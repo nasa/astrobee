@@ -1,0 +1,78 @@
+This file contains known problems, unclear issues, and suggestions for qpDUNES
+------------------------------------------------------------------------------
+
+* valgrind --dsymutil=yes --leak-check=full --track-origins=yes ./example2_affine
+
+* last tested working version: svn:r33
+
+* convergence problems for badly scaled Hessians: condition number 10^9 leads to ascent directions close to solution
+
+* support for DAE/parameters on lowest level? maybe directly through code-gen?
+
+* compare multipliers from one iteration to the next for convergence check and to avoid unnecessary hessian recomputations -> we want to have at least one AS change in each iteration anyways, therefore, with good line search Hesssian recomputation always needed
+
+* no return statements for elementary linear algebra
+
+* IMPORTANT: if newton matrix close to solution is regularized, qpDUNES cannot converge!!! -> example: Q = diag[1.01], R = diag[1.e2], constraint at 80 & 82, xL,xU=+/-1e-6
+Observation: it does regularized full steps without active set change, decreasing the step norm only very slowly. check how to do better!
+Observation2: Via Matlab interface (i.e. other settings) this seems to work...
+
+* enable nbr of iterations == -1 for no iteration limit, deal with logging accordingly
+
+* Treat flipping bounds
+
+* replace all nI, nX, nU, nZ, nD, ...  by macros NI, NX, ... that are by default set to 
+    #define NI (qpData->nI)
+  to prepare code for fixed dimensions code generation; make 'static'!
+
+* allow both size(zLow) = nZ and = nI*nZ+nX through Matlab interface; same for reference 
+
+* instead of having two routines, one for initialize and one for update, just use one routine, 
+  and check the matrix sparsityType (whether it's set) before doing sparsity checks again, etc.
+  
+* develop an infeasibility detection
+
+* obtain correct dual multipliers in y also for direct QP solver
+
+* why does accelerated Gradient search take > 1 steps when warmstarting?
+
+* idea: allow steps bigger than one when regularized
+
+* allocate memory for logging dynamically on the fly (is used in __DEBUG__ only anyways)
+
+* make a combination of armijo and gradient line search...
+
+* if Hessian would need to be regularized: abort factorization, do gradient step instead => does not work out...It takes me extremely long to leave regularized region again...
+
+* note in paper as justification for bisection interval search that the function we want to minimize is unimodal.
+
+* Newton-type line search
+
+* reorder factorization, and don't redo (or warm-start) if there were no active set changes in the end
+
+* parallelize setup of Newton matrix: setup step is often more than 50% of factorization time (z.B. 21 states)
+
+* NOTE for possibly faster factorization: cholH seems to have the structure 
+  [ D       ]
+  [ F D     ]
+  [   F D   ]
+  [     ... ]
+  for D diagonal Matrix, F Full matrix, AS LONG AS THERE ARE NO ACTIVE STATE CONSTRAINTS. Probably we can show this also formally, writing up an outer product...
+  we could exploit this for a bit faster backsolve, and maybe also factorization
+  
+* note: the on-the-fly regularization doesn't improve the conditioning significantly; we need additional criteria when to regularize...
+ 
+* Check whether the reverse Cholesky factorization indeed has something like a LQR/ riccatti recursion property -> should be something stationary that gets propagated
+
+* Further advantage of qpDUNES of IP: very high accuracy possible once at the right active set
+
+* Initialization with all bounds and constraints inactive should help against weakly active constraints being marked as active in the beginning. However, weakly active constraints might still occur during the solution process.
+
+* Linearized Version of Milan's chain fails for M=5, N=50; or M=9, N=80. On-the-fly-factorization with, e.g., 1.e-6 is not sufficient to correct the very 
+  negative value under the root. Have a Bachelor/Master-student test several regularizations for this problem to figure out which ones work best, and why.
+  
+* provide timings directly as outputs of the mex interface
+
+* maybe take first stage out of qpOASES shifting loop, since there we expect all variables to be active anyways, no matter what  
+
+

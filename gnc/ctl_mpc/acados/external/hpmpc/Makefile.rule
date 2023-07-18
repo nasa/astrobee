@@ -1,0 +1,136 @@
+####################################################################################################
+#                                                                                                 #
+# This file is part of HPMPC.                                                                     #
+#                                                                                                 #
+# HPMPC -- Library for High-Performance implementation of solvers for MPC.                        #
+# Copyright (C) 2014-2015 by Technical University of Denmark. All rights reserved.                #
+#                                                                                                 #
+# HPMPC is free software; you can redistribute it and/or                                          #
+# modify it under the terms of the GNU Lesser General Public                                      #
+# License as published by the Free Software Foundation; either                                    #
+# version 2.1 of the License, or (at your option) any later version.                              #
+#                                                                                                 #
+# HPMPC is distributed in the hope that it will be useful,                                        #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of                                  #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.                                            #
+# See the GNU Lesser General Public License for more details.                                     #
+#                                                                                                 #
+# You should have received a copy of the GNU Lesser General Public                                #
+# License along with HPMPC; if not, write to the Free Software                                    #
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA                  #
+#                                                                                                 #
+# Author: Gianluca Frison, giaf (at) dtu.dk                                                       #
+#                                                                                                 #
+###################################################################################################
+
+
+
+# Target architecture, currently supported (more architectures are available with the older v0.1 release):
+# X64_AVX2   : machine with AVX2 and FMA3 instruction sets (recent Intel and AMD processors), 64 bit operating system, code optimized for Intel Haswell.
+# X64_AVX    : machine with AVX instruction set (previous generation Intel and AMD processors), 64 bit operating system, code optimized for Intel Sandy-Bridge.
+# X64_SSE3   : machine with SSE3 instruction set (older Intel and AMD processors), 64 bit operating system, code optimized for Intel Core.
+# CORTEX_A57 : machine with ARMv8a processor with NEON, 64-bit operating system, code optimized for ARM Cortex A57.
+# CORTEX_A15 : machine with ARMv7a processor with VPFv3 (D32 versions) and NEON, code optimized for ARM Cortex A15.
+# CORTEX_A9  : machine with ARMv7a processor with VPFv3 (D32 versions) and NEON, code optimized for ARM Cortex A9.
+# CORTEX_A7  : machine with ARMv7a processor with VPFv3 (D32 versions) and NEON, code optimized for ARM Cortex A7.
+# C99_4X4    : c99 reference code, performing better on a machine with at least 32 scalar registers.
+#TARGET = X64_AVX2
+TARGET = X64_AVX
+#TARGET = X64_SSE3
+#TARGET = CORTEX_A57
+#TARGET = CORTEX_A15
+#TARGET = CORTEX_A9
+#TARGET = CORTEX_A7
+#TARGET = C99_4X4
+
+# use BLASFEO for the linear algebra
+USE_BLASFEO = 1
+BLASFEO_PATH = /opt/blasfeo
+
+# C Compiler
+CC = gcc
+#CC = clang
+#MINGW_ROOT = ~/cross_compiler_windows  (can be obtained here: https://sourceforge.net/projects/mingw-w64/files/)
+#CC = $(MINGW_ROOT)/mingw-w64-bin_x86_64-linux_20131228/bin/x86_64-w64-mingw32-gcc
+#CC = x86_64-w64-mingw32-gcc
+#CC = /opt/gcc/bin/gcc # custom gcc
+
+# operative system
+OS = LINUX
+#OS = WINDOWS
+
+# Installation directory
+PREFIX = /opt
+
+# top directory
+TOP = $(dir $(lastword $(MAKEFILE_LIST)))
+
+# Common optimization/debugging flags
+COMMON_FLAGS = -O2 -fPIC #-std=c99
+ifeq ($(CC), /opt/gcc/bin/gcc )
+COMMON_FLAGS += -DCUSTOM_GCC
+ifeq ($(TARGET), X64_AVX2)
+#COMMON_FLAGS += -I/opt/gcc/lib/gcc/x86_64-unknown-linux-gnu/5.2.0/include
+COMMON_FLAGS += -I/opt/gcc/lib/gcc/x86_64-pc-linux-gnu/6.0.0/include
+endif
+endif
+ifeq ($(USE_BLASFEO), 1)
+COMMON_FLAGS += -DBLASFEO -I$(BLASFEO_PATH)/include
+endif
+ifeq ($(OS), WINDOWS)
+COMMON_FLAGS += -DOS_WINDOWS
+endif
+DEBUG = #-g #-Wall -pedantic -Wfloat-equal #-pg
+LDFLAGS =
+
+# Reference code linking to standard BLAS and LAPACK
+REF_BLAS = 0
+#REF_BLAS = OPENBLAS
+#REF_BLAS = BLIS
+#REF_BLAS = NETLIB
+#REF_BLAS = MKL
+ifeq ($(REF_BLAS), 0)
+REF_BLAS_FLAGS =
+endif
+ifeq ($(REF_BLAS), OPENBLAS)
+REF_BLAS_FLAGS = -DREF_BLAS_OPENBLAS
+endif
+ifeq ($(REF_BLAS), BLIS)
+REF_BLAS_FLAGS = -DREF_BLAS_BLIS
+endif
+ifeq ($(REF_BLAS), NETLIB)
+REF_BLAS_FLAGS = -DREF_BLAS_NETLIB
+endif
+ifeq ($(REF_BLAS), MKL)
+REF_BLAS_FLAGS = -DREF_BLAS_MKL
+COMMON_FLAGS += -m64 -I/opt/intel/mkl/include
+endif
+
+# architecture-specific optimization flags
+ifeq ($(TARGET), X64_AVX2)
+CFLAGS = $(COMMON_FLAGS) -m64 -mavx2 -mfma -DTARGET_X64_AVX2 $(REF_BLAS_FLAGS) $(DEBUG)
+endif
+ifeq ($(TARGET), X64_AVX)
+CFLAGS = $(COMMON_FLAGS) -m64 -mavx -DTARGET_X64_AVX $(REF_BLAS_FLAGS) $(DEBUG)
+endif
+ifeq ($(TARGET), X64_SSE3)
+CFLAGS = $(COMMON_FLAGS) -m64 -msse3 -DTARGET_X64_SSE3 $(REF_BLAS_FLAGS) $(DEBUG)
+endif
+ifeq ($(TARGET), C99_4X4)
+CFLAGS = $(COMMON_FLAGS) -DTARGET_C99_4X4 $(REF_BLAS_FLAGS) $(DEBUG)
+endif
+ifeq ($(TARGET), C99_4X4_PREFETCH)
+CFLAGS = $(COMMON_FLAGS) -march=native -DTARGET_C99_4X4_PREFETCH $(REF_BLAS_FLAGS) $(DEBUG)
+endif
+ifeq ($(TARGET), CORTEX_A57)
+CFLAGS = $(COMMON_FLAGS) -march=armv8-a+fp+simd -mcpu=cortex-a57 -DTARGET_CORTEX_A57 $(REF_BLAS_FLAGS) $(DEBUG)
+endif
+ifeq ($(TARGET), CORTEX_A15)
+CFLAGS = $(COMMON_FLAGS) -marm -mfloat-abi=hard -mfpu=neon-vfpv4 -mcpu=cortex-a15 -DTARGET_CORTEX_A15 $(REF_BLAS_FLAGS) $(DEBUG)
+endif
+ifeq ($(TARGET), CORTEX_A9)
+CFLAGS = $(COMMON_FLAGS) -marm -mfloat-abi=hard -mfpu=neon -mcpu=cortex-a9 -DTARGET_CORTEX_A9 $(REF_BLAS_FLAGS) $(DEBUG)
+endif
+ifeq ($(TARGET), CORTEX_A7)
+CFLAGS = $(COMMON_FLAGS) -marm -mfloat-abi=hard -mfpu=neon-vfpv4 -mcpu=cortex-a7 -DTARGET_CORTEX_A7 $(REF_BLAS_FLAGS) $(DEBUG)
+endif

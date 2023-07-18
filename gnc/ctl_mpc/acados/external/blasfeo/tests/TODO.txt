@@ -1,0 +1,4 @@
+TODO in tests:
+- in case of bad call, print to file the arguments and exit
+- create a test routine to load the above print to work on debugging
+- remove min_kernel_size (it is only 4x4 now)

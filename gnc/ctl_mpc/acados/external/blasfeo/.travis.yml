@@ -1,0 +1,157 @@
+
+cache:
+  ccache: true
+
+
+jobs:
+  include:
+    - name: "Linux AMD64 tests"
+      arch: amd64
+      os: linux
+      dist: bionic
+      group: travis_latest
+      language: python
+      python: "3.6"
+      addons:
+        apt:
+          packages:
+          - libblas-dev
+          - liblapack-dev
+          - bc
+      script:
+        - cd "${TRAVIS_BUILD_DIR}"/tests
+        - pip install jinja2
+        - python tester.py testset_travis_blasfeo_pm_double_amd64.json
+        - python tester.py testset_travis_blasfeo_pm_single_amd64.json
+        - python tester.py testset_travis_blasfeo_cm_double_amd64.json
+        - python tester.py testset_travis_blasfeo_cm_double_amd64_packalg.json
+        - python tester.py testset_travis_blasfeo_cm_single_amd64.json
+        - python tester.py testset_travis_blas_pm_double_amd64.json
+        - python tester.py testset_travis_blas_pm_single_amd64.json
+        - python tester.py testset_travis_blas_cm_double_amd64.json
+        - python tester.py testset_travis_blas_cm_single_amd64.json
+
+    - name: "Linux ARM64 tests"
+      arch: arm64
+      os: linux
+      dist: bionic
+      group: travis_latest
+      language: python
+      python: "3.6"
+      addons:
+        apt:
+          packages:
+          - libblas-dev
+          - liblapack-dev
+          - bc
+      script:
+        - cd "${TRAVIS_BUILD_DIR}"/tests
+        - pip install jinja2
+        - python tester.py testset_travis_blasfeo_pm_double_arm64.json
+        - python tester.py testset_travis_blasfeo_pm_single_arm64.json
+        - python tester.py testset_travis_blasfeo_cm_double_arm64.json
+        - python tester.py testset_travis_blasfeo_cm_double_arm64_packalg.json
+        - python tester.py testset_travis_blasfeo_cm_single_arm64.json
+        - python tester.py testset_travis_blas_pm_double_arm64.json
+        - python tester.py testset_travis_blas_pm_single_arm64.json
+
+    - name: "Linux ARM32 make build"
+      arch: arm64
+      os: linux
+      dist: bionic
+      group: travis_latest
+      addons:
+        apt:
+          packages:
+          - gcc-arm-linux-gnueabihf
+          - libc6-dev-armhf-cross
+          - bc
+      install:
+        - sudo dpkg --add-architecture armhf
+        - sudo apt update
+        - sudo apt install libc6:armhf
+        - sudo dpkg --print-architecture
+        - sudo dpkg --print-foreign-architectures
+      script:
+        - make CC=arm-linux-gnueabihf-gcc TARGET=ARMV7A_ARM_CORTEX_A15 static_library -j 8
+        - make CC=arm-linux-gnueabihf-gcc TARGET=ARMV7A_ARM_CORTEX_A15 shared_library -j 8
+        - make CC=arm-linux-gnueabihf-gcc TARGET=ARMV7A_ARM_CORTEX_A15 -C examples/ example_d_riccati_recursion
+
+    - name: "Linux AMD64 cmake build"
+      arch: amd64
+      os: linux
+      dist: bionic
+      group: travis_latest
+      addons:
+        apt:
+          packages:
+          - bc
+      script:
+        - mkdir "${TRAVIS_BUILD_DIR}"/build
+        - cd "${TRAVIS_BUILD_DIR}"/build
+        - cmake ..
+        - make
+        - cd examples
+        - ./getting_started
+
+    - name: "Windows AMD64 cmake build"
+      os: windows
+      language: bash
+      group: travis_latest
+      addons:
+        apt:
+          packages:
+          - bc
+      script:
+        - export PATH="/C/Program Files (x86)/Microsoft Visual Studio/2017/BuildTools/MSBuild/15.0/Bin":$PATH
+        - mkdir "${TRAVIS_BUILD_DIR}"/build
+        - cd "${TRAVIS_BUILD_DIR}"/build
+        - cmake -DTARGET=GENERIC ..
+        - MSBuild.exe blasfeo.vcxproj
+        - cd examples
+        - MSBuild.exe getting_started.vcxproj
+        - cd Debug
+        - ./getting_started.exe
+
+    - name: "MacOS build"
+      if: branch = mac_build
+      os: osx
+      osx_image: xcode10.2
+      language: shell
+      script:
+        - cd "${TRAVIS_BUILD_DIR}"/tests
+        - python3 -m pip install --user jinja2
+        - python3 tester.py testset_travis.json
+
+    - name: "Windows build"
+      if: branch = windows_build
+      os: windows
+      language: shell
+      before_install:
+        - choco install python --version 3.6
+        - python -m pip install --upgrade pip
+      env: PATH=/c/Python36:/c/Python36/Scripts:$PATH
+      script:
+        - cd "${TRAVIS_BUILD_DIR}"/tests
+        - pip install --user jinja2
+        - python tester.py testset_travis.json
+
+    - name: "debug tests"
+      arch: arm64
+      os: linux
+      dist: bionic
+      group: travis_latest
+      language: python
+      python: "3.6"
+      addons:
+        apt:
+          packages:
+          - libblas-dev
+          - liblapack-dev
+          - bc
+      script:
+        - cd "${TRAVIS_BUILD_DIR}"/tests
+        - pip install jinja2
+        - python tester.py testset_debug.json
+
+

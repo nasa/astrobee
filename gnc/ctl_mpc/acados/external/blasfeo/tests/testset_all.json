@@ -1,0 +1,75 @@
+{
+  "options":{
+    "rebuild": 0,
+    "silent": 1,
+    "continue": 0
+  },
+  "env_flags":{
+    "CFLAGS":"-Wuninitialized"
+  },
+  "test_macros":
+  {
+    "VERBOSE":2
+  },
+  "blasfeo_flags":{
+    "CC": "clang",
+    "BLASFEO_REF_API": 1,
+    "EXTERNAL_BLAS": "OPENBLAS"
+  },
+  "available_blasfeo_flags":{
+    "SOC":["DSPACE", "BACHMANN"],
+    "CC": ["clang"],
+    "BLASFEO_REF_API": [1, 0],
+    "EXTERNAL_BLAS": ["OPENBLAS"]
+  },
+  "precisions":[
+    "d",
+    "s"
+  ],
+  "targets":[
+    "X64_INTEL_HASWELL",
+    "X64_INTEL_SANDY_BRIDGE",
+    "X64_INTEL_CORE",
+    "X64_AMD_BULLDOZER",
+    "X86_AMD_JAGUAR",
+    "X86_AMD_BARCELONA",
+    "ARMV8A_ARM_CORTEX_A57",
+    "ARMV8A_ARM_CORTEX_A53",
+    "ARMV7A_ARM_CORTEX_A15",
+    "ARMV7A_ARM_CORTEX_A7",
+    "ARMV7A_ARM_CORTEX_A9",
+    "GENERIC"
+  ],
+  "apis": [
+    "blasfeo",
+    "blas"
+  ],
+  "las":[
+    "HIGH_PERFORMANCE",
+    "REFERENCE",
+    "BLASFEO_WRAPPER"
+  ],
+  "routines":[
+    "gead",
+    "gecp",
+    "gesc",
+    "gecpsc",
+    "gemm",
+    "gemm_nn",
+    "gemm_nn",
+    "gemm_nt",
+    "gemm_tn",
+    "gemm_tt",
+    "syrk_ln_mn",
+    "syrk_ln",
+    "getrf_rowpivot",
+    "potrf_l",
+    "trsm_llnu",
+    "trsm_lunn",
+    "trsm_rltu",
+    "trsm_rltn",
+    "trsm_rutn",
+    "trmm_rutn",
+    "trmm_rlnn"
+  ]
+}

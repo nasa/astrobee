@@ -1,0 +1,26 @@
+- syrk_potrf_ln_mn
+- alpha for trsm
+- kernels and _mn_ version of trmv
+- kernel dsymv dgemv_nt 4 avx
+- remove n from trmv
+- store_gen in single precision
+- clean target.h and create it also from cmake (see "file")
+
+
+
+- (some) octave dependencies:
+	BLAS:
+		* dot
+		* gemv
+		* gemm
+		* syrk
+	LAPACK:
+		* geqrf
+		* getrf
+		* getri
+		* getrs
+		* potrf
+		* potri
+		* potrs
+		* trtri
+		* trtrs

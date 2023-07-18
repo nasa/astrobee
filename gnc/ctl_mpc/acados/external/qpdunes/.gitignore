@@ -1,0 +1,51 @@
+*.o
+*.a
+*.so
+*.dylib
+*.mexmaci64
+*.m~
+
+
+# latex stuff
+*.bbl
+*.aux
+*.blg
+*.synctex.gz
+*.log
+*.bak~
+*.zip
+*.ps
+
+
+# build stuff
+build/*
+**/build/*
+CMakeCache.txt
+**/CMakeFiles/*
+
+
+# eclipse stuff
+.cproject
+.project
+
+
+# executables
+examples/example1
+examples/example1_ltv
+examples/example2_affine
+examples/wang2010
+examples/singleIntegrator
+examples/singleIntegrator_b
+examples/singleIntegrator_sc
+examples/singleIntegrator_d
+examples/doubleIntegrator
+examples/doubleIntegrator_mpc
+examples/mhePrototype
+examples/nmpcPrototype
+examples/nmpcPrototype_b
+examples/chainMass_m3_N50_1stStep
+
+
+# FORCES stuff
+**/forcesMPC/*
+**/@CodeGen/*
