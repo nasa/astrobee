@@ -177,23 +177,23 @@ def generate_launch_description():
         #         extra_arguments=[{'use_intra_process_comms': True}]),
             ]
         ),
-        ComposableNodeContainer(
-        name='llp_lights',
-        namespace='',
-        package='rclcpp_components',
-        executable='component_container',
-        condition=IfCondition(LaunchConfiguration("drivers")),
-        composable_node_descriptions=[
+        # ComposableNodeContainer(
+        # name='llp_lights',
+        # namespace='',
+        # package='rclcpp_components',
+        # executable='component_container',
+        # condition=IfCondition(LaunchConfiguration("drivers")),
+        # composable_node_descriptions=[
+        # #     ComposableNode(
+        # #         package='signal_lights',
+        # #         plugin='signal_lights::SignalLightsNodelet',
+        # #         name='signal_lights',
+        # #         extra_arguments=[{'use_intra_process_comms': True}]),
         #     ComposableNode(
-        #         package='signal_lights',
-        #         plugin='signal_lights::SignalLightsNodelet',
-        #         name='signal_lights',
-        #         extra_arguments=[{'use_intra_process_comms': True}]),
-            ComposableNode(
-                package='light_flow',
-                plugin='light_flow::LightFlowComponent',
-                name='light_flow',
-                extra_arguments=[{'use_intra_process_comms': False, 'use_sim_time': True}]),
-            ]
-        ),
+        #         package='light_flow',
+        #         plugin='light_flow::LightFlowComponent',
+        #         name='light_flow',
+        #         extra_arguments=[{'use_intra_process_comms': False, 'use_sim_time': True}]),
+        #     ]
+        # ),
     ])

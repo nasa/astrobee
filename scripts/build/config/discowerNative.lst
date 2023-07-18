@@ -10,6 +10,7 @@ astrobee_iss
 description
 discower_cosmo
 discower_description
+discower_platforms
 ff_common
 ff_hw_msgs
 ff_msgs
