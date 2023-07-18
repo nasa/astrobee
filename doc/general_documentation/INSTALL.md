@@ -29,7 +29,7 @@ If you are planning to work with guest science code, you will also need the
 
 ### Dependencies
 
-Next, install all required dependencies:
+Next, install all required dependencies.
 
 *Note: `root` access is necessary to install the compiled debian packages below*
 
@@ -40,13 +40,26 @@ by running 'sudo apt-get update' and then 'sudo apt-get upgrade'*
     cd src/scripts/setup
     ./add_ros_repository.sh
     sudo apt-get update
-    cd sources
-    ./build_install_sources.sh
+    cd debians
+    ./build_install_debians.sh
     cd ../
     ./install_desktop_packages.sh
     sudo rosdep init
     rosdep update
     popd
+
+### Dependecies: ROS2 in Ubuntu Jammy (22.04)
+
+To install ROS2 and the have the extra dependencies installed to `~/.local`, proceed with:
+
+    pushd $ASTROBEE_WS
+    cd src/scripts/setup
+    ./add_ros_repository.sh
+    sudo apt-get update
+    cd sources
+    ./build_install_sources.sh
+    cd ../
+    ./install_desktop_packages.sh
 
 
 **Important**: you can safely ignore the following error messages, as they are simply letting you know that certain libraries cannot be found. These libraries are for internal NASA use only, and are not required by public users provided that software is launched with DDS disabled.
@@ -60,7 +73,7 @@ by running 'sudo apt-get update' and then 'sudo apt-get upgrade'*
     E: Unable to locate package libsoracore-dev
     E: Unable to locate package libmiro-dev
 
-## Configuring the build
+## Configuring the build - Ubuntu 20.04 or older
 
 ### Note for the build setup
 
@@ -117,7 +130,7 @@ simulator. The -D is used to turn off building the dds bridge. The bridge is
 used to communicate with our ground data system and is also not needed for the
 simulator.*
 
-## Building the code
+### Building the code
 
 To build, run `catkin build` in the `$WORKSPACE_PATH`. Note that depending on your host
 machine, this might take in the order of tens of minutes to complete the first
@@ -139,10 +152,39 @@ catkin to running one job at a time.
 For more information on running the simulator and moving the robot, please see the \ref running-the-sim.
 
 
-## Cross Compiling
+### Cross Compiling
 
 Please contact your Astrobee point of contact if you need to cross compile the
 code.
 
 For more information on running the simulator and moving the robot, please see
 the \ref sim-readme.
+
+## Configuring the build - Ubuntu 22.04 (Jammy) or newer
+
+### Note for the build setup
+
+When compiling, the `$WORKSPACE_PATH` defines where the `install`, `build`, `logs` and
+`install` directories are created. If you want to customize the `install` path then the
+`$INSTALL_PATH` can be defined. By default, the configure script uses the following paths:
+
+  - native build path: `$ASTROBEE_WS/build`
+  - native install path: `$ASTROBEE_WS/install`
+
+If you are satisfied with these paths, you can invoke the `configure.sh` without
+the `-p` and `-w` options. For the simplicity of the instructions below,
+we assume that `$WORKSPACE_PATH` and `$INSTALL_PATH` contain the location of the
+build and install path. For example:
+
+    export WORKSPACE_PATH=$ASTROBEE_WS
+    export INSTALL_PATH=$ASTROBEE_WS/install
+
+### Native build
+
+To build, run the following commands:
+
+    pushd $ASTROBEE_WS
+    ./src/scripts/configure.sh -l -D -F -Z -X -s
+    popd
+
+Note: In low-memory systems, please run in the same command line `export MAKEFLAGS="-j4"` before running the above command.

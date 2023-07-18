@@ -68,15 +68,17 @@ case $dist in
 esac
 
 # Update PATH
+update_shrc=0
 if [[ ":$PATH:" == *":$HOME/.local/bin:"* ]]; then
   echo "PATH is set."
 else
   echo "Setting PATH in $HOME/.zshrc"
   if [[ "$SHELL" == *"zsh"* ]]; then
-    echo "export PATH=$PATH:$HOME/.local/bin" >> $HOME/.zshrc
+    sed -i '3 i\export PATH=$PATH:$HOME/.local/bin' $HOME/.zshrc
   else
-    echo "export PATH=$PATH:$HOME/.local/bin" >> $HOME/.bashrc
+    sed -i '4 i\export PATH=$PATH:$HOME/.local/bin' $HOME/.bashrc
   fi
+  update_shrc=1
 fi
 
 # Update LD Library Path
@@ -85,10 +87,11 @@ if [[ ":$LD_LIBRARY_PATH:" == *":$HOME/.local/lib:"* ]]; then
 else
   echo "Setting LD_LIBRARY_PATH."
   if [[ "$SHELL" == *"zsh"* ]]; then
-    echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/.local/lib" >> $HOME/.zshrc
+    sed -i '4 i\export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/.local/lib' $HOME/.zshrc
   else
-    echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/.local/lib" >> $HOME/.bashrc
+    sed -i '5 i\export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/.local/lib' $HOME/.bashrc
   fi
+  update_shrc=1
 fi
 
 
@@ -97,14 +100,22 @@ if [[ ":$CPATH:" == *":$HOME/.local:"* ]]; then
 else
   echo "Setting CPATH."
   if [[ "$SHELL" == *"zsh"* ]]; then
-    echo "export CPATH=$CPATH:$HOME/.local" >> $HOME/.zshrc
-    echo "source $HOME/.zshrc and run this script again."
+    sed -i '5 i\export CPATH=$CPATH:$HOME/.local' $HOME/.zshrc
     exit 0
   else
-    echo "export CPATH=$CPATH:$HOME/.local" >> $HOME/.bashrc
-    echo "source $HOME/.bashrc and run this script again."
+    sed -i '6 i\export CPATH=$CPATH:$HOME/.local' $HOME/.bashrc
     exit 0
   fi
+  update_shrc=1
+fi
+
+if [ $update_shrc -eq 1 ]; then
+  if [[ "$SHELL" == *"zsh"* ]]; then
+    echo "source $HOME/.zshrc and run this script again."
+  else
+    echo "source $HOME/.bashrc and run this script again."
+  fi  
+  exit 0
 fi
 
 # Add public debians to build list
