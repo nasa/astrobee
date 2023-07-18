@@ -43,7 +43,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--loc-map",
         default="",
-        help="Full path to Localization map for bagfile to test localization performance.",
+        help="Full path to Localization map for bagfile to test localization performance. If not passed the localization test is not run",
     )
     parser.add_argument(
         "-o", "--output-directory", default="groundtruth_creation_output"
