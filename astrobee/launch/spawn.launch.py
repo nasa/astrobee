@@ -20,7 +20,6 @@ from utilities.utilities import *
 
 
 def generate_launch_description():
-    print("Spawing Astrobee")
     return LaunchDescription([
         DeclareLaunchArgument("robot", default_value=os.getenv("ASTROBEE_ROBOT", "sim")),
         DeclareLaunchArgument("world", default_value=os.getenv("ASTROBEE_WORLD", "iss")),

@@ -8,9 +8,11 @@ astrobee_handrail_41_5
 astrobee_handrail_8_5
 astrobee_iss
 description
+discower
 discower_cosmo
 discower_description
 discower_platforms
+discower_gazebo
 ff_common
 ff_hw_msgs
 ff_msgs
