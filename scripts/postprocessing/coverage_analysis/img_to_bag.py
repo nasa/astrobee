@@ -42,8 +42,10 @@ def create_mono_bag(imgs, bagname):
     bag = rosbag.Bag(bagname, "w")
 
     try:
+        print("Adding images to bag %s ..." % bagname)
+
         for i in range(len(imgs)):
-            print("Adding %s" % imgs[i])
+            # print("Adding %s" % imgs[i])
             img = cv2.imread(imgs[i])
             bridge = CvBridge()
 
@@ -54,9 +56,10 @@ def create_mono_bag(imgs, bagname):
             img_msg.header.stamp = Stamp
             img_msg.header.frame_id = "camera"
 
-            bag.write("mgt/img_sampler/nav_cam/image_record", img_msg, Stamp)
+            bag.write("/mgt/img_sampler/nav_cam/image_record", img_msg, Stamp)
     finally:
         bag.close()
+        print("...Done!")
 
 
 def create_bag(args):
