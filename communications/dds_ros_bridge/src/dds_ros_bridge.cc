@@ -746,7 +746,7 @@ bool DdsRosBridge::BuildCommandConfigToCommandConfig(const std::string& name) {
 }
 
 bool DdsRosBridge::SetTelem(float rate, std::string &err_msg, RateType type) {
-  if (ros_sub_rapid_pubs_.count("RTRT") == 0) {
+  if (!ros_sub_rapid_pubs_.count("RTRT")) {
     err_msg = "DDS Bridge: Telemetry message stuff not added but it is needed.";
     return false;
   }
@@ -798,7 +798,7 @@ bool DdsRosBridge::SetCommStatusRate(float rate, std::string &err_msg) {
 }
 
 bool DdsRosBridge::SetCpuStateRate(float rate, std::string &err_msg) {
-  if (ros_sub_rapid_pubs_.count("RCSRCS") == 0) {
+  if (!ros_sub_rapid_pubs_.count("RCSRCS")) {
     err_msg = "DDS Bridge: Cpu state message not added but it is needed.";
     return false;
   }
@@ -815,7 +815,7 @@ bool DdsRosBridge::SetCpuStateRate(float rate, std::string &err_msg) {
 }
 
 bool DdsRosBridge::SetDiskStateRate(float rate, std::string &err_msg) {
-  if (ros_sub_rapid_pubs_.count("RDSRDS") == 0) {
+  if (!ros_sub_rapid_pubs_.count("RDSRDS")) {
     err_msg = "DDS Bridge: Disk state message not added but it is needed.";
     return false;
   }
@@ -833,7 +833,7 @@ bool DdsRosBridge::SetDiskStateRate(float rate, std::string &err_msg) {
 bool DdsRosBridge::SetEkfPositionRate(float rate,
                                       std::string &err_msg,
                                       RateType type) {
-  if (ros_sub_rapid_pubs_.count("RORP") == 0) {
+  if (!ros_sub_rapid_pubs_.count("RORP")) {
     err_msg = "DDS Bridge: Ekf state message not added but it is needed.";
     return false;
   }
@@ -858,17 +858,17 @@ bool DdsRosBridge::SetEkfPositionRate(float rate,
 }
 
 bool DdsRosBridge::SetGncStateRate(float rate, std::string &err_msg) {
-  if (ros_sub_rapid_pubs_.count("RGCCRGCC") == 0) {
+  if (!ros_sub_rapid_pubs_.count("RGCCRGCC")) {
     err_msg = "DDS Bridge: Gnc control command not added but it is needed.";
     return false;
   }
 
-  if (ros_sub_rapid_pubs_.count("RGCSRGCS") == 0) {
+  if (!ros_sub_rapid_pubs_.count("RGCSRGCS")) {
     err_msg = "DDS Bridge: Gnc control shaper not added but it is needed.";
     return false;
   }
 
-  if (ros_sub_rapid_pubs_.count("RGCTRGCT") == 0) {
+  if (!ros_sub_rapid_pubs_.count("RGCTRGCT")) {
     err_msg = "DDS Bridge: Gnc control trajectory not added but it is needed.";
     return false;
   }
@@ -896,7 +896,7 @@ bool DdsRosBridge::SetGncStateRate(float rate, std::string &err_msg) {
 }
 
 bool DdsRosBridge::SetPmcStateRate(float rate, std::string &err_msg) {
-  if (ros_sub_rapid_pubs_.count("RPCSRPCS") == 0) {
+  if (!ros_sub_rapid_pubs_.count("RPCSRPCS")) {
     err_msg = "DDS Bridge: Pmc cmd state message not added but it is needed.";
     return false;
   }
@@ -913,7 +913,7 @@ bool DdsRosBridge::SetPmcStateRate(float rate, std::string &err_msg) {
 }
 
 bool DdsRosBridge::SetSparseMappingPoseRate(float rate, std::string &err_msg) {
-  if (ros_sub_rapid_pubs_.count("RSMPRP") == 0) {
+  if (!ros_sub_rapid_pubs_.count("RSMPRP")) {
     err_msg = "DDS Bridge: Sparse mapping pose message not add but needed.";
     return false;
   }
@@ -1406,7 +1406,7 @@ bool DdsRosBridge::ReadParams() {
     return false;
   }
 
-  if (ros_sub_rapid_pubs_.count("RBSRBS") == 0) {
+  if (!ros_sub_rapid_pubs_.count("RBSRBS")) {
     ROS_ERROR("DDS Bridge: Battery msg stuff not added and it is needed!");
     return false;
   }
