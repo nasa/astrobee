@@ -234,9 +234,6 @@ class SpawnEntityNode(Node):
                 return 1
         # Load entity XML published on topic specified
         elif self.args.topic:
-            print("---------------------")
-            print("          TOPIC      ")
-            print(": ", self.args.topic)
             self.get_logger().info(
                 "Loading entity published on topic %s" % self.args.topic
             )
@@ -475,9 +472,6 @@ def main(args=sys.argv):
     rclpy.init(args=args)
     args_without_ros = rclpy.utilities.remove_ros_args(args)
     spawn_entity_node = SpawnEntityNode(args_without_ros)
-    print("-----------------------")
-    print("-----------------------")
-    print("-----------------------")
     spawn_entity_node.get_logger().info("Spawn Entity started")
     exit_code = spawn_entity_node.run()
     sys.exit(exit_code)
