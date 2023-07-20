@@ -1,5 +1,5 @@
 #!/bin/sh
-cd ${HOME}/astrobee/src
+cd ${HOME}/ros_ws/astrobee/src
 
 # Note: Explicitly specifying loopback interface (127.0.0.1) in -p is
 # important for security. Otherwise the VNC server will be accessible

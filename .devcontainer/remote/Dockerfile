@@ -23,9 +23,9 @@ RUN apt-get update \
     xvfb \
   && rm -rf /var/lib/apt/lists/*
 
-COPY ./scripts/start_vnc.sh /start_vnc.sh
+RUN ls -l
 
-CMD ["/start_vnc.sh"]
+CMD ["/src/astrobee/src/scripts/start_vnc.sh"]
 
 # Expose VNC server's port
 EXPOSE 5900
