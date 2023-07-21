@@ -80,6 +80,6 @@ int main(int argc, char** argv) {
 
   const gtsam::Pose3 body_T_nav_cam = lc::LoadTransform(config, "nav_cam_transform");
   localization_analysis::SparseMappingPoseAdder sparse_mapping_pose_adder(input_bag, output_bag_path.string(),
-                                                              body_T_nav_cam.inverse());
+                                                                          body_T_nav_cam.inverse());
   sparse_mapping_pose_adder.AddPoses();
 }

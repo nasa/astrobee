@@ -17,7 +17,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 """
-The bag sweep tool runs the graph bag tool in parallel on multiple bag files.  It takes a config file with bag names, map names, and robot configs and produces pdfs and result bagfiles for each entry.
+The bag sweep tool runs the graph bag tool in parallel on multiple bag files.
+It takes a config file with bag names, map names, and robot configs and produces
+pdfs and result bagfiles for each entry.
 """
 
 
@@ -39,9 +41,6 @@ class GraphBagParams(object):
         bagfile,
         map_file,
         image_topic,
-        config_path,
-        robot_config_file,
-        world,
         use_image_features,
         groundtruth_bagfile,
         rmse_rel_start_time,
@@ -50,9 +49,6 @@ class GraphBagParams(object):
         self.bagfile = bagfile
         self.map_file = map_file
         self.image_topic = image_topic
-        self.config_path = config_path
-        self.robot_config_file = robot_config_file
-        self.world = world
         self.use_image_features = use_image_features
         self.groundtruth_bagfile = groundtruth_bagfile
         self.rmse_rel_start_time = rmse_rel_start_time
@@ -73,9 +69,6 @@ def load_params(param_file):
                     row[4],
                     row[5],
                     row[6],
-                    row[7],
-                    row[8],
-                    row[9],
                 )
             )
 
@@ -123,16 +116,10 @@ def run_graph_bag(params, output_dir):
         + params.bagfile
         + " "
         + params.map_file
-        + " "
-        + params.config_path
         + " -i "
         + params.image_topic
         + " -o "
         + output_bag_path
-        + " -r "
-        + params.robot_config_file
-        + " -w "
-        + params.world
         + " -s "
         + output_csv_file
         + " -f "
