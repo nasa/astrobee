@@ -1,3 +1,4 @@
+\page vnc-docker Remote using VNC
 
 # Astrobee Docker container with graphical applications shared via VNC #
 
@@ -11,7 +12,7 @@ We'll call the remote host `remotehost` and your local host `laptop`.
 
 On `remotehost`, run these commands to build and run the `astrobee-vnc` container:
 ```bash
-cd $ASTROBEE_WS/src/scripts/docker
+cd $ASTROBEE_WS/src/scripts/docker/remote
 ./build_vnc.sh
 ./run_vnc.sh
 ```
@@ -20,7 +21,7 @@ Note that the `run_vnc.sh` command will spout a bunch of warnings that you can s
 
 In another terminal on `remotehost`, run:
 ```bash
-remotehost$ cd $ASTROBEE_WS/src/scripts/docker
+remotehost$ cd $ASTROBEE_WS/src/scripts/docker/remote
 remotehost$ ./exec_vnc.sh
 docker# xeyes &
 ```

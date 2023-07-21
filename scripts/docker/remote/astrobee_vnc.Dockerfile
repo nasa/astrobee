@@ -4,7 +4,8 @@
 
 ARG UBUNTU_VERSION=20.04
 ARG REMOTE=astrobee
-FROM ${REMOTE}/astrobee:latest-ubuntu${UBUNTU_VERSION}
+ARG IMAGE=${REMOTE}/astrobee:latest-ubuntu${UBUNTU_VERSION}
+FROM ${IMAGE}
 
 # Rationale for packages:
 #   xvfb: X server that doesn't need GPU or physical display
