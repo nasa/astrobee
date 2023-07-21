@@ -501,7 +501,7 @@ void MatDescrToVec(cv::Mat const& mat, std::vector<float> * vec) {
   (*vec).reserve(mat.cols);
   (*vec).clear();
   for (int c = 0; c < mat.cols; c++) {
-    float val = static_cast<float>(mat.at<float>(0, c));
+    float val = mat.at<float>(0, c);
     (*vec).push_back(val);
   }
 }
