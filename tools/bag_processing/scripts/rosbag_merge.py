@@ -27,42 +27,14 @@ import string
 import subprocess
 import sys
 
+import localization_common.utilities as lu
+
 
 # https://stackoverflow.com/a/4836734
 def natural_sort(l):
     convert = lambda text: int(text) if text.isdigit() else text.lower()
     alphanum_key = lambda key: [convert(c) for c in re.split("([0-9]+)", key)]
     return sorted(l, key=alphanum_key)
-
-
-def run_command_and_print_output(command, print_command=True):
-    if print_command:
-        print(command)
-
-    stdout = ""
-    stderr = ""
-    popen = subprocess.Popen(
-        command,
-        shell=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        universal_newlines=True,
-    )
-    for stdout_line in iter(popen.stdout.readline, ""):
-        stdout += stdout_line
-
-    popen.stdout.close()
-
-    print(stdout)
-    print(stderr)
-    return_code = popen.wait()
-    if return_code:
-        raise subprocess.CalledProcessError(return_code, command)
-
-    if return_code != 0:
-        print(("Failed to run command.\nOutput: ", stdout, "\nError: ", stderr))
-
-    return (return_code, stdout, stderr)
 
 
 def merge_bag(input_bag_prefix, input_bag_suffix, merged_bag, only_loc_topics=False):
@@ -112,7 +84,7 @@ def merge_bag(input_bag_prefix, input_bag_suffix, merged_bag, only_loc_topics=Fa
             + " /beh/inspection/result'"
         )
 
-    run_command_and_print_output(merge_bags_command)
+        lu.run_command_and_save_output(merge_bags_command)
 
 
 if __name__ == "__main__":
