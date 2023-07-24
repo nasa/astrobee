@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # Copyright (c) 2017, United States Government, as represented by the
 # Administrator of the National Aeronautics and Space Administration.
 #
@@ -84,7 +84,7 @@ def merge_bag(input_bag_prefix, input_bag_suffix, merged_bag, only_loc_topics=Fa
             + " /beh/inspection/result'"
         )
 
-        lu.run_command_and_save_output(merge_bags_command)
+    lu.run_command_and_save_output(merge_bags_command)
 
 
 if __name__ == "__main__":
@@ -139,7 +139,6 @@ if __name__ == "__main__":
 
     print(bag_names)
     for bag_name in bag_names:
-        print(bag_name)
         merge_bag(
             bag_name, args.input_bag_suffix, args.merged_bag, args.only_loc_topics
         )
