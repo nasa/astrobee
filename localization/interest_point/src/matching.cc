@@ -301,6 +301,9 @@ namespace interest_point {
     } else {
       // Traditional floating point descriptor
       cv::FlannBasedMatcher matcher;
+      if (img1_descriptor_map.rows < 2 || // at least two are needed for knnMatch, otherwise error
+        img2_descriptor_map.rows < 2)
+        return;
       std::vector<std::vector<cv::DMatch> > possible_matches;
       matcher.knnMatch(img1_descriptor_map, img2_descriptor_map, possible_matches, 2);
       matches->clear();
