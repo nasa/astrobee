@@ -9,7 +9,7 @@
 	url = ssh://git@babelfish.arc.nasa.gov:7999/astrobee/astrobee_platform.git
 [submodule "description/media"]
 	path = description/media
-	url = git@github.com:DISCOWER/astrobee_media.git
+	url = git@github.com:NASA/astrobee_media.git
 [submodule "discower"]
 	path = discower
 	url = git@github.com:DISCOWER/discower_asim.git
