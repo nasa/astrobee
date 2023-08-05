@@ -73,11 +73,54 @@ def load_dataframe(files):
     return dataframe
 
 
-def run_command_and_save_output(command, output_filename, print_command=True):
+def run_command_and_save_output(command, output_filename="", print_command=True):
+    """
+    Run a command in the shell, save the output to a file, and print the output.
+
+    Parameters:
+        command (str): The shell command to be executed.
+        output_filename (str): (optional) The filename to save the command output. Default is an empty string.
+        print_command (bool): (optional) If True, print the command before executing. Default is True.
+
+    Returns:
+        tuple: A tuple containing the return code, standard output, and standard error.
+    """
+
     if print_command:
         print(command)
-    with open(output_filename, "w") as output_file:
-        subprocess.call(command, shell=True, stdout=output_file, stderr=output_file)
+
+    # If an output_filename is provided, open the file for writing
+    if output_filename != "":
+        f = open(output_filename, "w")
+
+    # Run the command in a subprocess and capture the output
+    stdout = ""
+    stderr = ""
+    popen = subprocess.Popen(
+        command,
+        shell=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        universal_newlines=True,
+    )
+    for stdout_line in iter(popen.stdout.readline, ""):
+        if output_filename != "":
+            f.write(stdout_line)
+        stdout += stdout_line
+
+    popen.stdout.close()
+
+    # Print the standard output and standard error
+    print(stdout)
+    print(stderr)
+
+    # Wait for the subprocess to finish and get the return code
+    return_code = popen.wait()
+    # If the return code is not 0, raise a subprocess.CalledProcessError
+    if return_code:
+        raise subprocess.CalledProcessError(return_code, command)
+
+    return (return_code, stdout, stderr)
 
 
 def basename(filename):
