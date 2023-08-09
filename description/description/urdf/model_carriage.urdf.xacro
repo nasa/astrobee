@@ -25,13 +25,13 @@
       <!-- ixx and iyy are dummy values                        -->
       <inertia ixx="0.694860833" ixy="0.0" ixz="0.0" iyy="0.694860833" iyz="0.0" izz="0.0923"/>
     </inertial>
-    <visual name="carriage_visual">
+    <visual>
       <origin xyz="0 0 -0.02" rpy="0 0 0" />
       <geometry>
         <mesh filename="package://astrobee_freeflyer/meshes/carriage.dae"/>
       </geometry>
     </visual>
-    <collision name="carriage_collision">
+    <collision>
       <origin xyz="0 0 -0.02" rpy="0 0 0" />
       <geometry>
         <mesh filename="package://astrobee_freeflyer/meshes/carriage.dae"/>
@@ -49,7 +49,7 @@
     <child
       link="${prefix}carriage" />
   </joint>
-  <gazebo reference="carriage">
+  <gazebo reference="${prefix}carriage">
     <kp>100000.0</kp>
     <kd>100000.0</kd>
     <mu1>0.0</mu1>
