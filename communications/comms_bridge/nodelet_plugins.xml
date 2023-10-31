@@ -1,0 +1,13 @@
+<class_libraries>
+  <library path="lib/libpolymorph_relay_sub">
+    <class name="dock/DockNodelet" type="dock::DockNodelet"
+           base_class_type="nodelet::Nodelet">
+      <description>Nodelet for the polymorph relay subscriber</description>
+    </class>
+  </library>
+  <library path="lib/libpolymorph_relay_pub">
+    <class name="pico_proxy/PicoProxyNodelet" type="pico_proxy::PicoProxyNodelet" base_class_type="nodelet::Nodelet">
+      <description>Nodelet for the polymorph relay publisher</description>
+    </class>
+  </library>
+</class_libraries>
