@@ -35,7 +35,7 @@
 
 #define DEFAULT_ROSROSBRIDGE_PUB_META_TOPIC_PREFIX "/polymorph_relay"
 
-class ROSROSBridgeSubscriber : public ROSBridgeSubscriber {
+class ROSROSBridgeSubscriber : public BridgeSubscriber {
  public:
   explicit ROSROSBridgeSubscriber(const std::string& meta_topic_prefix = DEFAULT_ROSROSBRIDGE_PUB_META_TOPIC_PREFIX);
   virtual ~ROSROSBridgeSubscriber();
@@ -52,7 +52,7 @@ class ROSROSBridgeSubscriber : public ROSBridgeSubscriber {
  protected:
   void setupMetaChannels();
   void setupReverseMetaChannels();
-  void handleResetMessage(const ros_bridge::RelayReset::ConstPtr& msg);
+  void handleResetMessage(const ff_msgs::RelayReset::ConstPtr& msg);
 
   std::string m_meta_topic_prefix;
   unsigned int m_n_advertised;

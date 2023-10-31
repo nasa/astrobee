@@ -28,7 +28,7 @@
 #define PUBLISHER_QUEUE_SIZE 10
 
 ROSROSBridgePublisher::ROSROSBridgePublisher(const std::string& meta_topic_prefix, double ad2pub_delay)
-    : ROSBridgePublisher(ad2pub_delay), m_meta_topic_prefix(meta_topic_prefix) {
+    : BridgePublisher(ad2pub_delay), m_meta_topic_prefix(meta_topic_prefix) {
   setupMetaChannels();
   setupReverseMetaChannels();
 }
@@ -55,11 +55,11 @@ void ROSROSBridgePublisher::setupReverseMetaChannels() {
   ros::NodeHandle nh;
 
   std::string reset_topic = m_meta_topic_prefix + "/reset";
-  m_reset_pub = nh.advertise<ros_bridge::RelayReset>(reset_topic, PUBLISHER_QUEUE_SIZE);
+  m_reset_pub = nh.advertise<ff_msgs::RelayReset>(reset_topic, PUBLISHER_QUEUE_SIZE);
 }
 
 void ROSROSBridgePublisher::requestTopicInfo(std::string const& output_topic) {
-  ros_bridge::RelayReset reset_msg;
+  ff_msgs::RelayReset reset_msg;
 
   reset_msg.header.seq = 0;
   reset_msg.header.stamp = ros::Time::now();
@@ -69,7 +69,7 @@ void ROSROSBridgePublisher::requestTopicInfo(std::string const& output_topic) {
   m_reset_pub.publish(reset_msg);
 }
 
-void ROSROSBridgePublisher::handleContentMessage(const ros_bridge::RelayContent::ConstPtr& msg) {
+void ROSROSBridgePublisher::handleContentMessage(const ff_msgs::RelayContent::ConstPtr& msg) {
   const std::lock_guard<std::mutex> lock(m_mutex);
 
   const std::string output_topic = msg->output_topic;
@@ -103,7 +103,7 @@ void ROSROSBridgePublisher::handleContentMessage(const ros_bridge::RelayContent:
     printf("  error relaying message\n");
 }
 
-void ROSROSBridgePublisher::handleAdMessage(const ros_bridge::RelayAdvertisement::ConstPtr& msg) {
+void ROSROSBridgePublisher::handleAdMessage(const ff_msgs::RelayAdvertisement::ConstPtr& msg) {
   const std::lock_guard<std::mutex> lock(m_mutex);
 
   const std::string output_topic = msg->output_topic;

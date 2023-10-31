@@ -36,7 +36,7 @@
 // default time to delay between advertising and publishing on that topic [sec]
 #define DEFAULT_ROSROSBRIDGE_PUB_ADVERTISE_DELAY 3.0
 
-class ROSROSBridgePublisher : public ROSBridgePublisher {
+class ROSROSBridgePublisher : public BridgePublisher {
  public:
   ROSROSBridgePublisher(const std::string& meta_topic_prefix = DEFAULT_ROSROSBRIDGE_PUB_META_TOPIC_PREFIX,
                         double ad2pub_delay = DEFAULT_ROSROSBRIDGE_PUB_ADVERTISE_DELAY);
@@ -48,8 +48,8 @@ class ROSROSBridgePublisher : public ROSBridgePublisher {
 
   void requestTopicInfo(std::string const& output_topic);
 
-  void handleContentMessage(const ros_bridge::RelayContent::ConstPtr& msg);
-  void handleAdMessage(const ros_bridge::RelayAdvertisement::ConstPtr& msg);
+  void handleContentMessage(const ff_msgs::RelayContent::ConstPtr& msg);
+  void handleAdMessage(const ff_msgs::RelayAdvertisement::ConstPtr& msg);
 
   std::string m_meta_topic_prefix;
   ros::Subscriber m_advert_sub;
@@ -57,7 +57,7 @@ class ROSROSBridgePublisher : public ROSBridgePublisher {
   ros::Publisher m_reset_pub;
 
   // prohibit shallow copy or assignment
-  ROSROSBridgePublisher(const ROSROSBridgePublisher&) : ROSBridgePublisher(m_ad2pub_delay) {}
+  ROSROSBridgePublisher(const ROSROSBridgePublisher&) : BridgePublisher(m_ad2pub_delay) {}
   void operator=(const ROSROSBridgePublisher&) {}
 };
 

@@ -40,10 +40,10 @@ void ROSROSBridgeSubscriber::setupMetaChannels() {
   ros::NodeHandle nh;
 
   std::string advertisement_topic = m_meta_topic_prefix + "/advert";
-  m_advertiser_pub = nh.advertise<ros_bridge::RelayAdvertisement>(advertisement_topic, PUBLISHER_QUEUE_SIZE);
+  m_advertiser_pub = nh.advertise<ff_msgs::RelayAdvertisement>(advertisement_topic, PUBLISHER_QUEUE_SIZE);
 
   std::string content_topic = m_meta_topic_prefix + "/content";
-  m_relayer_pub = nh.advertise<ros_bridge::RelayContent>(content_topic, PUBLISHER_QUEUE_SIZE);
+  m_relayer_pub = nh.advertise<ff_msgs::RelayContent>(content_topic, PUBLISHER_QUEUE_SIZE);
 }
 
 void ROSROSBridgeSubscriber::setupReverseMetaChannels() {
@@ -53,7 +53,7 @@ void ROSROSBridgeSubscriber::setupReverseMetaChannels() {
   m_reset_sub = nh.subscribe(reset_topic, SUBSCRIBER_QUEUE_SIZE, &ROSROSBridgeSubscriber::handleResetMessage, this);
 }
 
-void ROSROSBridgeSubscriber::handleResetMessage(const ros_bridge::RelayReset::ConstPtr& msg) {
+void ROSROSBridgeSubscriber::handleResetMessage(const ff_msgs::RelayReset::ConstPtr& msg) {
   const std::string out_topic = msg->topic;
 
   const std::lock_guard<std::mutex> lock(m_mutex);
@@ -85,7 +85,7 @@ void ROSROSBridgeSubscriber::subscribeTopic(std::string const& in_topic, const R
 void ROSROSBridgeSubscriber::advertiseTopic(const RelayTopicInfo& info) {
   const AdvertisementInfo &ad_info = info.ad_info;
 
-  ros_bridge::RelayAdvertisement ad;
+  ff_msgs::RelayAdvertisement ad;
 
   ad.header.seq = ++m_n_advertised;
   ad.header.stamp = ros::Time::now();
@@ -108,7 +108,7 @@ void ROSROSBridgeSubscriber::relayMessage(const RelayTopicInfo& topic_info, Cont
     requested_resets.erase(iter);
   }
 
-  ros_bridge::RelayContent content;
+  ff_msgs::RelayContent content;
 
   content.header.seq = topic_info.relay_seqnum;
   content.header.stamp = ros::Time::now();
