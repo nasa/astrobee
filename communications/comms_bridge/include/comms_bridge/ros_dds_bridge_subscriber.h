@@ -28,11 +28,21 @@
 
 #include <comms_bridge/bridge_subscriber.h>
 
+// // SoraCore Includes
+// #include "knDds/DdsSupport.h"
+// #include "knDds/DdsEntitiesFactory.h"
+// #include "knDds/DdsEntitiesFactorySvc.h"
+
+// miro includes
+#include <miro/Configuration.h>
+#include <miro/Robot.h>
+#include <miro/Log.h>
+
 #include <string>
 
 class ROSDDSBridgeSubscriber : public BridgeSubscriber {
  public:
-  ROSDDSBridgeSubscriber();
+  explicit ROSDDSBridgeSubscriber(std::string agent_name);
   virtual ~ROSDDSBridgeSubscriber();
 
   // Called with the mutex held
@@ -48,6 +58,8 @@ class ROSDDSBridgeSubscriber : public BridgeSubscriber {
   // prohibit shallow copy or assignment
   ROSDDSBridgeSubscriber(const ROSDDSBridgeSubscriber&) {}
   void operator=(const ROSDDSBridgeSubscriber&) {}
+ private:
+  std::string agent_name_, participant_name_;
 };
 
 #endif  // COMMS_BRIDGE_ROS_DDS_BRIDGE_SUBSCRIBER_H_

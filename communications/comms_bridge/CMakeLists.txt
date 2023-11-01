@@ -31,9 +31,42 @@ find_package(catkin2 REQUIRED COMPONENTS
   image_transport
   std_msgs
   sensor_msgs
+  ff_util
   ff_msgs
   topic_tools
 )
+
+
+# System dependencies are found with CMake's conventions
+# find_package(Eigen3 REQUIRED)
+find_package(Boost 1.54.0 QUIET REQUIRED COMPONENTS filesystem system iostreams thread program_options timer)
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/../../cmake")
+
+if (USE_CTC)
+  set(SORACORE_ROOT_DIR ${ARM_CHROOT_DIR}/usr)
+else (USE_CTC)
+  set(SORACORE_ROOT_DIR /usr)
+endif (USE_CTC)
+
+set(MIRO_ROOT_DIR ${SORACORE_ROOT_DIR})
+
+SET(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+SET(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+
+# find Qt version according to OS
+find_program(LSB_RELEASE_EXEC lsb_release)
+execute_process(COMMAND "${LSB_RELEASE_EXEC}" --short --release OUTPUT_VARIABLE LSB_RELEASE_VERSION_SHORT OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+if (${LSB_RELEASE_VERSION_SHORT} VERSION_GREATER 18.04)
+  find_package(Qt5Xml REQUIRED)
+else ()
+  find_package(Qt4 4.6.0 REQUIRED QtXml)
+endif ()
+
+find_package(Miro REQUIRED)
+find_package(RtiDds REQUIRED)
+find_package(Soracore REQUIRED)
 
 catkin_package(
   LIBRARIES src
@@ -50,6 +83,12 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
+  ${RTIDDS_INCLUDE_DIR}
+  ${SORACORE_INCLUDE_DIRS}
+  ${MIRO_INCLUDE_DIR}
+  ${QT_INCLUDE_DIR}
+  ${QT_INCLUDE_DIR}/Qt
+  ${Boost_INCLUDE_DIRS}
 )
 
 
@@ -57,19 +96,21 @@ include_directories(
 add_library(comms_bridge_sub
   src/bridge_subscriber.cpp
   src/ros_dds_bridge_subscriber.cpp
+  src/bridge_subscriber_nodelet.cpp
 )
 add_dependencies(comms_bridge_sub ${catkin_EXPORTED_TARGETS})
 target_link_libraries(comms_bridge_sub
-  ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${CMAKE_DL_LIBS} )
+  rapidIo Qt5::Xml ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${CMAKE_DL_LIBS} )
 
 
 add_library(comms_bridge_pub
   src/bridge_publisher.cpp
   src/dds_ros_bridge_publisher.cpp
+  src/bridge_publisher_nodelet.cpp
 )
 add_dependencies(comms_bridge_pub ${catkin_EXPORTED_TARGETS} )
 target_link_libraries(comms_bridge_pub
-  ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${CMAKE_DL_LIBS} )
+  rapidIo Qt5::Xml ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${CMAKE_DL_LIBS} )
 
 
 #############
@@ -86,3 +127,8 @@ install(TARGETS ${PROJECT_NAME}_sub ${PROJECT_NAME}_pub
 install(FILES nodelet_plugins.xml
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
+
+# Mark launch files for installation
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  PATTERN ".svn" EXCLUDE)
