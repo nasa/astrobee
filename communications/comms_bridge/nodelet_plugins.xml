@@ -1,13 +1,13 @@
 <class_libraries>
-  <library path="lib/libpolymorph_relay_sub">
-    <class name="dock/DockNodelet" type="dock::DockNodelet"
+  <library path="lib/libcomms_bridge_sub">
+    <class name="comms_bridge/BridgeSubscriberNodelet" type="comms_bridge::BridgeSubscriberNodelet"
            base_class_type="nodelet::Nodelet">
-      <description>Nodelet for the polymorph relay subscriber</description>
+      <description>Nodelet for the comms bridge subscriber</description>
     </class>
   </library>
-  <library path="lib/libpolymorph_relay_pub">
-    <class name="pico_proxy/PicoProxyNodelet" type="pico_proxy::PicoProxyNodelet" base_class_type="nodelet::Nodelet">
-      <description>Nodelet for the polymorph relay publisher</description>
+  <library path="lib/libcomms_bridge_pub">
+    <class name="comms_bridge/BridgePublisherNodelet" type="comms_bridge::BridgePublisherNodelet" base_class_type="nodelet::Nodelet">
+      <description>Nodelet for the comms bridge publisher</description>
     </class>
   </library>
 </class_libraries>
