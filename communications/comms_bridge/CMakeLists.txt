@@ -22,6 +22,7 @@ project(comms_bridge)
 ## Compile as C++14, supported in ROS Kinetic and newer
 add_compile_options(-std=c++14)
 
+if (USE_DDS)
 ## Find catkin macros and libraries
 find_package(catkin2 REQUIRED COMPONENTS
   roscpp
@@ -132,3 +133,8 @@ install(FILES nodelet_plugins.xml
 install(DIRECTORY launch/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
   PATTERN ".svn" EXCLUDE)
+
+else (USE_DDS)
+  find_package(catkin REQUIRED COMPONENTS)
+  catkin_package()
+endif (USE_DDS)
