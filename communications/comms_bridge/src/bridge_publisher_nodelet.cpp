@@ -36,12 +36,6 @@
 
 namespace comms_bridge {
 
-// void usage(const char *progname)
-// {
-//   fprintf(stderr, "Usage: %s [-v<verbose>] [-a<anonymous node>] [-d <delay sec>] [-t meta_topic_prefix]\n",
-//   progname);
-// }
-
 class BridgePublisherNodelet : public ff_util::FreeFlyerNodelet {
  public:
   BridgePublisherNodelet() : ff_util::FreeFlyerNodelet("comms_bridge_pub") {}
@@ -50,59 +44,35 @@ class BridgePublisherNodelet : public ff_util::FreeFlyerNodelet {
 
  protected:
   virtual void Initialize(ros::NodeHandle* nh) {
-    // bool anonymous_node = false;
-    // unsigned int verbose = 0;
-    // std::string meta_topic_prefix = "/polymorph_relay";
-    // double ad2pub_delay = 3.0;
+    config_params_.AddFile("communications/comms_bridge.config");
 
-    // int c;
-    // while ((c = getopt(argc, argv, "avd:t:")) != -1) {
-    //   switch (c) {
-    //     case 'a':
-    //       anonymous_node = true;
-    //       break;
-    //     case 'v':
-    //       verbose++;
-    //       break;
-    //     case 'd':
-    //       ad2pub_delay = atof(optarg);
-    //       if (ad2pub_delay < 0 || std::isnan(ad2pub_delay)) {
-    //         fprintf(stderr, "Invalid advertise delay %s\n", optarg);
-    //         usage(argv[0]);
-    //         return 1;
-    //       }
-    //       break;
-    //     case 't':
-    //       meta_topic_prefix = optarg;
-    //       break;
-    //     case '?':
-    //     default:
-    //       usage(argv[0]);
-    //       return 1;
-    //       break;
-    //   }
-    // }
+    if (!config_params_.ReadFiles()) {
+      ROS_FATAL("BridgePublisherNodelet: Error reading config files.");
+      exit(EXIT_FAILURE);
+      return;
+    }
 
-    // if (argc-optind != 0) {
-    //   usage(argv[0]);
-    //   return 1;
-    // }
+    unsigned int  verbose;
+    if (!config_params_.GetUInt("verbose", &verbose)) {
+      ROS_FATAL("BridgePublisherNodelet: Could not read verbosity level.");
+      exit(EXIT_FAILURE);
+      return;
+    }
 
-    // ros::init(argc, argv, "polymorph_relay_pub", (anonymous_node ? ros::init_options::AnonymousName : 0));
-    // ros::NodeHandle nhp("~");
-    // //nhp.param("verbose", verbose, 0);
+    double ad2pub_delay = 3.0;
+    if (!config_params_.GetReal("ad2pub_delay", &ad2pub_delay)) {
+      ROS_FATAL("BridgePublisherNodelet: Could not read advertiser to publisher delay.");
+      exit(EXIT_FAILURE);
+      return;
+    }
 
-    // ROSROSBridgePublisher pub(meta_topic_prefix, ad2pub_delay);
+    DDSROSBridgePublisher pub(ad2pub_delay);
     // if (verbose > 0)
     //   pub.setVerbosity(verbose);
-
-    // printf("Waiting for messages\n");
-    // ros::spin();
-
-    // printf("Exiting\n");
-
-    // return 0;
   }
+
+ private:
+  config_reader::ConfigReader config_params_;
 };
 
 PLUGINLIB_EXPORT_CLASS(comms_bridge::BridgePublisherNodelet, nodelet::Nodelet)

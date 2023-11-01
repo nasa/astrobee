@@ -35,28 +35,30 @@ using ros::Publisher;
 using ros::Publisher;
 using topic_tools::ShapeShifter;
 
-BridgePublisher::BridgePublisher(double ad2pub_delay) : m_ad2pub_delay(ad2pub_delay) {
-  m_n_relayed = 0;
-  m_verbose = 0;
+BridgePublisher::BridgePublisher(double ad2pub_delay) : m_ad2pub_delay_(ad2pub_delay) {
+  m_n_relayed_ = 0;
+  m_verbose_ = 0;
 
-  worker_thread = std::unique_ptr<std::thread>(new std::thread(&BridgePublisher::drainThread, this));
+  worker_thread_.reset(new std::thread(&BridgePublisher::drainThread, this));
 }
 
-BridgePublisher::~BridgePublisher() {}
+BridgePublisher::~BridgePublisher() {
+  worker_thread_->join();
+}
 
-void BridgePublisher::setVerbosity(unsigned int verbosity) { m_verbose = verbosity; }
+void BridgePublisher::setVerbosity(unsigned int verbosity) { m_verbose_ = verbosity; }
 
 bool BridgePublisher::advertiseTopic(const std::string& output_topic, const AdvertisementInfo& ad_info) {
-  if (m_verbose)
+  if (m_verbose_)
     printf("Advertising for topic %s\n", output_topic.c_str());
 
-  std::map<std::string, RelayTopicInfo>::iterator iter = m_relay_topics.find(output_topic);
-  if (iter == m_relay_topics.end()) {
-    if (m_verbose)
+  std::map<std::string, RelayTopicInfo>::iterator iter = m_relay_topics_.find(output_topic);
+  if (iter == m_relay_topics_.end()) {
+    if (m_verbose_)
       printf("  topic is yet-unknown\n");
     RelayTopicInfo topic_info;
     topic_info.out_topic = output_topic;
-    iter = m_relay_topics.emplace(output_topic, topic_info).first;
+    iter = m_relay_topics_.emplace(output_topic, topic_info).first;
   }
 
   RelayTopicInfo &topic_info = iter->second;
@@ -86,11 +88,11 @@ bool BridgePublisher::advertiseTopic(const std::string& output_topic, const Adve
     topic_info.advertised = true;
 
     const timepoint_t now = std::chrono::steady_clock::now();
-    topic_info.delay_until = now + std::chrono::microseconds((unsigned)(m_ad2pub_delay * 1e6));
+    topic_info.delay_until = now + std::chrono::microseconds((unsigned)(m_ad2pub_delay_ * 1e6));
 
-    if (m_ad2pub_delay > 0) {
-      m_drain_queue.push(std::make_pair(topic_info.delay_until, output_topic));
-      m_drain_cv.notify_all();
+    if (m_ad2pub_delay_ > 0) {
+      m_drain_queue_.push(std::make_pair(topic_info.delay_until, output_topic));
+      m_drain_cv_.notify_all();
     } else {
       // no post-advertise delay
 
@@ -128,20 +130,20 @@ bool BridgePublisher::relayContent(RelayTopicInfo& topic_info, const ContentInfo
   }
 
   topic_info.relay_seqnum++;
-  m_n_relayed++;
+  m_n_relayed_++;
 
-  if (m_verbose)
+  if (m_verbose_)
     printf("Sent message on topic %s\n", topic_info.out_topic.c_str());
 
   return true;
 }
 
 bool BridgePublisher::relayMessage(RelayTopicInfo& topic_info, const ContentInfo& content_info) {
-  if (m_verbose)
+  if (m_verbose_)
     printf("Relaying content message for topic %s\n", topic_info.out_topic.c_str());
 
   if (!topic_info.advertised) {
-    if (m_verbose)
+    if (m_verbose_)
       printf("  topic is yet-unknown, enqueuing message for now\n");
 
     topic_info.waiting_msgs.emplace(content_info);
@@ -161,7 +163,7 @@ bool BridgePublisher::relayMessage(RelayTopicInfo& topic_info, const ContentInfo
     // we're still delaying after advertising
     // so just enqueue messages
 
-    if (m_verbose)
+    if (m_verbose_)
       printf("  topic is not %s, enqueuing message for now\n",
              (!topic_info.advertised ? "yet advertised" : "yet ready"));
 
@@ -171,7 +173,7 @@ bool BridgePublisher::relayMessage(RelayTopicInfo& topic_info, const ContentInfo
 
     topic_info.waiting_msgs.emplace(content_info);
 
-    if (m_verbose > 1)
+    if (m_verbose_ > 1)
       printf("  %zu messages now waiting\n", topic_info.waiting_msgs.size());
 
     return true;
@@ -185,29 +187,29 @@ bool BridgePublisher::relayMessage(RelayTopicInfo& topic_info, const ContentInfo
 }
 
 void BridgePublisher::drainThread() {
-  std::unique_lock<std::mutex> lk(m_mutex);
+  std::unique_lock<std::mutex> lk(m_mutex_);
 
-  if (m_verbose)
-    printf("Started drain thread\n");
+  if (m_verbose_)
+    ROS_INFO("Started drain thread\n");
 
   while (1) {
-    while (m_drain_queue.empty())
-      m_drain_cv.wait(lk);
+    while (m_drain_queue_.empty())
+      m_drain_cv_.wait(lk);
 
-    std::pair<timepoint_t, std::string> entry = m_drain_queue.top();
-    m_drain_queue.pop();
+    std::pair<timepoint_t, std::string> entry = m_drain_queue_.top();
+    m_drain_queue_.pop();
 
     lk.unlock();
 
     timepoint_t t = entry.first;
 
-    if (m_verbose > 1)
+    if (m_verbose_ > 1)
       printf(
         "draining %s in %0.3f seconds\n", entry.second.c_str(),
         std::chrono::duration<double, std::chrono::seconds::period>((t - std::chrono::steady_clock::now())).count());
     std::this_thread::sleep_until(t);
 
-    if (m_verbose > 1)
+    if (m_verbose_ > 1)
       printf("draining %s now\n", entry.second.c_str());
 
     lk.lock();
@@ -218,7 +220,7 @@ void BridgePublisher::drainThread() {
 
 // called with mutex held
 void BridgePublisher::drainWaitingQueue(RelayTopicInfo& topic_info) {
-  if (m_verbose && topic_info.waiting_msgs.size() > 0)
+  if (m_verbose_ && topic_info.waiting_msgs.size() > 0)
     printf("Draining queue of %zu waiting messages\n", topic_info.waiting_msgs.size());
   while (topic_info.waiting_msgs.size() > 0) {
     const ContentInfo old_msg = topic_info.waiting_msgs.front();
@@ -229,8 +231,8 @@ void BridgePublisher::drainWaitingQueue(RelayTopicInfo& topic_info) {
 
 // called with mutex held
 void BridgePublisher::drainWaitingQueue(std::string const& output_topic) {
-  std::map<std::string, RelayTopicInfo>::iterator iter = m_relay_topics.find(output_topic);
-  assert(iter != m_relay_topics.end());
+  std::map<std::string, RelayTopicInfo>::iterator iter = m_relay_topics_.find(output_topic);
+  assert(iter != m_relay_topics_.end());
 
   RelayTopicInfo &topic_info = iter->second;
 

@@ -122,17 +122,17 @@ class BridgePublisher {
   void drainWaitingQueue(RelayTopicInfo& topic_info);
   void drainWaitingQueue(std::string const& output_topic);
 
-  unsigned int m_verbose;
+  unsigned int m_verbose_;
 
-  double m_ad2pub_delay;  // seconds
+  double m_ad2pub_delay_;  // seconds
 
-  std::mutex m_mutex;  // serializes access to below data structures
-  std::unique_ptr<std::thread> worker_thread;
-  std::map<std::string, RelayTopicInfo> m_relay_topics;  // keyed by input topic
-  std::priority_queue<std::pair<timepoint_t, std::string>> m_drain_queue;
-  std::condition_variable m_drain_cv;
+  std::mutex m_mutex_;  // serializes access to below data structures
+  std::shared_ptr<std::thread> worker_thread_;
+  std::map<std::string, RelayTopicInfo> m_relay_topics_;  // keyed by input topic
+  std::priority_queue<std::pair<timepoint_t, std::string>> m_drain_queue_;
+  std::condition_variable m_drain_cv_;
   // stats:
-  unsigned int m_n_relayed;
+  unsigned int m_n_relayed_;
 };
 
 #endif  // COMMS_BRIDGE_BRIDGE_PUBLISHER_H_

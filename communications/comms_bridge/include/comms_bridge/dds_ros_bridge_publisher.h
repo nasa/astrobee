@@ -38,7 +38,7 @@ class DDSROSBridgePublisher : public BridgePublisher {
 
  protected:
   // prohibit shallow copy or assignment
-  DDSROSBridgePublisher(const DDSROSBridgePublisher&) : BridgePublisher(m_ad2pub_delay) {}
+  DDSROSBridgePublisher(const DDSROSBridgePublisher&) : BridgePublisher(m_ad2pub_delay_) {}
   void operator=(const DDSROSBridgePublisher&) {}
 };
 

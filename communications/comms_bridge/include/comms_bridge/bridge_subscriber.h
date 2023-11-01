@@ -117,13 +117,13 @@ class BridgeSubscriber {
   void handleRelayedMessage(const ros::MessageEvent<topic_tools::ShapeShifter const>& msg_event,
                             std::string const& topic, SubscriberPtr sub);
 
-  unsigned int m_verbose;
+  unsigned int m_verbose_;
 
-  std::mutex m_mutex;                                    // serializes access to below data structures
-  uint8_t* m_msgbuffer;                                  // data serialization scratch
-  std::map<std::string, RelayTopicInfo> m_relay_topics;  // keyed by input topic
+  std::mutex m_mutex_;                                    // serializes access to below data structures
+  uint8_t* m_msgbuffer_;                                  // data serialization scratch
+  std::map<std::string, RelayTopicInfo> m_relay_topics_;  // keyed by input topic
   // stats:
-  unsigned int m_n_relayed;
+  unsigned int m_n_relayed_;
 };
 
 #endif  // COMMS_BRIDGE_BRIDGE_SUBSCRIBER_H_
