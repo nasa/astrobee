@@ -36,11 +36,6 @@
 #include "comms_bridge/ros_dds_bridge_subscriber.h"
 
 namespace comms_bridge {
-// void usage(const char *progname)
-// {
-//   fprintf(stderr, "Usage: %s [-v<verbose>] [-a<anonymous node>] [-t meta_topic_prefix] <topic to subscribe to> <topic
-//   to republish on remote side> [<subscribe topic> <republish topic> ...]\n", progname);
-// }
 
 class BridgeSubscriberNodelet : public ff_util::FreeFlyerNodelet {
  public:
@@ -86,17 +81,20 @@ class BridgeSubscriberNodelet : public ff_util::FreeFlyerNodelet {
       }
     }
 
-    bool verbose;
-    if (!config_params_.GetBool("verbose", &verbose)) {
+    unsigned int  verbose;
+    if (!config_params_.GetUInt("verbose", &verbose)) {
       ROS_FATAL("BridgeSubscriberNodelet: Could not read verbosity level.");
       exit(EXIT_FAILURE);
       return;
     }
 
-    ROS_ERROR_STREAM("ROBOT NAME " << agent_name_);
     // Declare the ROS to DDS Subscriber class
     ROSDDSBridgeSubscriber sub(agent_name_);
-    std::string ns = "/" + std::tolower(agent_name_[0]) + agent_name_.substr(1) + "/";
+    if (verbose > 0)
+      sub.setVerbosity(verbose);
+
+    std::string ns = std::string("/") + agent_name_ + "/";
+    ns[1] = std::tolower(ns[1]);  // namespaces don't start with uppercase
 
     // Load shared topic groups
     config_reader::ConfigReader::Table links, link, relay_forward, relay_backward, relay_both, item_conf;
@@ -121,7 +119,7 @@ class BridgeSubscriberNodelet : public ff_util::FreeFlyerNodelet {
               NODELET_ERROR("BridgeSubscriberNodelet: agent topic name not specified!");
               return;
             }
-            assert(sub.addTopic(topic_name, ns + topic_name));
+            sub.addTopic(topic_name, ns + topic_name);
           }
         }
         if (link.GetTable("relay_both", &relay_both)) {
@@ -132,7 +130,7 @@ class BridgeSubscriberNodelet : public ff_util::FreeFlyerNodelet {
               NODELET_ERROR("BridgeSubscriberNodelet: agent topic name not specified!");
               return;
             }
-            assert(sub.addTopic(topic_name, ns + topic_name));
+            sub.addTopic(topic_name, ns + topic_name);
           }
         }
       } else if (link.GetStr("to", &config_agent) && config_agent == agent_name_) {
@@ -144,7 +142,7 @@ class BridgeSubscriberNodelet : public ff_util::FreeFlyerNodelet {
               NODELET_ERROR("BridgeSubscriberNodelet: agent topic name not specified!");
               return;
             }
-            assert(sub.addTopic(topic_name, ns + topic_name));
+            sub.addTopic(topic_name, ns + topic_name);
           }
         }
         if (link.GetTable("relay_both", &relay_both)) {
@@ -155,7 +153,7 @@ class BridgeSubscriberNodelet : public ff_util::FreeFlyerNodelet {
               NODELET_ERROR("BridgeSubscriberNodelet: agent topic name not specified!");
               return;
             }
-            assert(sub.addTopic(topic_name, ns + topic_name));
+            sub.addTopic(topic_name, ns + topic_name);
           }
         }
       }

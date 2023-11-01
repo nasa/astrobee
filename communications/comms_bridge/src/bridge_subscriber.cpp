@@ -50,20 +50,20 @@ void BridgeSubscriber::handleRelayedMessage(const ros::MessageEvent<ShapeShifter
     msg_event.getConnectionHeaderPtr();
 
   if (m_verbose) {
-    printf("got data on %s:\n", topic.c_str());
+    ROS_INFO("got data on %s:\n", topic.c_str());
     if (m_verbose > 1) {
-      printf("  datatype: \"%s\"\n", ptr->getDataType().c_str());
-      printf("  md5: \"%s\"\n", ptr->getMD5Sum().c_str());
+      ROS_INFO("  datatype: \"%s\"\n", ptr->getDataType().c_str());
+      ROS_INFO("  md5: \"%s\"\n", ptr->getMD5Sum().c_str());
     }
     if (m_verbose > 2)
-      printf("  def: \"%s\"\n", ptr->getMessageDefinition().c_str());
+      ROS_INFO("  def: \"%s\"\n", ptr->getMessageDefinition().c_str());
 
     if (m_verbose > 2) {
-      printf("  conn header:\n");
+      ROS_INFO("  conn header:\n");
       for (ros::M_string::const_iterator iter = connection_header->begin();
            iter != connection_header->end();
            iter++)
-        printf("    %s: %s\n", iter->first.c_str(), iter->second.c_str());
+        ROS_INFO("    %s: %s\n", iter->first.c_str(), iter->second.c_str());
     }
   }
 
@@ -79,7 +79,7 @@ void BridgeSubscriber::handleRelayedMessage(const ros::MessageEvent<ShapeShifter
 
   if (!topic_info.advertised) {
     if (m_verbose)
-      printf("  sending advertisement\n");
+      ROS_INFO("  sending advertisement\n");
 
     bool latching = false;
     if (connection_header) {
@@ -106,7 +106,7 @@ void BridgeSubscriber::handleRelayedMessage(const ros::MessageEvent<ShapeShifter
   stream.next(*ptr);  // serializes just the message contents
   ssize_t serialized_size = ROS_BRIDGE_MAX_MSG_SIZE - stream.getLength();
   if (m_verbose > 2)
-    printf("  serialized size = %zd\n", serialized_size);
+    ROS_INFO("  serialized size = %zd\n", serialized_size);
   if (serialized_size <= 0) {
     ROS_ERROR("Serialization buffer size deficient, discarding message");
     return;
@@ -144,7 +144,7 @@ SubscriberPtr BridgeSubscriber::rosSubscribe(std::string const& topic) {
   *ptr = nh.subscribe(opts);
 
   if (m_verbose)
-    printf("Subscribed to topic %s\n", topic.c_str());
+    ROS_INFO("Subscribed to topic %s\n", topic.c_str());
 
   return ptr;
 }
@@ -155,7 +155,7 @@ bool BridgeSubscriber::addTopic(std::string const& in_topic, std::string const& 
   // Enforce that all relays have a unique input topic
   if (m_relay_topics.find(in_topic) != m_relay_topics.end()) {
     if (m_verbose)
-      printf("Already subscribed to relay from topic %s\n", in_topic.c_str());
+      ROS_ERROR("Already subscribed to relay from topic %s\n", in_topic.c_str());
     return false;
   }
 
@@ -166,7 +166,7 @@ bool BridgeSubscriber::addTopic(std::string const& in_topic, std::string const& 
   while (iter != m_relay_topics.end()) {
     if (iter->second.out_topic == out_topic) {
       if (m_verbose)
-        printf("Already relaying to topic %s\n", out_topic.c_str());
+        ROS_ERROR("Already relaying to topic %s\n", out_topic.c_str());
       return false;
     }
     iter++;
