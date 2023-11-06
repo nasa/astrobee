@@ -20,8 +20,6 @@ import glob
 import os
 import subprocess
 
-import pandas as pd
-
 
 # Forward errors so we can recover failures
 # even when running commands through multiprocessing
@@ -68,6 +66,9 @@ def create_directory(directory=None):
 
 
 def load_dataframe(files):
+    # Importing the module only within this function
+    import pandas as pd
+
     dataframes = [pd.read_csv(file) for file in files]
     dataframe = pd.concat(dataframes)
     return dataframe
