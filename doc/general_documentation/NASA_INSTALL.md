@@ -34,7 +34,7 @@ your life greatly.
 Verify that you are in this situation with the command below should succeed
 (certificate will be added later; remove the Release.gpg file after being fetched).
 
-    wget -v --no-check-certificate http://astrobee.ndc.nasa.gov/software/dists/xenial/Release.gpg
+    wget -v --no-check-certificate https://astrobee.ndc.nasa.gov/software_new/dists/focal/Release.gpg
 
 Before running the scripts in `scripts/setup` below, set this variable:
 
@@ -155,7 +155,7 @@ instead:
 
     ./scripts/configure.sh -l -p $INSTALL_PATH -w $WORKSPACE_PATH
 
-*Note: If a workspace is specified but not an explicit install distectory,
+*Note: If a workspace is specified but not an explicit install directory,
 install location will be $WORKSPACE_PATH/install.*
 
 
@@ -183,7 +183,7 @@ For more information on running the simulator and moving the robot, please see t
 
 ## Cross-compile - Running the code on a real robot
 
-In order to do this, you will need to followe the cross-compile build
+In order to do this, you will need to follow the cross-compile build
 instructions.
 
 ### Cross-compile setup
