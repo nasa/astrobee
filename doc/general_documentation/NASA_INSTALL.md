@@ -202,11 +202,18 @@ Next, download the cross toolchain and install the chroot:
 
     mkdir -p $ARMHF_TOOLCHAIN
     cd $HOME/arm_cross
-    $ASTROBEE_WS/src/submodules/platform/fetch_toolchain.sh
-    $ASTROBEE_WS/src/submodules/platform/rootfs/make_chroot.sh xenial dev $ARMHF_CHROOT_DIR
 
-*Note: The last script shown above needs the packages `qemu-user-static` (not
-`qemu-arm-static`) and `multistrap` to be installed (can be installed through apt).*
+    DIST=$(. /etc/os-release && echo $UBUNTU_CODENAME)
+    if [ ${DIST} == "kinetic" ]; then
+        # Use pre-built toolchain for 16.04
+        $ASTROBEE_WS/src/submodules/platform/fetch_toolchain.sh
+    else
+        # Use packaged toolchain for 20.04
+        sudo apt install -y gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
+    fi
+    sudo apt install -y qemu-user-static multistrap
+
+    $ASTROBEE_WS/src/submodules/platform/rootfs/make_chroot.sh ${DIST} dev $ARMHF_CHROOT_DIR
 
 ### Cross-compile build
 
