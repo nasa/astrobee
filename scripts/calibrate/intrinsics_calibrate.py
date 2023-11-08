@@ -222,7 +222,7 @@ def calibrate_camera(
         return None
 
     return (
-        bag_dir + "/camchain-" + bag_name + ".yaml"
+        bag_dir + "/" + bag_name + "-camchain.yaml"
     )  # The file where kalibr writes its output
 
 
