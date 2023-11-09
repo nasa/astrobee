@@ -167,7 +167,7 @@
     </include>
 
     <!-- Default call initialize bias so config file is created if not already present -->
-    <node pkg="rosservice" type="rosservice" name="imu_calibration_default" args="call --wait /gnc/ekf/init_bias" />
+    <node pkg="rosservice" type="rosservice" name="imu_calibration_default" args="call --wait $(arg ns)/gnc/ekf/init_bias" />
   </group>
 
   <!-- Auto-insert honey at a canned location -->
