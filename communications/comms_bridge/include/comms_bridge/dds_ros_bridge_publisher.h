@@ -22,9 +22,9 @@
 /* This is a specialization of ROSBridgePublisher using a DDS conduit
 */
 
-#include <ff_msgs/RelayAdvertisement.h>
-#include <ff_msgs/RelayContent.h>
-#include <ff_msgs/RelayReset.h>
+#include <ff_msgs/GenericCommsAdvertisementInfo.h>
+#include <ff_msgs/GenericCommsContent.h>
+#include <ff_msgs/GenericCommsReset.h>
 
 #include <comms_bridge/bridge_publisher.h>
 
@@ -33,6 +33,7 @@
 
 class DDSROSBridgePublisher : public BridgePublisher {
  public:
+  // explicit DDSROSBridgePublisher();
   explicit DDSROSBridgePublisher(double ad2pub_delay = DEFAULT_DDSROSBRIDGE_PUB_ADVERTISE_DELAY);
   virtual ~DDSROSBridgePublisher();
 

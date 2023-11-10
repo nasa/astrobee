@@ -1,13 +1,8 @@
 <class_libraries>
-  <library path="lib/libcomms_bridge_sub">
-    <class name="comms_bridge/BridgeSubscriberNodelet" type="comms_bridge::BridgeSubscriberNodelet"
+  <library path="lib/libcomms_bridge">
+    <class name="comms_bridge/CommsBridgeNodelet" type="comms_bridge::CommsBridgeNodelet"
            base_class_type="nodelet::Nodelet">
-      <description>Nodelet for the comms bridge subscriber</description>
-    </class>
-  </library>
-  <library path="lib/libcomms_bridge_pub">
-    <class name="comms_bridge/BridgePublisherNodelet" type="comms_bridge::BridgePublisherNodelet" base_class_type="nodelet::Nodelet">
-      <description>Nodelet for the comms bridge publisher</description>
+      <description>Nodelet for the comms bridge</description>
     </class>
   </library>
 </class_libraries>

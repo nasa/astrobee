@@ -32,9 +32,11 @@ find_package(catkin2 REQUIRED COMPONENTS
   image_transport
   std_msgs
   sensor_msgs
+  config_reader
   ff_util
   ff_msgs
   topic_tools
+  dds_msgs
 )
 
 
@@ -70,10 +72,8 @@ find_package(RtiDds REQUIRED)
 find_package(Soracore REQUIRED)
 
 catkin_package(
-  LIBRARIES src
-  CATKIN_DEPENDS
-  message_runtime
-  std_msgs
+  LIBRARIES comms_bridge
+  CATKIN_DEPENDS message_runtime std_msgs nodelet config_reader ff_util ff_msgs dds_msgs
 )
 
 ###########
@@ -94,31 +94,31 @@ include_directories(
 
 
 # Declare C++ libraries
-add_library(comms_bridge_sub
+add_library(comms_bridge
   src/bridge_subscriber.cpp
-  src/ros_dds_bridge_subscriber.cpp
-  src/bridge_subscriber_nodelet.cpp
+  src/generic_ros_sub_dds_pub.cpp
+  src/comms_bridge_nodelet.cpp
 )
-add_dependencies(comms_bridge_sub ${catkin_EXPORTED_TARGETS})
-target_link_libraries(comms_bridge_sub
-  rapidIo Qt5::Xml ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${CMAKE_DL_LIBS} )
+target_compile_definitions(comms_bridge PUBLIC ${RTIDDS_DEFINE_FLAGS})
+add_dependencies(comms_bridge ${catkin_EXPORTED_TARGETS})
+target_link_libraries(comms_bridge rapidIo Qt5::Xml ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 
-add_library(comms_bridge_pub
-  src/bridge_publisher.cpp
-  src/dds_ros_bridge_publisher.cpp
-  src/bridge_publisher_nodelet.cpp
-)
-add_dependencies(comms_bridge_pub ${catkin_EXPORTED_TARGETS} )
-target_link_libraries(comms_bridge_pub
-  rapidIo Qt5::Xml ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${CMAKE_DL_LIBS} )
+#add_library(comms_bridge_pub
+#  src/bridge_publisher.cpp
+#  src/dds_ros_bridge_publisher.cpp
+#  src/bridge_publisher_nodelet.cpp
+#)
+#add_dependencies(comms_bridge_pub ${catkin_EXPORTED_TARGETS} )
+#target_link_libraries(comms_bridge_pub
+#  rapidIo Qt5::Xml ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${CMAKE_DL_LIBS} )
 
 
 #############
 ## Install ##
 #############
 # Mark libraries for installation
-install(TARGETS ${PROJECT_NAME}_sub ${PROJECT_NAME}_pub
+install(TARGETS ${PROJECT_NAME}
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
