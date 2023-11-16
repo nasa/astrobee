@@ -34,8 +34,8 @@
 #include <string>
 #include <vector>
 
-#include "comms_bridge/dds_ros_bridge_publisher.h"
-#include "comms_bridge/generic_ros_sub_dds_pub.h"
+#include "comms_bridge/generic_rapid_msg_ros_pub.h"
+#include "comms_bridge/generic_ros_sub_rapid_pub.h"
 
 // SoraCore
 #include "knDds/DdsSupport.h"
@@ -182,17 +182,26 @@ class CommsBridgeNodelet : public ff_util::FreeFlyerNodelet {
     dds_entities_factory_.reset(new kn::DdsEntitiesFactorySvc());
     dds_entities_factory_->init(dds_params);
 
-    ros_subs_.InitializeDDS(agent_name_);
+    ros_sub_.InitializeDDS(agent_name_);
+
+    // TODO(Katie): Add more publisher stuff here
   }
 
   bool ReadParams() {
+    double ad2pub_delay = 0;
+    if (!config_params_.GetReal("ad2pub_delay", &ad2pub_delay) ||
+        ad2pub_delay <= 0) {
+      NODELET_ERROR("Comms Bridge Nodelet: Could not read/or invalid ad2pub_delay. Setting to 3.");
+      ad2pub_delay = 3;
+    }
+    ros_pub_ = std::make_shared<ff::GenericRapidMsgRosPub>(ad2pub_delay);
+
     unsigned int verbose = 2;
     if (!config_params_.GetUInt("verbose", &verbose)) {
       NODELET_ERROR("Comms Bridge Nodelet: Could not read verbosity level. Setting to 2 (info?).");
     }
-    ros_subs_.setVerbosity(verbose);
-    // TODO(Katie): Fix this when you work on the publisher
-    // pubs.setVerbosity(verbose);
+    ros_sub_.setVerbosity(verbose);
+    ros_pub_->setVerbosity(verbose);
 
     std::string ns = std::string("/") + agent_name_ + "/";
     ns[1] = std::tolower(ns[1]);  // namespaces don't start with upper case
@@ -255,17 +264,16 @@ class CommsBridgeNodelet : public ff_util::FreeFlyerNodelet {
            NODELET_ERROR("Comms Bridge Nodelet: Agent topic name not specified!");
             continue;
         }
-        ros_subs_.addTopic(topic_name, (ns + topic_name));
+        ros_sub_.addTopic(topic_name, (ns + topic_name));
       }
     }
   }
 
  private:
   config_reader::ConfigReader config_params_;
-  GenericROSSubDDSPub ros_subs_;
-  // TODO(Katie): Fix this when you work on the publisher
-  // DDSROSBridgePublisher ros_pubs_;
+  ff::GenericROSSubRapidPub ros_sub_;
   std::shared_ptr<kn::DdsEntitiesFactorySvc> dds_entities_factory_;
+  std::shared_ptr<ff::GenericRapidMsgRosPub> ros_pub_;
   std::string agent_name_, participant_name_;
   std::vector<std::string> rapid_connections_;
 };

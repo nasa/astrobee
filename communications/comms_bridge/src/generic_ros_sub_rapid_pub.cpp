@@ -16,22 +16,24 @@
  * under the License.
  */
 
-#include "comms_bridge/generic_ros_sub_dds_pub.h"
+#include "comms_bridge/generic_ros_sub_rapid_pub.h"
 
 #include <string>
 
-GenericROSSubDDSPub::GenericROSSubDDSPub() :
+namespace ff {
+
+GenericROSSubRapidPub::GenericROSSubRapidPub() :
     dds_initialized_(false), advertisement_info_seq_(0) {}
 
-GenericROSSubDDSPub::~GenericROSSubDDSPub() {}
+GenericROSSubRapidPub::~GenericROSSubRapidPub() {}
 
-void GenericROSSubDDSPub::InitializeDDS(std::string agent_name) {
+void GenericROSSubRapidPub::InitializeDDS(std::string agent_name) {
   advertisement_info_supplier_.reset(
-      new GenericROSSubDDSPub::AdvertisementInfoSupplier(
+      new GenericROSSubRapidPub::AdvertisementInfoSupplier(
           rapid::ext::astrobee::GENERIC_COMMS_ADVERTISEMENT_INFO_TOPIC + agent_name,
           "", "AstrobeeGenericCommsAdvertisementInfoProfile", ""));
 
-  content_supplier_.reset(new GenericROSSubDDSPub::ContentSupplier(
+  content_supplier_.reset(new GenericROSSubRapidPub::ContentSupplier(
                 rapid::ext::astrobee::GENERIC_COMMS_CONTENT_TOPIC + agent_name,
                 "", "AstrobeeGenericCommsContentProfile", ""));
 
@@ -42,13 +44,13 @@ void GenericROSSubDDSPub::InitializeDDS(std::string agent_name) {
 }
 
 // Called with the mutex held
-void GenericROSSubDDSPub::subscribeTopic(std::string const& in_topic, const RelayTopicInfo& info) {
+void GenericROSSubRapidPub::subscribeTopic(std::string const& in_topic, const RelayTopicInfo& info) {
   // this is just the base subscriber letting us know it's adding a topic
   // nothing more we need to do
 }
 
 // Called with the mutex held
-void GenericROSSubDDSPub::advertiseTopic(const RelayTopicInfo& relay_info) {
+void GenericROSSubRapidPub::advertiseTopic(const RelayTopicInfo& relay_info) {
   const AdvertisementInfo &info = relay_info.ad_info;
   rapid::ext::astrobee::GenericCommsAdvertisementInfo &msg =
                                         advertisement_info_supplier_->event();
@@ -85,11 +87,42 @@ void GenericROSSubDDSPub::advertiseTopic(const RelayTopicInfo& relay_info) {
 }
 
 // Called with the mutex held
-void GenericROSSubDDSPub::relayMessage(const RelayTopicInfo& topic_info, ContentInfo const& content_info) {
-  // FIXME: DDS stuff here
+void GenericROSSubRapidPub::relayMessage(const RelayTopicInfo& topic_info, ContentInfo const& content_info) {
+  rapid::ext::astrobee::GenericCommsContent &msg = content_supplier_->event();
+
+  unsigned int size;
+  std::string out_topic = topic_info.out_topic;
+
+  msg.hdr.timeStamp = comms_util::RosTime2RapidTime(ros::Time::now());
+  msg.hdr.serial = topic_info.relay_seqnum;
+
+  // Currently the output topic can only be 128 characters long
+  SizeCheck(size, out_topic.size(), 128, "Out topic", out_topic);
+  std::strncpy(msg.outputTopic, out_topic.data(), size);
+  msg.outputTopic[size] = '\0';
+
+  // Currently the md5 sum can only be 32 characters long
+  SizeCheck(size, content_info.type_md5_sum.size(), 32, "MD5 sum", out_topic);
+  std::strncpy(msg.md5Sum, content_info.type_md5_sum.data(), size);
+  msg.md5Sum[size] = '\0';
+
+  // Currently the content can only be 128K bytes long
+  SizeCheck(size, content_info.data_size, 131072, "Data", out_topic);
+  msg.data.ensure_length(size, (size + 1));
+  unsigned char *buf = msg.data.get_contiguous_buffer();
+  if (buf == NULL) {
+    ROS_ERROR("DDS: RTI didn't give a contiguous buffer for the content data!");
+    return;
+  }
+
+  std::memset(buf, 0, (size + 1));
+  std::memmove(buf, content_info.data, size);
+
+  // Send message
+  content_supplier_->sendEvent();
 }
 
-void GenericROSSubDDSPub::SizeCheck(unsigned int &size,
+void GenericROSSubRapidPub::SizeCheck(unsigned int &size,
                                     const int size_in,
                                     const int max_size,
                                     std::string const& data_name,
@@ -102,3 +135,5 @@ void GenericROSSubDDSPub::SizeCheck(unsigned int &size,
     size = (max_size - 1);
   }
 }
+
+}  // end namespace ff

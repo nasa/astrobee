@@ -16,17 +16,31 @@
  * under the License.
  */
 
-#include "comms_bridge/dds_ros_bridge_publisher.h"
+#include "comms_bridge/generic_rapid_sub.h"
 
-DDSROSBridgePublisher::DDSROSBridgePublisher(double ad2pub_delay) : BridgePublisher(ad2pub_delay) {}
+#include <string>
 
-DDSROSBridgePublisher::~DDSROSBridgePublisher() {}
+namespace ff {
 
-// When the peered subscriber transmits advertisement information, call:
-// advertiseTopic(const std::string &output_topic, const AdvertisementInfo &ad_info)
-// while holding m_mutex
-// to setup the output ROS advertisement
+GenericRapidSub::GenericRapidSub(const std::string& entity_name, const std::string& subscribe_topic,
+                                 GenericRapidMsgRosPub* rapid_msg_ros_pub)
+    : dds_event_loop_(entity_name), subscribe_topic_(subscribe_topic), ros_pub_(rapid_msg_ros_pub) {}
 
-// When the peered subscriber transmits a serialized message, call:
-// relayMessage(RelayTopicInfo &topic_info, const ContentInfo &content_info)
-// to publish the output ROS message
+GenericRapidSub::~GenericRapidSub() {
+  alive_ = false;  // Notify thread to exit
+  thread_.join();
+}
+
+void GenericRapidSub::StartThread() {
+  // start joinable thread
+  thread_ = std::thread(&GenericRapidSub::ThreadExec, this);
+}
+
+void GenericRapidSub::ThreadExec() {
+  while (alive_) {
+    // process events at 10hz
+    dds_event_loop_.processEvents(kn::milliseconds(100));
+  }
+}
+
+}  // end namespace ff

@@ -18,6 +18,8 @@
 
 #include <comms_bridge/util.h>
 
+#include <string>
+
 ros::Time comms_util::RapidTime2RosTime(const int64_t dds_time) {
   ros::Time t;
 
@@ -40,12 +42,11 @@ void comms_util::RosHeader2Rapid(std_msgs::Header const& ros_hdr,
     rapid_hdr->serial = serial;
   }
   rapid_hdr->statusCode = status;
-  rapid_hdr->timeStamp = util::RosTime2RapidTime(ros_hdr.stamp);
+  rapid_hdr->timeStamp = comms_util::RosTime2RapidTime(ros_hdr.stamp);
 }
 
-void comms_util::RapidHeader2Ros(rapid::Header const& rapid_hdr,
-                           std_msgs::Header *ros_hdr,
-                           std::string const& frame_id) {
+void comms_util::RapidHeader2Ros(rapid::Header const& rapid_hdr, std_msgs::Header* ros_hdr,
+                                 std::string const& frame_id) {
   ros_hdr->frame_id = frame_id;
-  ros_hdr->stamp = util::RapidTime2RosTime(rapid_hdr.timeStamp);
+  ros_hdr->stamp = comms_util::RapidTime2RosTime(rapid_hdr.timeStamp);
 }

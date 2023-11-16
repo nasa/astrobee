@@ -16,8 +16,8 @@
  * under the License.
  */
 
-#ifndef COMMS_BRIDGE_GENERIC_ROS_SUB_DDS_PUB_H_
-#define COMMS_BRIDGE_GENERIC_ROS_SUB_DDS_PUB_H_
+#ifndef COMMS_BRIDGE_GENERIC_ROS_SUB_RAPID_PUB_H_
+#define COMMS_BRIDGE_GENERIC_ROS_SUB_RAPID_PUB_H_
 
 /* This is a specialization of ROSBridgeSubscriber using a DDS conduit
 */
@@ -39,10 +39,12 @@
 #include "dds_msgs/GenericCommsAdvertisementInfoSupport.h"
 #include "dds_msgs/GenericCommsContentSupport.h"
 
-class GenericROSSubDDSPub : public BridgeSubscriber {
+namespace ff {
+
+class GenericROSSubRapidPub : public BridgeSubscriber {
  public:
-  GenericROSSubDDSPub();
-  ~GenericROSSubDDSPub();
+  GenericROSSubRapidPub();
+  ~GenericROSSubRapidPub();
 
   void InitializeDDS(std::string agent_name);
   void SizeCheck(unsigned int &size,
@@ -78,4 +80,6 @@ class GenericROSSubDDSPub : public BridgeSubscriber {
   unsigned int advertisement_info_seq_;
 };
 
-#endif  // COMMS_BRIDGE_GENERIC_ROS_SUB_DDS_PUB_H_
+}  // end namespace ff
+
+#endif  // COMMS_BRIDGE_GENERIC_ROS_SUB_RAPID_PUB_H_
