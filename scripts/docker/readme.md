@@ -151,7 +151,7 @@ All pre-built remote images are available on [GitHub here](https://github.com/na
 
 By default, the build script will automatically detect your host's Ubuntu OS version and configure the Docker image to use the same version using `Dockerfile` `ARGS`.
 
-However, there is no requirement for the host OS and the Docker image OS to match.  You can override the default and select a specific Docker image Ubuntu version by specifying `--xenial`, `--bionic`, or `--focal` for Ubuntu 16.04, 18.04, or 20.04 docker images, respectively.
+However, there is no requirement for the host OS and the Docker image OS to match.  You can override the default and select a specific Docker image Ubuntu version by specifying `--xenial` or `--focal` for Ubuntu 16.04 or 20.04 docker images, respectively.
 
 For more information about all the build arguments:
 
@@ -161,14 +161,13 @@ For more information about all the build arguments:
 
 The `build.sh` script normally manages these `Dockerfile` `ARGS` but you can set them yourself if you run `docker build` manually:
 
-- `UBUNTU_VERSION` - The version of Ubuntu to use. Valid values are "16.04", "18.04", and "20.04".
+- `UBUNTU_VERSION` - The version of Ubuntu to use. Valid values are "16.04" and "20.04".
 - `ROS_VERSION` - The version of ROS to use. Valid values are "kinetic", "melodic", and "noetic".
 - `PYTHON` - The version of Python to use. Valid values are "" (an empty string representing Python 2) and "3".
 
 Constraints:
 - If `UBUNTU_VERSION` is `"16.04"`, `ROS_VERSION` and `PYTHON` must be `"kinetic"` and `""` respectively.
-- If `UBUNTU_VERSION` is `"18.04"`, `ROS_VERSION` and `PYTHON` must be `"melodic"` and `""` respectively.
-- If `UBUNTU_VERSION` is `"20.04"`, `ROS_VERSION` and `PYTHON` must be `"neotic"` and `"3"` respectively.
+- If `UBUNTU_VERSION` is `"20.04"`, `ROS_VERSION` and `PYTHON` must be `"noetic"` and `"3"` respectively.
 
 The Docker files also accept args to use local or container registry images.
 
@@ -229,8 +228,8 @@ argument parsing more predictable.)
 
 As with `build.sh`, by default, the docker image OS version will be
 configured to match your host's OS version, but you can override that
-by specifying the `--xenial`, `--bionic`, or `--focal` option for
-Ubuntu 16.04, 18.04, or 20.04 docker images, respectively.
+by specifying the `--xenial` or `--focal` option for
+Ubuntu 16.04 or 20.04 docker images, respectively.
 
 Use `--remote` to fetch and run a pre-built Astrobee docker
 image. (Omit `--remote` to run using a docker image built locally by
@@ -266,7 +265,7 @@ The package argument is optional. The default is to build/test all
 packages.
 
 If debugging a CI failure that is specific to a particular OS version,
-remember to pass `run.sh` the `--xenial`, `--bionic`, or `--focal`
+remember to pass `run.sh` the `--xenial` or `--focal`
 option to select the right OS version to replicate the failure.
 
 Note: integration tests that use Gazebo simulation will be silently
