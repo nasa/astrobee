@@ -70,12 +70,12 @@ void CameraModel::SetTransform(const Eigen::Affine3d & cam_t_global) {
 
 double CameraModel::GetFovX(void) const {
   // This is an approximation since it doesn't take in account lens distortion
-  return atan(1.0 / (params_.GetFocalVector()[0] * params_.GetDistortedHalfSize()[0])) * 2;
+  return atan(params_.GetDistortedHalfSize()[0] / params_.GetFocalVector()[0] ) * 2;
 }
 
 double CameraModel::GetFovY(void) const {
   // This is an approximation since it doesn't take in account lens distortion
-  return atan(1.0 / (params_.GetFocalVector()[1] * params_.GetDistortedHalfSize()[1])) * 2;
+  return atan(params_.GetDistortedHalfSize()[1] / params_.GetFocalVector()[1] ) * 2;
 }
 
 const camera::CameraParameters& CameraModel::GetParameters() const {
