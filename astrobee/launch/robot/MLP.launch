@@ -297,18 +297,8 @@
     <arg name="default" value="$(arg dds)" />
   </include>
   <include file="$(find ff_util)/launch/ff_nodelet.launch">
-    <arg name="class" value="comms_bridge/BridgeSubscriberNodelet" />
-    <arg name="name" value="comms_bridge_sub" />
-    <arg name="manager" value="mlp_multibridge" />
-    <arg name="spurn" value="$(arg spurn)" />
-    <arg name="nodes" value="$(arg nodes)" />
-    <arg name="extra" value="$(arg extra)" />
-    <arg name="debug" value="$(arg debug)" />
-    <arg name="default" value="$(arg dds)" />
-  </include>
-  <include file="$(find ff_util)/launch/ff_nodelet.launch">
-    <arg name="class" value="comms_bridge/BridgePublisherNodelet" />
-    <arg name="name" value="comms_bridge_pub" />
+    <arg name="class" value="comms_bridge/CommsBridgeNodelet" />
+    <arg name="name" value="comms_bridge" />
     <arg name="manager" value="mlp_multibridge" />
     <arg name="spurn" value="$(arg spurn)" />
     <arg name="nodes" value="$(arg nodes)" />

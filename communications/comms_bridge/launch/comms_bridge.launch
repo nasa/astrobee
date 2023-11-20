@@ -19,14 +19,9 @@
   <arg name="name" default="comms_bridge" />
   <arg name="manager" default="" />
   <include file="$(find ff_util)/launch/ff_nodelet.launch">
-    <arg name="name" value="$(arg name)_sub"/>
+    <arg name="name" value="$(arg name)"/>
     <arg name="manager" value="$(arg manager)" />
-    <arg name="class" value="comms_bridge/BridgeSubscriberNodelet" />
-  </include>
-  <include file="$(find ff_util)/launch/ff_nodelet.launch">
-    <arg name="name" value="$(arg name)_pub"/>
-    <arg name="manager" value="$(arg manager)" />
-    <arg name="class" value="comms_bridge/BridgePublisherNodelet" />
+    <arg name="class" value="comms_bridge/CommsBridgeNodelet" />
   </include>
 </launch>
 
