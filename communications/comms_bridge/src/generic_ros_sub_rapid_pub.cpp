@@ -57,6 +57,8 @@ void GenericROSSubRapidPub::advertiseTopic(const RelayTopicInfo& relay_info) {
   unsigned int size;
   std::string out_topic = relay_info.out_topic;
 
+  ROS_INFO("Received ros advertise topic for topic %s\n", out_topic.c_str());
+
   msg.hdr.timeStamp = comms_util::RosTime2RapidTime(ros::Time::now());
   msg.hdr.serial = ++advertisement_info_seq_;
 
@@ -92,6 +94,8 @@ void GenericROSSubRapidPub::relayMessage(const RelayTopicInfo& topic_info, Conte
 
   unsigned int size;
   std::string out_topic = topic_info.out_topic;
+
+  ROS_INFO("Received ros content message for topic %s\n", out_topic);
 
   msg.hdr.timeStamp = comms_util::RosTime2RapidTime(ros::Time::now());
   msg.hdr.serial = topic_info.relay_seqnum;
