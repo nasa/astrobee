@@ -35,7 +35,10 @@
 #include <vector>
 
 #include "comms_bridge/generic_rapid_msg_ros_pub.h"
+#include "comms_bridge/generic_rapid_sub.h"
 #include "comms_bridge/generic_ros_sub_rapid_pub.h"
+
+#include "dds_msgs/AstrobeeConstants.h"
 
 // SoraCore
 #include "knDds/DdsSupport.h"
@@ -182,9 +185,31 @@ class CommsBridgeNodelet : public ff_util::FreeFlyerNodelet {
     dds_entities_factory_.reset(new kn::DdsEntitiesFactorySvc());
     dds_entities_factory_->init(dds_params);
 
-    ros_sub_.InitializeDDS(agent_name_);
+    InitializeDDS();
+  }
 
-    // TODO(Katie): Add more publisher stuff here
+  void InitializeDDS() {
+    std::string connection;
+    ff::AdvertisementInfoRapidSubPtr advertisement_info_sub;
+    ff::ContentRapidSubPtr content_sub;
+    ros_sub_.InitializeDDS();
+    for (size_t i = 0; i < rapid_connections_.size(); i++) {
+      // Lower case the external agent name to use it like a namespace
+      connection = rapid_connections_[i];
+      connection[0] = tolower(connection[0]);
+      advertisement_info_sub =
+        std::make_shared<ff::GenericRapidSub<rapid::ext::astrobee::GenericCommsAdvertisementInfo>>(
+          "AstrobeeGenericCommsAdvertisementInfoProfile", rapid::ext::astrobee::GENERIC_COMMS_ADVERTISEMENT_INFO_TOPIC,
+          connection, ros_pub_.get());
+      advertisement_info_rapid_subs_.push_back(advertisement_info_sub);
+
+      content_sub = std::make_shared<ff::GenericRapidSub<rapid::ext::astrobee::GenericCommsContent>>(
+          "AstrobeeGenericCommsContentProfile",
+          rapid::ext::astrobee::GENERIC_COMMS_CONTENT_TOPIC,
+          connection,
+          ros_pub_.get());
+      content_rapid_subs_.push_back(content_sub);
+    }
   }
 
   bool ReadParams() {
@@ -241,7 +266,7 @@ class CommsBridgeNodelet : public ff_util::FreeFlyerNodelet {
 
     // This should be very quick since we shouldn't have more than 2 connections
     bool found = false;
-    for (int i = 0; i < rapid_connections_.size() && !found; i++) {
+    for (size_t i = 0; i < rapid_connections_.size() && !found; i++) {
       if (connection == rapid_connections_[i]) {
         found = true;
       }
@@ -258,7 +283,7 @@ class CommsBridgeNodelet : public ff_util::FreeFlyerNodelet {
     config_reader::ConfigReader::Table relay_table, relay_item;
     std::string topic_name;
     if (link_table.GetTable(table_name.c_str(), &relay_table)) {
-      for (int i = 1; i <= relay_table.GetSize(); i++) {
+      for (size_t i = 1; i <= relay_table.GetSize(); i++) {
         relay_table.GetTable(i, &relay_item);
         if (!relay_item.GetStr("name", &topic_name)) {
            NODELET_ERROR("Comms Bridge Nodelet: Agent topic name not specified!");
@@ -272,6 +297,8 @@ class CommsBridgeNodelet : public ff_util::FreeFlyerNodelet {
  private:
   config_reader::ConfigReader config_params_;
   ff::GenericROSSubRapidPub ros_sub_;
+  std::vector<ff::ContentRapidSubPtr> content_rapid_subs_;
+  std::vector<ff::AdvertisementInfoRapidSubPtr> advertisement_info_rapid_subs_;
   std::shared_ptr<kn::DdsEntitiesFactorySvc> dds_entities_factory_;
   std::shared_ptr<ff::GenericRapidMsgRosPub> ros_pub_;
   std::string agent_name_, participant_name_;

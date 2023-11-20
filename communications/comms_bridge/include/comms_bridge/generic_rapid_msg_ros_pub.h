@@ -38,8 +38,8 @@ class GenericRapidMsgRosPub : public BridgePublisher {
   explicit GenericRapidMsgRosPub(double ad2pub_delay = DEFAULT_ADVERTISE_TO_PUB_DELAY);
   virtual ~GenericRapidMsgRosPub();
 
-  void ConvertAdvertisementInfo(rapid::ext::astrobee::GenericCommsAdvertisementInfo const* data);
-  void ConvertContent(rapid::ext::astrobee::GenericCommsContent const* data);
+  void ConvertData(rapid::ext::astrobee::GenericCommsAdvertisementInfo const* data);
+  void ConvertData(rapid::ext::astrobee::GenericCommsContent const* data);
 };
 
 }  // end namespace ff

@@ -46,7 +46,8 @@ class GenericROSSubRapidPub : public BridgeSubscriber {
   GenericROSSubRapidPub();
   ~GenericROSSubRapidPub();
 
-  void InitializeDDS(std::string agent_name);
+  void InitializeDDS();
+
   void SizeCheck(unsigned int &size,
                  const int size_in,
                  const int max_size,

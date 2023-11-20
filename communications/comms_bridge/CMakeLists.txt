@@ -92,18 +92,13 @@ include_directories(
   ${Boost_INCLUDE_DIRS}
 )
 
+file(GLOB cc_files
+     "src/*.cpp"
+)
 
 # Declare C++ libraries
 add_library(comms_bridge
-  src/bridge_publisher.cpp
-  src/bridge_subscriber.cpp
-  src/generic_rapid_msg_ros_pub.cpp
-  src/generic_ros_sub_rapid_pub.cpp
-  src/comms_bridge_nodelet.cpp
-  src/generic_rapid_sub.cpp
-  src/rapid_advertisement_info.cpp
-  #src/rapid_content.cpp
-  src/util.cpp
+  ${cc_files}
 )
 target_compile_definitions(comms_bridge PUBLIC ${RTIDDS_DEFINE_FLAGS})
 add_dependencies(comms_bridge ${catkin_EXPORTED_TARGETS})

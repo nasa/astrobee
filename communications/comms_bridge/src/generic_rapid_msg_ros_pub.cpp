@@ -29,7 +29,7 @@ GenericRapidMsgRosPub::GenericRapidMsgRosPub(double ad2pub_delay) :
 
 GenericRapidMsgRosPub::~GenericRapidMsgRosPub() {}
 
-void GenericRapidMsgRosPub::ConvertAdvertisementInfo(
+void GenericRapidMsgRosPub::ConvertData(
             rapid::ext::astrobee::GenericCommsAdvertisementInfo const* data) {
   const std::lock_guard<std::mutex> lock(m_mutex_);
 
@@ -50,7 +50,7 @@ void GenericRapidMsgRosPub::ConvertAdvertisementInfo(
   }
 }
 
-void GenericRapidMsgRosPub::ConvertContent(
+void GenericRapidMsgRosPub::ConvertData(
                       rapid::ext::astrobee::GenericCommsContent const* data) {
   const std::lock_guard<std::mutex> lock(m_mutex_);
 

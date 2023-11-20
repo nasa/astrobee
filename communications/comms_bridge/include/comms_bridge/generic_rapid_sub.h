@@ -32,43 +32,75 @@
 
 #include "knShare/Time.h"
 
+#include "dds_msgs/GenericCommsAdvertisementInfoSupport.h"
+#include "dds_msgs/GenericCommsContentSupport.h"
+
 namespace ff {
 
-/**
- * @brief base class for rapid subscriber to ros publisher
- * @details base class for rapid subscriber to ros publisher.
- *          A kn::DdsEventLoop is run within its own thread of execution.
- *          Child classes must connect requeseted messege and callback
- *          to m_ddsEventLoop and call startThread()
- */
+template<typename T>
 class GenericRapidSub {
- protected:
+ public:
   GenericRapidSub(const std::string& entity_name,
                   const std::string& subscribe_topic,
-                  GenericRapidMsgRosPub* rapid_msg_ros_pub);
-  ~GenericRapidSub();
+                  const std::string& subscriber_partition,
+                  GenericRapidMsgRosPub* rapid_msg_ros_pub)
+      : dds_event_loop_(entity_name),
+        subscribe_topic_(subscribe_topic),
+        subscriber_partition_(subscriber_partition),
+        ros_pub_(rapid_msg_ros_pub) {
+    // connect to ddsEventLoop
+    try {
+      dds_event_loop_.connect<T>(this,
+                                 subscribe_topic,       // topic
+                                 subscriber_partition,  // name
+                                 entity_name,           // profile
+                                 "");                   // library
+    } catch (std::exception& e) {
+      ROS_ERROR_STREAM("Rapid exception: " << e.what());
+      throw;
+    } catch (...) {
+      ROS_ERROR("Rapid exception unknown");
+      throw;
+    }
 
-  /**
-   * Will start thread execution by calling threadExec()
-   */
-  virtual void StartThread();
+    // start joinable thread
+    thread_ = std::thread(&GenericRapidSub::ThreadExec, this);
+  }
 
+  ~GenericRapidSub() {
+    alive_ = false;  // Notify thread to exit
+    thread_.join();
+  }
+
+  void operator() (T const* data) {
+    ros_pub_->ConvertData(data);
+  }
+
+ private:
   GenericRapidMsgRosPub* ros_pub_;
   std::string subscribe_topic_;
+  std::string subscriber_partition_;
 
   std::atomic<bool> alive_;
   std::thread thread_;
   kn::DdsEventLoop dds_event_loop_;
 
- private:
   /**
   * Function to execute within seperate thread
   *   process DdsEventLoop at 10Hz
   */
-  virtual void ThreadExec();
+  void ThreadExec() {
+    while (alive_) {
+      // process events at 10hz
+      dds_event_loop_.processEvents(kn::milliseconds(100));
+    }
+  }
 };
 
-typedef std::shared_ptr<GenericRapidSub> GenericRapidSubPtr;
+typedef std::shared_ptr<GenericRapidSub<rapid::ext::astrobee::GenericCommsAdvertisementInfo>>
+    AdvertisementInfoRapidSubPtr;
+typedef std::shared_ptr<GenericRapidSub<rapid::ext::astrobee::GenericCommsContent>>
+    ContentRapidSubPtr;
 
 }  // end namespace ff
 

@@ -27,14 +27,14 @@ GenericROSSubRapidPub::GenericROSSubRapidPub() :
 
 GenericROSSubRapidPub::~GenericROSSubRapidPub() {}
 
-void GenericROSSubRapidPub::InitializeDDS(std::string agent_name) {
+void GenericROSSubRapidPub::InitializeDDS() {
   advertisement_info_supplier_.reset(
       new GenericROSSubRapidPub::AdvertisementInfoSupplier(
-          rapid::ext::astrobee::GENERIC_COMMS_ADVERTISEMENT_INFO_TOPIC + agent_name,
+          rapid::ext::astrobee::GENERIC_COMMS_ADVERTISEMENT_INFO_TOPIC,
           "", "AstrobeeGenericCommsAdvertisementInfoProfile", ""));
 
   content_supplier_.reset(new GenericROSSubRapidPub::ContentSupplier(
-                rapid::ext::astrobee::GENERIC_COMMS_CONTENT_TOPIC + agent_name,
+                rapid::ext::astrobee::GENERIC_COMMS_CONTENT_TOPIC,
                 "", "AstrobeeGenericCommsContentProfile", ""));
 
   rapid::RapidHelper::initHeader(advertisement_info_supplier_->event().hdr);
