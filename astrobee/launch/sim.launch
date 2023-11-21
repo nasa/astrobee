@@ -165,6 +165,9 @@
       <arg name="dds" value="$(arg dds)" />          <!-- Enable DDS         -->
       <arg name="gtloc" value="$(arg gtloc)" /> <!-- Use Ground Truth Localizer -->
     </include>
+
+    <!-- Default call initialize bias so config file is created if not already present -->
+    <node pkg="rosservice" type="rosservice" name="imu_calibration_default" args="call --wait $(arg ns)/gnc/ekf/init_bias" />
   </group>
 
   <!-- Auto-insert honey at a canned location -->
@@ -188,6 +191,9 @@
       <arg name="dds" value="$(arg dds)" />          <!-- Enable DDS         -->
       <arg name="gtloc" value="$(arg gtloc)" /> <!-- Use Ground Truth Localizer -->
     </include>
+
+    <!-- Default call initialize bias so config file is created if not already present -->
+    <node pkg="rosservice" type="rosservice" name="imu_calibration_honey" args="call --wait /honey/gnc/ekf/init_bias" />
   </group>
 
   <!-- Auto-insert bumble at a canned location -->
@@ -211,6 +217,9 @@
       <arg name="dds" value="$(arg dds)" />          <!-- Enable DDS         -->
       <arg name="gtloc" value="$(arg gtloc)" /> <!-- Use Ground Truth Localizer -->
     </include>
+
+    <!-- Default call initialize bias so config file is created if not already present -->
+    <node pkg="rosservice" type="rosservice" name="imu_calibration_bumble" args="call --wait /bumble/gnc/ekf/init_bias" />
   </group>
 
   <!-- Auto-insert queen at a canned location -->
@@ -234,9 +243,10 @@
       <arg name="dds" value="$(arg dds)" />          <!-- Enable DDS         -->
       <arg name="gtloc" value="$(arg gtloc)" /> <!-- Use Ground Truth Localizer -->
     </include>
+
+    <!-- Default call initialize bias so config file is created if not already present -->
+    <node pkg="rosservice" type="rosservice" name="imu_calibration_queen" args="call --wait /queen/gnc/ekf/init_bias" />
   </group>
 
-  <!-- Default call initialize bias so config file is created if not already present -->
-  <node pkg="rosservice" type="rosservice" name="imu_calibration" args="call --wait /gnc/ekf/init_bias" />
 
 </launch>

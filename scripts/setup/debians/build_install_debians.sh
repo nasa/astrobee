@@ -33,17 +33,10 @@ case $dist in
   xenial)
     echo "Ubuntu 16 detected"
     ;;
-  bionic|focal)
-    build_list+=( opencv )
-    ;;&
-  bionic)
-    echo "Ubuntu 18 detected"
-     # jps3d deps
-    sudo apt-get install -y libvtk6.3 libboost-filesystem1.62.0 libboost-system1.62.0
-    ;;
   focal)
     echo "Ubuntu 20 detected"
-    #jps3d deps
+    build_list+=( opencv )
+    # jps3d deps
     sudo apt-get install -y libvtk7.1p libboost-filesystem1.71.0 libboost-system1.71.0
     ;;
   *)
