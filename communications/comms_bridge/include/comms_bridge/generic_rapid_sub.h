@@ -73,8 +73,7 @@ class GenericRapidSub {
   }
 
   void operator() (T const* data) {
-#include "comms_bridge/util.h"
-    ROS_INFO("Received data for topic %s\n", subscribe_topic_.c_str());
+    ROS_ERROR("Received data for topic %s\n", subscribe_topic_.c_str());
     ros_pub_->ConvertData(data);
   }
 
