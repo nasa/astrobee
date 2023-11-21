@@ -7,6 +7,7 @@
 module rapid {
   module ext {
     module astrobee {
+      typedef string<16384> String16K;
 
       //@copy-c-declaration class GenericCommsAdvertisementInfoTypeSupport;
       //@copy-c-declaration class GenericCommsAdvertisementInfoDataWriter;
@@ -35,10 +36,10 @@ module rapid {
         public String128 dataType;
 
         //@copy-declaration /** ROS message md5sum of type */
-        public String32 md5Sum;
+        public String64 md5Sum;
 
         //@copy-declaration /** ROS message definition */
-        public String2K msgDefinition;
+        public String16K msgDefinition;
       };
     };
   };

@@ -57,7 +57,7 @@ void GenericROSSubRapidPub::advertiseTopic(const RelayTopicInfo& relay_info) {
   unsigned int size;
   std::string out_topic = relay_info.out_topic;
 
-  ROS_INFO("Received ros advertise topic for topic %s\n", out_topic.c_str());
+  ROS_ERROR("Received ros advertise topic for topic %s\n", out_topic.c_str());
 
   msg.hdr.timeStamp = comms_util::RosTime2RapidTime(ros::Time::now());
   msg.hdr.serial = ++advertisement_info_seq_;
@@ -74,13 +74,14 @@ void GenericROSSubRapidPub::advertiseTopic(const RelayTopicInfo& relay_info) {
   std::strncpy(msg.dataType, info.data_type.data(), size);
   msg.dataType[size] = '\0';
 
-  // Currently the md5 sum can only be 32 characters long
-  SizeCheck(size, info.md5_sum.size(), 32, "MD5 sum", out_topic);
+  // Currently the md5 sum can only be 64 characters long
+  SizeCheck(size, info.md5_sum.size(), 64, "MD5 sum", out_topic);
   std::strncpy(msg.md5Sum, info.md5_sum.data(), size);
   msg.md5Sum[size] = '\0';
 
-  // Current the ROS message definition can only be 2048 characters long
-  SizeCheck(size, info.definition.size(), 2048, "Msg definition", out_topic);
+  ROS_ERROR("Defination is %i long\n", info.definition.size());
+  // Current the ROS message definition can only be 16384 characters long
+  SizeCheck(size, info.definition.size(), 16384, "Msg definition", out_topic);
   std::strncpy(msg.msgDefinition, info.definition.data(), size);
   msg.msgDefinition[size] = '\0';
 
@@ -95,7 +96,7 @@ void GenericROSSubRapidPub::relayMessage(const RelayTopicInfo& topic_info, Conte
   unsigned int size;
   std::string out_topic = topic_info.out_topic;
 
-  ROS_INFO("Received ros content message for topic %s\n", out_topic);
+  ROS_ERROR("Received ros content message for topic %s\n", out_topic.c_str());
 
   msg.hdr.timeStamp = comms_util::RosTime2RapidTime(ros::Time::now());
   msg.hdr.serial = topic_info.relay_seqnum;
@@ -105,8 +106,8 @@ void GenericROSSubRapidPub::relayMessage(const RelayTopicInfo& topic_info, Conte
   std::strncpy(msg.outputTopic, out_topic.data(), size);
   msg.outputTopic[size] = '\0';
 
-  // Currently the md5 sum can only be 32 characters long
-  SizeCheck(size, content_info.type_md5_sum.size(), 32, "MD5 sum", out_topic);
+  // Currently the md5 sum can only be 64 characters long
+  SizeCheck(size, content_info.type_md5_sum.size(), 64, "MD5 sum", out_topic);
   std::strncpy(msg.md5Sum, content_info.type_md5_sum.data(), size);
   msg.md5Sum[size] = '\0';
 

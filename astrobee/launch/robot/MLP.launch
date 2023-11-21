@@ -286,7 +286,7 @@
     <arg name="debug" value="$(arg debug)" />
     <arg name="default" value="$(arg dds)" />
   </include>
-  <include file="$(find ff_util)/launch/ff_nodelet.launch">
+<!--  <include file="$(find ff_util)/launch/ff_nodelet.launch">
     <arg name="class" value="dds_ros_bridge/AstrobeeAstrobeeBridge" />
     <arg name="name" value="astrobee_astrobee_bridge" />
     <arg name="manager" value="mlp_multibridge" />
@@ -295,7 +295,7 @@
     <arg name="extra" value="$(arg extra)" />
     <arg name="debug" value="$(arg debug)" />
     <arg name="default" value="$(arg dds)" />
-  </include>
+  </include> -->
   <include file="$(find ff_util)/launch/ff_nodelet.launch">
     <arg name="class" value="comms_bridge/CommsBridgeNodelet" />
     <arg name="name" value="comms_bridge" />

@@ -136,6 +136,8 @@ class CommsBridgeNodelet : public ff_util::FreeFlyerNodelet {
     robot_params->name = agent_name_;
     robot_params->namingContextName = robot_params->name;
 
+    ROS_ERROR("Agent name %s and participant name %s\n", agent_name_.c_str(), participant_name_.c_str());
+
     // Set values for default punlisher and subscriber
     dds_params->publishers[0].name = agent_name_;
     dds_params->publishers[0].partition = agent_name_;
@@ -161,7 +163,7 @@ class CommsBridgeNodelet : public ff_util::FreeFlyerNodelet {
     }
 
     // Register the connections into the parameters so they can be used later
-    for (int i = 0; i <= rapid_connections_.size(); i++) {
+    for (int i = 0; i < rapid_connections_.size(); i++) {
       // This shouldn't be needed but check just in case
       if (local_subscriber != rapid_connections_[i]) {
         kn::DdsNodeParameters subscriber;
@@ -196,7 +198,6 @@ class CommsBridgeNodelet : public ff_util::FreeFlyerNodelet {
     for (size_t i = 0; i < rapid_connections_.size(); i++) {
       // Lower case the external agent name to use it like a namespace
       connection = rapid_connections_[i];
-      connection[0] = tolower(connection[0]);
       advertisement_info_sub =
         std::make_shared<ff::GenericRapidSub<rapid::ext::astrobee::GenericCommsAdvertisementInfo>>(
           "AstrobeeGenericCommsAdvertisementInfoProfile", rapid::ext::astrobee::GENERIC_COMMS_ADVERTISEMENT_INFO_TOPIC,
@@ -209,6 +210,13 @@ class CommsBridgeNodelet : public ff_util::FreeFlyerNodelet {
           connection,
           ros_pub_.get());
       content_rapid_subs_.push_back(content_sub);
+    }
+
+    std::string ns = std::string("/") + agent_name_ + "/";
+    ns[1] = std::tolower(ns[1]);  // namespaces don't start with upper case
+
+    for (size_t i = 0; i < topics_sub_.size(); i++) {
+      ros_sub_.addTopic(topics_sub_[i], (ns + topics_sub_[i]));
     }
   }
 
@@ -228,9 +236,6 @@ class CommsBridgeNodelet : public ff_util::FreeFlyerNodelet {
     ros_sub_.setVerbosity(verbose);
     ros_pub_->setVerbosity(verbose);
 
-    std::string ns = std::string("/") + agent_name_ + "/";
-    ns[1] = std::tolower(ns[1]);  // namespaces don't start with upper case
-
     // Load shared topic groups
     config_reader::ConfigReader::Table links, link;
     if (!config_params_.GetTable("links", &links)) {
@@ -246,21 +251,22 @@ class CommsBridgeNodelet : public ff_util::FreeFlyerNodelet {
       std::string config_agent;
       if (link.GetStr("from", &config_agent) && config_agent == agent_name_) {
         AddRapidConnections(link, "to");
-        AddTableToSubs(link, "relay_forward", ns);
-        AddTableToSubs(link, "relay_both", ns);
+        AddTableToSubs(link, "relay_forward");
+        AddTableToSubs(link, "relay_both");
       } else if (link.GetStr("to", &config_agent) && config_agent == agent_name_) {
         AddRapidConnections(link, "from");
-        AddTableToSubs(link, "relay_backward", ns);
-        AddTableToSubs(link, "relay_both", ns);
+        AddTableToSubs(link, "relay_backward");
+        AddTableToSubs(link, "relay_both");
       }
     }
+    return true;
   }
 
   void AddRapidConnections(config_reader::ConfigReader::Table &link_table,
                            std::string direction) {
     std::string connection;
     if (!link_table.GetStr(direction.c_str(), &connection)) {
-      NODELET_ERROR("Comms Bridge Nodelet: %s not specified for one link", direction);
+      NODELET_ERROR("Comms Bridge Nodelet: %s not specified for one link", direction.c_str());
       return;
     }
 
@@ -278,8 +284,7 @@ class CommsBridgeNodelet : public ff_util::FreeFlyerNodelet {
   }
 
   void AddTableToSubs(config_reader::ConfigReader::Table &link_table,
-                      std::string table_name,
-                      std::string ns) {
+                      std::string table_name) {
     config_reader::ConfigReader::Table relay_table, relay_item;
     std::string topic_name;
     if (link_table.GetTable(table_name.c_str(), &relay_table)) {
@@ -289,7 +294,17 @@ class CommsBridgeNodelet : public ff_util::FreeFlyerNodelet {
            NODELET_ERROR("Comms Bridge Nodelet: Agent topic name not specified!");
             continue;
         }
-        ros_sub_.addTopic(topic_name, (ns + topic_name));
+
+        bool found = false;
+        for (size_t i = 0; i < topics_sub_.size() && !found; i++) {
+          if (topic_name == topics_sub_[i]) {
+            found = true;
+          }
+        }
+
+        if (!found) {
+          topics_sub_.push_back(topic_name);
+        }
       }
     }
   }
@@ -302,7 +317,7 @@ class CommsBridgeNodelet : public ff_util::FreeFlyerNodelet {
   std::shared_ptr<kn::DdsEntitiesFactorySvc> dds_entities_factory_;
   std::shared_ptr<ff::GenericRapidMsgRosPub> ros_pub_;
   std::string agent_name_, participant_name_;
-  std::vector<std::string> rapid_connections_;
+  std::vector<std::string> rapid_connections_, topics_sub_;
 };
 
 PLUGINLIB_EXPORT_CLASS(comms_bridge::CommsBridgeNodelet, nodelet::Nodelet)

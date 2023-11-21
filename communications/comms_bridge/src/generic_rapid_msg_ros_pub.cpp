@@ -62,7 +62,7 @@ void GenericRapidMsgRosPub::ConvertData(
   std::map<std::string, RelayTopicInfo>::iterator iter = m_relay_topics_.find(output_topic);
   if (iter == m_relay_topics_.end()) {
     ROS_ERROR("Comms Bridge Nodelet: Received content for topic %s but never received advertisement info.\n",
-              output_topic);
+              output_topic.c_str());
   } else {
     RelayTopicInfo &topic_info = iter->second;
 

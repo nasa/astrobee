@@ -29,7 +29,7 @@ module rapid {
         public String128 outputTopic;
 
         //@copy-declaration /** The md5 sum of msg type repeated from the original advertisement */
-        public String32 md5Sum;
+        public String64 md5Sum;
 
         //@copy-declaration /** Serialized content of the message */
         public OctetSequence128K data;
