@@ -107,7 +107,7 @@ instead:
 
     ./src/scripts/configure.sh -l -F -D -p $INSTALL_PATH -w $WORKSPACE_PATH
 
-*Note: If a workspace is specified but not an explicit install distectory,
+*Note: If a workspace is specified but not an explicit install directory,
 install location will be $WORKSPACE_PATH/install.*
 
 *Note: Make sure you use the -F and -D flags. If these flags are not used, the

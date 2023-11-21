@@ -24,9 +24,10 @@ import argparse
 import os
 import re
 import string
+import subprocess
 import sys
 
-import rosbag
+import localization_common.utilities as lu
 
 
 # https://stackoverflow.com/a/4836734
@@ -59,29 +60,31 @@ def merge_bag(input_bag_prefix, input_bag_suffix, merged_bag, only_loc_topics=Fa
         merged_bag_name = input_bag_prefix + ".merged.bag"
 
     sorted_bag_names = natural_sort(bag_names)
+    merge_bags_command = (
+        "rosrun localization_node merge_bags "
+        + " ".join(sorted_bag_names)
+        + " -output_bag "
+        + str(merged_bag_name)
+    )
 
-    topics = None
     if only_loc_topics:
-        topics = [
-            "/hw/imu",
-            "/loc/of/features",
-            "/loc/ml/features",
-            "/loc/ar/features",
-            "/mgt/img_sampler/nav_cam/image_record",
-            "/graph_loc/state",
-            "/gnc/ekf",
-            "/sparse_mapping/pose",
-            "/mob/flight_mode",
-            "/beh/inspection/feedback",
-            "/beh/inspection/goal",
-            "/beh/inspection/result",
-        ]
+        merge_bags_command += (
+            " -save_topics"
+            + " '/hw/imu"
+            + " /loc/of/features"
+            + " /loc/ml/features"
+            + " /loc/ar/features"
+            + " /mgt/img_sampler/nav_cam/image_record"
+            + " /graph_loc/state"
+            + " /gnc/ekf"
+            + " /sparse_mapping/pose"
+            + " /mob/flight_mode"
+            + " /beh/inspection/feedback"
+            + " /beh/inspection/goal"
+            + " /beh/inspection/result'"
+        )
 
-    with rosbag.Bag(merged_bag_name, "w") as merged_bag:
-        for sorted_bag_name in sorted_bag_names:
-            with rosbag.Bag(sorted_bag_name, "r") as sorted_bag:
-                for topic, msg, t in sorted_bag.read_messages(topics):
-                    merged_bag.write(topic, msg, t)
+    lu.run_command_and_save_output(merge_bags_command)
 
 
 if __name__ == "__main__":
@@ -136,7 +139,6 @@ if __name__ == "__main__":
 
     print(bag_names)
     for bag_name in bag_names:
-        print(bag_name)
         merge_bag(
             bag_name, args.input_bag_suffix, args.merged_bag, args.only_loc_topics
         )
