@@ -100,6 +100,7 @@ class CommsBridgeNodelet : public ff_util::FreeFlyerNodelet {
         agent_name_[0] = toupper(agent_name_[0]);
       }
     }
+    ROS_INFO_STREAM("Comms Bridge Nodelet: agent name " << agent_name_);
 
     int fake_argc = 1;
 
@@ -136,7 +137,7 @@ class CommsBridgeNodelet : public ff_util::FreeFlyerNodelet {
     robot_params->name = agent_name_;
     robot_params->namingContextName = robot_params->name;
 
-    ROS_ERROR("Agent name %s and participant name %s\n", agent_name_.c_str(), participant_name_.c_str());
+    ROS_INFO("Agent name %s and participant name %s\n", agent_name_.c_str(), participant_name_.c_str());
 
     // Set values for default punlisher and subscriber
     dds_params->publishers[0].name = agent_name_;
@@ -216,6 +217,7 @@ class CommsBridgeNodelet : public ff_util::FreeFlyerNodelet {
     ns[1] = std::tolower(ns[1]);  // namespaces don't start with upper case
 
     for (size_t i = 0; i < topics_sub_.size(); i++) {
+      ROS_INFO_STREAM("Initialize DDS topic sub: " << topics_sub_[i]);
       ros_sub_.addTopic(topics_sub_[i], (ns + topics_sub_[i]));
     }
   }
@@ -243,12 +245,15 @@ class CommsBridgeNodelet : public ff_util::FreeFlyerNodelet {
       return false;
     }
 
+    ROS_INFO_STREAM("Read Params numebr of links: " << links.GetSize());
     for (int i = 1; i <= links.GetSize(); i++) {
       if (!links.GetTable(i, &link)) {
         NODELET_ERROR("Comms Bridge Nodelet: Could read link table row %i", i);
         continue;
       }
       std::string config_agent;
+      ROS_INFO_STREAM("Link " << i << " from " << link.GetStr("from", &config_agent));
+      ROS_INFO_STREAM("Link " << i << " to " << link.GetStr("to", &config_agent));
       if (link.GetStr("from", &config_agent) && config_agent == agent_name_) {
         AddRapidConnections(link, "to");
         AddTableToSubs(link, "relay_forward");

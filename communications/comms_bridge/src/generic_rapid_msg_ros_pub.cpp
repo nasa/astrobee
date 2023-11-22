@@ -29,6 +29,7 @@ GenericRapidMsgRosPub::GenericRapidMsgRosPub(double ad2pub_delay) :
 
 GenericRapidMsgRosPub::~GenericRapidMsgRosPub() {}
 
+// Handle Ad Message
 void GenericRapidMsgRosPub::ConvertData(
             rapid::ext::astrobee::GenericCommsAdvertisementInfo const* data) {
   const std::lock_guard<std::mutex> lock(m_mutex_);
@@ -43,6 +44,10 @@ void GenericRapidMsgRosPub::ConvertData(
   ad_info.data_type = data->dataType;
   ad_info.md5_sum = data->md5Sum;
   ad_info.definition = data->msgDefinition;
+  ROS_INFO_STREAM("ad_info latching: " << data->latching);
+  ROS_INFO_STREAM("ad_info dataType: " << data->dataType);
+  ROS_INFO_STREAM("ad_info md5Sum: " << data->md5Sum);
+  ROS_INFO_STREAM("ad_info msgDefinition: " << data->msgDefinition);
 
   if (!advertiseTopic(output_topic, ad_info)) {
     ROS_ERROR("Comms Bridge Nodelet: Error advertising topic: %s\n",
@@ -50,6 +55,7 @@ void GenericRapidMsgRosPub::ConvertData(
   }
 }
 
+// Handle content message
 void GenericRapidMsgRosPub::ConvertData(
                       rapid::ext::astrobee::GenericCommsContent const* data) {
   const std::lock_guard<std::mutex> lock(m_mutex_);
