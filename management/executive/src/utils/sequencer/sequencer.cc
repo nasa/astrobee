@@ -71,6 +71,17 @@ Waypoint2TrajectoryPoint(jsonloader::Waypoint const& w) {
   return p;
 }
 
+sensor_msgs::JointState
+ArmWaypoint2ArmTrajectoryPoint(jsonloader::ArmWaypoint const& aw) {
+  sensor_msgs::JointState p;
+
+  for (int i = 0; i < aw.carm_waypoint().size(); i++) {
+    p.position.push_back(aw.carm_waypoint()[i]);
+  }
+
+  return p;
+}
+
 inline ff_msgs::Status MakeStatus(std::uint8_t status, int point, int command, int duration) {
   ff_msgs::Status s;
   s.status.status = status;
@@ -119,6 +130,16 @@ Segment2Trajectory(jsonloader::Segment const& seg) {
     traj.push_back(Waypoint2TrajectoryPoint(wp));
   }
   return traj;
+}
+
+std::vector<sensor_msgs::JointState>
+Segment2ArmTraj(jsonloader::Segment const& segment) {
+  std::vector<sensor_msgs::JointState> arm_traj;
+  arm_traj.reserve(segment.arm_waypoints().size());
+  for (jsonloader::ArmWaypoint const& awp : segment.arm_waypoints()) {
+    arm_traj.push_back(ArmWaypoint2ArmTrajectoryPoint(awp));
+  }
+  return arm_traj;
 }
 
 Sequencer::Sequencer()

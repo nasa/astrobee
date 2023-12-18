@@ -119,6 +119,52 @@ TEST(Segment, NormalConstruction) {
   }
 }
 
+TEST(Segment, ArmConstruction) {
+  static const std::string data = u8R"(
+    { "type": "Segment",
+      "stopAtEnd": true,
+      "speed": 0.25,
+      "tolerance": 0.52,
+      "faceForward": true,
+      "waypointType": "ArmPoseVelAccel",
+      "waypoints": [ [ 0, 1, 2, 3, 4, 5, 6 ] ],
+      "arm_waypoints": [ [ 0, 1, 2 ] ]
+    }
+  )";
+  Json::Value v;
+  Json::Reader().parse(data, v, false);
+
+  // Sanity checks
+  jsonloader::Segment segment(v);
+  ASSERT_TRUE(segment.valid());
+
+  EXPECT_EQ(segment.waypoint_type(), "ArmPoseVelAccel");
+  EXPECT_TRUE(segment.stop_at_end());
+  EXPECT_TRUE(segment.face_forward());
+  EXPECT_FLOAT_EQ(segment.speed(), 0.25f);
+  EXPECT_FLOAT_EQ(segment.tolerance(), 0.52f);
+
+  // Make sure we are pulling the right number of waypoints
+  jsonloader::Segment::WaypointSeq const& wpts = segment.waypoints();
+  ASSERT_EQ(wpts.size(), 1);
+
+  // Make sure we are creating the Eigen::Vectors right
+  ASSERT_EQ(wpts[0].cwaypoint().size(), 6);
+  for (int i = 0; i < 6; i++) {
+    EXPECT_FLOAT_EQ(static_cast<float>(i+1), wpts[0].cwaypoint()[i]);
+  }
+
+  // Make sure we are pulling the right number of arm waypoints
+  jsonloader::Segment::ArmWaypointSeq const& awpts = segment.arm_waypoints();
+  ASSERT_EQ(awpts.size(), 1);
+
+  // Make sure we are creating the Eigen::Vectors right
+  ASSERT_EQ(awpts[0].carm_waypoint().size(), 3);
+  for (int i = 0; i < 3; i++) {
+    EXPECT_FLOAT_EQ(static_cast<float>(i), awpts[0].carm_waypoint()[i]);
+  }
+}
+
 TEST(Segment, InvalidWaypoint) {
   static const std::string data = u8R"(
     { "type": "Segment",
@@ -135,6 +181,65 @@ TEST(Segment, InvalidWaypoint) {
 
   jsonloader::Segment s(v);
   ASSERT_FALSE(s.valid());
+}
+
+TEST(Segment, InvalidArmWaypoint) {
+  static const std::string data = u8R"(
+    { "type": "Segment",
+      "stopAtEnd": true,
+      "speed": 0.25,
+      "tolerance": 0.52,
+      "faceForward": true,
+      "waypointType": "ArmPoseVelAccel",
+      "waypoints": [ [ 0, 1, 2, 3, 4, 5, 6 ] ],
+      "arm_waypoints": [ {} ]
+    }
+  )";
+  Json::Value v;
+  Json::Reader().parse(data, v, false);
+
+  // Sanity checks
+  jsonloader::Segment segment(v);
+  ASSERT_FALSE(segment.valid());
+}
+
+TEST(Segment, MissingArmWaypoint) {
+  static const std::string data = u8R"(
+    { "type": "Segment",
+      "stopAtEnd": true,
+      "speed": 0.25,
+      "tolerance": 0.52,
+      "faceForward": true,
+      "waypointType": "ArmPoseVelAccel",
+      "waypoints": [ [ 0, 1, 2, 3, 4, 5, 6 ] ]
+    }
+  )";
+  Json::Value v;
+  Json::Reader().parse(data, v, false);
+
+  // Sanity checks
+  jsonloader::Segment segment(v);
+  ASSERT_FALSE(segment.valid());
+}
+
+TEST(Segment, NumWaypointMismatch) {
+  static const std::string data = u8R"(
+    { "type": "Segment",
+      "stopAtEnd": true,
+      "speed": 0.25,
+      "tolerance": 0.52,
+      "faceForward": true,
+      "waypointType": "ArmPoseVelAccel",
+      "waypoints": [ [ 0, 1, 2, 3, 4, 5, 6 ], [ 0, 1, 2, 3, 4, 5, 6 ] ],
+      "arm_waypoints": [ [ 0, 1, 2 ], [ 3, 4, 5 ], [ 6, 7, 8 ]]
+    }
+  )";
+  Json::Value v;
+  Json::Reader().parse(data, v, false);
+
+  // Sanity checks
+  jsonloader::Segment segment(v);
+  ASSERT_FALSE(segment.valid());
 }
 
 TEST(Station, NormalConstruction) {
