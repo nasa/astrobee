@@ -23,21 +23,16 @@
 */
 
 #include <comms_bridge/bridge_subscriber.h>
-#include <comms_bridge/util.h>
+#include <comms_bridge/generic_rapid_pub.h>
 
 #include <ff_msgs/GenericCommsAdvertisementInfo.h>
 #include <ff_msgs/GenericCommsContent.h>
 #include <ff_msgs/GenericCommsReset.h>
 
+#include <map>
 #include <string>
-
-#include "knDds/DdsTypedSupplier.h"
-
-#include "rapidUtil/RapidHelper.h"
-
-#include "dds_msgs/AstrobeeConstantsSupport.h"
-#include "dds_msgs/GenericCommsAdvertisementInfoSupport.h"
-#include "dds_msgs/GenericCommsContentSupport.h"
+#include <utility>
+#include <vector>
 
 namespace ff {
 
@@ -46,13 +41,10 @@ class GenericROSSubRapidPub : public BridgeSubscriber {
   GenericROSSubRapidPub();
   ~GenericROSSubRapidPub();
 
-  void InitializeDDS();
+  void AddTopics(std::map<std::string,
+       std::vector<std::pair<std::string, std::string>>> const& link_entries);
 
-  void SizeCheck(unsigned int &size,
-                 const int size_in,
-                 const int max_size,
-                 std::string const& data_name,
-                 std::string const& topic);
+  void InitializeDDS(std::vector<std::string> const& connections);
 
   // Called with the mutex held
   virtual void subscribeTopic(std::string const& in_topic, const RelayTopicInfo& info);
@@ -66,19 +58,9 @@ class GenericROSSubRapidPub : public BridgeSubscriber {
  private:
   bool dds_initialized_;
 
-  using AdvertisementInfoSupplier =
-     kn::DdsTypedSupplier<rapid::ext::astrobee::GenericCommsAdvertisementInfo>;
-  using AdvertisementInfoSupplierPtr = std::unique_ptr<AdvertisementInfoSupplier>;
-
-  AdvertisementInfoSupplierPtr advertisement_info_supplier_;
-
-  using ContentSupplier =
-      kn::DdsTypedSupplier<rapid::ext::astrobee::GenericCommsContent>;
-  using ContentSupplierPtr = std::unique_ptr<ContentSupplier>;
-
-  ContentSupplierPtr content_supplier_;
-
-  unsigned int advertisement_info_seq_;
+  std::map<std::string, std::vector<std::pair<std::string, std::string>>> topic_mapping_;
+  std::map<std::string, GenericRapidPubPtr> robot_connections_;
+  std::string robot_name_;
 };
 
 }  // end namespace ff

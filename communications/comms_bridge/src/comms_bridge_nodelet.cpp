@@ -192,22 +192,32 @@ class CommsBridgeNodelet : public ff_util::FreeFlyerNodelet {
   }
 
   void InitializeDDS() {
-    std::string connection;
+    std::string connection, dds_topic_name;
     ff::AdvertisementInfoRapidSubPtr advertisement_info_sub;
     ff::ContentRapidSubPtr content_sub;
-    ros_sub_.InitializeDDS();
+    ros_sub_.InitializeDDS(rapid_connections_);
     for (size_t i = 0; i < rapid_connections_.size(); i++) {
       // Lower case the external agent name to use it like a namespace
       connection = rapid_connections_[i];
+      dds_topic_name = agent_name_ + "-" +
+          rapid::ext::astrobee::GENERIC_COMMS_ADVERTISEMENT_INFO_TOPIC;
+      ROS_ERROR("Comms Bridge: DDS Sub DDS advertisement info topic name: %s\n",
+                dds_topic_name.c_str());
       advertisement_info_sub =
         std::make_shared<ff::GenericRapidSub<rapid::ext::astrobee::GenericCommsAdvertisementInfo>>(
-          "AstrobeeGenericCommsAdvertisementInfoProfile", rapid::ext::astrobee::GENERIC_COMMS_ADVERTISEMENT_INFO_TOPIC,
-          connection, ros_pub_.get());
+          "AstrobeeGenericCommsAdvertisementInfoProfile",
+          dds_topic_name,
+          connection,
+          ros_pub_.get());
       advertisement_info_rapid_subs_.push_back(advertisement_info_sub);
 
+      dds_topic_name = agent_name_ + "-" +
+                       rapid::ext::astrobee::GENERIC_COMMS_CONTENT_TOPIC;
+      ROS_ERROR("Comms Bridge: DDS Sub DDS content topic name: %s\n",
+                dds_topic_name.c_str());
       content_sub = std::make_shared<ff::GenericRapidSub<rapid::ext::astrobee::GenericCommsContent>>(
           "AstrobeeGenericCommsContentProfile",
-          rapid::ext::astrobee::GENERIC_COMMS_CONTENT_TOPIC,
+          dds_topic_name,
           connection,
           ros_pub_.get());
       content_rapid_subs_.push_back(content_sub);

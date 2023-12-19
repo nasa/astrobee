@@ -18,33 +18,47 @@
 
 #include "comms_bridge/generic_ros_sub_rapid_pub.h"
 
+#include <map>
 #include <string>
+#include <utility>
+#include <vector>
 
 namespace ff {
 
-GenericROSSubRapidPub::GenericROSSubRapidPub() :
-    dds_initialized_(false), advertisement_info_seq_(0) {}
+GenericROSSubRapidPub::GenericROSSubRapidPub() : dds_initialized_(false) {}
 
 GenericROSSubRapidPub::~GenericROSSubRapidPub() {}
 
-void GenericROSSubRapidPub::InitializeDDS() {
-  advertisement_info_supplier_.reset(
-      new GenericROSSubRapidPub::AdvertisementInfoSupplier(
-          rapid::ext::astrobee::GENERIC_COMMS_ADVERTISEMENT_INFO_TOPIC,
-          "", "AstrobeeGenericCommsAdvertisementInfoProfile", ""));
+void GenericROSSubRapidPub::AddTopics(
+  std::map<std::string, std::vector<std::pair<std::string, std::string>>> const& link_entries) {
+  std::string in_topic, primary_out_topic;
+  for (auto it = link_entries.begin(); it != link_entries.end(); ++it) {
+    in_topic = it->first;
+    // Use the first out_topic we read in as the out topic the base class uses
+    primary_out_topic = it->second[0].second;
+    // Save all robot/out topic pairs so that the bridge can pass the correct
+    // advertisement info and content message to each roboot that needs it
+    topic_mapping_[primary_out_topic] = it->second;
+    // Add topic to base class
+    ROS_ERROR("Adding topic %s to base class.", in_topic.c_str());
+    addTopic(in_topic, primary_out_topic);
+  }
+}
 
-  content_supplier_.reset(new GenericROSSubRapidPub::ContentSupplier(
-                rapid::ext::astrobee::GENERIC_COMMS_CONTENT_TOPIC,
-                "", "AstrobeeGenericCommsContentProfile", ""));
-
-  rapid::RapidHelper::initHeader(advertisement_info_supplier_->event().hdr);
-  rapid::RapidHelper::initHeader(content_supplier_->event().hdr);
+void GenericROSSubRapidPub::InitializeDDS(std::vector<std::string> const& connections) {
+  // std::string robot_name;
+  for (size_t i = 0; i < connections.size(); ++i) {
+    robot_name_ = connections[i];
+    GenericRapidPubPtr rapid_pub = std::make_shared<GenericRapidPub>(robot_name_);
+    robot_connections_[robot_name_] = rapid_pub;
+  }
 
   dds_initialized_ = true;
 }
 
 // Called with the mutex held
-void GenericROSSubRapidPub::subscribeTopic(std::string const& in_topic, const RelayTopicInfo& info) {
+void GenericROSSubRapidPub::subscribeTopic(std::string const& in_topic,
+                                           const RelayTopicInfo& info) {
   // this is just the base subscriber letting us know it's adding a topic
   // nothing more we need to do
 }
@@ -52,93 +66,38 @@ void GenericROSSubRapidPub::subscribeTopic(std::string const& in_topic, const Re
 // Called with the mutex held
 void GenericROSSubRapidPub::advertiseTopic(const RelayTopicInfo& relay_info) {
   const AdvertisementInfo &info = relay_info.ad_info;
-  rapid::ext::astrobee::GenericCommsAdvertisementInfo &msg =
-                                        advertisement_info_supplier_->event();
-  unsigned int size;
   std::string out_topic = relay_info.out_topic;
 
   ROS_ERROR("Received ros advertise topic for topic %s\n", out_topic.c_str());
 
-  msg.hdr.timeStamp = comms_util::RosTime2RapidTime(ros::Time::now());
-  msg.hdr.serial = ++advertisement_info_seq_;
+  // Check robot connection exists
+  if (robot_connections_.find(robot_name_) == robot_connections_.end()) {
+    ROS_ERROR("Comms Bridge: No connection for %s.\n", robot_name_.c_str());
+  }
 
-  // Currently the output topic can only be 128 characters long
-  SizeCheck(size, out_topic.size(), 128, "Out topic", out_topic);
-  std::strncpy(msg.outputTopic, out_topic.data(), size);
-  msg.outputTopic[size] = '\0';
-
-  msg.latching = info.latching;
-
-  // Currently the data type can only be 128 characters long
-  SizeCheck(size, info.data_type.size(), 128, "Data type",  out_topic);
-  std::strncpy(msg.dataType, info.data_type.data(), size);
-  msg.dataType[size] = '\0';
-
-  // Currently the md5 sum can only be 64 characters long
-  SizeCheck(size, info.md5_sum.size(), 64, "MD5 sum", out_topic);
-  std::strncpy(msg.md5Sum, info.md5_sum.data(), size);
-  msg.md5Sum[size] = '\0';
-
-  ROS_ERROR("Defination is %i long\n", info.definition.size());
-  // Current the ROS message definition can only be 16384 characters long
-  SizeCheck(size, info.definition.size(), 16384, "Msg definition", out_topic);
-  std::strncpy(msg.msgDefinition, info.definition.data(), size);
-  msg.msgDefinition[size] = '\0';
-
-  // Send message
-  advertisement_info_supplier_->sendEvent();
+  robot_connections_[robot_name_]->ProcessAdvertisementInfo(out_topic,
+                                                           info.latching,
+                                                           info.data_type,
+                                                           info.md5_sum,
+                                                           info.definition);
 }
 
 // Called with the mutex held
 void GenericROSSubRapidPub::relayMessage(const RelayTopicInfo& topic_info, ContentInfo const& content_info) {
-  rapid::ext::astrobee::GenericCommsContent &msg = content_supplier_->event();
-
-  unsigned int size;
   std::string out_topic = topic_info.out_topic;
 
   ROS_ERROR("Received ros content message for topic %s\n", out_topic.c_str());
 
-  msg.hdr.timeStamp = comms_util::RosTime2RapidTime(ros::Time::now());
-  msg.hdr.serial = topic_info.relay_seqnum;
-
-  // Currently the output topic can only be 128 characters long
-  SizeCheck(size, out_topic.size(), 128, "Out topic", out_topic);
-  std::strncpy(msg.outputTopic, out_topic.data(), size);
-  msg.outputTopic[size] = '\0';
-
-  // Currently the md5 sum can only be 64 characters long
-  SizeCheck(size, content_info.type_md5_sum.size(), 64, "MD5 sum", out_topic);
-  std::strncpy(msg.md5Sum, content_info.type_md5_sum.data(), size);
-  msg.md5Sum[size] = '\0';
-
-  // Currently the content can only be 128K bytes long
-  SizeCheck(size, content_info.data_size, 131072, "Data", out_topic);
-  msg.data.ensure_length(size, (size + 1));
-  unsigned char *buf = msg.data.get_contiguous_buffer();
-  if (buf == NULL) {
-    ROS_ERROR("DDS: RTI didn't give a contiguous buffer for the content data!");
-    return;
+  // Check robot connection exists
+  if (robot_connections_.find(robot_name_) == robot_connections_.end()) {
+    ROS_ERROR("Comms Bridge: No connection for %s.\n", robot_name_.c_str());
   }
 
-  std::memset(buf, 0, (size + 1));
-  std::memmove(buf, content_info.data, size);
-
-  // Send message
-  content_supplier_->sendEvent();
-}
-
-void GenericROSSubRapidPub::SizeCheck(unsigned int &size,
-                                    const int size_in,
-                                    const int max_size,
-                                    std::string const& data_name,
-                                    std::string const& topic) {
-  size = size_in;
-  // Account for null
-  if (size > (max_size - 1)) {
-    ROS_ERROR("Comms Bridge: %s for topic %s is greater than %i characters. Please change idl.",
-              data_name.c_str(), topic.c_str(), max_size);
-    size = (max_size - 1);
-  }
+  robot_connections_[robot_name_]->ProcessContent(out_topic,
+                                    content_info.type_md5_sum,
+                                    content_info.data,
+                                    content_info.data_size,
+                                    topic_info.relay_seqnum);
 }
 
 }  // end namespace ff
