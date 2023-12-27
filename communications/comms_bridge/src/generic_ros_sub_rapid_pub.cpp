@@ -46,12 +46,13 @@ void GenericROSSubRapidPub::AddTopics(
 }
 
 void GenericROSSubRapidPub::InitializeDDS(std::vector<std::string> const& connections) {
-  // std::string robot_name;
+  std::string robot_name;
   for (size_t i = 0; i < connections.size(); ++i) {
-    robot_name_ = connections[i];
-    GenericRapidPubPtr rapid_pub = std::make_shared<GenericRapidPub>(robot_name_);
-    robot_connections_[robot_name_] = rapid_pub;
+    robot_name = connections[i];
+    GenericRapidPubPtr rapid_pub = std::make_shared<GenericRapidPub>(robot_name);
+    robot_connections_[robot_name] = rapid_pub;
   }
+
 
   dds_initialized_ = true;
 }
@@ -66,38 +67,69 @@ void GenericROSSubRapidPub::subscribeTopic(std::string const& in_topic,
 // Called with the mutex held
 void GenericROSSubRapidPub::advertiseTopic(const RelayTopicInfo& relay_info) {
   const AdvertisementInfo &info = relay_info.ad_info;
-  std::string out_topic = relay_info.out_topic;
+  std::string out_topic = relay_info.out_topic, robot_name, robot_out_topic;
 
   ROS_ERROR("Received ros advertise topic for topic %s\n", out_topic.c_str());
 
-  // Check robot connection exists
-  if (robot_connections_.find(robot_name_) == robot_connections_.end()) {
-    ROS_ERROR("Comms Bridge: No connection for %s.\n", robot_name_.c_str());
+  // Make sure we recognize the topic
+  if (topic_mapping_.find(out_topic) == topic_mapping_.end()) {
+    ROS_ERROR("Comms Bridge: Output topic %s unknown in advertise topic.\n",
+              out_topic.c_str());
+    return;
   }
 
-  robot_connections_[robot_name_]->ProcessAdvertisementInfo(out_topic,
-                                                           info.latching,
-                                                           info.data_type,
-                                                           info.md5_sum,
-                                                           info.definition);
+  for (size_t i = 0; i < topic_mapping_[out_topic].size(); ++i) {
+    robot_name = topic_mapping_[out_topic][i].first;
+    robot_out_topic = topic_mapping_[out_topic][i].second;
+
+    ROS_ERROR("Robot name: %s Robot out topic: %s\n", robot_name.c_str(), robot_out_topic.c_str());
+
+    // Check robot connection exists
+    if (robot_connections_.find(robot_name) == robot_connections_.end()) {
+      ROS_ERROR("Comms Bridge: No connection for %s.\n", robot_name.c_str());
+      continue;
+    }
+
+    robot_connections_[robot_name]->ProcessAdvertisementInfo(out_topic,
+                                                             info.latching,
+                                                             info.data_type,
+                                                             info.md5_sum,
+                                                             info.definition);
+  }
 }
 
 // Called with the mutex held
-void GenericROSSubRapidPub::relayMessage(const RelayTopicInfo& topic_info, ContentInfo const& content_info) {
-  std::string out_topic = topic_info.out_topic;
-
+void GenericROSSubRapidPub::relayMessage(const RelayTopicInfo& topic_info,
+                                         ContentInfo const& content_info) {
+  std::string out_topic = topic_info.out_topic, robot_name, robot_out_topic;
+  unsigned int size;
   ROS_ERROR("Received ros content message for topic %s\n", out_topic.c_str());
 
-  // Check robot connection exists
-  if (robot_connections_.find(robot_name_) == robot_connections_.end()) {
-    ROS_ERROR("Comms Bridge: No connection for %s.\n", robot_name_.c_str());
+  // Make sure we recognize the topic
+  if (topic_mapping_.find(out_topic) == topic_mapping_.end()) {
+    ROS_ERROR("Comms Bridge: Output topic %s unknown in relay message.\n",
+              out_topic.c_str());
+    return;
   }
 
-  robot_connections_[robot_name_]->ProcessContent(out_topic,
-                                    content_info.type_md5_sum,
-                                    content_info.data,
-                                    content_info.data_size,
-                                    topic_info.relay_seqnum);
+  for (size_t i = 0; i < topic_mapping_[out_topic].size(); ++i) {
+    robot_name = topic_mapping_[out_topic][i].first;
+    robot_out_topic = topic_mapping_[out_topic][i].second;
+
+    ROS_ERROR("Robot name: %s Robot out topic: %s\n", robot_name.c_str(), robot_out_topic.c_str());
+
+    // Check robot connection exists
+    if (robot_connections_.find(robot_name) == robot_connections_.end()) {
+      ROS_ERROR("Comms Bridge: No connection for %s.\n", robot_name.c_str());
+      continue;
+    }
+
+    robot_connections_[robot_name]->ProcessContent(out_topic,
+                                                   content_info.type_md5_sum,
+                                                   content_info.data,
+                                                   content_info.data_size,
+                                                   topic_info.relay_seqnum);
+  }
 }
 
 }  // end namespace ff

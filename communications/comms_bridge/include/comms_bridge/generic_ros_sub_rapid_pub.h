@@ -47,20 +47,21 @@ class GenericROSSubRapidPub : public BridgeSubscriber {
   void InitializeDDS(std::vector<std::string> const& connections);
 
   // Called with the mutex held
-  virtual void subscribeTopic(std::string const& in_topic, const RelayTopicInfo& info);
+  virtual void subscribeTopic(std::string const& in_topic,
+                              const RelayTopicInfo& info);
 
   // Called with the mutex held
   virtual void advertiseTopic(const RelayTopicInfo& info);
 
   // Called with the mutex held
-  virtual void relayMessage(const RelayTopicInfo& topic_info, ContentInfo const& content_info);
+  virtual void relayMessage(const RelayTopicInfo& topic_info,
+                            ContentInfo const& content_info);
 
  private:
   bool dds_initialized_;
 
   std::map<std::string, std::vector<std::pair<std::string, std::string>>> topic_mapping_;
   std::map<std::string, GenericRapidPubPtr> robot_connections_;
-  std::string robot_name_;
 };
 
 }  // end namespace ff

@@ -31,7 +31,9 @@
 #include <stdio.h>
 #include <getopt.h>
 
+#include <map>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "comms_bridge/generic_rapid_msg_ros_pub.h"
@@ -222,14 +224,7 @@ class CommsBridgeNodelet : public ff_util::FreeFlyerNodelet {
           ros_pub_.get());
       content_rapid_subs_.push_back(content_sub);
     }
-
-    std::string ns = std::string("/") + agent_name_ + "/";
-    ns[1] = std::tolower(ns[1]);  // namespaces don't start with upper case
-
-    for (size_t i = 0; i < topics_sub_.size(); i++) {
-      ROS_INFO_STREAM("Initialize DDS topic sub: " << topics_sub_[i]);
-      ros_sub_.addTopic(topics_sub_[i], (ns + topics_sub_[i]));
-    }
+    ros_sub_.AddTopics(link_entries_);
   }
 
   bool ReadParams() {
@@ -255,34 +250,38 @@ class CommsBridgeNodelet : public ff_util::FreeFlyerNodelet {
       return false;
     }
 
+    std::string ns = std::string("/") + agent_name_ + "/";
+    ns[1] = std::tolower(ns[1]);  // namespaces don't start with upper case
     ROS_INFO_STREAM("Read Params numebr of links: " << links.GetSize());
     for (int i = 1; i <= links.GetSize(); i++) {
       if (!links.GetTable(i, &link)) {
         NODELET_ERROR("Comms Bridge Nodelet: Could read link table row %i", i);
         continue;
       }
-      std::string config_agent;
+      std::string config_agent, connection_agent;
       ROS_INFO_STREAM("Link " << i << " from " << link.GetStr("from", &config_agent));
       ROS_INFO_STREAM("Link " << i << " to " << link.GetStr("to", &config_agent));
       if (link.GetStr("from", &config_agent) && config_agent == agent_name_) {
-        AddRapidConnections(link, "to");
-        AddTableToSubs(link, "relay_forward");
-        AddTableToSubs(link, "relay_both");
+        if (AddRapidConnections(link, "to", connection_agent)) {
+          AddTableToSubs(link, "relay_forward", ns, connection_agent);
+          AddTableToSubs(link, "relay_both", ns, connection_agent);
+        }
       } else if (link.GetStr("to", &config_agent) && config_agent == agent_name_) {
-        AddRapidConnections(link, "from");
-        AddTableToSubs(link, "relay_backward");
-        AddTableToSubs(link, "relay_both");
+        if (AddRapidConnections(link, "from", connection_agent)) {
+          AddTableToSubs(link, "relay_backward", ns, connection_agent);
+          AddTableToSubs(link, "relay_both", ns, connection_agent);
+        }
       }
     }
     return true;
   }
 
-  void AddRapidConnections(config_reader::ConfigReader::Table &link_table,
-                           std::string direction) {
-    std::string connection;
+  bool AddRapidConnections(config_reader::ConfigReader::Table &link_table,
+                           std::string const& direction,
+                           std::string &connection) {
     if (!link_table.GetStr(direction.c_str(), &connection)) {
       NODELET_ERROR("Comms Bridge Nodelet: %s not specified for one link", direction.c_str());
-      return;
+      return false;
     }
 
     // This should be very quick since we shouldn't have more than 2 connections
@@ -296,30 +295,31 @@ class CommsBridgeNodelet : public ff_util::FreeFlyerNodelet {
     if (!found) {
       rapid_connections_.push_back(connection);
     }
+    return true;
   }
 
   void AddTableToSubs(config_reader::ConfigReader::Table &link_table,
-                      std::string table_name) {
+                      std::string table_name,
+                      std::string const& current_robot_ns,
+                      std::string const& connection_robot) {
     config_reader::ConfigReader::Table relay_table, relay_item;
-    std::string topic_name;
+    std::string in_topic, out_topic;
     if (link_table.GetTable(table_name.c_str(), &relay_table)) {
       for (size_t i = 1; i <= relay_table.GetSize(); i++) {
         relay_table.GetTable(i, &relay_item);
-        if (!relay_item.GetStr("name", &topic_name)) {
-           NODELET_ERROR("Comms Bridge Nodelet: Agent topic name not specified!");
+        if (!relay_item.GetStr("in_topic", &in_topic)) {
+           NODELET_ERROR("Comms Bridge Nodelet: In topic not specified!");
             continue;
         }
 
-        bool found = false;
-        for (size_t i = 0; i < topics_sub_.size() && !found; i++) {
-          if (topic_name == topics_sub_[i]) {
-            found = true;
-          }
+        if (!relay_item.GetStr("out_topic", &out_topic)) {
+          out_topic = current_robot_ns + in_topic;
         }
 
-        if (!found) {
-          topics_sub_.push_back(topic_name);
-        }
+        // Save all output topics under the same in topic since we don't want
+        // to subscribe to the same topic multiple times
+        link_entries_[in_topic].push_back(std::make_pair(connection_robot,
+                                                         out_topic));
       }
     }
   }
@@ -332,7 +332,8 @@ class CommsBridgeNodelet : public ff_util::FreeFlyerNodelet {
   std::shared_ptr<kn::DdsEntitiesFactorySvc> dds_entities_factory_;
   std::shared_ptr<ff::GenericRapidMsgRosPub> ros_pub_;
   std::string agent_name_, participant_name_;
-  std::vector<std::string> rapid_connections_, topics_sub_;
+  std::vector<std::string> rapid_connections_;
+  std::map<std::string, std::vector<std::pair<std::string, std::string>>> link_entries_;
 };
 
 PLUGINLIB_EXPORT_CLASS(comms_bridge::CommsBridgeNodelet, nodelet::Nodelet)
