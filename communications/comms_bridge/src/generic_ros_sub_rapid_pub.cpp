@@ -32,16 +32,21 @@ GenericROSSubRapidPub::~GenericROSSubRapidPub() {}
 void GenericROSSubRapidPub::AddTopics(
   std::map<std::string, std::vector<std::pair<std::string, std::string>>> const& link_entries) {
   std::string in_topic, primary_out_topic;
-  for (auto it = link_entries.begin(); it != link_entries.end(); ++it) {
-    in_topic = it->first;
-    // Use the first out_topic we read in as the out topic the base class uses
-    primary_out_topic = it->second[0].second;
-    // Save all robot/out topic pairs so that the bridge can pass the correct
-    // advertisement info and content message to each roboot that needs it
-    topic_mapping_[primary_out_topic] = it->second;
-    // Add topic to base class
-    ROS_ERROR("Adding topic %s to base class.", in_topic.c_str());
-    addTopic(in_topic, primary_out_topic);
+  // Make sure dds is initialized before adding topics
+  if (dds_initialized_) {
+    for (auto it = link_entries.begin(); it != link_entries.end(); ++it) {
+      in_topic = it->first;
+      // Use the first out_topic we read in as the out topic the base class uses
+      primary_out_topic = it->second[0].second;
+      // Save all robot/out topic pairs so that the bridge can pass the correct
+      // advertisement info and content message to each roboot that needs it
+      topic_mapping_[primary_out_topic] = it->second;
+      // Add topic to base class
+      ROS_DEBUG("Adding topic %s to base class.", in_topic.c_str());
+      addTopic(in_topic, primary_out_topic);
+    }
+  } else {
+    ROS_ERROR("Comms Bridge: Cannot add topics until dds is initialized.\n");
   }
 }
 
@@ -52,7 +57,6 @@ void GenericROSSubRapidPub::InitializeDDS(std::vector<std::string> const& connec
     GenericRapidPubPtr rapid_pub = std::make_shared<GenericRapidPub>(robot_name);
     robot_connections_[robot_name] = rapid_pub;
   }
-
 
   dds_initialized_ = true;
 }
@@ -69,7 +73,7 @@ void GenericROSSubRapidPub::advertiseTopic(const RelayTopicInfo& relay_info) {
   const AdvertisementInfo &info = relay_info.ad_info;
   std::string out_topic = relay_info.out_topic, robot_name, robot_out_topic;
 
-  ROS_ERROR("Received ros advertise topic for topic %s\n", out_topic.c_str());
+  ROS_DEBUG("Received ros advertise topic for topic %s\n", out_topic.c_str());
 
   // Make sure we recognize the topic
   if (topic_mapping_.find(out_topic) == topic_mapping_.end()) {
@@ -82,7 +86,7 @@ void GenericROSSubRapidPub::advertiseTopic(const RelayTopicInfo& relay_info) {
     robot_name = topic_mapping_[out_topic][i].first;
     robot_out_topic = topic_mapping_[out_topic][i].second;
 
-    ROS_ERROR("Robot name: %s Robot out topic: %s\n", robot_name.c_str(), robot_out_topic.c_str());
+    ROS_DEBUG("Robot name: %s Robot out topic: %s\n", robot_name.c_str(), robot_out_topic.c_str());
 
     // Check robot connection exists
     if (robot_connections_.find(robot_name) == robot_connections_.end()) {
@@ -103,7 +107,7 @@ void GenericROSSubRapidPub::relayMessage(const RelayTopicInfo& topic_info,
                                          ContentInfo const& content_info) {
   std::string out_topic = topic_info.out_topic, robot_name, robot_out_topic;
   unsigned int size;
-  ROS_ERROR("Received ros content message for topic %s\n", out_topic.c_str());
+  ROS_DEBUG("Received ros content message for topic %s\n", out_topic.c_str());
 
   // Make sure we recognize the topic
   if (topic_mapping_.find(out_topic) == topic_mapping_.end()) {
@@ -116,7 +120,7 @@ void GenericROSSubRapidPub::relayMessage(const RelayTopicInfo& topic_info,
     robot_name = topic_mapping_[out_topic][i].first;
     robot_out_topic = topic_mapping_[out_topic][i].second;
 
-    ROS_ERROR("Robot name: %s Robot out topic: %s\n", robot_name.c_str(), robot_out_topic.c_str());
+    ROS_DEBUG("Robot name: %s Robot out topic: %s\n", robot_name.c_str(), robot_out_topic.c_str());
 
     // Check robot connection exists
     if (robot_connections_.find(robot_name) == robot_connections_.end()) {

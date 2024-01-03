@@ -27,7 +27,7 @@ GenericRapidPub::GenericRapidPub(std::string const& robot_name) :
   std::string dds_topic_name;
   dds_topic_name = robot_name + "-" +
                    rapid::ext::astrobee::GENERIC_COMMS_ADVERTISEMENT_INFO_TOPIC;
-  ROS_ERROR("Comms Bridge: DDS Pub DDS advertisement info topic name: %s\n",
+  ROS_DEBUG("Comms Bridge: DDS Pub DDS advertisement info topic name: %s\n",
             dds_topic_name.c_str());
   advertisement_info_supplier_.reset(
     new GenericRapidPub::AdvertisementInfoSupplier(
@@ -35,7 +35,7 @@ GenericRapidPub::GenericRapidPub(std::string const& robot_name) :
 
   dds_topic_name = robot_name + "-" +
                    rapid::ext::astrobee::GENERIC_COMMS_CONTENT_TOPIC;
-  ROS_ERROR("Comms Bridge: DDS Publisher DDS content topic name: %s\n",
+  ROS_DEBUG("Comms Bridge: DDS Publisher DDS content topic name: %s\n",
             dds_topic_name.c_str());
   content_supplier_.reset(new GenericRapidPub::ContentSupplier(
     dds_topic_name, "", "AstrobeeGenericCommsContentProfile", ""));

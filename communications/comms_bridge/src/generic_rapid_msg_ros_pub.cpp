@@ -36,7 +36,7 @@ void GenericRapidMsgRosPub::ConvertData(
 
   const std::string output_topic = data->outputTopic;
 
-  ROS_ERROR("Comms Bridge Nodelet: Received advertisement message for topic %s\n",
+  ROS_DEBUG("Comms Bridge Nodelet: Received advertisement message for topic %s\n",
             output_topic.c_str());
 
   AdvertisementInfo ad_info;
@@ -62,28 +62,36 @@ void GenericRapidMsgRosPub::ConvertData(
 
   const std::string output_topic = data->outputTopic;
 
-  ROS_ERROR("Comms Bridge Nodelet: Received content message for topic %s\n",
+  ROS_DEBUG("Comms Bridge Nodelet: Received content message for topic %s\n",
             output_topic.c_str());
 
   std::map<std::string, RelayTopicInfo>::iterator iter = m_relay_topics_.find(output_topic);
   if (iter == m_relay_topics_.end()) {
     ROS_ERROR("Comms Bridge Nodelet: Received content for topic %s but never received advertisement info.\n",
               output_topic.c_str());
-  } else {
-    RelayTopicInfo &topic_info = iter->second;
 
-    ContentInfo content_info;
-    content_info.type_md5_sum = data->md5Sum;
+    RelayTopicInfo topic_info;
+    topic_info.out_topic = output_topic;
+    topic_info.ad_info.md5_sum = data->md5Sum;
+    iter = m_relay_topics_.emplace(output_topic, topic_info).first;
 
-    unsigned char* buf = data->data.get_contiguous_buffer();
-    for (size_t i = 0; i < data->data.length(); i++) {
-      content_info.data.push_back(buf[i]);
-    }
+    // TODO(Katie) Do we request advertisement info
+    // requestAdvertisementInfo(output_topic);
+  }
 
-    if (!relayMessage(topic_info, content_info)) {
-      ROS_ERROR("Comms Bridge Nodelet: Error relaying message for topic %s\n",
-                output_topic.c_str());
-    }
+  RelayTopicInfo &topic_info = iter->second;
+
+  ContentInfo content_info;
+  content_info.type_md5_sum = data->md5Sum;
+
+  unsigned char* buf = data->data.get_contiguous_buffer();
+  for (size_t i = 0; i < data->data.length(); i++) {
+    content_info.data.push_back(buf[i]);
+  }
+
+  if (!relayMessage(topic_info, content_info)) {
+    ROS_ERROR("Comms Bridge Nodelet: Error relaying message for topic %s\n",
+              output_topic.c_str());
   }
 }
 
