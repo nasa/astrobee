@@ -42,6 +42,8 @@
 
 #include "dds_msgs/AstrobeeConstants.h"
 
+#include "ff_msgs/ResponseOnly.h"
+
 // SoraCore
 #include "knDds/DdsSupport.h"
 #include "knDds/DdsEntitiesFactory.h"
@@ -61,7 +63,9 @@ namespace comms_bridge {
 
 class CommsBridgeNodelet : public ff_util::FreeFlyerNodelet {
  public:
-  CommsBridgeNodelet() : ff_util::FreeFlyerNodelet("comms_bridge") {}
+  CommsBridgeNodelet() : ff_util::FreeFlyerNodelet("comms_bridge"),
+                         dds_initialized_(false),
+                         initialize_dds_on_start_(false) {}
 
   virtual ~CommsBridgeNodelet() {}
 
@@ -190,7 +194,23 @@ class CommsBridgeNodelet : public ff_util::FreeFlyerNodelet {
     dds_entities_factory_.reset(new kn::DdsEntitiesFactorySvc());
     dds_entities_factory_->init(dds_params);
 
-    InitializeDDS();
+    dds_initialize_srv_ = nh->advertiseService(
+                              SERVICE_COMMUNICATIONS_ENABLE_ASTROBEE_INTERCOMMS,
+                              &CommsBridgeNodelet::StartDDS,
+                              this);
+
+    if (initialize_dds_on_start_) {
+      InitializeDDS();
+    }
+  }
+
+  bool StartDDS(ff_msgs::ResponseOnly::Request& req,
+                ff_msgs::ResponseOnly::Response& res) {
+    if (!dds_initialized_) {
+      InitializeDDS();
+    }
+    res.success = true;
+    return true;
   }
 
   void InitializeDDS() {
@@ -203,7 +223,7 @@ class CommsBridgeNodelet : public ff_util::FreeFlyerNodelet {
       connection = rapid_connections_[i];
       dds_topic_name = agent_name_ + "-" +
           rapid::ext::astrobee::GENERIC_COMMS_ADVERTISEMENT_INFO_TOPIC;
-      ROS_ERROR("Comms Bridge: DDS Sub DDS advertisement info topic name: %s\n",
+      ROS_DEBUG("Comms Bridge: DDS Sub DDS advertisement info topic name: %s\n",
                 dds_topic_name.c_str());
       advertisement_info_sub =
         std::make_shared<ff::GenericRapidSub<rapid::ext::astrobee::GenericCommsAdvertisementInfo>>(
@@ -215,7 +235,7 @@ class CommsBridgeNodelet : public ff_util::FreeFlyerNodelet {
 
       dds_topic_name = agent_name_ + "-" +
                        rapid::ext::astrobee::GENERIC_COMMS_CONTENT_TOPIC;
-      ROS_ERROR("Comms Bridge: DDS Sub DDS content topic name: %s\n",
+      ROS_DEBUG("Comms Bridge: DDS Sub DDS content topic name: %s\n",
                 dds_topic_name.c_str());
       content_sub = std::make_shared<ff::GenericRapidSub<rapid::ext::astrobee::GenericCommsContent>>(
           "AstrobeeGenericCommsContentProfile",
@@ -225,6 +245,7 @@ class CommsBridgeNodelet : public ff_util::FreeFlyerNodelet {
       content_rapid_subs_.push_back(content_sub);
     }
     ros_sub_.AddTopics(link_entries_);
+    dds_initialized_ = true;
   }
 
   bool ReadParams() {
@@ -242,6 +263,12 @@ class CommsBridgeNodelet : public ff_util::FreeFlyerNodelet {
     }
     ros_sub_.setVerbosity(verbose);
     ros_pub_->setVerbosity(verbose);
+
+    initialize_dds_on_start_ = false;
+    if (!config_params_.GetBool("initialize_dds_on_start",
+                                &initialize_dds_on_start_)) {
+      NODELET_ERROR("Comms Bridge Nodelet: Could not read initialize dds on start. Setting to false.");
+    }
 
     // Load shared topic groups
     config_reader::ConfigReader::Table links, link;
@@ -325,6 +352,7 @@ class CommsBridgeNodelet : public ff_util::FreeFlyerNodelet {
   }
 
  private:
+  bool initialize_dds_on_start_, dds_initialized_;
   config_reader::ConfigReader config_params_;
   ff::GenericROSSubRapidPub ros_sub_;
   std::vector<ff::ContentRapidSubPtr> content_rapid_subs_;
@@ -334,6 +362,7 @@ class CommsBridgeNodelet : public ff_util::FreeFlyerNodelet {
   std::string agent_name_, participant_name_;
   std::vector<std::string> rapid_connections_;
   std::map<std::string, std::vector<std::pair<std::string, std::string>>> link_entries_;
+  ros::ServiceServer dds_initialize_srv_;
 };
 
 PLUGINLIB_EXPORT_CLASS(comms_bridge::CommsBridgeNodelet, nodelet::Nodelet)
