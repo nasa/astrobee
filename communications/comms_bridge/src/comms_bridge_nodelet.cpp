@@ -223,8 +223,8 @@ class CommsBridgeNodelet : public ff_util::FreeFlyerNodelet {
       connection = rapid_connections_[i];
       dds_topic_name = agent_name_ + "-" +
           rapid::ext::astrobee::GENERIC_COMMS_ADVERTISEMENT_INFO_TOPIC;
-      ROS_DEBUG("Comms Bridge: DDS Sub DDS advertisement info topic name: %s\n",
-                dds_topic_name.c_str());
+      ROS_INFO("Comms Bridge: DDS Sub DDS advertisement info topic name: %s\n",
+               dds_topic_name.c_str());
       advertisement_info_sub =
         std::make_shared<ff::GenericRapidSub<rapid::ext::astrobee::GenericCommsAdvertisementInfo>>(
           "AstrobeeGenericCommsAdvertisementInfoProfile",
@@ -235,8 +235,8 @@ class CommsBridgeNodelet : public ff_util::FreeFlyerNodelet {
 
       dds_topic_name = agent_name_ + "-" +
                        rapid::ext::astrobee::GENERIC_COMMS_CONTENT_TOPIC;
-      ROS_DEBUG("Comms Bridge: DDS Sub DDS content topic name: %s\n",
-                dds_topic_name.c_str());
+      ROS_INFO("Comms Bridge: DDS Sub DDS content topic name: %s\n",
+               dds_topic_name.c_str());
       content_sub = std::make_shared<ff::GenericRapidSub<rapid::ext::astrobee::GenericCommsContent>>(
           "AstrobeeGenericCommsContentProfile",
           dds_topic_name,

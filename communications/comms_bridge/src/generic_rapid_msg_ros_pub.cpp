@@ -36,8 +36,8 @@ void GenericRapidMsgRosPub::ConvertData(
 
   const std::string output_topic = data->outputTopic;
 
-  ROS_DEBUG("Comms Bridge Nodelet: Received advertisement message for topic %s\n",
-            output_topic.c_str());
+  ROS_INFO("Comms Bridge Nodelet: Received advertisement message for topic %s\n",
+           output_topic.c_str());
 
   AdvertisementInfo ad_info;
   ad_info.latching = data->latching;
@@ -62,8 +62,8 @@ void GenericRapidMsgRosPub::ConvertData(
 
   const std::string output_topic = data->outputTopic;
 
-  ROS_DEBUG("Comms Bridge Nodelet: Received content message for topic %s\n",
-            output_topic.c_str());
+  ROS_INFO("Comms Bridge Nodelet: Received content message for topic %s\n",
+           output_topic.c_str());
 
   std::map<std::string, RelayTopicInfo>::iterator iter = m_relay_topics_.find(output_topic);
   if (iter == m_relay_topics_.end()) {

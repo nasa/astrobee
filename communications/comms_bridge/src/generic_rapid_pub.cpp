@@ -27,16 +27,16 @@ GenericRapidPub::GenericRapidPub(std::string const& robot_name) :
   std::string dds_topic_name;
   dds_topic_name = robot_name + "-" +
                    rapid::ext::astrobee::GENERIC_COMMS_ADVERTISEMENT_INFO_TOPIC;
-  ROS_DEBUG("Comms Bridge: DDS Pub DDS advertisement info topic name: %s\n",
-            dds_topic_name.c_str());
+  ROS_INFO("Comms Bridge: DDS Pub DDS advertisement info topic name: %s\n",
+           dds_topic_name.c_str());
   advertisement_info_supplier_.reset(
     new GenericRapidPub::AdvertisementInfoSupplier(
       dds_topic_name, "", "AstrobeeGenericCommsAdvertisementInfoProfile", ""));
 
   dds_topic_name = robot_name + "-" +
                    rapid::ext::astrobee::GENERIC_COMMS_CONTENT_TOPIC;
-  ROS_DEBUG("Comms Bridge: DDS Publisher DDS content topic name: %s\n",
-            dds_topic_name.c_str());
+  ROS_INFO("Comms Bridge: DDS Publisher DDS content topic name: %s\n",
+           dds_topic_name.c_str());
   content_supplier_.reset(new GenericRapidPub::ContentSupplier(
     dds_topic_name, "", "AstrobeeGenericCommsContentProfile", ""));
 
@@ -108,7 +108,7 @@ void GenericRapidPub::ProcessAdvertisementInfo(std::string const& output_topic,
   }
 
   // Currently the ROS message definition can only by 8192 characters long
-  ROS_DEBUG("Definition is %i long\n", definition.size());
+  ROS_INFO("Definition is %i long\n", definition.size());
   CopyString<rapid::ext::astrobee::String8K>(8192,
                                              definition,
                                              msg.msgDefinition,

@@ -42,7 +42,7 @@ void GenericROSSubRapidPub::AddTopics(
       // advertisement info and content message to each roboot that needs it
       topic_mapping_[primary_out_topic] = it->second;
       // Add topic to base class
-      ROS_DEBUG("Adding topic %s to base class.", in_topic.c_str());
+      ROS_INFO("Adding topic %s to base class.", in_topic.c_str());
       addTopic(in_topic, primary_out_topic);
     }
   } else {
@@ -73,7 +73,7 @@ void GenericROSSubRapidPub::advertiseTopic(const RelayTopicInfo& relay_info) {
   const AdvertisementInfo &info = relay_info.ad_info;
   std::string out_topic = relay_info.out_topic, robot_name, robot_out_topic;
 
-  ROS_DEBUG("Received ros advertise topic for topic %s\n", out_topic.c_str());
+  ROS_INFO("Received ros advertise topic for topic %s\n", out_topic.c_str());
 
   // Make sure we recognize the topic
   if (topic_mapping_.find(out_topic) == topic_mapping_.end()) {
@@ -86,7 +86,7 @@ void GenericROSSubRapidPub::advertiseTopic(const RelayTopicInfo& relay_info) {
     robot_name = topic_mapping_[out_topic][i].first;
     robot_out_topic = topic_mapping_[out_topic][i].second;
 
-    ROS_DEBUG("Robot name: %s Robot out topic: %s\n", robot_name.c_str(), robot_out_topic.c_str());
+    ROS_INFO("Robot name: %s Robot out topic: %s\n", robot_name.c_str(), robot_out_topic.c_str());
 
     // Check robot connection exists
     if (robot_connections_.find(robot_name) == robot_connections_.end()) {
@@ -107,7 +107,7 @@ void GenericROSSubRapidPub::relayMessage(const RelayTopicInfo& topic_info,
                                          ContentInfo const& content_info) {
   std::string out_topic = topic_info.out_topic, robot_name, robot_out_topic;
   unsigned int size;
-  ROS_DEBUG("Received ros content message for topic %s\n", out_topic.c_str());
+  ROS_INFO("Received ros content message for topic %s\n", out_topic.c_str());
 
   // Make sure we recognize the topic
   if (topic_mapping_.find(out_topic) == topic_mapping_.end()) {
@@ -120,7 +120,7 @@ void GenericROSSubRapidPub::relayMessage(const RelayTopicInfo& topic_info,
     robot_name = topic_mapping_[out_topic][i].first;
     robot_out_topic = topic_mapping_[out_topic][i].second;
 
-    ROS_DEBUG("Robot name: %s Robot out topic: %s\n", robot_name.c_str(), robot_out_topic.c_str());
+    ROS_INFO("Robot name: %s Robot out topic: %s\n", robot_name.c_str(), robot_out_topic.c_str());
 
     // Check robot connection exists
     if (robot_connections_.find(robot_name) == robot_connections_.end()) {
