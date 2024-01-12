@@ -50,12 +50,12 @@ void BridgePublisher::setVerbosity(unsigned int verbosity) { m_verbose_ = verbos
 
 bool BridgePublisher::advertiseTopic(const std::string& output_topic, const AdvertisementInfo& ad_info) {
   if (m_verbose_)
-    printf("Advertising for topic %s\n", output_topic.c_str());
+    ROS_INFO("Advertising for topic %s\n", output_topic.c_str());
 
   std::map<std::string, RelayTopicInfo>::iterator iter = m_relay_topics_.find(output_topic);
   if (iter == m_relay_topics_.end()) {
     if (m_verbose_)
-      printf("  topic is yet-unknown\n");
+      ROS_INFO("  topic is yet-unknown\n");
     RelayTopicInfo topic_info;
     topic_info.out_topic = output_topic;
     iter = m_relay_topics_.emplace(output_topic, topic_info).first;
@@ -133,18 +133,18 @@ bool BridgePublisher::relayContent(RelayTopicInfo& topic_info, const ContentInfo
   m_n_relayed_++;
 
   if (m_verbose_)
-    printf("Sent message on topic %s\n", topic_info.out_topic.c_str());
+    ROS_INFO("Sent message on topic %s\n", topic_info.out_topic.c_str());
 
   return true;
 }
 
 bool BridgePublisher::relayMessage(RelayTopicInfo& topic_info, const ContentInfo& content_info) {
   if (m_verbose_)
-    printf("Relaying content message for topic %s\n", topic_info.out_topic.c_str());
+    ROS_INFO("Relaying content message for topic %s\n", topic_info.out_topic.c_str());
 
   if (!topic_info.advertised) {
     if (m_verbose_)
-      printf("  topic is yet-unknown, enqueuing message for now\n");
+      ROS_INFO("  topic is yet-unknown, enqueuing message for now\n");
 
     topic_info.waiting_msgs.emplace(content_info);
 
@@ -164,7 +164,7 @@ bool BridgePublisher::relayMessage(RelayTopicInfo& topic_info, const ContentInfo
     // so just enqueue messages
 
     if (m_verbose_)
-      printf("  topic is not %s, enqueuing message for now\n",
+      ROS_INFO("  topic is not %s, enqueuing message for now\n",
              (!topic_info.advertised ? "yet advertised" : "yet ready"));
 
     // limit the number of waiting messages, tossing the oldest ones
@@ -174,7 +174,7 @@ bool BridgePublisher::relayMessage(RelayTopicInfo& topic_info, const ContentInfo
     topic_info.waiting_msgs.emplace(content_info);
 
     if (m_verbose_ > 1)
-      printf("  %zu messages now waiting\n", topic_info.waiting_msgs.size());
+      ROS_INFO("  %zu messages now waiting\n", topic_info.waiting_msgs.size());
 
     return true;
   }
@@ -204,13 +204,13 @@ void BridgePublisher::drainThread() {
     timepoint_t t = entry.first;
 
     if (m_verbose_ > 1)
-      printf(
+      ROS_INFO(
         "draining %s in %0.3f seconds\n", entry.second.c_str(),
         std::chrono::duration<double, std::chrono::seconds::period>((t - std::chrono::steady_clock::now())).count());
     std::this_thread::sleep_until(t);
 
     if (m_verbose_ > 1)
-      printf("draining %s now\n", entry.second.c_str());
+      ROS_INFO("draining %s now\n", entry.second.c_str());
 
     lk.lock();
 
@@ -221,7 +221,7 @@ void BridgePublisher::drainThread() {
 // called with mutex held
 void BridgePublisher::drainWaitingQueue(RelayTopicInfo& topic_info) {
   if (m_verbose_ && topic_info.waiting_msgs.size() > 0)
-    printf("Draining queue of %zu waiting messages\n", topic_info.waiting_msgs.size());
+    ROS_INFO("Draining queue of %zu waiting messages\n", topic_info.waiting_msgs.size());
   while (topic_info.waiting_msgs.size() > 0) {
     const ContentInfo old_msg = topic_info.waiting_msgs.front();
     relayContent(topic_info, old_msg);

@@ -89,6 +89,9 @@ void GenericRapidMsgRosPub::ConvertData(
     content_info.data.push_back(buf[i]);
   }
 
+  ROS_INFO("Comms Bridge Nodelet: Calling relay message for topic %s\n",
+           output_topic.c_str());
+
   if (!relayMessage(topic_info, content_info)) {
     ROS_ERROR("Comms Bridge Nodelet: Error relaying message for topic %s\n",
               output_topic.c_str());

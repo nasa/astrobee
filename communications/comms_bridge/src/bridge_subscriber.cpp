@@ -71,7 +71,7 @@ void BridgeSubscriber::handleRelayedMessage(const ros::MessageEvent<ShapeShifter
 
   std::map<std::string, RelayTopicInfo>::iterator iter = m_relay_topics_.find(topic);
   if (iter == m_relay_topics_.end()) {
-    printf("Received message on non-relayed topic %s\n", topic.c_str());
+    ROS_INFO("Received message on non-relayed topic %s\n", topic.c_str());
     return;
   }
 
