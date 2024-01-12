@@ -22,6 +22,9 @@
 
 namespace nodes {
 template <typename NodeType>
+// Container for timestamped nodes with a single value per node.
+// Stores the templated NodeType at various timestamps for use with a graph optimizer.
+// Child class of TimestampedCombinedNodes which handles multiple values per node/timestamp.
 class TimestampedNodes : public TimestampedCombinedNodes<NodeType> {
   using Base = TimestampedCombinedNodes<NodeType>;
 

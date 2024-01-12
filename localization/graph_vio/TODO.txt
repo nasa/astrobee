@@ -1,3 +1,20 @@
+- gt creation:
+  4 min 13 sec per image for matching
+      - 75 threads for ba
+      - images per bag: 6847 before remove low momemvent, 545 after
+      - images per surf base map: 2969!!!
+      - TODO: why is it only matching to last 1000 images in surf base map?? 
+        - starts with image 2970, not continuous but in increasing number (skips some numbers), goes to image 3
+        - what is asearch vs b search when finding matching tracks?? 
+          - search containers, cid_to_cid map for finding matches
+      - TODO: test with maxed threads, much faster matching per image?? 
+          - max threads (96) (0 image speed): 6m 49 sec
+          - 75 threads: 6m 20 sec 
+      - TODO: change jacobian to be analytic! (AB)
+      - TODO: find smaller base surf map????
+        - check sizes of other gt surf maps in maps dir! what is the range? (AA)
+          - 2972, similar
+
 - update tutorial with simple loc and odom!
   - update simple localizer section!
   - add simple odometry section!
@@ -8,8 +25,18 @@
       - add unit tests for these!!!!
 
 - start plotting VIO!
+    - run new localizer using a bag file, save results to bag!
+      - does this already exist??? test! (AAAA)
     - add super init calls to inherited pose states!
-    - finish plot vio script! test! (AA)
+    - finish plot vio script! (AA)
+      - Avoid iterating through bag multiple times!!!
+        - add bag reader that has callback for certain msg types!!!! (AAAAA)
+      - load groundtruth poses! -> save to poses vector! (A)
+      - load graph_vio_states! (B)
+      - plot graph_vio_states poses vs groundtruth
+      - plot graph vio vels
+      - plot graph vio imu biases 
+    - test vio plot script! (AB)
     - add comments!
     - update readme!
 

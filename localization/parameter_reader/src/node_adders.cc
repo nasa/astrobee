@@ -76,8 +76,10 @@ void LoadPoseNodeAdderParams(config_reader::ConfigReader& config, na::PoseNodeAd
                              const std::string& prefix) {
   LOAD_PARAM(params.starting_prior_translation_stddev, config, prefix);
   LOAD_PARAM(params.starting_prior_quaternion_stddev, config, prefix);
-  params.SetStartNoiseModels();
+  LOAD_PARAM(params.starting_prior_translation_stddev, config, prefix);
   LoadBaseTimestampedNodeAdderParams<gtsam::Pose3>(config, params, prefix);
+  // Set start noise models after params have been loaded, since this relies on huber_k value
+  params.SetStartNoiseModels();
   // Load start node from measurements
 }
 }  // namespace parameter_reader

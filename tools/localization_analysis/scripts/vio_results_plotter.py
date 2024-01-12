@@ -159,7 +159,7 @@ def create_plots(
     bag_start_time = bag.get_start_time()
 
     # Load groundtruth poses
-    # Use sparse mapping poses as groundtruth. TODO: pass this as an option?
+    # Use sparse mapping poses as groundtruth. 
     groundtruth_poses = poses.Poses("Groundtruth", "/sparse_mapping/pose")
     groundtruth_vec_of_poses = [groundtruth_poses]
     load_pose_msgs(groundtruth_vec_of_poses, groundtruth_bag, bag_start_time)
