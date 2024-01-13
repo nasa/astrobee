@@ -50,8 +50,8 @@ void GenericRapidMsgRosPub::ConvertData(
   ROS_INFO_STREAM("ad_info msgDefinition: " << data->msgDefinition);
 
   if (!advertiseTopic(output_topic, ad_info)) {
-    ROS_ERROR("Comms Bridge Nodelet: Error advertising topic: %s\n",
-              output_topic.c_str());
+    ROS_INFO("Comms Bridge Nodelet: Received more than one advertisement info message for topic: %s\n",
+             output_topic.c_str());
   }
 }
 
@@ -75,7 +75,7 @@ void GenericRapidMsgRosPub::ConvertData(
     topic_info.ad_info.md5_sum = data->md5Sum;
     iter = m_relay_topics_.emplace(output_topic, topic_info).first;
 
-    // TODO(Katie) Do we request advertisement info
+    // TODO(Katie) Working on this in another branch
     // requestAdvertisementInfo(output_topic);
   }
 
