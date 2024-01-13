@@ -203,7 +203,7 @@
         </durability>
         <history>
           <kind>KEEP_LAST_HISTORY_QOS</kind>
-          <depth>1</depth>
+          <depth>20</depth>
         </history>
       </datareader_qos>
       <datawriter_qos>
@@ -215,7 +215,7 @@
         </durability>
         <history>
           <kind>KEEP_LAST_HISTORY_QOS</kind>
-          <depth>1</depth>
+          <depth>20</depth>
         </history>
       </datawriter_qos>
     </qos_profile>
