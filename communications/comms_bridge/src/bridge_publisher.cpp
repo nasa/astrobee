@@ -118,6 +118,11 @@ bool BridgePublisher::relayContent(RelayTopicInfo& topic_info, const ContentInfo
     return false;
   }
 
+  // Output error if inconsistent type info
+  if (topic_info.ad_info.md5_sum != content_info.type_md5_sum) {
+    ROS_ERROR("Content md5 sum doesn't match the advertiment info md5 sum. This could cause issues!");
+  }
+
   // will always succeed, even if inconsistent type info
   shifter.morph(topic_info.ad_info.md5_sum, topic_info.ad_info.data_type, topic_info.ad_info.definition, "");
 
