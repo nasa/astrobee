@@ -25,7 +25,7 @@ One can either change the 'initialize_dds_on_start' parameter in the comms bridg
 config file to true before starting flight software or send an "enable astrobee
 intercomms" command to astrobee after the flight software has started.
 
-## Specifing Topics
+## Specifying Topics
 
 To add topics to be passed between robots, please see the comms bridge config
 file. The comments in the config file should explain how to add topics.
@@ -47,4 +47,6 @@ no more than 20 topics being passed between robots. If more topics are required,
 please change the message depth in the "RAPID_QOS_PROFILES.xml" file in the
 "dds_generic_comms" folder. The depth for the "RapidReliableDurableQos" will
 need to be changed for both the "datareader_qos" and the "datawriter_qos". This
-should be on or around lines 206 and 218 in the file.
+should be on or around lines 206 and 218 in the file. You will also need to
+change the value check in the "comms_bridge_nodelet.cpp" file on or around
+line 307.

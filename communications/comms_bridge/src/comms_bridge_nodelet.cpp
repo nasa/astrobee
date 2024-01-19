@@ -279,6 +279,7 @@ class CommsBridgeNodelet : public ff_util::FreeFlyerNodelet {
 
     std::string ns = std::string("/") + agent_name_ + "/";
     ns[1] = std::tolower(ns[1]);  // namespaces don't start with upper case
+    int num_topics = 0;
     ROS_INFO_STREAM("Read Params numebr of links: " << links.GetSize());
     for (int i = 1; i <= links.GetSize(); i++) {
       if (!links.GetTable(i, &link)) {
@@ -286,18 +287,25 @@ class CommsBridgeNodelet : public ff_util::FreeFlyerNodelet {
         continue;
       }
       std::string config_agent, connection_agent;
+      num_topics = 0;
       ROS_INFO_STREAM("Link " << i << " from " << link.GetStr("from", &config_agent));
       ROS_INFO_STREAM("Link " << i << " to " << link.GetStr("to", &config_agent));
       if (link.GetStr("from", &config_agent) && config_agent == agent_name_) {
         if (AddRapidConnections(link, "to", connection_agent)) {
-          AddTableToSubs(link, "relay_forward", ns, connection_agent);
-          AddTableToSubs(link, "relay_both", ns, connection_agent);
+          AddTableToSubs(link, "relay_forward", ns, connection_agent, num_topics);
+          AddTableToSubs(link, "relay_both", ns, connection_agent, num_topics);
         }
       } else if (link.GetStr("to", &config_agent) && config_agent == agent_name_) {
         if (AddRapidConnections(link, "from", connection_agent)) {
-          AddTableToSubs(link, "relay_backward", ns, connection_agent);
-          AddTableToSubs(link, "relay_both", ns, connection_agent);
+          AddTableToSubs(link, "relay_backward", ns, connection_agent, num_topics);
+          AddTableToSubs(link, "relay_both", ns, connection_agent, num_topics);
         }
+      }
+
+      // Check to make sure the number of topics added doesn't exceed the
+      // the number of messages dds reliably delivers
+      if (num_topics > 20) {
+        ROS_ERROR("Comms bridge: Num of added topics is greater than the number of topics dds will reliably deliver.");
       }
     }
     return true;
@@ -328,10 +336,12 @@ class CommsBridgeNodelet : public ff_util::FreeFlyerNodelet {
   void AddTableToSubs(config_reader::ConfigReader::Table &link_table,
                       std::string table_name,
                       std::string const& current_robot_ns,
-                      std::string const& connection_robot) {
+                      std::string const& connection_robot,
+                      int &num_topics) {
     config_reader::ConfigReader::Table relay_table, relay_item;
     std::string in_topic, out_topic;
     if (link_table.GetTable(table_name.c_str(), &relay_table)) {
+      num_topics += relay_table.GetSize();
       for (size_t i = 1; i <= relay_table.GetSize(); i++) {
         relay_table.GetTable(i, &relay_item);
         if (!relay_item.GetStr("in_topic", &in_topic)) {
