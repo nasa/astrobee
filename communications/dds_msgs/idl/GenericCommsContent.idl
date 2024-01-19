@@ -1,0 +1,39 @@
+/*
+ * Copyright 2023 (c) 2023 Intelligent Robotics Group, NASA ARC
+ */
+
+#include "Message.idl"
+
+module rapid {
+  module ext {
+    module astrobee {
+
+      //@copy-c-declaration class GenericCommsContentTypeSupport;
+      //@copy-c-declaration class GenericCommsContentDataWriter;
+      //@copy-c-declaration class GenericCommsContentDataReader;
+      //@copy-c-declaration struct GenericCommsContentSeq;
+
+      //@copy-declaration /**
+      //@copy-declaration   * Content of a generic comms ROS message
+      //@copy-declaration   */
+      valuetype GenericCommsContent : Message {
+        //@copy-c-declaration #if RTI_DDS_VERSION_MAJOR < 4 || (RTI_DDS_VERSION_MAJOR == 4  && RTI_DDS_VERSION_MINOR < 5) || (RTI_DDS_VERSION_MAJOR == 4  && RTI_DDS_VERSION_MINOR  == 5 && RTI_DDS_VERSION_RELEASE != 'f' )
+        //@copy-c-declaration typedef GenericCommsContentTypeSupport TypeSupport;
+        //@copy-c-declaration typedef GenericCommsContentDataWriter DataWriter;
+        //@copy-c-declaration typedef GenericCommsContentDataReader DataReader;
+        //@copy-c-declaration typedef GenericCommsContentSeq Seq;
+        //@copy-c-declaration #endif
+        //@copy-c-declaration typedef GenericCommsContent Type;
+
+        //@copy-declaration /** Topic on which to republish */
+        public String128 outputTopic;
+
+        //@copy-declaration /** The md5 sum of msg type repeated from the original advertisement */
+        public String64 md5Sum;
+
+        //@copy-declaration /** Serialized content of the message */
+        public OctetSequence128K data;
+      };
+    };
+  };
+};
