@@ -6660,8 +6660,8 @@ def FlagCxx11Features(filename, clean_lines, linenum, error):
     if include and include.group(1) in (
         "cfenv",
         "fenv.h",
-        "condition_variable",
-        "future",
+        # "condition_variable",
+        # "future",
         "ratio",
         "regex",
         "system_error",

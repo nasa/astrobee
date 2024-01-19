@@ -1,0 +1,46 @@
+/*
+ * Copyright 2023 (c) 2023 Intelligent Robotics Group, NASA ARC
+ */
+
+#include "Message.idl"
+
+module rapid {
+  module ext {
+    module astrobee {
+      typedef string<8192> String8K;
+
+      //@copy-c-declaration class GenericCommsAdvertisementInfoTypeSupport;
+      //@copy-c-declaration class GenericCommsAdvertisementInfoDataWriter;
+      //@copy-c-declaration class GenericCommsAdvertisementInfoDataReader;
+      //@copy-c-declaration struct GenericCommsAdvertisementInfoSeq;
+
+      //@copy-declaration /**
+      //@copy-declaration   * Information of the topic type for generic comms.
+      //@copy-declaration   */
+      valuetype GenericCommsAdvertisementInfo : Message {
+        //@copy-c-declaration #if RTI_DDS_VERSION_MAJOR < 4 || (RTI_DDS_VERSION_MAJOR == 4  && RTI_DDS_VERSION_MINOR < 5) || (RTI_DDS_VERSION_MAJOR == 4  && RTI_DDS_VERSION_MINOR  == 5 && RTI_DDS_VERSION_RELEASE != 'f' )
+        //@copy-c-declaration typedef GenericCommsAdvertisementInfoTypeSupport TypeSupport;
+        //@copy-c-declaration typedef GenericCommsAdvertisementInfoDataWriter DataWriter;
+        //@copy-c-declaration typedef GenericCommsAdvertisementInfoDataReader DataReader;
+        //@copy-c-declaration typedef GenericCommsAdvertisementInfoSeq Seq;
+        //@copy-c-declaration #endif
+        //@copy-c-declaration typedef GenericCommsAdvertisementInfo Type;
+
+        //@copy-declaration /** Topic on which to republish */
+        public String128 outputTopic;
+
+        //@copy-declaration /** Whether republisher should advertise topic as latching */
+        public boolean latching;
+
+        //@copy-declaration /** ROS message data type name */
+        public String128 dataType;
+
+        //@copy-declaration /** ROS message md5sum of type */
+        public String64 md5Sum;
+
+        //@copy-declaration /** ROS message definition */
+        public String8K msgDefinition;
+      };
+    };
+  };
+};

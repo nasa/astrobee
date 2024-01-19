@@ -1,0 +1,6 @@
+;; NDDS_DISCOVERY_PEERS - Discovery Configuration File
+;; This file is used to configure the dds portion of the comms bridge
+; EVERY LINE IN THIS FILE MUST END IN A COMMENT. Even blank lines.
+;
+;; Add the IP addresses of the robots to communicate with
+127.0.0.1       ; Local host is added by default
