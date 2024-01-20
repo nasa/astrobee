@@ -587,6 +587,7 @@ void AckCallback(ff_msgs::AckStampedConstPtr const& ack) {
     std::cout << "\n" << ack->cmd_id << " command failed! " << ack->message;
     std::cout << "\n";
     ros::shutdown();
+    exit(1);
     return;
   }
   if (Finished()) {
