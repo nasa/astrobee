@@ -55,6 +55,7 @@ DEFINE_bool(undock, false, "Send undock command");
 DEFINE_bool(relative, false, "Position is relative to current point");
 DEFINE_bool(reset_bias, false, "Send initialize bias command");
 DEFINE_bool(reset_ekf, false, "Send reset ekf command");
+DEFINE_bool(remote, false, "Whether target command is remote robot");
 
 DEFINE_double(accel, -1.0, "Desired acceleration");
 DEFINE_double(alpha, -1.0, "Desired angular acceleration");
@@ -586,6 +587,7 @@ void AckCallback(ff_msgs::AckStampedConstPtr const& ack) {
     std::cout << "\n" << ack->cmd_id << " command failed! " << ack->message;
     std::cout << "\n";
     ros::shutdown();
+    exit(1);
     return;
   }
   if (Finished()) {
@@ -736,7 +738,7 @@ int main(int argc, char** argv) {
 
   // Hacky time out
   int count = 0;
-  while (ack_sub.getNumPublishers() == 0) {
+  while (ack_sub.getNumPublishers() == 0 && !FLAGS_remote) {
     ros::Duration(0.2).sleep();
     // Only wait 2 seconds
     if (count == 9) {
@@ -748,7 +750,7 @@ int main(int argc, char** argv) {
   }
 
   // If the user wants to get pose or move, get the current pose of the robot
-  if (FLAGS_get_pose || FLAGS_move) {
+  if (FLAGS_get_pose || (FLAGS_move && !FLAGS_remote)) {
     std::string ns = FLAGS_ns;
     // Wait for transform listener to start up
     ros::Duration(1.0).sleep();
@@ -802,7 +804,7 @@ int main(int argc, char** argv) {
     dock_sub = nh.subscribe(topic_name, 10, &DockFeedbackCallback);
     // Hacky time out
     int dock_count = 0;
-    while (dock_sub.getNumPublishers() == 0) {
+    while (dock_sub.getNumPublishers() == 0 && !FLAGS_remote) {
       ros::Duration(0.2).sleep();
       // Only wait 2 seconds
       if (dock_count == 9) {
@@ -812,6 +814,16 @@ int main(int argc, char** argv) {
       }
       dock_count++;
     }
+  }
+
+  // If remote, spin for seconds
+  if (FLAGS_remote) {
+    ros::Rate loop_rate(10);
+    ros::Time start_time = ros::Time::now();
+
+    // Spin for 3 seconds
+    while (ros::Time::now() - start_time < ros::Duration(3.0))
+        loop_rate.sleep();
   }
 
   if (!SendNextCommand()) {
