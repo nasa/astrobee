@@ -18,25 +18,37 @@
 # under the License.
 
 import numpy as np
+import pose_with_covariance
 import timestamped_pose_with_covariance
-import timestamped_velocity 
+import timestamped_velocity_with_covariance 
 import scipy.spatial.transform
 
 # Return list of 3 lists, one each for x, y, z values in poses
 def xyz_vectors_from_poses(poses):
-    return [(pose.position[0] for pose in poses), (pose.position[1] for pose in poses), (pose.position[2] for pose in poses)]
+    # TODO: Do this more efficiently
+    xs = [pose.position[0] for pose in poses] 
+    ys = [pose.position[1] for pose in poses] 
+    zs = [pose.position[2] for pose in poses] 
+    return [xs, ys, zs]
 
 # Return list of 3 lists, one each for y, p, r values in poses
 def ypr_vectors_from_poses(poses):
-    return [(pose.euler_angles[0] for pose in poses), (pose.euler_angles[1] for pose in poses), (pose.euler_angles[2] for pose in poses)]
+    # TODO: Do this more efficiently
+    ys = [euler_angles[0] for euler_angles in (pose.euler_angles() for pose in poses)]
+    ps = [euler_angles[1] for euler_angles in (pose.euler_angles() for pose in poses)]
+    rs = [euler_angles[2] for euler_angles in (pose.euler_angles() for pose in poses)]
+    return [ys, ps, rs]
 
 # Return list of 3 lists, one each for x, y, z values in velocities 
 def xyz_vectors_from_velocities(velocities):
-    return [(velocity.x for velocity in velocities), (velocity.y for velocity in velocities), (velocity.z for velocity in velocities)]
+    xs = [velocity.x for velocity in velocities] 
+    xs = [velocity.y for velocity in velocities] 
+    xs = [velocity.z for velocity in velocities] 
+    return [xs, ys, zs]
 
 # Return list of times for given timestamped objects 
 def times_from_timestamped_objects(timestamped_objects):
-    return (obj.timestamp for obj in objects)
+    return [obj.timestamp for obj in timestamped_objects]
 
 # Return list of diagonal position covariance norms from poses 
 def diagonal_position_covariance_norms_from_poses(poses):
@@ -46,7 +58,7 @@ def diagonal_position_covariance_norms_from_poses(poses):
     # Thus position diagonals occur at (3, 3), (4, 4), (5, 5) for the 6x6 matrix.
     # The msg stores covariances as an array with 36 values (from 0-35) where (x, y) occurs at 
     # x + 6*y. So (3, 3) -> 21, (4, 4) -> 28, (5, 5) -> 35
-    return (np.linalg.norm(pose.covariance[21], pose.covariance[28], pose.covariance[35]) for pose in poses)
+    return [np.linalg.norm(pose.covariance[21], pose.covariance[28], pose.covariance[35]) for pose in poses]
 
 # Return list of timestamped poses with covariances from graph vio states
 def timestamped_poses_with_covariance_from_graph_vio_states(graph_vio_states):

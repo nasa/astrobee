@@ -17,9 +17,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import vector3ds
-
-
 class Velocity(object):
     def __init__(self, x, y, z):
         self.x = x

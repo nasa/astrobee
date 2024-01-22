@@ -17,10 +17,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from pose_with_covariance import PoseWithCovariance 
+from velocity import Velocity 
 
-# Class that contains a timestamped pose and covariance.
-class TimestampedPoseWithCovariance(PoseWithCovariance):
-    def __init__(self, orientation, position, covariance, timestamp):
-        PoseWithCovariance.__init__(self, orientation, position, timestamp)
-        self.covariance = covariance
+# Class that contains a timestamped velocity and covariance.
+class TimestampedVelocity(Velocity):
+    def __init__(self, velocity, timestamp):
+        Velocity.__init__(self, velocity)
+        self.timestamp = timestamp

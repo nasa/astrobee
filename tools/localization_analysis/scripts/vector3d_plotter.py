@@ -23,7 +23,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # Class for plotting 3d vector values on the same and separate plots.
-class Vector3dPlotter:
+class Vector3dPlotter(object):
     def __init__(
         self,
         name,
@@ -57,7 +57,7 @@ class Vector3dPlotter:
         self.markersize = markersize
 
     # Plot x, y, and z values on the same plot.
-    def full_plot(self):
+    def plot_xyz(self):
         self.plot_x()
         self.plot_y()
         self.plot_z()

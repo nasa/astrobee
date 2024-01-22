@@ -17,19 +17,19 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 """
-Utility functions for interacting with ros bags.
+Functions for loading messages from ros bags.
 """
 
 import rosbag
 
-# Load poses from a bag file for a set of poses with desired topics.
+import message_conversions
+
+# Load poses from a bag file for a given topic.
 # Start at the provided bag start time.
-def load_pose_msgs(poses_vector, topics, bag, bag_start_time):
-    for topic, msg, t in bag.read_messages(topics):
-        for poses, pose_topic in zip(poses_vector, topics):
-            if pose_topic == topic:
-                poses.add_msg(msg, msg.header.stamp, bag_start_time)
-                break
+def load_pose_msgs(timestamped_poses, topic, bag, bag_start_time):
+    for msg_topic, msg, t in bag.read_messages(topic):
+        if msg_topic == topic:
+            timestamped_poses.append(message_conversions.timestamped_pose_from_msg(msg, bag_start_time))
 
 # Load odometry poses from a bag file for a set of odometry poses with desired topics.
 # Start at the provided bag start time.

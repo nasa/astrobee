@@ -17,7 +17,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import VelocityWithCovariance
+from velocity_with_covariance import VelocityWithCovariance 
 
 # Class that contains a timestamped velocity and covariance.
 class TimestampedVelocityWithCovariance(VelocityWithCovariance):

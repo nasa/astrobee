@@ -18,7 +18,7 @@
 # under the License.
 
 # Pose class that contains an orientation and position and supports pose multiplication.
-class Pose:
+class Pose(object):
     def __init__(self, orientation, position):
         self.orientation = orientation
         self.position = position
@@ -30,9 +30,9 @@ class Pose:
         return Pose(new_orientation, new_position)
 
     # Returns the orientation as ZYX euler angles (YPR).
-    def __euler_angles__(self):
+    def euler_angles(self):
         return self.orientation.as_euler("ZYX", degrees=True)
 
     # Returns the position.
-    def __position__(self):
+    def position(self):
         return self.position 

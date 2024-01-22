@@ -18,7 +18,8 @@
 # under the License.
 
 import numpy as np
-import timestamped_pose_with_covariance
+from timestamped_pose import TimestampedPose
+from timestamped_pose_with_covariance import TimestampedPoseWithCovariance
 import timestamped_velocity 
 import scipy.spatial.transform
 
@@ -27,21 +28,32 @@ import scipy.spatial.transform
 def relative_timestamp(timestamp, bag_start_time):
     return timestamp.secs + 1e-9 * timestamp.nsecs - bag_start_time
 
-# Create a timestamped pose with covariance from a pose msg using relative bag time. 
-def pose_from_msg(pose_msg, bag_start_time=0):
+# Helper function to return orientation, position, and timestamp from a pose msg. 
+def pose_info_from_msg(pose_msg, bag_start_time=0):
     orientation = scipy.spatial.transform.Rotation.from_quat(
         [
-            pose_msg.orientation.x,
-            pose_msg.orientation.y,
-            pose_msg.orientation.z,
-            pose_msg.orientation.w,
+            pose_msg.pose.orientation.x,
+            pose_msg.pose.orientation.y,
+            pose_msg.pose.orientation.z,
+            pose_msg.pose.orientation.w,
         ]
     )
-    self.add_orientation_and_position(
-        orientation, pose_msg.position.x, pose_msg.position.y, pose_msg.position.z
-    )
-    timestamp = relative_timestamp(msg.header.stamp, bag_start_time)
-    return TimestampedPoseWithCovariance(orientation, [pose_msg.position.x, pose_msg.position.y, pose_msg.position.z], msg.covariance, pose_timestamp)
+    timestamp = relative_timestamp(pose_msg.header.stamp, bag_start_time)
+    return orientation, [pose_msg.pose.position.x, pose_msg.pose.position.y, pose_msg.pose.position.z], timestamp
+
+
+
+# Create a timestamped pose with covariance from a pose msg using relative bag time. 
+def timestamped_pose_from_msg(pose_msg, bag_start_time=0):
+    orientation, position, timestamp = pose_info_from_msg(pose_msg, bag_start_time)
+    return TimestampedPose(orientation, position, timestamp)
+
+
+
+# Create a timestamped pose with covariance from a pose msg using relative bag time. 
+def timestamped_pose_with_covariance_from_msg(pose_msg, bag_start_time=0):
+    orientation, position, timestamp = pose_info_from_msg(pose_msg, bag_start_time)
+    return TimestampedPoseWithCovariance(orientation, position, pose_msgs.covariance, timestamp)
 
 # Create a timestamped velocity from a velocity msg using relative bag time. 
 def velocity_from_msg(velocity_msg, bag_start_time=0):

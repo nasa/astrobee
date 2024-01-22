@@ -17,10 +17,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import Velocity
+from velocity import Velocity
 
 # Class that contains a velocity and covariance.
 class VelocityWithCovariance(Velocity):
     def __init__(self, velocity, covariance):
-        self.velocity = velocity 
+        Velocity(self, velocity)
         self.covariance = covariance

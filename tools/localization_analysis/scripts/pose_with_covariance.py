@@ -17,7 +17,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import Pose
+from pose import Pose
 
 # Class that contains a pose and covariance.
 class PoseWithCovariance(Pose):

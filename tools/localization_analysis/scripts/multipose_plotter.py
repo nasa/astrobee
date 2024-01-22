@@ -18,19 +18,22 @@
 # under the License.
 
 import matplotlib
-import poses
+from orientation_plotter import OrientationPlotter
+import plot_conversions
+import pose
 import vector3d_plotter
 
 matplotlib.use("pdf")
 import matplotlib.pyplot as plt
 import numpy as np
+import sys
 
 # Convert a list of angles from radians to degrees.
 def radians_to_degrees(angles):
     return np.rad2deg(np.unwrap(np.deg2rad(angles)))
 
 # Plotter that allows plotting multiple pose positions and orientations in the same plots.
-# Pass poses to plot using the add_pose_position(...) and add_pose_orientation(...) functions.
+# Pass poses to plot using the add_poses function.
 # Optionally also plot individual plots for each position or orientation axis (x/y/z or r/p/y) if individual plots is true.
 class MultiPosePlotter:
     def __init__(self, xlabel, ylabel, title, individual_plots = False):
@@ -40,8 +43,37 @@ class MultiPosePlotter:
         self.individual_plots = individual_plots
         self.vector3d_plotters = []
 
+    # Add poses to position and orientation plots
+    def add_poses(self,
+        name, 
+        timestamped_poses,
+        colors=["r", "b", "g"],
+        linestyle="-",
+        linewidth=1,
+        marker=None,
+        markeredgewidth=None,
+        markersize=1,
+    ):
+        self.add_poses_positions(name, timestamped_poses,
+        colors,
+        linestyle,
+        linewidth,
+        marker,
+        markeredgewidth,
+        markersize)
+
+        self.add_poses_orientations(name, timestamped_poses,
+        colors,
+        linestyle,
+        linewidth,
+        marker,
+        markeredgewidth,
+        markersize)
+
+ 
+
     # Add poses to position plots.
-    def add_pose_position(
+    def add_poses_positions(
         self,
         name, 
         timestamped_poses,
@@ -71,8 +103,8 @@ class MultiPosePlotter:
         )
         self.add_vector3d_plotter(position_plotter)
 
-    # Add pose to orientation plots
-    def add_pose_orientation(
+    # Add poses to orientation plots
+    def add_poses_orientations(
         self,
         name, 
         timestamped_poses,
@@ -85,13 +117,12 @@ class MultiPosePlotter:
     ):
         ypr_vectors = plot_conversions.ypr_vectors_from_poses(timestamped_poses)
         times = plot_conversions.times_from_timestamped_objects(timestamped_poses)
-        orientation_plotter = vector3d_plotter.Vector3dPlotter(
+        orientation_plotter = OrientationPlotter(
             name,
             times,
             radians_to_degrees(ypr_vectors[0]),
             radians_to_degrees(ypr_vectors[1]),
             radians_to_degrees(ypr_vectors[2]),
-            ["Orientation (Yaw)", "Orientation (Roll)", "Orientation (Pitch)"],
             colors,
             linestyle,
             linewidth,
@@ -110,7 +141,7 @@ class MultiPosePlotter:
     def plot(self, pdf, individual_plots=True):
         plt.figure()
         for vector3d_plotter in self.vector3d_plotters:
-            vector3d_plotter.full_plot()
+            vector3d_plotter.plot_xyz()
         plt.xlabel(self.xlabel)
         plt.ylabel(self.ylabel)
         plt.title(self.title)
