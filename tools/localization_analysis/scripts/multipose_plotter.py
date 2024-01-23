@@ -19,9 +19,10 @@
 
 import matplotlib
 from orientation_plotter import OrientationPlotter
+from position_plotter import PositionPlotter
 import plot_conversions
 import pose
-import vector3d_plotter
+from multivector3d_plotter import MultiVector3dPlotter
 
 matplotlib.use("pdf")
 import matplotlib.pyplot as plt
@@ -41,7 +42,8 @@ class MultiPosePlotter:
         self.ylabel = ylabel
         self.title = title
         self.individual_plots = individual_plots
-        self.vector3d_plotters = []
+        self.orientations_plotter = MultiVector3dPlotter(xlabel, ylabel, title, individual_plots)
+        self.positions_plotter = MultiVector3dPlotter(xlabel, ylabel, title, individual_plots)
 
     # Add poses to position and orientation plots
     def add_poses(self,
@@ -54,7 +56,7 @@ class MultiPosePlotter:
         markeredgewidth=None,
         markersize=1,
     ):
-        self.add_poses_positions(name, timestamped_poses,
+        self.add_pose_positions(name, timestamped_poses,
         colors,
         linestyle,
         linewidth,
@@ -62,7 +64,7 @@ class MultiPosePlotter:
         markeredgewidth,
         markersize)
 
-        self.add_poses_orientations(name, timestamped_poses,
+        self.add_pose_orientations(name, timestamped_poses,
         colors,
         linestyle,
         linewidth,
@@ -73,7 +75,7 @@ class MultiPosePlotter:
  
 
     # Add poses to position plots.
-    def add_poses_positions(
+    def add_pose_positions(
         self,
         name, 
         timestamped_poses,
@@ -87,13 +89,12 @@ class MultiPosePlotter:
 
         xyz_vectors = plot_conversions.xyz_vectors_from_poses(timestamped_poses)
         times = plot_conversions.times_from_timestamped_objects(timestamped_poses)
-        position_plotter = vector3d_plotter.Vector3dPlotter(
+        position_plotter = PositionPlotter(
             name,
             times,
             xyz_vectors[0],
             xyz_vectors[1],
             xyz_vectors[2],
-            ["Pos. (X)", "Pos. (Y)", "Pos. (Z)"],
             colors,
             linestyle,
             linewidth,
@@ -101,10 +102,10 @@ class MultiPosePlotter:
             markeredgewidth,
             markersize,
         )
-        self.add_vector3d_plotter(position_plotter)
+        self.positions_plotter.add(position_plotter)
 
     # Add poses to orientation plots
-    def add_poses_orientations(
+    def add_pose_orientations(
         self,
         name, 
         timestamped_poses,
@@ -130,62 +131,10 @@ class MultiPosePlotter:
             markeredgewidth,
             markersize,
         )
-        self.add_vector3d_plotter(orientation_plotter)
+        self.orientations_plotter.add(orientation_plotter)
 
-    # Helper function to add vector 3d plotters that should be called during plotting.
-    def add_vector3d_plotter(self, vector3d_plotter):
-        self.vector3d_plotters.append(vector3d_plotter)
-
-    # Plot each of the added y values. Optionally plot individual axes on seperate plots
+    # Plot each of the added pose values. Plots positions and orientations in different plots. Optionally plot individual axes on seperate plots
     # if individual_plots set to True.
     def plot(self, pdf, individual_plots=True):
-        plt.figure()
-        for vector3d_plotter in self.vector3d_plotters:
-            vector3d_plotter.plot_xyz()
-        plt.xlabel(self.xlabel)
-        plt.ylabel(self.ylabel)
-        plt.title(self.title)
-        plt.legend(prop={"size": 6})
-        pdf.savefig()
-        plt.close()
-
-        if individual_plots:
-            self.plot_xs(pdf)
-            self.plot_ys(pdf)
-            self.plot_zs(pdf)
-
-    # Plot x values. 
-    def plot_xs(self, pdf):
-        plt.figure()
-        for vector3d_plotter in self.vector3d_plotters:
-            vector3d_plotter.plot_x()
-        plt.xlabel(self.xlabel)
-        plt.ylabel(self.ylabel)
-        plt.title(self.title)
-        plt.legend(prop={"size": 6})
-        pdf.savefig()
-        plt.close()
-
-    # Plot y values. 
-    def plot_ys(self, pdf):
-        plt.figure()
-        for vector3d_plotter in self.vector3d_plotters:
-            vector3d_plotter.plot_y()
-        plt.xlabel(self.xlabel)
-        plt.ylabel(self.ylabel)
-        plt.title(self.title)
-        plt.legend(prop={"size": 6})
-        pdf.savefig()
-        plt.close()
-
-    # Plot z values. 
-    def plot_zs(self, pdf):
-        plt.figure()
-        for vector3d_plotter in self.vector3d_plotters:
-            vector3d_plotter.plot_z()
-        plt.xlabel(self.xlabel)
-        plt.ylabel(self.ylabel)
-        plt.title(self.title)
-        plt.legend(prop={"size": 6})
-        pdf.savefig()
-        plt.close()
+        self.positions_plotter.plot(pdf, individual_plots)
+        self.orientations_plotter.plot(pdf, individual_plots)

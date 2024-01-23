@@ -26,8 +26,8 @@
 
 - start plotting VIO!
     - run new localizer using a bag file, save results to bag!
-      - does this already exist??? test!
-        - update script! make sure it works! (AAA)
+        - fix plotting orientations and positions in same plots! (A)
+        - add plotting graph vio states! (B)
     - add super init calls to inherited pose states!
     - finish plot vio script! (AA)
       - Avoid iterating through bag multiple times!!!
