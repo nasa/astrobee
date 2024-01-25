@@ -18,6 +18,7 @@
 # under the License.
 
 import numpy as np
+from value_plotter import ValuePlotter
 from vector3d_plotter import Vector3dPlotter
 import scipy.spatial.transform
 
@@ -111,3 +112,8 @@ def gyro_bias_plotter_from_graph_vio_states(graph_vio_states):
   xs, ys, zs = xyz_gyro_bias_vectors_from_graph_vio_states(graph_vio_states)
   times = times_from_timestamped_objects(graph_vio_states) 
   return Vector3dPlotter("Graph VIO Gyro Bias", times, xs, ys, zs, ['X', 'Y', 'Z'])
+
+def optical_flow_feature_count_plotter_from_graph_vio_states(graph_vio_states):
+  counts = optical_flow_factor_counts_from_graph_vio_states(graph_vio_states)
+  times = times_from_timestamped_objects(graph_vio_states) 
+  return ValuePlotter("Graph VIO OF Counts", times, counts, "Time (s)", "Count", "OF")

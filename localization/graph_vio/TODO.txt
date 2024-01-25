@@ -27,11 +27,9 @@
 - start plotting VIO!
     - finish plot vio script! 
           - fix vio plotting! 
-            - add plottig gyro bias values! (AAAA)
-            - add plotting num factors! (B)
-            - add plotting num features! (C)
-           
-            - add initilizing first vio value using groundtruth value! (AAAC)
+            - add plotting num factors! (A)
+            - add plotting num features! (B)
+            - add initilizing first vio value using groundtruth value! (C)
               - make all future poses relative to this!
                 - add function to do this??
 

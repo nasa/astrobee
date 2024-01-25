@@ -90,6 +90,9 @@ def plot_vio_results(
     gyro_bias_plotters.add(graph_vio_gyro_bias_plotter)
     gyro_bias_plotters.plot(pdf)
 
+    of_count_plotter = plot_conversions.optical_flow_feature_count_plotter_from_graph_vio_states(graph_vio_states)
+    of_count_plotter.plot(pdf)
+
 
 
 
