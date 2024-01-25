@@ -22,5 +22,5 @@ from pose_with_covariance import PoseWithCovariance
 # Class that contains a timestamped pose and covariance.
 class TimestampedPoseWithCovariance(PoseWithCovariance):
     def __init__(self, orientation, position, covariance, timestamp):
-        PoseWithCovariance.__init__(self, orientation, position, timestamp)
-        self.covariance = covariance
+        super(TimestampedPoseWithCovariance, self).__init__(orientation, position)
+        self.timestamp = timestamp

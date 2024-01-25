@@ -28,6 +28,7 @@ import sys
 
 import message_reader 
 import multipose_plotter
+from timestamped_pose import TimestampedPose
 #import plotting_utilities
 
 import matplotlib
@@ -43,7 +44,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 def plot_vio_results(
     pdf,
     groundtruth_poses,
-    #graph_localization_states,
+    graph_vio_states,
 ):
     poses_plotter = multipose_plotter.MultiPosePlotter("Time (s)", "Position (m)", "Graph vs. Groundtruth Position", True)
     poses_plotter.add_poses(
@@ -54,6 +55,14 @@ def plot_vio_results(
         markeredgewidth=0.1,
         markersize=1.5,
     )
+
+    graph_vio_poses = [TimestampedPose(graph_vio_state.pose_with_covariance.orientation, graph_vio_state.pose_with_covariance.position, graph_vio_state.timestamp) for graph_vio_state in graph_vio_states]
+    poses_plotter.add_poses(
+        "Graph VIO Poses", 
+        graph_vio_poses,
+        linestyle="-",
+    )
+
 #    if ar_tag_poses.times:
 #        position_plotter.add_pose_position(
 #            ar_tag_poses,
@@ -163,18 +172,12 @@ def load_data_and_create_vio_plots(
     # Load groundtruth poses
     # Use sparse mapping poses as groundtruth. 
     groundtruth_poses = []
-    message_reader.load_pose_msgs(groundtruth_poses, "/sparse_mapping/pose", groundtruth_bag, bag_start_time)
+    message_reader.load_poses(groundtruth_poses, "/sparse_mapping/pose", groundtruth_bag, bag_start_time)
 
 
-    # Load VIO msgs 
-    # TODO: create this!!
-    #graph_vio_states = vio_states.LocStates(
-    #    "Graph Localization", "/graph_loc/state"
-    #)
-    #vec_of_vio_states = [
-    #    graph_vio_states
-    #]
-    #load_vio_state_msgs(vec_of_vio_states, bag, bag_start_time)
+    # Load graph VIO states 
+    graph_vio_states = []
+    message_reader.load_graph_vio_states(graph_vio_states, "/graph_vio/state", bag, bag_start_time)
     bag.close()
 
     with PdfPages(output_pdf_file) as pdf:
@@ -182,7 +185,7 @@ def load_data_and_create_vio_plots(
             pdf,
             groundtruth_poses,
             #ar_tag_poses,
-            #graph_vio_states,
+            graph_vio_states,
             #imu_augmented_graph_localization_states,
         )
     #    add_other_loc_plots(

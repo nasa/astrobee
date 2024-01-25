@@ -22,6 +22,5 @@ from pose import Pose
 # Class that contains a pose and covariance.
 class PoseWithCovariance(Pose):
     def __init__(self, orientation, position, covariance):
-        self.orientation = orientation
-        self.position = position
+        super(PoseWithCovariance, self).__init__(orientation, position)
         self.covariance = covariance

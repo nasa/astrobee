@@ -26,10 +26,18 @@ import message_conversions
 
 # Load poses from a bag file for a given topic.
 # Start at the provided bag start time.
-def load_pose_msgs(timestamped_poses, topic, bag, bag_start_time):
+def load_poses(timestamped_poses, topic, bag, bag_start_time):
     for msg_topic, msg, t in bag.read_messages(topic):
         if msg_topic == topic:
             timestamped_poses.append(message_conversions.timestamped_pose_from_msg(msg, bag_start_time))
+
+# Load graph vio states from a bag file for a given topic.
+# Start at the provided bag start time.
+def load_graph_vio_states(graph_vio_states, topic, bag, bag_start_time):
+    for msg_topic, msg, t in bag.read_messages(topic):
+        if msg_topic == topic:
+            graph_vio_states.append(message_conversions.graph_vio_state_from_msg(msg, bag_start_time))
+
 
 # Load odometry poses from a bag file for a set of odometry poses with desired topics.
 # Start at the provided bag start time.

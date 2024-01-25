@@ -16,6 +16,6 @@
 # under the License.
 #
 Header header
-geometry_msgs/PoseWithCovariance pose 
+geometry_msgs/PoseWithCovarianceStamped pose 
 VelocityWithCovariance velocity
 ImuBiasWithCovariance imu_bias
