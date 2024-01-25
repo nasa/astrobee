@@ -93,10 +93,9 @@ def timestamped_imu_biases_with_covariance_from_graph_vio_states(graph_vio_state
 def optical_flow_feature_counts_from_graph_vio_states(graph_vio_states):
     return [graph_vio_state.num_detected_of_features for graph_vio_state in graph_vio_states]
 
-# Return list of number of optical flow factors from graph vio states
+# Return list of optical flow factor counts from graph vio states
 def optical_flow_factor_counts_from_graph_vio_states(graph_vio_states):
-    return [graph_vio_state.num_detected_of_features for graph_vio_state in graph_vio_states]
-
+    return [graph_vio_state.num_of_factors for graph_vio_state in graph_vio_states]
 
 def velocity_plotter_from_graph_vio_states(graph_vio_states):
     xs, ys, zs = xyz_velocity_vectors_from_graph_vio_states(graph_vio_states)
@@ -114,6 +113,11 @@ def gyro_bias_plotter_from_graph_vio_states(graph_vio_states):
   return Vector3dPlotter("Graph VIO Gyro Bias", times, xs, ys, zs, ['X', 'Y', 'Z'])
 
 def optical_flow_feature_count_plotter_from_graph_vio_states(graph_vio_states):
+  counts = optical_flow_feature_counts_from_graph_vio_states(graph_vio_states)
+  times = times_from_timestamped_objects(graph_vio_states) 
+  return ValuePlotter("Graph VIO OF Counts", times, counts, "Time (s)", "Num Features", "OF")
+
+def optical_flow_factor_count_plotter_from_graph_vio_states(graph_vio_states):
   counts = optical_flow_factor_counts_from_graph_vio_states(graph_vio_states)
   times = times_from_timestamped_objects(graph_vio_states) 
-  return ValuePlotter("Graph VIO OF Counts", times, counts, "Time (s)", "Count", "OF")
+  return ValuePlotter("Graph VIO OF Factors", times, counts, "Time (s)", "Num Factors", "OF")

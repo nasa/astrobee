@@ -93,6 +93,11 @@ def plot_vio_results(
     of_count_plotter = plot_conversions.optical_flow_feature_count_plotter_from_graph_vio_states(graph_vio_states)
     of_count_plotter.plot(pdf)
 
+    of_num_factors_plotter = plot_conversions.optical_flow_factor_count_plotter_from_graph_vio_states(graph_vio_states)
+    of_num_factors_plotter.plot(pdf)
+
+
+
 
 
 
