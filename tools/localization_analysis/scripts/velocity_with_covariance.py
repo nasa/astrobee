@@ -21,6 +21,6 @@ from velocity import Velocity
 
 # Class that contains a velocity and covariance.
 class VelocityWithCovariance(Velocity):
-    def __init__(self, velocity, covariance):
-        Velocity(self, velocity)
+    def __init__(self, x, y, z, covariance):
+        super(VelocityWithCovariance, self).__init__(x, y, z)
         self.covariance = covariance

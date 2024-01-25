@@ -22,7 +22,7 @@ class GraphVIOState():
     def __init__(self):
         self.timestamp = None
         self.pose_with_covariance = None
-        #self.velocity_with_covariance = message_conversions.velocity_from_msg(msg.velocity, bag_start_time)
+        self.velocity_with_covariance = None
         #self.imu_bias_with_covariance = ImuBias(msg.accel_bias, msg.gyro_bias)
         #self.num_detected_of_features = msg.num_detected_of_features
         #self.num_of_factors = msg.num_of_factors

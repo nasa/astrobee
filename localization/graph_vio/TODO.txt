@@ -27,10 +27,15 @@
 - start plotting VIO!
     - finish plot vio script! (AA)
           - fix vio plotting! (AAA)
-      - plot graph vio vels
-      - plot graph vio imu biases 
-    - test vio plot script! (AB)
+            - add plottig velocity and bias values! (AAAA)
+            - add plotting imu values! (AAAAB)
+            - add initilizing first vio value using groundtruth value! (AAAC)
+              - make all future poses relative to this!
+                - add function to do this??
+            - whats going wrong??
     - add comments!
+    - rename pose node adder to relative pose node adder??
+      - update comments/readme/test/documentation?
     - update readme!
 
 - add regression tests?

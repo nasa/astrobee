@@ -23,6 +23,7 @@ from pose_with_covariance import PoseWithCovariance
 from timestamped_pose import TimestampedPose
 from timestamped_pose_with_covariance import TimestampedPoseWithCovariance
 import timestamped_velocity 
+from velocity_with_covariance import VelocityWithCovariance
 import scipy.spatial.transform
 
 # Subtract the bag start time from the timestamp
@@ -68,15 +69,19 @@ def timestamped_pose_with_covariance_from_msg(pose_msg, bag_start_time=0):
     return TimestampedPoseWithCovariance(orientation, position, pose_msgs.covariance, timestamp)
 
 # Create a timestamped velocity from a velocity msg using relative bag time. 
-def velocity_from_msg(velocity_msg, bag_start_time=0):
+def timestamped_velocity_from_msg(velocity_msg, bag_start_time=0):
     timestamp = relative_timestamp(velocity_msg.header.stamp, bag_start_time)
-    return TimestampedVelocity(velocity_msg.x, velocity_msg.y, velocity_msg.z, timestamp)
+    return TimestampedVelocity(velocity_msg.velocity.x, velocity_msg.velocity.y, velocity_msg.velocity.z, timestamp)
+
+# Create a timestamped velocity from a velocity msg using relative bag time. 
+def velocity_with_covariance_from_msg(velocity_msg, bag_start_time=0):
+    return VelocityWithCovariance(velocity_msg.velocity.x, velocity_msg.velocity.y, velocity_msg.velocity.z, velocity_msg.covariance)
 
 # Create a graph vio state from a msg using relative bag time. 
 def graph_vio_state_from_msg(msg, bag_start_time=0):
     graph_vio_state = GraphVIOState()
     # TODO: load all combined nav states???
-    # TODO: Remove combined nav state array msg? just use combined nav state []vector?
     graph_vio_state.timestamp = relative_timestamp(msg.header.stamp, bag_start_time)
-    graph_vio_state.pose_with_covariance = pose_with_covariance_from_msg(msg.combined_nav_states.combined_nav_states[0].pose)
+    graph_vio_state.pose_with_covariance = pose_with_covariance_from_msg(msg.combined_nav_states.combined_nav_states[-1].pose)
+    graph_vio_state.velocity_with_covariance = velocity_with_covariance_from_msg(msg.combined_nav_states.combined_nav_states[-1].velocity)
     return graph_vio_state
