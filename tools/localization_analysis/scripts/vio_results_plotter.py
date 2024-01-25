@@ -85,6 +85,13 @@ def plot_vio_results(
     accel_bias_plotters.add(graph_vio_accel_bias_plotter)
     accel_bias_plotters.plot(pdf)
 
+    gyro_bias_plotters = MultiVector3dPlotter("Time (s)", "Gyro Bias (rad/s^2)", "Graph VIO Gyro. Biases", True)
+    graph_vio_gyro_bias_plotter = plot_conversions.gyro_bias_plotter_from_graph_vio_states(graph_vio_states) 
+    gyro_bias_plotters.add(graph_vio_gyro_bias_plotter)
+    gyro_bias_plotters.plot(pdf)
+
+
+
 
 
 #

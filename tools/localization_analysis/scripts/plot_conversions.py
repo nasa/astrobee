@@ -53,6 +53,13 @@ def xyz_accel_bias_vectors_from_graph_vio_states(graph_vio_states):
     zs = [state.imu_bias_with_covariance.accelerometer_bias.z for state in graph_vio_states] 
     return [xs, ys, zs]
 
+# Return list of 3 lists, one each for x, y, z values in IMU gyro bias 
+def xyz_gyro_bias_vectors_from_graph_vio_states(graph_vio_states):
+    # TODO: Do this more efficiently
+    xs = [state.imu_bias_with_covariance.gyroscope_bias.x for state in graph_vio_states] 
+    ys = [state.imu_bias_with_covariance.gyroscope_bias.y for state in graph_vio_states] 
+    zs = [state.imu_bias_with_covariance.gyroscope_bias.z for state in graph_vio_states] 
+    return [xs, ys, zs]
 
 
 # Return list of times for given timestamped objects 
@@ -99,4 +106,8 @@ def accel_bias_plotter_from_graph_vio_states(graph_vio_states):
    xs, ys, zs = xyz_accel_bias_vectors_from_graph_vio_states(graph_vio_states)
    times = times_from_timestamped_objects(graph_vio_states) 
    return Vector3dPlotter("Graph VIO Accel. Bias", times, xs, ys, zs, ['X', 'Y', 'Z'])
-    
+
+def gyro_bias_plotter_from_graph_vio_states(graph_vio_states):
+  xs, ys, zs = xyz_gyro_bias_vectors_from_graph_vio_states(graph_vio_states)
+  times = times_from_timestamped_objects(graph_vio_states) 
+  return Vector3dPlotter("Graph VIO Gyro Bias", times, xs, ys, zs, ['X', 'Y', 'Z'])
