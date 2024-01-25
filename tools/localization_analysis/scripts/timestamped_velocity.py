@@ -22,5 +22,5 @@ from velocity import Velocity
 # Class that contains a timestamped velocity and covariance.
 class TimestampedVelocity(Velocity):
     def __init__(self, velocity, timestamp):
-        Velocity.__init__(self, velocity)
+        super(TimestampedVelocity, self).__init__(velocity)
         self.timestamp = timestamp
