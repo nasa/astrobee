@@ -45,7 +45,7 @@ class MultiVector3dPlotter:
 
     # Plot each of the vector3d values. Optionally plot individual axes on seperate plots
     # if individual_plots set to True.
-    def plot(self, pdf, individual_plots=True):
+    def plot(self, pdf):
         plt.figure()
         for vector3d_plotter in self.vector3d_plotters:
             vector3d_plotter.plot_xyz()
@@ -56,7 +56,7 @@ class MultiVector3dPlotter:
         pdf.savefig()
         plt.close()
 
-        if individual_plots:
+        if self.individual_plots:
             self.plot_xs(pdf)
             self.plot_ys(pdf)
             self.plot_zs(pdf)

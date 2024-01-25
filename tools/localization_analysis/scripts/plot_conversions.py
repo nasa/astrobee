@@ -18,9 +18,7 @@
 # under the License.
 
 import numpy as np
-import pose_with_covariance
-import timestamped_pose_with_covariance
-import timestamped_velocity_with_covariance 
+from vector3d_plotter import Vector3dPlotter
 import scipy.spatial.transform
 
 # Return list of 3 lists, one each for x, y, z values in poses
@@ -40,10 +38,11 @@ def ypr_vectors_from_poses(poses):
     return [ys, ps, rs]
 
 # Return list of 3 lists, one each for x, y, z values in velocities 
-def xyz_vectors_from_velocities(velocities):
-    xs = [velocity.x for velocity in velocities] 
-    xs = [velocity.y for velocity in velocities] 
-    xs = [velocity.z for velocity in velocities] 
+def xyz_velocity_vectors_from_graph_vio_states(graph_vio_states):
+    # TODO: Do this more efficiently
+    xs = [state.velocity_with_covariance.x for state in graph_vio_states] 
+    ys = [state.velocity_with_covariance.y for state in graph_vio_states] 
+    zs = [state.velocity_with_covariance.z for state in graph_vio_states] 
     return [xs, ys, zs]
 
 # Return list of times for given timestamped objects 
@@ -79,3 +78,10 @@ def optical_flow_feature_counts_from_graph_vio_states(graph_vio_states):
 # Return list of number of optical flow factors from graph vio states
 def optical_flow_factor_counts_from_graph_vio_states(graph_vio_states):
     return [graph_vio_state.num_detected_of_features for graph_vio_state in graph_vio_states]
+
+
+def velocity_plotter_from_graph_vio_states(graph_vio_states):
+    xs, ys, zs = xyz_velocity_vectors_from_graph_vio_states(graph_vio_states)
+    times = times_from_timestamped_objects(graph_vio_states) 
+    return Vector3dPlotter("Graph VIO Velocity", times, xs, ys, zs, ['X', 'Y', 'Z'])
+    

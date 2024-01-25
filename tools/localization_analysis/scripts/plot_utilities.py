@@ -30,6 +30,8 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import vector3d_plotter
 
+# TODO: remove this file....
+
 # Plot velocities over time
 def plot_velocities_vs_time(
     pdf,

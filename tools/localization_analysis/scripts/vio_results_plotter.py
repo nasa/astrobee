@@ -27,7 +27,9 @@ import os
 import sys
 
 import message_reader 
-import multipose_plotter
+from multipose_plotter import MultiPosePlotter
+from multivector3d_plotter import MultiVector3dPlotter
+import plot_conversions
 from timestamped_pose import TimestampedPose
 #import plotting_utilities
 
@@ -46,7 +48,7 @@ def plot_vio_results(
     groundtruth_poses,
     graph_vio_states,
 ):
-    poses_plotter = multipose_plotter.MultiPosePlotter("Time (s)", "Position (m)", "Graph vs. Groundtruth Position", True)
+    poses_plotter = MultiPosePlotter("Time (s)", "Position (m)", "Graph vs. Groundtruth Position", True)
     poses_plotter.add_poses(
         "Groundtruth Poses", 
         groundtruth_poses,
@@ -73,27 +75,11 @@ def plot_vio_results(
 #        )
     poses_plotter.plot(pdf)
 
-    # orientations
-#    orientation_plotter = vector3d_plotter.Vector3dPlotter(
-#        "Time (s)", "Orientation (deg)", "Graph vs. Groundtruth Orientation", True
-#    )
-#    orientation_plotter.add_pose_orientation(
-#        groundtruth_poses,
-#        linestyle="None",
-#        marker="o",
-#        markeredgewidth=0.1,
-#        markersize=1.5,
-#    )
-#    if ar_tag_poses.times:
-#        orientation_plotter.add_pose_orientation(
-#            ar_tag_poses,
-#            linestyle="None",
-#            marker="x",
-#            markeredgewidth=0.1,
-#            markersize=1.5,
-#        )
-#    orientation_plotter.add_pose_orientation(graph_localization_states)
-#    orientation_plotter.plot(pdf)
+    velocities_plotter = MultiVector3dPlotter("Time (s)", "Velocity (m/s)", "Graph VIO Velocities", True)
+    graph_vio_velocity_plotter = plot_conversions.velocity_plotter_from_graph_vio_states(graph_vio_states) 
+    velocities_plotter.add(graph_vio_velocity_plotter)
+    velocities_plotter.plot(pdf)
+
 #
 #    # Imu Augmented Loc vs. Loc
 #    position_plotter = vector3d_plotter.Vector3dPlotter(

@@ -37,11 +37,10 @@ def radians_to_degrees(angles):
 # Pass poses to plot using the add_poses function.
 # Optionally also plot individual plots for each position or orientation axis (x/y/z or r/p/y) if individual plots is true.
 class MultiPosePlotter:
-    def __init__(self, xlabel, ylabel, title, individual_plots = False):
+    def __init__(self, xlabel, ylabel, title, individual_plots = True):
         self.xlabel = xlabel
         self.ylabel = ylabel
         self.title = title
-        self.individual_plots = individual_plots
         self.orientations_plotter = MultiVector3dPlotter(xlabel, ylabel, title, individual_plots)
         self.positions_plotter = MultiVector3dPlotter(xlabel, ylabel, title, individual_plots)
 
@@ -135,6 +134,6 @@ class MultiPosePlotter:
 
     # Plot each of the added pose values. Plots positions and orientations in different plots. Optionally plot individual axes on seperate plots
     # if individual_plots set to True.
-    def plot(self, pdf, individual_plots=True):
-        self.positions_plotter.plot(pdf, individual_plots)
-        self.orientations_plotter.plot(pdf, individual_plots)
+    def plot(self, pdf):
+        self.positions_plotter.plot(pdf)
+        self.orientations_plotter.plot(pdf)
