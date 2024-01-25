@@ -23,7 +23,7 @@ class GraphVIOState():
         self.timestamp = None
         self.pose_with_covariance = None
         self.velocity_with_covariance = None
-        #self.imu_bias_with_covariance = ImuBias(msg.accel_bias, msg.gyro_bias)
+        self.imu_bias_with_covariance = None
         #self.num_detected_of_features = msg.num_detected_of_features
         #self.num_of_factors = msg.num_of_factors
         # TODO: change this using bag start time??

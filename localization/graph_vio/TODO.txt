@@ -25,14 +25,23 @@
       - add unit tests for these!!!!
 
 - start plotting VIO!
-    - finish plot vio script! (AA)
-          - fix vio plotting! (AAA)
-            - add plottig velocity and bias values! (AAAA)
-            - add plotting imu values! (AAAAB)
+    - finish plot vio script! 
+          - fix vio plotting! 
+            - add plottig gyro bias values! (AAAA)
+            - add plotting num factors! (B)
+            - add plotting num features! (C)
+           
             - add initilizing first vio value using groundtruth value! (AAAC)
               - make all future poses relative to this!
                 - add function to do this??
+
             - whats going wrong??
+
+            - add plotting acceleration values? (these come from imu messages....) (A)
+              - bias corrected? raw?
+            - add plotting angular acceleration values! (B)
+              - bias corrected? raw?
+ 
     - add comments!
     - rename pose node adder to relative pose node adder??
       - update comments/readme/test/documentation?

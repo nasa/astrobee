@@ -17,10 +17,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import ImuBias
-
-# Class that contains an imu bias and covariance.
-class ImuBiasWithCovariance(ImuBias):
-    def __init__(self, accelerometer_bias, gyroscope_bias, covariance):
-        super(ImuBiasWithCovariance, self).__init__(accelerometer_bias, gyroscope_bias)
-        self.covariance = covariance
+# Gyroscope Bias object
+class GyroscopeBias(object):
+    def __init__(self, x, y, z):
+        self.x = x
+        self.y = y
+        self.z = z

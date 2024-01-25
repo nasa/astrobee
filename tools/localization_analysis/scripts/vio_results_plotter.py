@@ -80,6 +80,13 @@ def plot_vio_results(
     velocities_plotter.add(graph_vio_velocity_plotter)
     velocities_plotter.plot(pdf)
 
+    accel_bias_plotters = MultiVector3dPlotter("Time (s)", "Accelerometer Bias (m/s^2)", "Graph VIO Accel. Biases", True)
+    graph_vio_accel_bias_plotter = plot_conversions.accel_bias_plotter_from_graph_vio_states(graph_vio_states) 
+    accel_bias_plotters.add(graph_vio_accel_bias_plotter)
+    accel_bias_plotters.plot(pdf)
+
+
+
 #
 #    # Imu Augmented Loc vs. Loc
 #    position_plotter = vector3d_plotter.Vector3dPlotter(

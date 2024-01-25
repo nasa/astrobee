@@ -18,7 +18,10 @@
 # under the License.
 
 import numpy as np
+from accelerometer_bias import AccelerometerBias
 from graph_vio_state import GraphVIOState
+from gyroscope_bias import GyroscopeBias
+from imu_bias import ImuBias
 from pose_with_covariance import PoseWithCovariance
 from timestamped_pose import TimestampedPose
 from timestamped_pose_with_covariance import TimestampedPoseWithCovariance
@@ -82,6 +85,12 @@ def graph_vio_state_from_msg(msg, bag_start_time=0):
     graph_vio_state = GraphVIOState()
     # TODO: load all combined nav states???
     graph_vio_state.timestamp = relative_timestamp(msg.header.stamp, bag_start_time)
-    graph_vio_state.pose_with_covariance = pose_with_covariance_from_msg(msg.combined_nav_states.combined_nav_states[-1].pose)
-    graph_vio_state.velocity_with_covariance = velocity_with_covariance_from_msg(msg.combined_nav_states.combined_nav_states[-1].velocity)
+    latest_state = msg.combined_nav_states.combined_nav_states[-1]
+    graph_vio_state.pose_with_covariance = pose_with_covariance_from_msg(latest_state.pose)
+    graph_vio_state.velocity_with_covariance = velocity_with_covariance_from_msg(latest_state.velocity)
+    # TODO: make function for this?
+    accelerometer_bias = AccelerometerBias(latest_state.imu_bias.accelerometer_bias.x, latest_state.imu_bias.accelerometer_bias.y, latest_state.imu_bias.accelerometer_bias.z) 
+    gyro_bias = GyroscopeBias(latest_state.imu_bias.gyroscope_bias.x, latest_state.imu_bias.gyroscope_bias.y, latest_state.imu_bias.gyroscope_bias.z) 
+    # TODO: load covariance?
+    graph_vio_state.imu_bias_with_covariance = ImuBias(accelerometer_bias, gyro_bias)
     return graph_vio_state
