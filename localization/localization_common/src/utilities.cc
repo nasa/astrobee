@@ -140,7 +140,7 @@ geometry_msgs::TransformStamped PoseToTF(const Eigen::Isometry3d& pose, const st
 }
 
 CombinedNavState CombinedNavStateFromMsg(const ff_msgs::CombinedNavState& msg) {
-  const auto pose = PoseFromMsg(msg.pose.pose);
+  const auto pose = PoseFromMsg(msg.pose.pose.pose);
   const auto velocity = mc::VectorFromMsg<gtsam::Velocity3, geometry_msgs::Vector3>(msg.velocity.velocity);
   const auto accel_bias = mc::VectorFromMsg<gtsam::Vector3, geometry_msgs::Vector3>(msg.imu_bias.accelerometer_bias);
   const auto gyro_bias = mc::VectorFromMsg<gtsam::Vector3, geometry_msgs::Vector3>(msg.imu_bias.gyroscope_bias);
@@ -149,7 +149,7 @@ CombinedNavState CombinedNavStateFromMsg(const ff_msgs::CombinedNavState& msg) {
 }
 
 CombinedNavStateCovariances CombinedNavStateCovariancesFromMsg(const ff_msgs::CombinedNavState& msg) {
-  const auto pose_covariance = mc::EigenCovarianceFromMsg<6>(msg.pose.covariance);
+  const auto pose_covariance = mc::EigenCovarianceFromMsg<6>(msg.pose.pose.covariance);
   const auto velocity_covariance = mc::EigenCovarianceFromMsg<3>(msg.velocity.covariance);
   const auto imu_bias_covariance = mc::EigenCovarianceFromMsg<6>(msg.imu_bias.covariance);
   return CombinedNavStateCovariances(pose_covariance, velocity_covariance, imu_bias_covariance);
@@ -172,13 +172,13 @@ ff_msgs::CombinedNavState CombinedNavStateToMsg(const CombinedNavState& combined
   ff_msgs::CombinedNavState msg;
   TimeToHeader(combined_nav_state.timestamp(), msg.header);
   // Write CombinedNavState
-  PoseToMsg(combined_nav_state.pose(), msg.pose.pose);
+  PoseToMsg(combined_nav_state.pose(), msg.pose.pose.pose);
   msg_conversions::VectorToMsg(combined_nav_state.velocity(), msg.velocity.velocity);
   msg_conversions::VectorToMsg(combined_nav_state.bias().accelerometer(), msg.imu_bias.accelerometer_bias);
   msg_conversions::VectorToMsg(combined_nav_state.bias().gyroscope(), msg.imu_bias.gyroscope_bias);
 
   // Write covariances
-  msg_conversions::EigenCovarianceToMsg(pose_covariance, msg.pose.covariance);
+  msg_conversions::EigenCovarianceToMsg(pose_covariance, msg.pose.pose.covariance);
   msg_conversions::EigenCovarianceToMsg(velocity_covariance, msg.velocity.covariance);
   msg_conversions::EigenCovarianceToMsg(imu_bias_covariance, msg.imu_bias.covariance);
   return msg;

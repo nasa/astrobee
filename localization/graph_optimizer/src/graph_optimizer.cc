@@ -85,9 +85,9 @@ const gtsam::NonlinearFactorGraph& GraphOptimizer::factors() const { return fact
 
 gtsam::NonlinearFactorGraph& GraphOptimizer::factors() { return factors_; }
 
-const int GraphOptimizer::num_factors() const { return factors_.size(); }
+int GraphOptimizer::num_factors() const { return factors_.size(); }
 
-const int GraphOptimizer::num_values() const { return values_->size(); }
+int GraphOptimizer::num_values() const { return values_->size(); }
 
 const GraphOptimizerParams& GraphOptimizer::params() const { return params_; }
 

@@ -90,10 +90,14 @@ class GraphOptimizer {
   gtsam::NonlinearFactorGraph& factors();
 
   // Returns number of factors currently in the graph.
-  const int num_factors() const;
+  int num_factors() const;
+
+  // Returns number of factors of provided FactorType currently in the graph.
+  template <typename FactorType>
+  int NumFactors() const;
 
   // Returns number of values currently in the graph.
-  const int num_values() const;
+  int num_values() const;
 
   // Graph optimizer params.
   const GraphOptimizerParams& params() const;
@@ -164,6 +168,19 @@ class GraphOptimizer {
   localization_common::Averager iterations_averager_ = localization_common::Averager("Optimization Iterations");
   localization_common::Averager total_error_averager_ = localization_common::Averager("Total Factor Error");
 };
+
+// Implementation
+template <typename FactorType>
+int GraphOptimizer::NumFactors() const {
+  int num_factors = 0;
+  for (const auto& factor : factors()) {
+    const auto casted_factor = boost::dynamic_pointer_cast<const FactorType>(factor);
+    if (casted_factor) ++num_factors;
+  }
+  return num_factors;
+}
+
+
 }  // namespace graph_optimizer
 
 #endif  // GRAPH_OPTIMIZER_GRAPH_OPTIMIZER_H_

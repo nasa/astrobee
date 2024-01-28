@@ -28,7 +28,12 @@
     - finish plot vio script! 
           - fix vio plotting! 
             - add plotting num factors! (A)
+              - add templated function num_factors to graph_optimizer! test! (AAA)
+                  - recompile code
+                  - add NumOFFactors function to graph_vio?
+                  - call this to get num of factors!
             - add plotting num features! (B)
+              - how to get num detected features???
             - add initilizing first vio value using groundtruth value! (C)
               - make all future poses relative to this!
                 - add function to do this??
