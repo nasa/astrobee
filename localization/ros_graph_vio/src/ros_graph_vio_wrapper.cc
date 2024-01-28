@@ -105,11 +105,17 @@ void RosGraphVIOWrapper::ResetBiasesFromFileAndResetVIO() {
 }
 
 boost::optional<ff_msgs::GraphVIOState> RosGraphVIOWrapper::GraphVIOStateMsg() {
-  if (!Initialized()) return boost::none;
+  if (!Initialized()) {
+    LogWarningEveryN(200, "Graph VIO not yet initialized.");
+    return boost::none;
+  }
   const auto& nodes = graph_vio_->combined_nav_state_nodes();
   const auto times = nodes.Timestamps();
   // Avoid sending repeat msgs
-  if (times.empty() || (latest_msg_time_ && times.back() == *latest_msg_time_)) return boost::none;
+  if (times.empty() || (latest_msg_time_ && times.back() == *latest_msg_time_)) {
+        LogWarningEveryN(200, "No new graph VIO times added.");
+    return boost::none;
+  }
   const lc::Time latest_time = times.back();
   latest_msg_time_ = latest_time;
   ff_msgs::GraphVIOState msg;

@@ -100,7 +100,7 @@ def optical_flow_factor_counts_from_graph_vio_states(graph_vio_states):
 def velocity_plotter_from_graph_vio_states(graph_vio_states):
     xs, ys, zs = xyz_velocity_vectors_from_graph_vio_states(graph_vio_states)
     times = times_from_timestamped_objects(graph_vio_states) 
-    return Vector3dPlotter("Graph VIO Velocity", times, xs, ys, zs, ['X', 'Y', 'Z'])
+    return Vector3dPlotter("Graph VIO Velocity", times, xs, ys, zs, ['X', 'Y', 'Z'], marker='o')
 
 def accel_bias_plotter_from_graph_vio_states(graph_vio_states):
    xs, ys, zs = xyz_accel_bias_vectors_from_graph_vio_states(graph_vio_states)
