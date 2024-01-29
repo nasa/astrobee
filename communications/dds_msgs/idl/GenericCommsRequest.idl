@@ -1,0 +1,33 @@
+/*
+ * Copy 2023 (c) 2023 Intelligent Robotics Group, NASA ARC
+ */
+
+#include "Message.idl"
+
+module rapid {
+  module ext {
+    module astrobee {
+
+      //@copy-c-declaration class GenericCommsRequestTypeSupport;
+      //@copy-c-declaration class GenericCommsRequestDataWriter;
+      //@copy-c-declaration class GenericCommsRequestDataReader;
+      //@copy-c-declaration struct GenericCommsRequestSeq;
+
+      //@copy-declaration /**
+      //@copy-declaration   * Request topic for the generic comms
+      //@copy-declaration   */
+      valuetype GenericCommsRequest : Message {
+        //@copy-c-declaration #if RTI_DDS_VERSION_MAJOR < 4 || (RTI_DDS_VERSION_MAJOR == 4  && RTI_DDS_VERSION_MINOR < 5) || (RTI_DDS_VERSION_MAJOR == 4  && RTI_DDS_VERSION_MINOR  == 5 && RTI_DDS_VERSION_RELEASE != 'f' )
+        //@copy-c-declaration typedef GenericCommsRequestTypeSupport TypeSupport;
+        //@copy-c-declaration typedef GenericCommsRequestDataWriter DataWriter;
+        //@copy-c-declaration typedef GenericCommsRequestDataReader DataReader;
+        //@copy-c-declaration typedef GenericCommsRequestSeq Seq;
+        //@copy-c-declaration #endif
+        //@copy-c-declaration typedef GenericCommsRequest Type;
+
+        //@copy-declaration /** Topic for which metadata retransmission is requested */
+        public String128 outputTopic;
+      };
+    };
+  };
+};
