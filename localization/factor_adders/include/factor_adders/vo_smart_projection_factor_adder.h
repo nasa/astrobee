@@ -155,8 +155,10 @@ template <typename PoseNodeAdderType>
 int VoSmartProjectionFactorAdder<PoseNodeAdderType>::AddFactorsUsingDownsampledMeasurements(
   gtsam::NonlinearFactorGraph& factors) const {
   int num_added_factors = 0;
-  for (const auto& feature_track : feature_tracker_->SpacedFeatureTracks()) {
-    if (ValidTrack(feature_track) && num_added_factors < params_.max_num_factors) {
+  const auto spaced_feature_tracks = feature_tracker_->SpacedFeatureTracks();
+  for (const auto& feature_track : spaced_feature_tracks) {
+    if (num_added_factors >= params_.max_num_factors) break;
+    if (ValidTrack(feature_track)) {
       if (AddSmartFactor(feature_track, factors)) ++num_added_factors;
     }
   }

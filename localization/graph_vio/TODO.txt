@@ -26,10 +26,6 @@
 
 - start plotting VIO!
     - finish plot vio script! 
-            - why are so few smart factors added? (3, 4, etc) (A)
-              - check how many feature traacks have the correct number of points, how many factors should be added
-              - check how many factors already in the graph?? (recreating graph each time?) 
-
             - add initilizing first vio value using groundtruth value! (B)
               - make all future poses relative to this!
                 - add function to do this??
