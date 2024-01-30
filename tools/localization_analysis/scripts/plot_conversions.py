@@ -18,9 +18,11 @@
 # under the License.
 
 import numpy as np
+from timestamped_pose import TimestampedPose
 from value_plotter import ValuePlotter
 from vector3d_plotter import Vector3dPlotter
 import scipy.spatial.transform
+import sys
 
 # Return list of 3 lists, one each for x, y, z values in poses
 def xyz_vectors_from_poses(poses):
@@ -88,6 +90,29 @@ def timestamped_velocities_with_covariance_from_graph_vio_states(graph_vio_state
 # Return list of timestamped imu bias with covariances from graph vio states
 def timestamped_imu_biases_with_covariance_from_graph_vio_states(graph_vio_states):
     return [graph_vio_state.timestamped_imu_bias_with_covariance() for graph_vio_state in graph_vio_states]
+
+# Return list of graph vio poses from graph vio states.
+# Poses are adjusted to start at the corresponding groundtruth pose at the earliest corresponding timestamp
+# so they can be plotted against groundtruth poses.
+def adjusted_graph_vio_poses_from_graph_vio_states(graph_vio_states, groundtruth_poses, max_diff = 0.1):
+    graph_vio_state_times = np.array([state.timestamp for state in graph_vio_states])
+    world_T_vio = None
+    for groundtruth_pose in groundtruth_poses:
+        closest_matching_graph_vio_state_index = np.argmin(np.abs(graph_vio_state_times - groundtruth_pose.timestamp))
+        timestamp_diff = np.abs(graph_vio_state_times[closest_matching_graph_vio_state_index] - groundtruth_pose.timestamp)
+        if timestamp_diff <= max_diff:
+            closest_graph_vio_state = graph_vio_states[closest_matching_graph_vio_state_index]
+            world_T_vio = groundtruth_pose * graph_vio_states[closest_matching_graph_vio_state_index].pose_with_covariance.inverse()
+            break
+    if not world_T_vio:
+        print("Failed to find corresponding groundtruth pose to graph VIO poses")
+        sys.exit(0)     
+    adjusted_graph_vio_poses = []
+    for graph_vio_state in graph_vio_states:
+        adjusted_pose = world_T_vio * TimestampedPose(graph_vio_state.pose_with_covariance.orientation, graph_vio_state.pose_with_covariance.position, graph_vio_state.timestamp)
+        adjusted_graph_vio_poses.append(TimestampedPose(adjusted_pose.orientation, adjusted_pose.position, graph_vio_state.timestamp))
+    return adjusted_graph_vio_poses
+    
 
 # Return list of optical flow feature counts from graph vio states
 def optical_flow_feature_counts_from_graph_vio_states(graph_vio_states):

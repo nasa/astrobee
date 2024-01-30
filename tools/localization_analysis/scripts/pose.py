@@ -29,6 +29,12 @@ class Pose(object):
         new_position = self.orientation.apply(pose_b.position) + self.position
         return Pose(new_orientation, new_position)
 
+    # Invert the pose
+    def inverse(self):
+        new_orientation = self.orientation.inv() 
+        new_position = -1.0*new_orientation.apply(self.position)
+        return Pose(new_orientation, new_position)
+
     # Returns the orientation as ZYX euler angles (YPR).
     def euler_angles(self):
         return self.orientation.as_euler("ZYX", degrees=True)

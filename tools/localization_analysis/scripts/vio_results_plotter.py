@@ -58,7 +58,7 @@ def plot_vio_results(
         markersize=1.5,
     )
 
-    graph_vio_poses = [TimestampedPose(graph_vio_state.pose_with_covariance.orientation, graph_vio_state.pose_with_covariance.position, graph_vio_state.timestamp) for graph_vio_state in graph_vio_states]
+    graph_vio_poses = plot_conversions.adjusted_graph_vio_poses_from_graph_vio_states(graph_vio_states, groundtruth_poses) 
     poses_plotter.add_poses(
         "Graph VIO Poses", 
         graph_vio_poses,
