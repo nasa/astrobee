@@ -178,21 +178,23 @@ bool VoSmartProjectionFactorAdder<PoseNodeAdderType>::AddSmartFactor(
                                           params_.rotation_only_fallback, params_.robust, params_.huber_k);
 
   for (int i = 0; i < static_cast<int>(feature_track_points.size()); ++i) {
-    const auto& feature_point = feature_track_points[i];
+    // Start in reverse so most recent measurements are added first
+    const auto& feature_point = feature_track_points[feature_track_points.size() - 1 - i];
     if (i >= params_.max_num_points_per_factor) break;
-    // Add or get pose key
     const auto& timestamp = feature_point.timestamp;
+    // Add or get pose key
     if (!node_adder_->AddNode(timestamp, factors)) {
-      LogError("AddSmartFactor: Failed to add node for timestamp " << timestamp << ".");
+      LogError("AddSmartFactor: Failed to add node for timestamp " << std::setprecision(15) << timestamp << ".");
       return false;
     }
     const auto keys = node_adder_->Keys(timestamp);
     if (keys.empty()) {
-      LogError("AddSmartFactor: Failed to get keys for timestamp " << timestamp << ".");
+      LogError("AddSmartFactor: Failed to get keys for timestamp " << std::setprecision(15) << timestamp << ".");
       return false;
     }
     // Assumes first key is pose
     const auto& pose_key = keys[0];
+
     smart_factor->add(SmartFactorCamera::Measurement(feature_point.image_point), pose_key);
   }
   factors.push_back(smart_factor);
