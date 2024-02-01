@@ -132,8 +132,18 @@ class MultiPosePlotter:
         )
         self.orientations_plotter.add(orientation_plotter)
 
+    # Plot each of the added pose position values. Optionally plot individual axes on seperate plots
+    # if individual_plots set to True.
+    def plot_positions(self, pdf):
+        self.positions_plotter.plot(pdf)
+
+    # Plot each of the added pose orientation values. Optionally plot individual axes on seperate plots
+    # if individual_plots set to True.
+    def plot_orientations(self, pdf):
+        self.orientations_plotter.plot(pdf)
+
     # Plot each of the added pose values. Plots positions and orientations in different plots. Optionally plot individual axes on seperate plots
     # if individual_plots set to True.
     def plot(self, pdf):
-        self.positions_plotter.plot(pdf)
-        self.orientations_plotter.plot(pdf)
+        self.plot_positions(pdf)
+        self.plot_orientations(pdf)

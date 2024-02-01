@@ -97,6 +97,23 @@ def plot_vio_results(
     of_num_factors_plotter.plot(pdf)
 
 
+    integrated_velocity_poses = plot_conversions.absolute_poses_from_integrated_graph_vio_state_velocities(graph_vio_states, groundtruth_poses)
+    integrated_velocity_poses_plotter = MultiPosePlotter("Time (s)", "Position (m)", "Integrated Velocities vs. Groundtruth Position", True)
+    integrated_velocity_poses_plotter.add_poses(
+        "Groundtruth Poses", 
+        groundtruth_poses,
+        linestyle="None",
+        marker="o",
+        markeredgewidth=0.1,
+        markersize=1.5,
+    )
+    integrated_velocity_poses_plotter.add_poses(
+        "Graph VIO Integrated Velocity Poses", 
+        integrated_velocity_poses,
+        linestyle="-",
+    )
+    integrated_velocity_poses_plotter.plot_positions(pdf)
+
 
 
 

@@ -93,7 +93,8 @@ def timestamped_imu_biases_with_covariance_from_graph_vio_states(graph_vio_state
 
 # Return list of graph vio poses from graph vio states.
 # Poses are adjusted to start at the corresponding groundtruth pose at the earliest corresponding timestamp
-# so they can be plotted against groundtruth poses.
+# so they can be plotted against groundtruth poses. The earliest corresponding timestamp is the first timestamp
+# with a dt <= max_diff compared to a graph_vio_state.
 def adjusted_graph_vio_poses_from_graph_vio_states(graph_vio_states, groundtruth_poses, max_diff = 0.1):
     graph_vio_state_times = np.array([state.timestamp for state in graph_vio_states])
     world_T_vio = None
@@ -112,6 +113,46 @@ def adjusted_graph_vio_poses_from_graph_vio_states(graph_vio_states, groundtruth
         adjusted_pose = world_T_vio * TimestampedPose(graph_vio_state.pose_with_covariance.orientation, graph_vio_state.pose_with_covariance.position, graph_vio_state.timestamp)
         adjusted_graph_vio_poses.append(TimestampedPose(adjusted_pose.orientation, adjusted_pose.position, graph_vio_state.timestamp))
     return adjusted_graph_vio_poses
+
+# Return list of graph vio poses from graph vio state integrated velocities.
+# Poses are adjusted to start at the corresponding groundtruth pose at the earliest corresponding timestamp
+# so they can be plotted against groundtruth poses. The earliest corresponding timestamp is the first timestamp
+# with a dt <= max_diff compared to a graph_vio_state.
+def absolute_poses_from_integrated_graph_vio_state_velocities(graph_vio_states, groundtruth_poses, max_diff = 0.1):
+    graph_vio_state_times = np.array([state.timestamp for state in graph_vio_states])
+    start_index = None
+    starting_groundtruth_pose = None
+    for i in range(len(groundtruth_poses)):
+        closest_matching_graph_vio_state_index = np.argmin(np.abs(graph_vio_state_times - groundtruth_poses[i].timestamp))
+        timestamp_diff = np.abs(graph_vio_state_times[closest_matching_graph_vio_state_index] - groundtruth_poses[i].timestamp)
+        if timestamp_diff <= max_diff:
+            start_index = closest_matching_graph_vio_state_index
+            starting_groundtruth_pose = groundtruth_poses[i]
+            break
+    if not start_index:
+        print("Failed to find corresponding groundtruth pose to graph VIO poses")
+        sys.exit(0)  
+    return integrate_velocities(graph_vio_states[start_index:], starting_groundtruth_pose)
+
+
+# Integrates graph vio velocities and appends these to a starting pose to generate absolute pose estimates 
+def integrate_velocities(graph_vio_states, starting_pose):
+    # Calculate relative x,y,z increments using v*dt for each increment
+    # Succesively add these increments to starting pose to generate future poses
+    x = starting_pose.position[0]
+    y = starting_pose.position[1]
+    z = starting_pose.position[2]
+    integrated_poses = []
+    for i in range(len(graph_vio_states)-1):
+        integrated_poses.append(TimestampedPose(scipy.spatial.transform.Rotation.from_rotvec([0,0,0]), [x, y, z], graph_vio_states[i].timestamp))
+        dt = graph_vio_states[i+1].timestamp - graph_vio_states[i].timestamp 
+        dx = dt*graph_vio_states[i].velocity_with_covariance.x
+        dy = dt*graph_vio_states[i].velocity_with_covariance.y
+        dz = dt*graph_vio_states[i].velocity_with_covariance.z
+        x += dx
+        y += dy
+        z += dz
+    return integrated_poses
     
 
 # Return list of optical flow feature counts from graph vio states

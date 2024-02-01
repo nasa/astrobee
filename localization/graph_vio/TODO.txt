@@ -26,18 +26,21 @@
 
 - start plotting VIO!
     - finish plot vio script! 
-            - add initilizing first vio value using groundtruth value! (B)
-              - make all future poses relative to this!
-                - add function to do this??
+            - add initilizing first vio value using groundtruth value! 
+              - why is first pose start way off??
+                - print adjusted pose positions! (AAA)
             
-            - add integrated velocities plot! (C)
+            - add integrated velocities plot! (B)
+              - add positions object! use for pose!
+
+            - add integrated imu values??? (C)
 
             - add plotting num features! (D)
               - how to get num detected features???
 
-            - add plotting acceleration values? (these come from imu messages....) (A)
+            - add plotting acceleration values? (these come from imu messages....) (E)
               - bias corrected? raw?
-            - add plotting angular acceleration values! (B)
+            - add plotting angular acceleration values! (F)
               - bias corrected? raw?
  
     - add comments!
