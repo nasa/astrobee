@@ -18,6 +18,7 @@
 # under the License.
 
 import numpy as np
+from position import Position
 from timestamped_pose import TimestampedPose
 from value_plotter import ValuePlotter
 from vector3d_plotter import Vector3dPlotter
@@ -27,9 +28,9 @@ import sys
 # Return list of 3 lists, one each for x, y, z values in poses
 def xyz_vectors_from_poses(poses):
     # TODO: Do this more efficiently
-    xs = [pose.position[0] for pose in poses] 
-    ys = [pose.position[1] for pose in poses] 
-    zs = [pose.position[2] for pose in poses] 
+    xs = [pose.position.x for pose in poses] 
+    ys = [pose.position.y for pose in poses] 
+    zs = [pose.position.z for pose in poses] 
     return [xs, ys, zs]
 
 # Return list of 3 lists, one each for y, p, r values in poses
@@ -139,12 +140,12 @@ def absolute_poses_from_integrated_graph_vio_state_velocities(graph_vio_states, 
 def integrate_velocities(graph_vio_states, starting_pose):
     # Calculate relative x,y,z increments using v*dt for each increment
     # Succesively add these increments to starting pose to generate future poses
-    x = starting_pose.position[0]
-    y = starting_pose.position[1]
-    z = starting_pose.position[2]
+    x = starting_pose.position.x
+    y = starting_pose.position.y
+    z = starting_pose.position.z
     integrated_poses = []
     for i in range(len(graph_vio_states)-1):
-        integrated_poses.append(TimestampedPose(scipy.spatial.transform.Rotation.from_rotvec([0,0,0]), [x, y, z], graph_vio_states[i].timestamp))
+        integrated_poses.append(TimestampedPose(scipy.spatial.transform.Rotation.from_rotvec([0,0,0]), Position([x, y, z]), graph_vio_states[i].timestamp))
         dt = graph_vio_states[i+1].timestamp - graph_vio_states[i].timestamp 
         dx = dt*graph_vio_states[i].velocity_with_covariance.x
         dy = dt*graph_vio_states[i].velocity_with_covariance.y

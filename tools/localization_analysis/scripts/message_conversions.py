@@ -22,6 +22,7 @@ from accelerometer_bias import AccelerometerBias
 from graph_vio_state import GraphVIOState
 from gyroscope_bias import GyroscopeBias
 from imu_bias import ImuBias
+from position import Position
 from pose_with_covariance import PoseWithCovariance
 from timestamped_pose import TimestampedPose
 from timestamped_pose_with_covariance import TimestampedPoseWithCovariance
@@ -44,7 +45,8 @@ def orientation_position_from_msg(pose_msg):
             pose_msg.pose.orientation.w,
         ]
     )
-    return orientation, [pose_msg.pose.position.x, pose_msg.pose.position.y, pose_msg.pose.position.z]
+    position = Position([pose_msg.pose.position.x, pose_msg.pose.position.y, pose_msg.pose.position.z])
+    return orientation, position 
 
 
 # Helper function to return orientation, position, and timestamp from a pose msg. 

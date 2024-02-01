@@ -17,6 +17,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from position import Position
+
 # Pose class that contains an orientation and position and supports pose multiplication.
 class Pose(object):
     def __init__(self, orientation, position):
@@ -26,13 +28,13 @@ class Pose(object):
     # Right multiply the pose by pose_b and return the resulting pose.
     def __mul__(self, pose_b):
         new_orientation = self.orientation * pose_b.orientation
-        new_position = self.orientation.apply(pose_b.position) + self.position
+        new_position = Position(self.orientation.apply(pose_b.position) + self.position)
         return Pose(new_orientation, new_position)
 
     # Invert the pose
     def inverse(self):
         new_orientation = self.orientation.inv() 
-        new_position = -1.0*new_orientation.apply(self.position)
+        new_position = Position(-1.0*new_orientation.apply(self.position))
         return Pose(new_orientation, new_position)
 
     # Returns the orientation as ZYX euler angles (YPR).
