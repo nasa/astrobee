@@ -24,15 +24,14 @@
     - add examples package! make sure these compile!!!
       - add unit tests for these!!!!
 
+- start plotting graph loc!! (AAAA)
+
 - start plotting VIO!
     - finish plot vio script! 
             - add initilizing first vio value using groundtruth value! 
               - why is first pose start way off??
                 - print adjusted pose positions! (AAA)
             
-            - add integrated velocities plot! (B)
-              - add positions object! use for pose!
-
             - add integrated imu values??? (C)
 
             - add plotting num features! (D)

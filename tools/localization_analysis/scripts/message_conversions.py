@@ -19,6 +19,7 @@
 
 import numpy as np
 from accelerometer_bias import AccelerometerBias
+from graph_loc_state import GraphLocState
 from graph_vio_state import GraphVIOState
 from gyroscope_bias import GyroscopeBias
 from imu_bias import ImuBias
@@ -98,3 +99,19 @@ def graph_vio_state_from_msg(msg, bag_start_time=0):
     graph_vio_state.num_detected_of_features = msg.num_detected_of_features
     graph_vio_state.num_of_factors = msg.num_of_factors
     return graph_vio_state
+
+# Create a graph loc state from a msg using relative bag time. 
+def graph_loc_state_from_msg(msg, bag_start_time=0):
+    graph_loc_state = GraphLocState()
+    graph_loc_state.timestamp = relative_timestamp(msg.header.stamp, bag_start_time)
+    graph_loc_state.pose_with_covariance = pose_with_covariance_from_msg(msg.pose)
+    graph_loc_state.num_detected_ar_features = msg.num_detected_ar_features
+    graph_loc_state.num_detected_ml_features = msg.num_detected_ml_features
+    graph_loc_state.optimization_iterations = msg.optimization_iterations
+    graph_loc_state.optimization_time = msg.optimization_time
+    graph_loc_state.update_time = msg.update_time
+    graph_loc_state.num_factors = msg.num_factors
+    graph_loc_state.num_ml_projection_factors = msg.num_ml_projection_factors
+    graph_loc_state.num_ml_pose_factors = msg.num_ml_pose_factors
+    graph_loc_state.num_states = msg.num_states
+    return graph_loc_state
