@@ -45,8 +45,12 @@ def load_graph_loc_states(graph_loc_states, topic, bag, bag_start_time):
         if msg_topic == topic:
             graph_loc_states.append(message_conversions.graph_loc_state_from_msg(msg, bag_start_time))
 
-
-
+# Load extrapolated loc states from a bag file for a given topic.
+# Start at the provided bag start time.
+def load_extrapolated_loc_states(extrapolated_loc_states, topic, bag, bag_start_time):
+    for msg_topic, msg, t in bag.read_messages(topic):
+        if msg_topic == topic:
+            extrapolated_loc_states.append(message_conversions.extrapolated_loc_state_from_msg(msg, bag_start_time))
 
 # Load odometry poses from a bag file for a set of odometry poses with desired topics.
 # Start at the provided bag start time.

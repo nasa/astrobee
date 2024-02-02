@@ -19,10 +19,12 @@
 
 import numpy as np
 from accelerometer_bias import AccelerometerBias
+from extrapolated_loc_state import ExtrapolatedLocState
 from graph_loc_state import GraphLocState
 from graph_vio_state import GraphVIOState
 from gyroscope_bias import GyroscopeBias
 from imu_bias import ImuBias
+from pose import Pose 
 from position import Position
 from pose_with_covariance import PoseWithCovariance
 from timestamped_pose import TimestampedPose
@@ -57,11 +59,15 @@ def orientation_position_timestamp_from_msg(pose_msg, bag_start_time=0):
     return orientation, position, timestamp
 
 
-
 # Create a timestamped pose with covariance from a pose msg using relative bag time. 
 def timestamped_pose_from_msg(pose_msg, bag_start_time=0):
     orientation, position, timestamp = orientation_position_timestamp_from_msg(pose_msg, bag_start_time)
     return TimestampedPose(orientation, position, timestamp)
+
+# Create a pose from a pose msg 
+def pose_from_msg(pose_msg):
+    orientation, position = orientation_position_from_msg(pose_msg)
+    return Pose(orientation, position)
 
 # Create a pose with covariance from a pose msg 
 def pose_with_covariance_from_msg(pose_msg):
@@ -117,3 +123,10 @@ def graph_loc_state_from_msg(msg, bag_start_time=0):
     graph_loc_state.num_ml_pose_factors = msg.num_ml_pose_factors
     graph_loc_state.num_states = msg.num_states
     return graph_loc_state
+
+# Create a extrapolated loc state from a msg using relative bag time. 
+def extrapolated_loc_state_from_msg(msg, bag_start_time=0):
+    extrapolated_loc_state = ExtrapolatedLocState()
+    extrapolated_loc_state.timestamp = relative_timestamp(msg.header.stamp, bag_start_time)
+    extrapolated_loc_state.pose = pose_from_msg(msg)
+    return extrapolated_loc_state

@@ -46,6 +46,7 @@ def plot_loc_results(
     pdf,
     groundtruth_poses,
     graph_loc_states,
+    extrapolated_loc_states = None
 ):
     poses_plotter = MultiPosePlotter("Time (s)", "Position (m)", "Loc vs. Groundtruth Position", True)
     poses_plotter.add_poses(
@@ -74,6 +75,25 @@ def plot_loc_results(
 #        )
     poses_plotter.plot(pdf)
 
+    if extrapolated_loc_states:
+        extrapolated_poses_plotter = MultiPosePlotter("Time (s)", "Position (m)", "Extrapolated Loc vs. Groundtruth Position", True)
+        extrapolated_poses_plotter.add_poses(
+            "Groundtruth Poses", 
+            groundtruth_poses,
+            linestyle="None",
+            marker="o",
+            markeredgewidth=0.1,
+            markersize=1.5,
+        )
+    
+        extrapolated_loc_poses = plot_conversions.poses_from_extrapolated_loc_states(extrapolated_loc_states) 
+        extrapolated_poses_plotter.add_poses(
+            "Extrapolated Loc Poses", 
+            extrapolated_loc_poses,
+            linestyle="-",
+        )
+        extrapolated_poses_plotter.plot(pdf)
+    
     ml_num_pose_factors_plotter = plot_conversions.ml_pose_factor_count_plotter_from_graph_loc_states(graph_loc_states)
     ml_num_pose_factors_plotter.plot(pdf)
 
@@ -160,7 +180,13 @@ def load_data_and_create_loc_plots(
     # Load graph localization states 
     graph_loc_states = []
     message_reader.load_graph_loc_states(graph_loc_states, "/graph_loc/state", bag, bag_start_time)
+
+    # Load extrapolated localization states 
+    extrapolated_loc_states = []
+    message_reader.load_extrapolated_loc_states(extrapolated_loc_states, "/gnc/ekf", bag, bag_start_time)
     bag.close()
+
+
 
     with PdfPages(output_pdf_file) as pdf:
         plot_loc_results(
@@ -168,6 +194,7 @@ def load_data_and_create_loc_plots(
             groundtruth_poses,
             #ar_tag_poses,
             graph_loc_states,
+            extrapolated_loc_states,
             #imu_augmented_graph_localization_states,
         )
     #    add_other_loc_plots(

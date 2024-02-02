@@ -109,13 +109,13 @@ void OfflineReplay::Run() {
       pose_extrapolator_wrapper_.ImuCallback(*imu_msg);
       // imu_bias_tester_wrapper_.ImuCallback(*imu_msg);
 
-      // Save imu augmented loc msg if available
-      /*const auto imu_augmented_loc_msg = pose_extrapolator_wrapper_.LatestImuAugmentedLocalizationMsg();
-      if (!imu_augmented_loc_msg) {
-        LogWarningEveryN(50, "Run: Failed to get latest imu augmented loc msg.");
+      // Save extrapolated loc msg if available
+      const auto extrapolated_loc_msg = pose_extrapolator_wrapper_.LatestExtrapolatedLocalizationMsg();
+      if (!extrapolated_loc_msg) {
+        LogWarningEveryN(50, "Run: Failed to get latest extrapolated loc msg.");
       } else {
-        SaveMsg(*imu_augmented_loc_msg, TOPIC_GNC_EKF, results_bag_);
-      }*/
+        SaveMsg(*extrapolated_loc_msg, TOPIC_GNC_EKF, results_bag_);
+      }
     }
     /*const auto depth_odometry_msg = live_measurement_simulator_->GetDepthOdometryMessage(current_time);
     if (depth_odometry_msg) {
@@ -174,7 +174,7 @@ void OfflineReplay::Run() {
       if (!vio_msg) {
         LogWarningEveryN(200, "Run: Failed to get vio msg.");
       } else {
-        // pose_extrapolator_wrapper_.GraphVIOStateCallback(*vio_msg);
+        pose_extrapolator_wrapper_.GraphVIOStateCallback(*vio_msg);
         // TODO(rsoussan): Pass this to live measurement simulator? allow for simulated delay?
         graph_localizer_simulator_->BufferGraphVIOStateMsg(*vio_msg);
         SaveMsg(*vio_msg, TOPIC_GRAPH_VIO_STATE, results_bag_);
@@ -188,7 +188,7 @@ void OfflineReplay::Run() {
       if (!localization_msg) {
         LogWarningEveryN(200, "Run: Failed to get localization msg.");
       } else {
-        // pose_extrapolator_wrapper_.LocalizationStateCallback(*localization_msg);
+         pose_extrapolator_wrapper_.LocalizationStateCallback(*localization_msg);
         SaveMsg(*localization_msg, TOPIC_GRAPH_LOC_STATE, results_bag_);
     /*const auto imu_bias_tester_predicted_states =
       imu_bias_tester_wrapper_.LocalizationStateCallback(*localization_msg);

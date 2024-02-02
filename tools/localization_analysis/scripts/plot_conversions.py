@@ -184,6 +184,10 @@ def update_times_from_states(states):
 def poses_from_graph_loc_states(graph_loc_states):
     return [TimestampedPose(graph_loc_state.pose_with_covariance.orientation, graph_loc_state.pose_with_covariance.position, graph_loc_state.timestamp)  for graph_loc_state in graph_loc_states]
 
+# Return list of timestamped poses from extrapolated loc states
+def poses_from_extrapolated_loc_states(extrapolated_loc_states):
+    return [TimestampedPose(extrapolated_loc_state.pose.orientation, extrapolated_loc_state.pose.position, extrapolated_loc_state.timestamp)  for extrapolated_loc_state in extrapolated_loc_states]
+
 def velocity_plotter_from_graph_vio_states(graph_vio_states):
     xs, ys, zs = xyz_velocity_vectors_from_graph_vio_states(graph_vio_states)
     times = times_from_timestamped_objects(graph_vio_states) 
