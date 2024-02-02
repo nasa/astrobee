@@ -28,15 +28,16 @@
     - test localizer!
      - finish loc plotting script! 
         - add num ml measurements! 
-        - add pose extrapolator results! (A)
-          - where do these come from?????
-            - add to offline replay!!!! 
 
-      - add ar measurements! (B)
-        - publish ar junk!
-        - add to plots!
+      - add ar measurements! (A)
+        - add to localizer (AA)
+        - add to plots (AB)
+        - publish localizer junk! (AC)
+            - world_T_body tf, others?
+        - publish ar junk! (AD)
+            - tfs, others?
 
-      - test with sim!
+      - test with sim! (B)
 
       - tune factor covariances!
         - lessen ml factor val! (B)

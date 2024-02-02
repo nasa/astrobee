@@ -20,6 +20,7 @@
 import numpy as np
 from position import Position
 from timestamped_pose import TimestampedPose
+from timestamped_velocity import TimestampedVelocity
 from value_plotter import ValuePlotter
 from vector3d_plotter import Vector3dPlotter
 import scipy.spatial.transform
@@ -47,6 +48,14 @@ def xyz_velocity_vectors_from_graph_vio_states(graph_vio_states):
     xs = [state.velocity_with_covariance.x for state in graph_vio_states] 
     ys = [state.velocity_with_covariance.y for state in graph_vio_states] 
     zs = [state.velocity_with_covariance.z for state in graph_vio_states] 
+    return [xs, ys, zs]
+
+# Return list of 3 lists, one each for x, y, z values in velocities 
+def xyz_velocity_vectors_from_extrapolated_loc_states(extrapolated_loc_states):
+    # TODO: Do this more efficiently
+    xs = [state.velocity.x for state in extrapolated_loc_states] 
+    ys = [state.velocity.y for state in extrapolated_loc_states] 
+    zs = [state.velocity.z for state in extrapolated_loc_states] 
     return [xs, ys, zs]
 
 # Return list of 3 lists, one each for x, y, z values in IMU accelerometer bias 
@@ -115,41 +124,57 @@ def adjusted_graph_vio_poses_from_graph_vio_states(graph_vio_states, groundtruth
         adjusted_graph_vio_poses.append(TimestampedPose(adjusted_pose.orientation, adjusted_pose.position, graph_vio_state.timestamp))
     return adjusted_graph_vio_poses
 
-# Return list of graph vio poses from graph vio state integrated velocities.
+# Return list of poses from integrated velocities.
 # Poses are adjusted to start at the corresponding groundtruth pose at the earliest corresponding timestamp
 # so they can be plotted against groundtruth poses. The earliest corresponding timestamp is the first timestamp
-# with a dt <= max_diff compared to a graph_vio_state.
-def absolute_poses_from_integrated_graph_vio_state_velocities(graph_vio_states, groundtruth_poses, max_diff = 0.1):
-    graph_vio_state_times = np.array([state.timestamp for state in graph_vio_states])
+# with a dt <= max_diff compared to a velocity.
+def absolute_poses_from_integrated_velocities(timestamped_velocities, groundtruth_poses, max_diff = 0.1):
+    times = np.array([velocity.timestamp for velocity in timestamped_velocities])
     start_index = None
     starting_groundtruth_pose = None
     for i in range(len(groundtruth_poses)):
-        closest_matching_graph_vio_state_index = np.argmin(np.abs(graph_vio_state_times - groundtruth_poses[i].timestamp))
-        timestamp_diff = np.abs(graph_vio_state_times[closest_matching_graph_vio_state_index] - groundtruth_poses[i].timestamp)
+        closest_matching_index = np.argmin(np.abs(times - groundtruth_poses[i].timestamp))
+        timestamp_diff = np.abs(times[closest_matching_index] - groundtruth_poses[i].timestamp)
         if timestamp_diff <= max_diff:
-            start_index = closest_matching_graph_vio_state_index
+            start_index = closest_matching_index
             starting_groundtruth_pose = groundtruth_poses[i]
             break
     if not start_index:
         print("Failed to find corresponding groundtruth pose to graph VIO poses")
         sys.exit(0)  
-    return integrate_velocities(graph_vio_states[start_index:], starting_groundtruth_pose)
+    return integrate_velocities(timestamped_velocities[start_index:], starting_groundtruth_pose)
+
+# Return list of poses from integrated graph_vio velocities.
+# Poses are adjusted to start at the corresponding groundtruth pose at the earliest corresponding timestamp
+# so they can be plotted against groundtruth poses. The earliest corresponding timestamp is the first timestamp
+# with a dt <= max_diff compared to a velocity.
+def absolute_poses_from_integrated_graph_vio_state_velocities(graph_vio_states, groundtruth_poses, max_diff = 0.1):
+    velocities = [TimestampedVelocity(graph_vio_state.velocity_with_covariance.x, graph_vio_state.velocity_with_covariance.y, graph_vio_state.velocity_with_covariance.z, graph_vio_state.timestamp) for graph_vio_state in graph_vio_states] 
+    return absolute_poses_from_integrated_velocities(velocities, groundtruth_poses, max_diff)
+
+# Return list of poses from integrated extrapolated loc velocities.
+# Poses are adjusted to start at the corresponding groundtruth pose at the earliest corresponding timestamp
+# so they can be plotted against groundtruth poses. The earliest corresponding timestamp is the first timestamp
+# with a dt <= max_diff compared to a velocity.
+def absolute_poses_from_integrated_extrapolated_loc_state_velocities(extrapolated_loc_states, groundtruth_poses, max_diff = 0.1):
+    velocities = [TimestampedVelocity(extrapolated_loc_state.velocity.x, extrapolated_loc_state.velocity.y, extrapolated_loc_state.velocity.z, extrapolated_loc_state.timestamp) for extrapolated_loc_state in extrapolated_loc_states] 
+    return absolute_poses_from_integrated_velocities(velocities, groundtruth_poses, max_diff)
 
 
 # Integrates graph vio velocities and appends these to a starting pose to generate absolute pose estimates 
-def integrate_velocities(graph_vio_states, starting_pose):
+def integrate_velocities(velocities, starting_pose):
     # Calculate relative x,y,z increments using v*dt for each increment
     # Succesively add these increments to starting pose to generate future poses
     x = starting_pose.position.x
     y = starting_pose.position.y
     z = starting_pose.position.z
     integrated_poses = []
-    for i in range(len(graph_vio_states)-1):
-        integrated_poses.append(TimestampedPose(scipy.spatial.transform.Rotation.from_rotvec([0,0,0]), Position([x, y, z]), graph_vio_states[i].timestamp))
-        dt = graph_vio_states[i+1].timestamp - graph_vio_states[i].timestamp 
-        dx = dt*graph_vio_states[i].velocity_with_covariance.x
-        dy = dt*graph_vio_states[i].velocity_with_covariance.y
-        dz = dt*graph_vio_states[i].velocity_with_covariance.z
+    for i in range(len(velocities)-1):
+        integrated_poses.append(TimestampedPose(scipy.spatial.transform.Rotation.from_rotvec([0,0,0]), Position([x, y, z]), velocities[i].timestamp))
+        dt = velocities[i+1].timestamp - velocities[i].timestamp 
+        dx = dt*velocities[i].x
+        dy = dt*velocities[i].y
+        dz = dt*velocities[i].z
         x += dx
         y += dy
         z += dz
@@ -192,6 +217,12 @@ def velocity_plotter_from_graph_vio_states(graph_vio_states):
     xs, ys, zs = xyz_velocity_vectors_from_graph_vio_states(graph_vio_states)
     times = times_from_timestamped_objects(graph_vio_states) 
     return Vector3dPlotter("Graph VIO Velocity", times, xs, ys, zs, ['X', 'Y', 'Z'], marker='o')
+
+def velocity_plotter_from_extrapolated_loc_states(extrapolated_loc_states):
+    xs, ys, zs = xyz_velocity_vectors_from_extrapolated_loc_states(extrapolated_loc_states)
+    times = times_from_timestamped_objects(extrapolated_loc_states) 
+    return Vector3dPlotter("Extrapolated Loc Velocity", times, xs, ys, zs, ['X', 'Y', 'Z'])
+
 
 def accel_bias_plotter_from_graph_vio_states(graph_vio_states):
    xs, ys, zs = xyz_accel_bias_vectors_from_graph_vio_states(graph_vio_states)

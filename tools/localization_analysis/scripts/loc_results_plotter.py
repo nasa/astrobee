@@ -93,6 +93,30 @@ def plot_loc_results(
             linestyle="-",
         )
         extrapolated_poses_plotter.plot(pdf)
+
+        extrapolated_velocities_plotter = MultiVector3dPlotter("Time (s)", "Velocity (m/s)", "Extrapolated Velocities", True)
+        extrapolated_velocity_plotter = plot_conversions.velocity_plotter_from_extrapolated_loc_states(extrapolated_loc_states) 
+        extrapolated_velocities_plotter.add(extrapolated_velocity_plotter)
+        extrapolated_velocities_plotter.plot(pdf)
+
+        extrapolated_integrated_velocity_poses = plot_conversions.absolute_poses_from_integrated_extrapolated_loc_state_velocities(extrapolated_loc_states, groundtruth_poses)
+        extrapolated_integrated_velocity_poses_plotter = MultiPosePlotter("Time (s)", "Position (m)", "Extrapolated Loc Integrated Velocities vs. Groundtruth Position", True)
+        extrapolated_integrated_velocity_poses_plotter.add_poses(
+            "Groundtruth Poses", 
+            groundtruth_poses,
+            linestyle="None",
+            marker="o",
+            markeredgewidth=0.1,
+            markersize=1.5,
+        )
+        extrapolated_integrated_velocity_poses_plotter.add_poses(
+            "Extrapolted Loc Integrated Velocity Poses", 
+            extrapolated_integrated_velocity_poses,
+            linestyle="-",
+        )
+        extrapolated_integrated_velocity_poses_plotter.plot_positions(pdf)
+
+
     
     ml_num_pose_factors_plotter = plot_conversions.ml_pose_factor_count_plotter_from_graph_loc_states(graph_loc_states)
     ml_num_pose_factors_plotter.plot(pdf)

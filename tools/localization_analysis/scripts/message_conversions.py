@@ -29,7 +29,8 @@ from position import Position
 from pose_with_covariance import PoseWithCovariance
 from timestamped_pose import TimestampedPose
 from timestamped_pose_with_covariance import TimestampedPoseWithCovariance
-import timestamped_velocity 
+from timestamped_velocity import TimestampedVelocity
+from velocity import Velocity
 from velocity_with_covariance import VelocityWithCovariance
 import scipy.spatial.transform
 
@@ -85,6 +86,10 @@ def timestamped_velocity_from_msg(velocity_msg, bag_start_time=0):
     timestamp = relative_timestamp(velocity_msg.header.stamp, bag_start_time)
     return TimestampedVelocity(velocity_msg.velocity.x, velocity_msg.velocity.y, velocity_msg.velocity.z, timestamp)
 
+# Create a velocity from a velocity msg. 
+def velocity_from_msg(velocity_msg):
+    return Velocity(velocity_msg.velocity.x, velocity_msg.velocity.y, velocity_msg.velocity.z)
+
 # Create a timestamped velocity from a velocity msg using relative bag time. 
 def velocity_with_covariance_from_msg(velocity_msg, bag_start_time=0):
     return VelocityWithCovariance(velocity_msg.velocity.x, velocity_msg.velocity.y, velocity_msg.velocity.z, velocity_msg.covariance)
@@ -129,4 +134,5 @@ def extrapolated_loc_state_from_msg(msg, bag_start_time=0):
     extrapolated_loc_state = ExtrapolatedLocState()
     extrapolated_loc_state.timestamp = relative_timestamp(msg.header.stamp, bag_start_time)
     extrapolated_loc_state.pose = pose_from_msg(msg)
+    extrapolated_loc_state.velocity = velocity_from_msg(msg)
     return extrapolated_loc_state
