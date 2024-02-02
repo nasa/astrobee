@@ -43,7 +43,7 @@ class RosGraphLocalizerWrapper {
   void SparseMapVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg);
 
   // Add graph vio state to graph localizer.
-  void GraphVIOStateCallback(const ff_msgs::GraphVIOState& graph_vio_state_msg);
+  bool GraphVIOStateCallback(const ff_msgs::GraphVIOState& graph_vio_state_msg);
 
   // Updates the graph_localizer if it has been initialized.
   void Update();

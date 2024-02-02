@@ -24,9 +24,13 @@
     - add examples package! make sure these compile!!!
       - add unit tests for these!!!!
 
-- start plotting graph loc!! (AAAA)
 
 - start plotting VIO!
+
+    - test localizer!
+      - why is vio msg gap so large? (A)
+      - finish loc plotting script!
+
     - finish plot vio script! 
             - add initilizing first vio value using groundtruth value! 
               - why is first pose start way off??

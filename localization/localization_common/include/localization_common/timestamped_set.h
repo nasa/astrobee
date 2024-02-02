@@ -131,6 +131,9 @@ class TimestampedSet {
   // equal to the provided timestamp.
   int RemoveBelowLowerBoundValues(const Time timestamp);
 
+  // Removes and returns the oldest value if it exists.
+  boost::optional<TimestampedValue<T>> RemoveOldest();
+
   // Returns a const reference to the internal map containing timestamps and corresponding values.
   const std::map<Time, T>& set() const;
 
@@ -363,6 +366,13 @@ int TimestampedSet<T>::RemoveBelowLowerBoundValues(const Time timestamp) {
     upper_bound != timestamp_value_map_.cbegin() ? std::prev(upper_bound) : timestamp_value_map_.cbegin();
   timestamp_value_map_.erase(timestamp_value_map_.begin(), lower_bound);
   return initial_num_values - size();
+}
+
+template <typename T>
+boost::optional<TimestampedValue<T>> TimestampedSet<T>::RemoveOldest() {
+  const auto oldest = Oldest();
+  if (oldest) Remove(oldest->timestamp);
+  return oldest;
 }
 
 template <typename T>

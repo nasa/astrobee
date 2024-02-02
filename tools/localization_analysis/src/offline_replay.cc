@@ -180,7 +180,7 @@ void OfflineReplay::Run() {
         SaveMsg(*vio_msg, TOPIC_GRAPH_VIO_STATE, results_bag_);
       }
     }
-    /*const bool updated_localizer_graph = graph_localizer_simulator_->AddMeasurementsAndUpdateIfReady(current_time);
+    const bool updated_localizer_graph = graph_localizer_simulator_->AddMeasurementsAndUpdateIfReady(current_time);
     if (updated_localizer_graph) {
       // Save latest graph localization msg
       // Pass latest loc state to imu augmentor if it is available.
@@ -189,12 +189,12 @@ void OfflineReplay::Run() {
         LogWarningEveryN(200, "Run: Failed to get localization msg.");
       } else {
         // pose_extrapolator_wrapper_.LocalizationStateCallback(*localization_msg);
-        SaveMsg(*localization_msg, TOPIC_GRAPH_LOC_STATE, results_bag_);*/
+        SaveMsg(*localization_msg, TOPIC_GRAPH_LOC_STATE, results_bag_);
     /*const auto imu_bias_tester_predicted_states =
       imu_bias_tester_wrapper_.LocalizationStateCallback(*localization_msg);
     SaveImuBiasTesterPredictedStates(imu_bias_tester_predicted_states, results_bag_);*/
-    /* }
-   }*/
+      }
+    }
   }
   offline_replay_timer.Stop();
   offline_replay_timer.Log();
