@@ -22,21 +22,24 @@
 
 namespace ff {
 
-RapidPubRequest::RapidPubRequest(const std::string& entity_name, const std::string& subscribe_topic,
-                                 const std::string& subscriber_partition, GenericROSSubRapidPub* ros_sub_rapid_pub)
-    : GenericRapidSub(entity_name, subscribe_topic, subscriber_partition), ros_sub_(ros_sub_rapid_pub) {
+RapidSubRequest::RapidSubRequest(const std::string& entity_name,
+                                 const std::string& subscribe_topic,
+                                 const std::string& subscriber_partition,
+                                 GenericROSSubRapidPub* ros_sub_rapid_pub)
+    : GenericRapidSub(entity_name, subscribe_topic, subscriber_partition),
+      ros_sub_(ros_sub_rapid_pub) {
   // connect to ddsEventLoop
   try {
     dds_event_loop_.connect<rapid::ext::astrobee::GenericCommsRequest>(this,
-                                                                       subscribe_topic,       // topic
-                                                                       subscriber_partition,  // name
-                                                                       entity_name,           // profile
-                                                                       "");                   // library
+                                              subscribe_topic,       // topic
+                                              subscriber_partition,  // name
+                                              entity_name,           // profile
+                                              "");                   // library
   } catch (std::exception& e) {
-    ROS_ERROR_STREAM("RapidPubRequest exception: " << e.what());
+    ROS_ERROR_STREAM("RapidSubRequest exception: " << e.what());
     throw;
   } catch (...) {
-    ROS_ERROR("RapidPubRequest exception unknown");
+    ROS_ERROR("RapidSubRequest exception unknown");
     throw;
   }
 
@@ -44,7 +47,7 @@ RapidPubRequest::RapidPubRequest(const std::string& entity_name, const std::stri
   StartThread();
 }
 
-void RapidPubRequest::operator() (
+void RapidSubRequest::operator() (
                     rapid::ext::astrobee::GenericCommsRequest const* request) {
   ros_sub_->ConvertRequest(request, subscriber_partition_);
 }

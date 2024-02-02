@@ -20,14 +20,31 @@
 
 #include <map>
 #include <string>
+#include <vector>
 
 namespace ff {
 
 GenericRapidMsgRosPub::GenericRapidMsgRosPub(double ad2pub_delay) :
-    BridgePublisher(ad2pub_delay) {
+    BridgePublisher(ad2pub_delay),
+    dds_initialized_(false),
+    enable_advertisement_info_request_(false) {
 }
 
 GenericRapidMsgRosPub::~GenericRapidMsgRosPub() {}
+
+void GenericRapidMsgRosPub::InitializeDDS(std::vector<std::string> const& connections,
+                                          bool enable_advertisement_info_request) {
+  std::string robot_name;
+  for (size_t i = 0; i < connections.size(); ++i) {
+    robot_name = connections[i];
+    RapidPubRequestPtr rapid_pub = std::make_shared<RapidPubRequest>(robot_name);
+    robot_connections_[robot_name] = rapid_pub;
+  }
+
+  enable_advertisement_info_request_ = enable_advertisement_info_request;
+
+  dds_initialized_ = true;
+}
 
 // Handle Ad Message
 void GenericRapidMsgRosPub::ConvertAdvertisementInfo(
@@ -57,7 +74,8 @@ void GenericRapidMsgRosPub::ConvertAdvertisementInfo(
 
 // Handle content message
 void GenericRapidMsgRosPub::ConvertContent(
-                      rapid::ext::astrobee::GenericCommsContent const* data) {
+                      rapid::ext::astrobee::GenericCommsContent const* data,
+                      std::string const& connecting_robot) {
   const std::lock_guard<std::mutex> lock(m_mutex_);
 
   const std::string output_topic = data->outputTopic;
@@ -75,8 +93,7 @@ void GenericRapidMsgRosPub::ConvertContent(
     topic_info.ad_info.md5_sum = data->md5Sum;
     iter = m_relay_topics_.emplace(output_topic, topic_info).first;
 
-    // TODO(Katie) Working on this in another branch
-    // requestAdvertisementInfo(output_topic);
+    RequestAdvertisementInfo(output_topic, connecting_robot);
   }
 
   RelayTopicInfo &topic_info = iter->second;
@@ -95,6 +112,29 @@ void GenericRapidMsgRosPub::ConvertContent(
   if (!relayMessage(topic_info, content_info)) {
     ROS_ERROR("Comms Bridge Nodelet: Error relaying message for topic %s\n",
               output_topic.c_str());
+  }
+}
+
+void GenericRapidMsgRosPub::RequestAdvertisementInfo(
+                                          std::string const& output_topic,
+                                          std::string const& connecting_robot) {
+  if (enable_advertisement_info_request_) {
+    if (dds_initialized_) {
+      // Check robot connection exists
+      if (robot_connections_.find(connecting_robot) !=
+                                                    robot_connections_.end()) {
+        ROS_INFO("Sending request for advertisement info for topic %s!\n",
+                 output_topic.c_str());
+        robot_connections_[connecting_robot]->SendRequest(output_topic);
+      } else {
+        ROS_ERROR("Comms Bridge: No connection for %s in rapid msg ros pub.\n",
+                  connecting_robot.c_str());
+      }
+    } else {
+      ROS_ERROR("Comms Bridge: DDS is not initialized for sending advertisement info request.\n");
+    }
+  } else {
+    ROS_INFO("Comms Bridge: Advertisement info request not enabled.\n");
   }
 }
 

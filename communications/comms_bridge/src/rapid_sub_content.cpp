@@ -22,21 +22,24 @@
 
 namespace ff {
 
-RapidPubContent::RapidPubContent(const std::string& entity_name, const std::string& subscribe_topic,
-                                 const std::string& subscriber_partition, GenericRapidMsgRosPub* rapid_msg_ros_pub)
-    : GenericRapidSub(entity_name, subscribe_topic, subscriber_partition), ros_pub_(rapid_msg_ros_pub) {
+RapidSubContent::RapidSubContent(const std::string& entity_name,
+                                 const std::string& subscribe_topic,
+                                 const std::string& subscriber_partition,
+                                 GenericRapidMsgRosPub* rapid_msg_ros_pub)
+    : GenericRapidSub(entity_name, subscribe_topic, subscriber_partition),
+      ros_pub_(rapid_msg_ros_pub) {
   // connect to ddsEventLoop
   try {
     dds_event_loop_.connect<rapid::ext::astrobee::GenericCommsContent>(this,
-                                                                       subscribe_topic,       // topic
-                                                                       subscriber_partition,  // name
-                                                                       entity_name,           // profile
-                                                                       "");                   // library
+                                              subscribe_topic,       // topic
+                                              subscriber_partition,  // name
+                                              entity_name,           // profile
+                                              "");                   // library
   } catch (std::exception& e) {
-    ROS_ERROR_STREAM("RapidPubContent exception: " << e.what());
+    ROS_ERROR_STREAM("RapidSubContent exception: " << e.what());
     throw;
   } catch (...) {
-    ROS_ERROR("RapidPubContent exception unknown");
+    ROS_ERROR("RapidSubContent exception unknown");
     throw;
   }
 
@@ -44,9 +47,9 @@ RapidPubContent::RapidPubContent(const std::string& entity_name, const std::stri
   StartThread();
 }
 
-void RapidPubContent::operator() (
+void RapidSubContent::operator() (
                     rapid::ext::astrobee::GenericCommsContent const* content) {
-  ros_pub_->ConvertContent(content);
+  ros_pub_->ConvertContent(content, subscriber_partition_);
 }
 
 }  // end namespace ff

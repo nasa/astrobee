@@ -223,6 +223,10 @@ class CommsBridgeNodelet : public ff_util::FreeFlyerNodelet {
     std::string connection, dds_topic_name;
     ff::GenericRapidSubPtr rapid_sub;
     ros_sub_->InitializeDDS(rapid_connections_);
+    if (enable_advertisement_info_request_) {
+      ros_pub_->InitializeDDS(rapid_connections_,
+                              enable_advertisement_info_request_);
+    }
     for (size_t i = 0; i < rapid_connections_.size(); i++) {
       // Lower case the external agent name to use it like a namespace
       connection = rapid_connections_[i];
@@ -230,7 +234,7 @@ class CommsBridgeNodelet : public ff_util::FreeFlyerNodelet {
           rapid::ext::astrobee::GENERIC_COMMS_ADVERTISEMENT_INFO_TOPIC;
       ROS_INFO("Comms Bridge: DDS Sub DDS advertisement info topic name: %s\n",
                dds_topic_name.c_str());
-      rapid_sub = std::make_shared<ff::RapidPubAdvertisementInfo>(
+      rapid_sub = std::make_shared<ff::RapidSubAdvertisementInfo>(
                                 "AstrobeeGenericCommsAdvertisementInfoProfile",
                                 dds_topic_name,
                                 connection,
@@ -241,7 +245,7 @@ class CommsBridgeNodelet : public ff_util::FreeFlyerNodelet {
                        rapid::ext::astrobee::GENERIC_COMMS_CONTENT_TOPIC;
       ROS_INFO("Comms Bridge: DDS Sub DDS content topic name: %s\n",
                dds_topic_name.c_str());
-      rapid_sub = std::make_shared<ff::RapidPubContent>(
+      rapid_sub = std::make_shared<ff::RapidSubContent>(
                                           "AstrobeeGenericCommsContentProfile",
                                           dds_topic_name,
                                           connection,
@@ -253,7 +257,7 @@ class CommsBridgeNodelet : public ff_util::FreeFlyerNodelet {
             rapid::ext::astrobee::GENERIC_COMMS_REQUEST_TOPIC;
         ROS_INFO("Comms Bridge: DDS Sub DDS request topic name: %s\n",
                  dds_topic_name.c_str());
-        rapid_sub = std::make_shared<ff::RapidPubRequest>(
+        rapid_sub = std::make_shared<ff::RapidSubRequest>(
                                           "AstrobeeGenericCommsRequestProfile",
                                           dds_topic_name,
                                           connection,

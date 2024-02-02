@@ -150,6 +150,7 @@ void GenericROSSubRapidPub::ConvertRequest(
   auto search = topic_mapping_.find(robot_out_topic);
   if (search != topic_mapping_.end()) {
     out_topic = robot_out_topic;
+    found = true;
   } else {
     // If it is not the keyed topic, try to find it.
     for (auto it = topic_mapping_.begin(); it != topic_mapping_.end() && !found; it++) {
@@ -182,7 +183,7 @@ void GenericROSSubRapidPub::ConvertRequest(
     return;
   }
 
-  ROS_ERROR("Received reset for topic %s\n", out_topic.c_str());
+  ROS_INFO("Received reset for topic %s\n", out_topic.c_str());
 
   // Check robot connection exists
   if (robot_connections_.find(connecting_robot) == robot_connections_.end()) {

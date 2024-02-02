@@ -16,37 +16,41 @@
  * under the License.
  */
 
-#ifndef COMMS_BRIDGE_RAPID_SUB_CONTENT_H_
-#define COMMS_BRIDGE_RAPID_SUB_CONTENT_H_
+#ifndef COMMS_BRIDGE_RAPID_PUB_REQUEST_H_
+#define COMMS_BRIDGE_RAPID_PUB_REQUEST_H_
 
-#include <comms_bridge/generic_rapid_msg_ros_pub.h>
-#include <comms_bridge/generic_rapid_sub.h>
+#include <comms_bridge/util.h>
+#include <ros/ros.h>
 
 #include <string>
 
 #include "knDds/DdsTypedSupplier.h"
 
-#include "dds_msgs/AstrobeeConstants.h"
-#include "dds_msgs/GenericCommsContentSupport.h"
+#include "rapidUtil/RapidHelper.h"
+
+#include "dds_msgs/AstrobeeConstantsSupport.h"
+#include "dds_msgs/GenericCommsRequestSupport.h"
 
 namespace ff {
 
-class RapidSubContent : public GenericRapidSub {
+class RapidPubRequest {
  public:
-  RapidSubContent(const std::string& entity_name,
-                  const std::string& subscribe_topic,
-                  const std::string& subscriber_partition,
-                  GenericRapidMsgRosPub* rapid_msg_ros_pub);
+  explicit RapidPubRequest(std::string const& robot_name);
+  ~RapidPubRequest();
 
-  /**
-   * Call back for ddsEventLoop
-   */
-  void operator() (rapid::ext::astrobee::GenericCommsContent const* content);
+  void SendRequest(std::string const& output_topic);
 
  private:
-  GenericRapidMsgRosPub* ros_pub_;
+  using RequestSupplier =
+              kn::DdsTypedSupplier<rapid::ext::astrobee::GenericCommsRequest>;
+  using RequestSupplierPtr = std::unique_ptr<RequestSupplier>;
+  RequestSupplierPtr request_supplier_;
+
+  unsigned int request_seq_;
 };
+
+typedef std::shared_ptr<ff::RapidPubRequest> RapidPubRequestPtr;
 
 }  // end namespace ff
 
-#endif  // COMMS_BRIDGE_RAPID_SUB_CONTENT_H_
+#endif  // COMMS_BRIDGE_RAPID_PUB_REQUEST_H_

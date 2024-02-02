@@ -22,22 +22,26 @@
 
 namespace ff {
 
-RapidPubAdvertisementInfo::RapidPubAdvertisementInfo(const std::string& entity_name, const std::string& subscribe_topic,
-                                                     const std::string& subscriber_partition,
-                                                     GenericRapidMsgRosPub* rapid_msg_ros_pub)
-    : GenericRapidSub(entity_name, subscribe_topic, subscriber_partition), ros_pub_(rapid_msg_ros_pub) {
+RapidSubAdvertisementInfo::RapidSubAdvertisementInfo(
+                                      const std::string& entity_name,
+                                      const std::string& subscribe_topic,
+                                      const std::string& subscriber_partition,
+                                      GenericRapidMsgRosPub* rapid_msg_ros_pub)
+    : GenericRapidSub(entity_name, subscribe_topic, subscriber_partition),
+      ros_pub_(rapid_msg_ros_pub) {
   // connect to ddsEventLoop
   try {
-    dds_event_loop_.connect<rapid::ext::astrobee::GenericCommsAdvertisementInfo>(this,
-                                                                                 subscribe_topic,       // topic
-                                                                                 subscriber_partition,  // name
-                                                                                 entity_name,           // profile
-                                                                                 "");                   // library
+    dds_event_loop_.connect<rapid::ext::astrobee::GenericCommsAdvertisementInfo>(
+                                              this,
+                                              subscribe_topic,       // topic
+                                              subscriber_partition,  // name
+                                              entity_name,           // profile
+                                              "");                   // library
   } catch (std::exception& e) {
-    ROS_ERROR_STREAM("RapidPubAdvertisementInfo exception: " << e.what());
+    ROS_ERROR_STREAM("RapidSubAdvertisementInfo exception: " << e.what());
     throw;
   } catch (...) {
-    ROS_ERROR("RapidPubAdvertisementInfo exception unknown");
+    ROS_ERROR("RapidSubAdvertisementInfo exception unknown");
     throw;
   }
 
@@ -45,7 +49,7 @@ RapidPubAdvertisementInfo::RapidPubAdvertisementInfo(const std::string& entity_n
   StartThread();
 }
 
-void RapidPubAdvertisementInfo::operator() (
+void RapidSubAdvertisementInfo::operator() (
           rapid::ext::astrobee::GenericCommsAdvertisementInfo const* ad_info) {
   ros_pub_->ConvertAdvertisementInfo(ad_info);
 }

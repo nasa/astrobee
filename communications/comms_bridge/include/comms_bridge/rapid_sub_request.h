@@ -31,10 +31,12 @@
 
 namespace ff {
 
-class RapidPubRequest : public GenericRapidSub {
+class RapidSubRequest : public GenericRapidSub {
  public:
-  RapidPubRequest(const std::string& entity_name, const std::string& subscribe_topic,
-                  const std::string& subscriber_partition, GenericROSSubRapidPub* ros_sub_rapid_pub);
+  RapidSubRequest(const std::string& entity_name,
+                  const std::string& subscribe_topic,
+                  const std::string& subscriber_partition,
+                  GenericROSSubRapidPub* ros_sub_rapid_pub);
 
   /**
    * Call back for ddsEventLoop
