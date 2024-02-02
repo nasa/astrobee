@@ -231,7 +231,7 @@ if __name__ == "__main__":
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument("bagfile", help="Input bagfile.")
-    parser.add_argument("--output-file", default="output.pdf", help="Output pdf file.")
+    parser.add_argument("--output-file", default="vio_output.pdf", help="Output pdf file.")
     parser.add_argument(
         "--output-csv-file",
         default="results.csv",

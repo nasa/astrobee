@@ -164,6 +164,14 @@ def optical_flow_feature_counts_from_graph_vio_states(graph_vio_states):
 def optical_flow_factor_counts_from_graph_vio_states(graph_vio_states):
     return [graph_vio_state.num_of_factors for graph_vio_state in graph_vio_states]
 
+# Return list of ml pose factor counts from graph loc states
+def ml_pose_factor_counts_from_graph_loc_states(graph_loc_states):
+    return [graph_loc_state.num_ml_pose_factors for graph_loc_state in graph_loc_states]
+
+# Return list of ml projection factor counts from graph loc states
+def ml_projection_factor_counts_from_graph_loc_states(graph_loc_states):
+    return [graph_loc_state.num_ml_projection_factors for graph_loc_state in graph_loc_states]
+
 # Return list of optimization times from states
 def optimization_times_from_states(states):
     return [state.optimization_time for state in states]
@@ -200,6 +208,16 @@ def optical_flow_factor_count_plotter_from_graph_vio_states(graph_vio_states):
   counts = optical_flow_factor_counts_from_graph_vio_states(graph_vio_states)
   times = times_from_timestamped_objects(graph_vio_states) 
   return ValuePlotter("Graph VIO OF Factors", times, counts, "Time (s)", "Num Factors", "OF")
+
+def ml_pose_factor_count_plotter_from_graph_loc_states(graph_loc_states):
+  counts = ml_pose_factor_counts_from_graph_loc_states(graph_loc_states)
+  times = times_from_timestamped_objects(graph_loc_states) 
+  return ValuePlotter("Graph Loc ML Pose Factors", times, counts, "Time (s)", "Num Factors", "ML")
+
+def ml_projection_factor_count_plotter_from_graph_loc_states(graph_loc_states):
+  counts = ml_projection_factor_counts_from_graph_loc_states(graph_loc_states)
+  times = times_from_timestamped_objects(graph_loc_states) 
+  return ValuePlotter("Graph Loc ML Projection Factors", times, counts, "Time (s)", "Num Factors", "ML")
 
 def optimization_time_plotter_from_states(states):
   optimization_times = optimization_times_from_states(states)

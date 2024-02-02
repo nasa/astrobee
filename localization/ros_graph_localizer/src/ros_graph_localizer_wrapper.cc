@@ -17,6 +17,8 @@
  */
 
 #include <config_reader/config_reader.h>
+#include <graph_factors/loc_pose_factor.h>
+#include <graph_factors/loc_projection_factor.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
 #include <localization_measurements/measurement_conversions.h>
@@ -142,6 +144,8 @@ boost::optional<ff_msgs::GraphLocState> RosGraphLocalizerWrapper::GraphLocStateM
   mc::EigenCovarianceToMsg(latest_pose_covariance, msg.pose.covariance);
   lc::TimeToHeader(latest_timestamp, msg.header);
   msg.child_frame_id = "world";
+  msg.num_ml_projection_factors = graph_localizer_->NumFactors<gtsam::LocProjectionFactor<>>();
+  msg.num_ml_pose_factors = graph_localizer_->NumFactors<gtsam::LocPoseFactor>();
   msg.optimization_time = graph_localizer_->optimization_timer().last_value();
   msg.update_time = graph_localizer_->update_timer().last_value();
   // TODO(rsoussan): set other graph info!

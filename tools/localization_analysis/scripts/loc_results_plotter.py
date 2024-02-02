@@ -74,6 +74,14 @@ def plot_loc_results(
 #        )
     poses_plotter.plot(pdf)
 
+    ml_num_pose_factors_plotter = plot_conversions.ml_pose_factor_count_plotter_from_graph_loc_states(graph_loc_states)
+    ml_num_pose_factors_plotter.plot(pdf)
+
+    ml_num_projection_factors_plotter = plot_conversions.ml_projection_factor_count_plotter_from_graph_loc_states(graph_loc_states)
+    ml_num_projection_factors_plotter.plot(pdf)
+
+
+
     optimization_time_plotter = plot_conversions.optimization_time_plotter_from_states(graph_loc_states)
     optimization_time_plotter.plot(pdf)
 
@@ -179,7 +187,7 @@ if __name__ == "__main__":
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument("bagfile", help="Input bagfile.")
-    parser.add_argument("--output-file", default="output.pdf", help="Output pdf file.")
+    parser.add_argument("--output-file", default="loc_output.pdf", help="Output pdf file.")
     parser.add_argument(
         "--output-csv-file",
         default="results.csv",
