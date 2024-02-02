@@ -146,6 +146,8 @@ boost::optional<ff_msgs::GraphVIOState> RosGraphVIOWrapper::GraphVIOStateMsg() {
   msg.child_frame_id = "odom";
   msg.standstill = graph_vio_->standstill();
   msg.num_of_factors = graph_vio_->NumFactors<factor_adders::RobustSmartFactor>();
+  msg.optimization_time = graph_vio_->optimization_timer().last_value();
+  msg.update_time = graph_vio_->update_timer().last_value();
   // TODO(rsoussan): Add more stats here!
   return msg;
 }

@@ -142,6 +142,8 @@ boost::optional<ff_msgs::GraphLocState> RosGraphLocalizerWrapper::GraphLocStateM
   mc::EigenCovarianceToMsg(latest_pose_covariance, msg.pose.covariance);
   lc::TimeToHeader(latest_timestamp, msg.header);
   msg.child_frame_id = "world";
+  msg.optimization_time = graph_localizer_->optimization_timer().last_value();
+  msg.update_time = graph_localizer_->update_timer().last_value();
   // TODO(rsoussan): set other graph info!
   return msg;
 }

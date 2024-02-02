@@ -59,6 +59,9 @@ class SlidingWindowGraphOptimizer : public graph_optimizer::GraphOptimizer {
   // See SlideWindow() function comments for more details on sliding the window.
   bool Update();
 
+  // Returns const reference to update timer
+  const localization_common::Timer& update_timer() const;
+
  private:
   // Removes nodes older than calculated new start time (see NewStartTime() for how this is calculated).
   // Removes any factors depending on a removed node and optionally adds marginalized

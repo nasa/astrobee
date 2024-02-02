@@ -26,18 +26,28 @@
 
 
     - test localizer!
-      - tune factor covariances!
-        - lessen ml factor val! (A)
-          - responds too quickly to these...
-      - tune vio relative pose covariance based on duration????
-      - finish loc plotting script! (C) 
+     - finish loc plotting script! (A) 
         - add optimization time! update time!
+          - add these to vio too!!
         - add num factors!
         - add num ml measurements!
         - add num ml factors!
         - add pose extrapolator results!
-    
+          - where do these come from?????
+            - add to offline replay!!!! 
 
+      - add ar measurements!
+        - publish ar junk!
+
+      - test with sim!
+
+      - tune factor covariances!
+        - lessen ml factor val! (B)
+          - responds too quickly to these...
+      - tune vio relative pose covariance based on duration???? (C)
+
+      - add tuning scripts!
+        - sweeps vs gt, tune variables!
 
     - finish plot vio script! 
             - add optimization, update times! (A)

@@ -114,10 +114,11 @@ def plot_vio_results(
     )
     integrated_velocity_poses_plotter.plot_positions(pdf)
 
+    optimization_time_plotter = plot_conversions.optimization_time_plotter_from_states(graph_vio_states)
+    optimization_time_plotter.plot(pdf)
 
-
-
-
+    update_time_plotter = plot_conversions.update_time_plotter_from_states(graph_vio_states)
+    update_time_plotter.plot(pdf)
 
 #
 #    # Imu Augmented Loc vs. Loc

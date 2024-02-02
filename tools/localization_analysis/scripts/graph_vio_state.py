@@ -26,4 +26,6 @@ class GraphVIOState():
         self.imu_bias_with_covariance = None
         self.num_detected_of_features = None
         self.num_of_factors = None
+        self.optimization_time = None
+        self.update_time = None
         # TODO: change this using bag start time??

@@ -113,6 +113,9 @@ class GraphOptimizer {
   // Returns a reference to the stats logger
   localization_common::StatsLogger& stats_logger();
 
+  // Returns a const reference to the optimization timer
+  const localization_common::Timer& optimization_timer() const;
+
   // Sum of factor errors for each factor in the graph
   double TotalGraphError() const;
 

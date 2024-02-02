@@ -98,6 +98,8 @@ def graph_vio_state_from_msg(msg, bag_start_time=0):
     graph_vio_state.imu_bias_with_covariance = ImuBias(accelerometer_bias, gyro_bias)
     graph_vio_state.num_detected_of_features = msg.num_detected_of_features
     graph_vio_state.num_of_factors = msg.num_of_factors
+    graph_vio_state.optimization_time = msg.optimization_time
+    graph_vio_state.update_time = msg.update_time
     return graph_vio_state
 
 # Create a graph loc state from a msg using relative bag time. 

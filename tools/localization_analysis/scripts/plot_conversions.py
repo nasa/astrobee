@@ -164,6 +164,14 @@ def optical_flow_feature_counts_from_graph_vio_states(graph_vio_states):
 def optical_flow_factor_counts_from_graph_vio_states(graph_vio_states):
     return [graph_vio_state.num_of_factors for graph_vio_state in graph_vio_states]
 
+# Return list of optimization times from states
+def optimization_times_from_states(states):
+    return [state.optimization_time for state in states]
+
+# Return list of update times from states
+def update_times_from_states(states):
+    return [state.update_time for state in states]
+
 # Return list of timestamped poses from graph loc states
 def poses_from_graph_loc_states(graph_loc_states):
     return [TimestampedPose(graph_loc_state.pose_with_covariance.orientation, graph_loc_state.pose_with_covariance.position, graph_loc_state.timestamp)  for graph_loc_state in graph_loc_states]
@@ -192,3 +200,13 @@ def optical_flow_factor_count_plotter_from_graph_vio_states(graph_vio_states):
   counts = optical_flow_factor_counts_from_graph_vio_states(graph_vio_states)
   times = times_from_timestamped_objects(graph_vio_states) 
   return ValuePlotter("Graph VIO OF Factors", times, counts, "Time (s)", "Num Factors", "OF")
+
+def optimization_time_plotter_from_states(states):
+  optimization_times = optimization_times_from_states(states)
+  times = times_from_timestamped_objects(states) 
+  return ValuePlotter("Optimization Times", times, optimization_times, "Time (s)", "Opt. Time (s)", "Opt. Time")
+
+def update_time_plotter_from_states(states):
+  update_times = update_times_from_states(states)
+  times = times_from_timestamped_objects(states) 
+  return ValuePlotter("Update Times", times, update_times, "Time (s)", "Update Time (s)", "Update Time")

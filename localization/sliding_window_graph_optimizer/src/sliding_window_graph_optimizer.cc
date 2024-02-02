@@ -210,4 +210,7 @@ gtsam::NonlinearFactorGraph SlidingWindowGraphOptimizer::RemoveFactors(const gts
 }
 
 void SlidingWindowGraphOptimizer::AddAveragersAndTimers() { stats_logger().AddTimer(update_timer_); }
+
+const localization_common::Timer& SlidingWindowGraphOptimizer::update_timer() const { return update_timer_; }
+
 }  // namespace sliding_window_graph_optimizer

@@ -99,6 +99,8 @@ gtsam::Values& GraphOptimizer::gtsam_values() { return values_->gtsam_values(); 
 
 lc::StatsLogger& GraphOptimizer::stats_logger() { return stats_logger_; }
 
+const lc::Timer& GraphOptimizer::optimization_timer() const { return optimization_timer_; }
+
 double GraphOptimizer::TotalGraphError() const {
   double total_error = 0;
   for (const auto& factor : factors_) {

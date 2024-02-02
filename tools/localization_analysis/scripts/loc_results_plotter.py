@@ -74,6 +74,14 @@ def plot_loc_results(
 #        )
     poses_plotter.plot(pdf)
 
+    optimization_time_plotter = plot_conversions.optimization_time_plotter_from_states(graph_loc_states)
+    optimization_time_plotter.plot(pdf)
+
+    update_time_plotter = plot_conversions.update_time_plotter_from_states(graph_loc_states)
+    update_time_plotter.plot(pdf)
+
+
+
     #of_count_plotter = plot_conversions.optical_flow_feature_count_plotter_from_graph_loc_states(graph_loc_states)
     #of_count_plotter.plot(pdf)
 
