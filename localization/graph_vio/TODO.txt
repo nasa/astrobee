@@ -26,8 +26,11 @@
 
 
     - test localizer!
-      - why is vio msg gap so large? (A)
-      - finish loc plotting script! (B) 
+      - tune factor covariances!
+        - lessen ml factor val! (A)
+          - responds too quickly to these...
+      - tune vio relative pose covariance based on duration????
+      - finish loc plotting script! (C) 
         - add optimization time! update time!
         - add num factors!
         - add num ml measurements!

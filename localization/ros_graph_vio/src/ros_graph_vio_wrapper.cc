@@ -57,7 +57,7 @@ void RosGraphVIOWrapper::ImuCallback(const sensor_msgs::Imu& imu_msg) {
   imu_bias_initializer_->AddImuMeasurement(imu_measurement);
   if (!Initialized() && imu_bias_initializer_->Bias()) {
     // Set initial nav state. Use bias from initializer and
-    // assume zero initial velocity. Set pose initial to identity.
+    // assume zero initial velocity. Set initial pose to identity.
     const lc::CombinedNavState initial_state(gtsam::Pose3::identity(), gtsam::Velocity3::Zero(),
                                              *(imu_bias_initializer_->Bias()), imu_measurement.timestamp);
     params_.combined_nav_state_node_adder.start_node = initial_state;
@@ -111,6 +111,12 @@ boost::optional<ff_msgs::GraphVIOState> RosGraphVIOWrapper::GraphVIOStateMsg() {
   }
   const auto& nodes = graph_vio_->combined_nav_state_nodes();
   const auto times = nodes.Timestamps();
+  // Avoid sending msgs before enough optical flow measurements have been incorporated in the graph
+  if (times.size() < 3) {
+    LogWarningEveryN(200, "Too few nodes in Graph VIO, waiting for more optical flow measurements.");
+    return boost::none;
+  }
+
   // Avoid sending repeat msgs
   if (times.empty() || (latest_msg_time_ && times.back() == *latest_msg_time_)) {
         LogWarningEveryN(200, "No new graph VIO times added.");
