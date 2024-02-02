@@ -47,7 +47,7 @@ def plot_loc_results(
     groundtruth_poses,
     graph_loc_states,
 ):
-    poses_plotter = MultiPosePlotter("Time (s)", "Position (m)", "Graph vs. Groundtruth Position", True)
+    poses_plotter = MultiPosePlotter("Time (s)", "Position (m)", "Loc vs. Groundtruth Position", True)
     poses_plotter.add_poses(
         "Groundtruth Poses", 
         groundtruth_poses,

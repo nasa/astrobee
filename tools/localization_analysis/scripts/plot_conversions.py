@@ -164,6 +164,10 @@ def optical_flow_feature_counts_from_graph_vio_states(graph_vio_states):
 def optical_flow_factor_counts_from_graph_vio_states(graph_vio_states):
     return [graph_vio_state.num_of_factors for graph_vio_state in graph_vio_states]
 
+# Return list of timestamped poses from graph loc states
+def poses_from_graph_loc_states(graph_loc_states):
+    return [TimestampedPose(graph_loc_state.pose_with_covariance.orientation, graph_loc_state.pose_with_covariance.position, graph_loc_state.timestamp)  for graph_loc_state in graph_loc_states]
+
 def velocity_plotter_from_graph_vio_states(graph_vio_states):
     xs, ys, zs = xyz_velocity_vectors_from_graph_vio_states(graph_vio_states)
     times = times_from_timestamped_objects(graph_vio_states) 

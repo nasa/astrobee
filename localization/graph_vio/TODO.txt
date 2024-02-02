@@ -25,13 +25,19 @@
       - add unit tests for these!!!!
 
 
-- start plotting VIO!
-
     - test localizer!
       - why is vio msg gap so large? (A)
-      - finish loc plotting script!
+      - finish loc plotting script! (B) 
+        - add optimization time! update time!
+        - add num factors!
+        - add num ml measurements!
+        - add num ml factors!
+        - add pose extrapolator results!
+    
+
 
     - finish plot vio script! 
+            - add optimization, update times! (A)
             - add initilizing first vio value using groundtruth value! 
               - why is first pose start way off??
                 - print adjusted pose positions! (AAA)
