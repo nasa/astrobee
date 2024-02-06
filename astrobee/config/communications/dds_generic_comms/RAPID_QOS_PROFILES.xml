@@ -660,7 +660,7 @@
     <!-- ASTROBEE Extension: Generic Comms ============================ -->
     <qos_profile name="AstrobeeGenericCommsAdvertisementInfoProfile" base_name="RapidConfigQos" />
     <qos_profile name="AstrobeeGenericCommsContentProfile" base_name="RapidStateQos" />
-    <qos_profile name="AstrobeeGenericCommsResetProfile" base_name="RapidConfigQos" />
+    <qos_profile name="AstrobeeGenericCommsRequestProfile" base_name="RapidConfigQos" />
 
     <!-- ASTROBEE Extension: GNC Fam Cmd ============================== -->
     <qos_profile name="AstrobeeGncFamCmdStateProfile" base_name="RapidStateQos" />

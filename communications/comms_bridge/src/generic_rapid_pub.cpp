@@ -63,11 +63,11 @@ void GenericRapidPub::CopyString(const int max_size,
   dest[size] = '\0';
 }
 
-void GenericRapidPub::ProcessAdvertisementInfo(std::string const& output_topic,
-                                               bool latching,
-                                               std::string const& data_type,
-                                               std::string const& md5_sum,
-                                               std::string definition) {
+void GenericRapidPub::SendAdvertisementInfo(std::string const& output_topic,
+                                            bool latching,
+                                            std::string const& data_type,
+                                            std::string const& md5_sum,
+                                            std::string definition) {
   rapid::ext::astrobee::GenericCommsAdvertisementInfo &msg =
                                           advertisement_info_supplier_->event();
 
@@ -119,11 +119,11 @@ void GenericRapidPub::ProcessAdvertisementInfo(std::string const& output_topic,
   advertisement_info_supplier_->sendEvent();
 }
 
-void GenericRapidPub::ProcessContent(std::string const& output_topic,
-                                     std::string const& md5_sum,
-                                     uint8_t const* data,
-                                     const size_t data_size,
-                                     const int seq_num) {
+void GenericRapidPub::SendContent(std::string const& output_topic,
+                                  std::string const& md5_sum,
+                                  uint8_t const* data,
+                                  const size_t data_size,
+                                  const int seq_num) {
   unsigned int size;
   rapid::ext::astrobee::GenericCommsContent &msg = content_supplier_->event();
 

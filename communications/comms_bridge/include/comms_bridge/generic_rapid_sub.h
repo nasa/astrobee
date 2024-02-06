@@ -19,8 +19,6 @@
 #ifndef COMMS_BRIDGE_GENERIC_RAPID_SUB_H_
 #define COMMS_BRIDGE_GENERIC_RAPID_SUB_H_
 
-#include <comms_bridge/generic_rapid_msg_ros_pub.h>
-
 #include <memory>
 #include <string>
 #include <thread>
@@ -32,53 +30,28 @@
 
 #include "knShare/Time.h"
 
-#include "dds_msgs/GenericCommsAdvertisementInfoSupport.h"
-#include "dds_msgs/GenericCommsContentSupport.h"
-
 namespace ff {
 
-template<typename T>
+/**
+ * @brief base class for rapid subscriber to ros publisher
+ * @details base class for rapid subscriber to ros publisher.
+ *          A kn::DdsEventLoop is run within its own thread of execution.
+ *          Child classes must connect requested message and callback
+ *          to m_ddsEventLoop and call startThread()
+ */
 class GenericRapidSub {
- public:
+ protected:
   GenericRapidSub(const std::string& entity_name,
                   const std::string& subscribe_topic,
-                  const std::string& subscriber_partition,
-                  GenericRapidMsgRosPub* rapid_msg_ros_pub)
-      : dds_event_loop_(entity_name),
-        subscribe_topic_(subscribe_topic),
-        subscriber_partition_(subscriber_partition),
-        ros_pub_(rapid_msg_ros_pub) {
-    // connect to ddsEventLoop
-    try {
-      dds_event_loop_.connect<T>(this,
-                                 subscribe_topic,       // topic
-                                 subscriber_partition,  // name
-                                 entity_name,           // profile
-                                 "");                   // library
-    } catch (std::exception& e) {
-      ROS_ERROR_STREAM("Rapid exception: " << e.what());
-      throw;
-    } catch (...) {
-      ROS_ERROR("Rapid exception unknown");
-      throw;
-    }
+                  const std::string& subscriber_partition);
 
-    // start joinable thread
-    thread_ = std::thread(&GenericRapidSub::ThreadExec, this);
-  }
+  ~GenericRapidSub();
 
-  ~GenericRapidSub() {
-    alive_ = false;  // Notify thread to exit
-    thread_.join();
-  }
+  /**
+   * Will start thread exection by calling threadExec()
+   */
+  virtual void StartThread();
 
-  void operator() (T const* data) {
-    ROS_INFO("Received data for topic %s\n", subscribe_topic_.c_str());
-    ros_pub_->ConvertData(data);
-  }
-
- private:
-  GenericRapidMsgRosPub* ros_pub_;
   std::string subscribe_topic_;
   std::string subscriber_partition_;
 
@@ -86,22 +59,15 @@ class GenericRapidSub {
   std::thread thread_;
   kn::DdsEventLoop dds_event_loop_;
 
+ private:
   /**
   * Function to execute within seperate thread
   *   process DdsEventLoop at 10Hz
   */
-  void ThreadExec() {
-    while (alive_) {
-      // process events at 10hz
-      dds_event_loop_.processEvents(kn::milliseconds(100));
-    }
-  }
+  virtual void ThreadExec();
 };
 
-typedef std::shared_ptr<GenericRapidSub<rapid::ext::astrobee::GenericCommsAdvertisementInfo>>
-    AdvertisementInfoRapidSubPtr;
-typedef std::shared_ptr<GenericRapidSub<rapid::ext::astrobee::GenericCommsContent>>
-    ContentRapidSubPtr;
+typedef std::shared_ptr<GenericRapidSub> GenericRapidSubPtr;
 
 }  // end namespace ff
 

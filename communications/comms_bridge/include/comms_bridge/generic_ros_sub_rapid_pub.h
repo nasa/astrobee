@@ -34,6 +34,8 @@
 #include <utility>
 #include <vector>
 
+#include "dds_msgs/GenericCommsRequestSupport.h"
+
 namespace ff {
 
 class GenericROSSubRapidPub : public BridgeSubscriber {
@@ -56,6 +58,9 @@ class GenericROSSubRapidPub : public BridgeSubscriber {
   // Called with the mutex held
   virtual void relayMessage(const RelayTopicInfo& topic_info,
                             ContentInfo const& content_info);
+
+  void ConvertRequest(rapid::ext::astrobee::GenericCommsRequest const* data,
+                      std::string const& connecting_robot);
 
  private:
   bool dds_initialized_;
