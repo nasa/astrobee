@@ -50,7 +50,6 @@
         - sweeps vs gt, tune variables!
 
     - finish plot vio script! 
-            - add optimization, update times! (A)
             - add initilizing first vio value using groundtruth value! 
               - why is first pose start way off??
                 - print adjusted pose positions! (AAA)
@@ -83,14 +82,6 @@
 
 offline replay:
   - allow for vio msg delay? run vio first, buffer vio msgs, then run graph loc?
-  - plot_graph_bag
-    - plot graph vio!!!! (AAA)
-    - plot graph loc!
-    - plot velocities and biases!
-      - need to convert velocity frame in graph bag tool as well before integrating!
-    - plot extrapolated states!
-
-- test in sim! (E)
 
  - add pose_extrapolator package?
 
