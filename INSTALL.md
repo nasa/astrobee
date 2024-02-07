@@ -2,11 +2,11 @@
 
 ## System requirements
 
-Ubuntu 20.04 is the preferred host OS for most Astrobee developers to use.
+Ubuntu 20.04 is currently the only supported platform for most Astrobee development use cases.
 
-Here are the available host OS options with development roadmap details (use 64-bit PC (AMD64) desktop image):
-- [Ubuntu 20.04](http://releases.ubuntu.com/20.04): This is the preferred host OS for most Astrobee developers to use. The Astrobee Facility team is currently preparing to upgrade the robots on ISS from Ubuntu 16.04 to Ubuntu 20.04, but we aren't yet ready to announce a deployment date for that upgrade.
-- [Ubuntu 16.04](http://releases.ubuntu.com/16.04): The Astrobee robot hardware on ISS currently runs Ubuntu 16.04. Only developers with NASA internal access can cross-compile software to run on the robot, and must use 16.04 for that. Most developers shouldn't need to work with 16.04, especially when just getting started. Support will eventually be discontinued after the robot hardware on ISS is upgraded to Ubuntu 20.04.
+Here are the currently available host OS options with development roadmap details (use 64-bit PC (AMD64) desktop image):
+- [Ubuntu 20.04](http://releases.ubuntu.com/20.04): This is currently the only supported platform for most Astrobee development use cases. The Astrobee hardware on ISS has been running Ubuntu 20.04 since it was upgraded during the "Crew-Minimal S14" activity on December 19, 2023.
+- [Ubuntu 16.04](http://releases.ubuntu.com/16.04): No longer supported for most use cases. The Astrobee robot hardware ran Ubuntu 16.04 from its launch in 2019 until it was upgraded to run Ubuntu 20.04. Ubuntu 16.04 support was discontinued for most use cases in February 2024. Ending Ubuntu 16.04 support removed important limitations. For example, going forward, Astrobee's software will no longer need to be backward-compatible with Python 2 and OpenCV 3. However, Ubuntu 16.04 is still required in a very limited role that most developers don't need to worry about. We use it to compile a JAR file binary artifact of Astrobee message definitions used by the [astrobee_android](https://github.com/nasa/astrobee_android) code hosted on Astrobee's High-Level Processor, which runs a legacy version of Android with `rosjava`, which was designed to communicate with the ROS Kinetic distribution. Compiling the JAR file requires the `ros-kinetic-rosjava` package that is only available for Ubuntu 16.04. (But most developers shouldn't need to generate this artifact.)
 
 Specifically not supported:
 - ~~[Ubuntu 18.04](http://releases.ubuntu.com/18.04)~~: Ubuntu 18.04 support as a software development platform was discontinued as of November 2023. (It was never supported on the robot hardware.)
