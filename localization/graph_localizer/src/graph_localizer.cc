@@ -38,6 +38,9 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
   sparse_map_loc_factor_adder_ =
     std::make_shared<fa::LocFactorAdder<na::PoseNodeAdder>>(params_.sparse_map_loc_factor_adder, pose_node_adder_);
   AddFactorAdder(sparse_map_loc_factor_adder_);
+  ar_tag_loc_factor_adder_ =
+    std::make_shared<fa::LocFactorAdder<na::PoseNodeAdder>>(params_.ar_tag_loc_factor_adder, pose_node_adder_);
+  AddFactorAdder(ar_tag_loc_factor_adder_);
 }
 
 void GraphLocalizer::AddPoseMeasurement(const lm::PoseWithCovarianceMeasurement& pose_measurement) {
@@ -48,6 +51,12 @@ void GraphLocalizer::AddSparseMapMatchedProjectionsMeasurement(
   const lm::MatchedProjectionsMeasurement& matched_projections_measurement) {
   if (params_.sparse_map_loc_factor_adder.enabled)
     sparse_map_loc_factor_adder_->AddMeasurement(matched_projections_measurement);
+}
+
+void GraphLocalizer::AddArTagMatchedProjectionsMeasurement(
+  const lm::MatchedProjectionsMeasurement& matched_projections_measurement) {
+  if (params_.ar_tag_loc_factor_adder.enabled)
+    ar_tag_loc_factor_adder_->AddMeasurement(matched_projections_measurement);
 }
 
 const no::TimestampedNodes<gtsam::Pose3>& GraphLocalizer::pose_nodes() const { return pose_node_adder_->nodes(); }

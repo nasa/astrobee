@@ -46,7 +46,8 @@ def plot_loc_results(
     pdf,
     groundtruth_poses,
     graph_loc_states,
-    extrapolated_loc_states = None
+    extrapolated_loc_states,
+    ar_tag_poses, 
 ):
     poses_plotter = MultiPosePlotter("Time (s)", "Position (m)", "Loc vs. Groundtruth Position", True)
     poses_plotter.add_poses(
@@ -65,14 +66,14 @@ def plot_loc_results(
         linestyle="-",
     )
 
-#    if ar_tag_poses.times:
-#        position_plotter.add_pose_position(
-#            ar_tag_poses,
-#            linestyle="None",
-#            marker="x",
-#            markeredgewidth=0.1,
-#            markersize=1.5,
-#        )
+    poses_plotter.add_poses(
+        "AR Tag Poses", 
+        ar_tag_poses,
+        linestyle="None",
+        marker="x",
+        markeredgewidth=0.1,
+        markersize=1.5,
+    )
     poses_plotter.plot(pdf)
 
     if extrapolated_loc_states:
@@ -208,6 +209,10 @@ def load_data_and_create_loc_plots(
     # Load extrapolated localization states 
     extrapolated_loc_states = []
     message_reader.load_extrapolated_loc_states(extrapolated_loc_states, "/gnc/ekf", bag, bag_start_time)
+
+    # Load AR Tag poses
+    ar_tag_poses = []
+    message_reader.load_poses(ar_tag_poses, "/ar_tag/pose", bag, bag_start_time)
     bag.close()
 
 
@@ -216,9 +221,9 @@ def load_data_and_create_loc_plots(
         plot_loc_results(
             pdf,
             groundtruth_poses,
-            #ar_tag_poses,
             graph_loc_states,
             extrapolated_loc_states,
+            ar_tag_poses,
             #imu_augmented_graph_localization_states,
         )
     #    add_other_loc_plots(

@@ -140,6 +140,18 @@ void OfflineReplay::Run() {
         SaveMsg(PoseMsg(sparse_mapping_global_T_body, timestamp), TOPIC_SPARSE_MAPPING_POSE, results_bag_);
       }
     }
+
+    const auto ar_msg = live_measurement_simulator_->GetARMessage(current_time);
+    if (ar_msg) {
+      graph_localizer_simulator_->BufferARVisualLandmarksMsg(*ar_msg);
+      if (static_cast<int>(ar_msg->landmarks.size()) >= params_.ar_min_num_landmarks) {
+        const gtsam::Pose3 ar_global_T_body =
+          lc::PoseFromMsgWithExtrinsics(ar_msg->pose, params_.body_T_nav_cam.inverse());
+        const lc::Time timestamp = lc::TimeFromHeader(ar_msg->header);
+        SaveMsg(PoseMsg(ar_global_T_body, timestamp), TOPIC_AR_TAG_POSE, results_bag_);
+      }
+    }
+
     /*const auto ar_msg = live_measurement_simulator_->GetARMessage(current_time);
     if (ar_msg) {
       static bool marked_world_T_dock_for_resetting_if_necessary = false;

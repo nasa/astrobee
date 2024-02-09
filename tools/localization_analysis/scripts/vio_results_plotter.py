@@ -64,15 +64,6 @@ def plot_vio_results(
         graph_vio_poses,
         linestyle="-",
     )
-
-#    if ar_tag_poses.times:
-#        position_plotter.add_pose_position(
-#            ar_tag_poses,
-#            linestyle="None",
-#            marker="x",
-#            markeredgewidth=0.1,
-#            markersize=1.5,
-#        )
     poses_plotter.plot(pdf)
 
     velocities_plotter = MultiVector3dPlotter("Time (s)", "Velocity (m/s)", "Graph VIO Velocities", True)
@@ -200,7 +191,6 @@ def load_data_and_create_vio_plots(
     groundtruth_poses = []
     message_reader.load_poses(groundtruth_poses, "/sparse_mapping/pose", groundtruth_bag, bag_start_time)
 
-
     # Load graph VIO states 
     graph_vio_states = []
     message_reader.load_graph_vio_states(graph_vio_states, "/graph_vio/state", bag, bag_start_time)
@@ -210,7 +200,6 @@ def load_data_and_create_vio_plots(
         plot_vio_results(
             pdf,
             groundtruth_poses,
-            #ar_tag_poses,
             graph_vio_states,
             #imu_augmented_graph_localization_states,
         )
