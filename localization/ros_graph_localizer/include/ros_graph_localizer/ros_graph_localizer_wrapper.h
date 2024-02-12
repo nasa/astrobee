@@ -42,6 +42,9 @@ class RosGraphLocalizerWrapper {
   // Add sparse map visual landmarks msg to graph_localizer.
   void SparseMapVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg);
 
+  // Add AR tag visual landmarks msg to graph_localizer.
+  void ARVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg);
+
   // Add graph vio state to graph localizer.
   bool GraphVIOStateCallback(const ff_msgs::GraphVIOState& graph_vio_state_msg);
 
@@ -53,6 +56,9 @@ class RosGraphLocalizerWrapper {
 
   // Resets the graph.
   void ResetLocalizer();
+
+  // Resets the world_T_dock frame relative transform.
+  void ResetWorldTDock();
 
   // Creates graph loc state msg using latest pose and graph information
   // in graph localizer.
@@ -68,6 +74,7 @@ class RosGraphLocalizerWrapper {
   localization_common::TimestampedSet<ff_msgs::GraphVIOState> vio_measurement_buffer_;
   boost::optional<localization_common::Time> last_vio_msg_time_;
   boost::optional<localization_common::Time> latest_msg_time_;
+  boost::optional<gtsam::Pose3> world_T_dock_;
 };
 }  // namespace ros_graph_localizer
 

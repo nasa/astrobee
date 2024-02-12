@@ -33,7 +33,7 @@ void LoadFactorAdderParams(config_reader::ConfigReader& config, fa::FactorAdderP
 }
 
 void LoadLocFactorAdderParams(config_reader::ConfigReader& config, fa::LocFactorAdderParams& params,
-                              const std::string& prefix) {
+                              const std::string& prefix, const std::string& camera_name) {
   LoadFactorAdderParams(config, params, prefix);
   LOAD_PARAM(params.add_pose_priors, config, prefix);
   LOAD_PARAM(params.add_projection_factors, config, prefix);
@@ -49,10 +49,11 @@ void LoadLocFactorAdderParams(config_reader::ConfigReader& config, fa::LocFactor
   LOAD_PARAM(params.min_num_matches_per_measurement, config, prefix);
   LOAD_PARAM(params.max_valid_projection_error, config, prefix);
   // Don't pass prefix for load transform or intrinsics since these are from camera config
-  params.body_T_cam = lc::LoadTransform(config, "nav_cam_transform");
+  params.body_T_cam = lc::LoadTransform(config, camera_name + "_cam_transform");
   // TODO(rsoussan): make not necessarily nav cam specific?
-  params.cam_intrinsics.reset(new gtsam::Cal3_S2(lc::LoadCameraIntrinsics(config, "nav_cam")));
-  params.cam_noise = gtsam::noiseModel::Isotropic::Sigma(2, mc::LoadDouble(config, "nav_cam_noise_stddev", prefix));
+  params.cam_intrinsics.reset(new gtsam::Cal3_S2(lc::LoadCameraIntrinsics(config, camera_name + "_cam")));
+  params.cam_noise =
+    gtsam::noiseModel::Isotropic::Sigma(2, mc::LoadDouble(config, camera_name + "_cam_noise_stddev", prefix));
 }
 
 void LoadStandstillFactorAdderParams(config_reader::ConfigReader& config, fa::StandstillFactorAdderParams& params,

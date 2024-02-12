@@ -79,6 +79,23 @@ void RosGraphLocalizerWrapper::SparseMapVisualLandmarksCallback(const ff_msgs::V
   }
 }
 
+void RosGraphLocalizerWrapper::ARVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg) {
+  // Set world_T_dock using pose estimate from msg and latest vl pose estimate
+  // since the dock pose in the message is relative to the robot body
+  // and not the global frame
+  if (!world_T_dock_) {
+    const auto latest_pose = *(graph_localizer_->pose_nodes().LatestNode());
+    const auto dock_T_body = lc::PoseFromMsgWithExtrinsics(
+      visual_landmarks_msg.pose, params_.ar_tag_loc_factor_adder.body_T_cam.inverse());
+    world_T_dock_ = latest_pose * dock_T_body.inverse();
+  }
+  const auto msg_time = lc::TimeFromHeader(visual_landmarks_msg.header);
+  if (Initialized()) {
+    graph_localizer_->AddArTagMatchedProjectionsMeasurement(
+      lm::MakeMatchedProjectionsMeasurement(visual_landmarks_msg));
+  }
+}
+
 bool RosGraphLocalizerWrapper::GraphVIOStateCallback(const ff_msgs::GraphVIOState& graph_vio_state_msg) {
   const auto timestamp = lc::TimeFromHeader(graph_vio_state_msg.header);
   // Buffer measurements before initialization so they can be added once initialized.
@@ -123,6 +140,8 @@ void RosGraphLocalizerWrapper::ResetLocalizer() {
   vio_measurement_buffer_.Clear();
   last_vio_msg_time_ = boost::none;
 }
+
+void RosGraphLocalizerWrapper::ResetWorldTDock() { world_T_dock_ = boost::none; }
 
 boost::optional<ff_msgs::GraphLocState> RosGraphLocalizerWrapper::GraphLocStateMsg() {
   if (!Initialized()) {

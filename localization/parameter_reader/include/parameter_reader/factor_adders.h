@@ -33,7 +33,7 @@ void LoadFactorAdderParams(config_reader::ConfigReader& config, factor_adders::F
                            const std::string& prefix = "");
 
 void LoadLocFactorAdderParams(config_reader::ConfigReader& config, factor_adders::LocFactorAdderParams& params,
-                              const std::string& prefix = "");
+                              const std::string& prefix = "", const std::string& camera_name = "nav");
 
 void LoadStandstillFactorAdderParams(config_reader::ConfigReader& config,
                                      factor_adders::StandstillFactorAdderParams& params,

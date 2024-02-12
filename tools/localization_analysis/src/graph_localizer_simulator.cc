@@ -56,7 +56,7 @@ bool GraphLocalizerSimulator::AddMeasurementsAndUpdateIfReady(const lc::Time& cu
   vl_msg_buffer_.clear();
 
   for (const auto& ar_msg : ar_msg_buffer_) {
-    // ARVisualLandmarksCallback(ar_msg);
+    ARVisualLandmarksCallback(ar_msg);
   }
   ar_msg_buffer_.clear();
 

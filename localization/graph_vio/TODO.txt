@@ -30,12 +30,13 @@
         - add num ml measurements! 
 
       - add ar measurements! (A)
-        - add to localizer (AA)
-        - add to plots (AB)
+        - add to ros_graph_localizer!!!! (AAAA)
+            - make sure plots look good! (AC)
         - publish localizer junk! (AC)
-            - world_T_body tf, others?
-        - publish ar junk! (AD)
-            - tfs, others?
+            - world_T_body tf, ar pose, others?
+            - add option in nodelet to reestimate worldTdock on mode changes
+            - add options to reset localizer!
+
 
       - test with sim! (B)
 
