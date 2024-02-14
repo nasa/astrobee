@@ -23,6 +23,7 @@
 #include <ff_msgs/VisualLandmarks.h>
 // #include <ff_msgs/SerializedGraph.h>
 #include <graph_localizer/graph_localizer.h>
+#include <localization_common/pose_interpolater.h>
 #include <localization_common/timestamped_set.h>
 
 #include <memory>
@@ -75,6 +76,7 @@ class RosGraphLocalizerWrapper {
   boost::optional<localization_common::Time> last_vio_msg_time_;
   boost::optional<localization_common::Time> latest_msg_time_;
   boost::optional<gtsam::Pose3> world_T_dock_;
+  localization_common::PoseInterpolater odom_interpolator_;
 };
 }  // namespace ros_graph_localizer
 

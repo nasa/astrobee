@@ -80,19 +80,28 @@ void RosGraphLocalizerWrapper::SparseMapVisualLandmarksCallback(const ff_msgs::V
 }
 
 void RosGraphLocalizerWrapper::ARVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg) {
-  // Set world_T_dock using pose estimate from msg and latest vl pose estimate
-  // since the dock pose in the message is relative to the robot body
+  // Set world_T_dock using the pose estimate from provided msg and the latest VIO extrapolated pose estimate
+  // since the dock pose in the message is relative to the dock frame
   // and not the global frame
   if (!world_T_dock_) {
-    const auto latest_pose = *(graph_localizer_->pose_nodes().LatestNode());
+    const auto world_T_latest_graph_body = *(graph_localizer_->pose_nodes().LatestNode());
+    const auto latest_graph_timestamp = *(graph_localizer_->pose_nodes().LatestTimestamp());
+    const auto dock_time = lc::TimeFromHeader(visual_landmarks_msg.header);
+    const auto latest_graph_body_T_body = odom_interpolator_.Relative(latest_graph_timestamp, dock_time);
+    if (!latest_graph_body_T_body) {
+      LogError("LocalizationStateCallback: Failed to get latest_graph_body_T_body for provided times.");
+      return;
+    }
     const auto dock_T_body = lc::PoseFromMsgWithExtrinsics(
       visual_landmarks_msg.pose, params_.ar_tag_loc_factor_adder.body_T_cam.inverse());
-    world_T_dock_ = latest_pose * dock_T_body.inverse();
+    world_T_dock_ = world_T_latest_graph_body * lc::GtPose(*latest_graph_body_T_body) * dock_T_body.inverse();
   }
-  const auto msg_time = lc::TimeFromHeader(visual_landmarks_msg.header);
   if (Initialized()) {
-    graph_localizer_->AddArTagMatchedProjectionsMeasurement(
-      lm::MakeMatchedProjectionsMeasurement(visual_landmarks_msg));
+    // Frame change the ar tag measurement from the dock to world frame before
+    // passing to the localizer.
+    const auto frame_changed_ar_measurements = lm::FrameChangeMatchedProjectionsMeasurement(
+      lm::MakeMatchedProjectionsMeasurement(visual_landmarks_msg), *world_T_dock_);
+    graph_localizer_->AddArTagMatchedProjectionsMeasurement(frame_changed_ar_measurements);
   }
 }
 
@@ -121,6 +130,7 @@ bool RosGraphLocalizerWrapper::GraphVIOStateCallback(const ff_msgs::GraphVIOStat
     latest_combined_nav_state.pose(), latest_covariances.pose_covariance(), latest_combined_nav_state.timestamp());
   graph_localizer_->AddPoseMeasurement(pose_measurement);
   last_vio_msg_time_ = timestamp;
+  odom_interpolator_.Add(latest_combined_nav_state.timestamp(), lc::EigenPose(latest_combined_nav_state.pose()));
   return true;
 }
 
@@ -155,6 +165,7 @@ boost::optional<ff_msgs::GraphLocState> RosGraphLocalizerWrapper::GraphLocStateM
     return boost::none;
   }
   latest_msg_time_ = latest_timestamp;
+  odom_interpolator_.RemoveBelowLowerBoundValues(latest_timestamp);
   ff_msgs::GraphLocState msg;
   const auto latest_pose = *(graph_localizer_->pose_nodes().LatestNode());
   const auto latest_keys = graph_localizer_->pose_nodes().Keys(latest_timestamp);
