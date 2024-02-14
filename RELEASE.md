@@ -1,5 +1,11 @@
 # Releases
 
+# Release 0.17.2
+
+  * Adding Generic comms bridge
+  * Multiple bug fixes
+  * Ubuntu 20 only supported now
+
 # Release 0.17.1
 
   * Multiple bug fixes
