@@ -32,6 +32,7 @@ struct OfflineReplayParams {
   bool log_relative_time;
   std::unique_ptr<camera::CameraParameters> nav_cam_params;
   gtsam::Pose3 body_T_nav_cam;
+  gtsam::Pose3 body_T_dock_cam;
   // Min number of ar landmarks for an AR msg to be valid.
   int ar_min_num_landmarks;
   // Min number of sparse mapping landmarks for a Sparse Mapping msg to be valid.

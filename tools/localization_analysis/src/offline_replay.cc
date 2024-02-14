@@ -143,13 +143,9 @@ void OfflineReplay::Run() {
 
     const auto ar_msg = live_measurement_simulator_->GetARMessage(current_time);
     if (ar_msg) {
+      std::cout << "buffering ar msg!" << std::endl;
       graph_localizer_simulator_->BufferARVisualLandmarksMsg(*ar_msg);
-      if (static_cast<int>(ar_msg->landmarks.size()) >= params_.ar_min_num_landmarks) {
-        const gtsam::Pose3 ar_global_T_body =
-          lc::PoseFromMsgWithExtrinsics(ar_msg->pose, params_.body_T_nav_cam.inverse());
-        const lc::Time timestamp = lc::TimeFromHeader(ar_msg->header);
-        SaveMsg(PoseMsg(ar_global_T_body, timestamp), TOPIC_AR_TAG_POSE, results_bag_);
-      }
+      latest_ar_msg_ = ar_msg;
     }
 
     /*const auto ar_msg = live_measurement_simulator_->GetARMessage(current_time);
@@ -205,6 +201,16 @@ void OfflineReplay::Run() {
     /*const auto imu_bias_tester_predicted_states =
       imu_bias_tester_wrapper_.LocalizationStateCallback(*localization_msg);
     SaveImuBiasTesterPredictedStates(imu_bias_tester_predicted_states, results_bag_);*/
+      }
+      // Save ar tag pose after updating graph so latest world_T_dock is estimated.
+      if (latest_ar_msg_) {
+        if (static_cast<int>(ar_msg->landmarks.size()) >= params_.ar_min_num_landmarks) {
+          const gtsam::Pose3 world_T_body = (*graph_localizer_simulator_->WorldTDock())*
+            lc::PoseFromMsgWithExtrinsics(ar_msg->pose, params_.body_T_dock_cam.inverse());
+          const lc::Time timestamp = lc::TimeFromHeader(ar_msg->header);
+          SaveMsg(PoseMsg(world_T_body, timestamp), TOPIC_AR_TAG_POSE, results_bag_);
+          latest_ar_msg_ = boost::none;
+        }
       }
     }
   }

@@ -59,6 +59,7 @@ class OfflineReplay {
   ros_pose_extrapolator::RosPoseExtrapolatorWrapper pose_extrapolator_wrapper_;
   std::string output_stats_file_;
   const std::string kFeatureTracksImageTopic_ = "feature_track_image";
+  boost::optional<ff_msgs::VisualLandmarks> latest_ar_msg_;
   OfflineReplayParams params_;
 };
 }  // end namespace localization_analysis

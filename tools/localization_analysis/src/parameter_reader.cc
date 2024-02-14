@@ -62,5 +62,6 @@ void LoadOfflineReplayParams(config_reader::ConfigReader& config, OfflineReplayP
   LOAD_PARAM(params.ar_min_num_landmarks, config, "or_");
   params.nav_cam_params.reset(new camera::CameraParameters(&config, "nav_cam"));
   params.body_T_nav_cam = lc::LoadTransform(config, "nav_cam_transform");
+  params.body_T_dock_cam = lc::LoadTransform(config, "dock_cam_transform");
 }
 }  // namespace localization_analysis
