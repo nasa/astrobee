@@ -79,8 +79,6 @@ def test_values(
         + bag_file
         + " "
         + map_file
-        + " "
-        + config_path
         + " -o "
         + output_bag
         + " -s "

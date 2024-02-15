@@ -7,51 +7,16 @@ This folder contains various scripts for calibration.
 - Build and install the Astrobee code on the robot.
 - Install Kalibr on your computer.
 
-## Installation instructions for Kalibr for Ubuntu 18.04
+## Installation instructions for Kalibr for Ubuntu 20.04
 
-    sudo apt install python-rosinstall ipython python-software-properties \
-            python-git ipython python-catkin-tools
-    sudo apt install libopencv-dev ros-melodic-vision-opencv
+Install Kalibr following the instructions at:
 
-# Install pip and use it to install python packages
+https://github.com/ethz-asl/kalibr
 
-We assume that Python 2 is used.
-
-    curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
-    sudo python get-pip.py
-    sudo -H pip install testresources
-    sudo -H pip install python-igraph==0.8 --upgrade
-    sudo -H pip install  numpy==1.15.0 opencv-python==4.2.0.32
-
-If necessary, pip and the other packages can be installed in user
-space. The PYTHONPATH may need to be set for such packages.
-The pip flags --user, --force, and --verbose may be useful.
-
-Kalibr uses Python 2, and many packages are transitioning to Python 3,
-so some effort may be needed to install the Python 2 dependencies.
-
-    # Build using catkin
-    export KALIBR_WS=$HOME/source/kalibr_workspace
-    mkdir -p $KALIBR_WS/src
-    cd $KALIBR_WS
-    source /opt/ros/melodic/setup.bash
-    catkin init
-    catkin config --extend /opt/ros/melodic
-    catkin config --cmake-args -DCMAKE_BUILD_TYPE=Release
-    cd $KALIBR_WS/src
-    git clone git@github.com:oleg-alexandrov/Kalibr.git
-
-If the above cloning operation fails, it is likely due to some ssh settings on your machine not being as GitHub expects. Then try:
+However, check out our fork which supports the assymetric aprilgrid
+installed on Astrobee's dock:
 
     git clone https://github.com/oleg-alexandrov/Kalibr.git
-
-In either case, continue as follows:
-
-    # This line takes care of catkin not finding numpy.
-    ln -s /usr/local/lib/python2.7/dist-packages/numpy/core/include/numpy \
-      $KALIBR_WS/src/Kalibr/Schweizer-Messer/numpy_eigen/include
-
-    catkin build -DCMAKE_BUILD_TYPE=Release -j4
 
 # Prepare the environment. This is expected for all the steps below.
 

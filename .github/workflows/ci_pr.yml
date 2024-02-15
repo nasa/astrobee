@@ -7,38 +7,6 @@ on:
 
 jobs:
 
-  build-xenial:
-
-    runs-on: ubuntu-20.04
-
-    steps:
-    - uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
-
-    - name: Checkout submodule
-      run: git submodule update --init --depth 1 description/media
-
-    - name: Build, test
-      run: ./scripts/docker/build.sh --xenial --remote
-                                     astrobee test_astrobee
-
-  build-bionic:
-
-    runs-on: ubuntu-20.04
-
-    steps:
-    - uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
-
-    - name: Checkout submodule
-      run: git submodule update --init --depth 1 description/media
-
-    - name: Build, test
-      run: ./scripts/docker/build.sh --bionic --remote
-                                     astrobee test_astrobee
-
   build-focal:
 
     runs-on: ubuntu-20.04

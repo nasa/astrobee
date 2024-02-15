@@ -66,6 +66,7 @@ if (USE_ROS)
     src/graph_localizer_simulator.cc
     src/imu_bias_tester_adder.cc
     src/live_measurement_simulator.cc
+    src/map_matcher.cc
     src/parameter_reader.cc
     src/sparse_mapping_pose_adder.cc
     src/utilities.cc
@@ -103,6 +104,12 @@ if (USE_ROS)
   target_link_libraries(run_imu_bias_tester_adder
     ${PROJECT_NAME} gflags gtsam ${catkin_LIBRARIES})
 
+  ## Declare a C++ executable: run_map_matcher
+  add_executable(run_map_matcher tools/run_map_matcher.cc)
+  add_dependencies(run_map_matcher ${catkin_EXPORTED_TARGETS})
+  target_link_libraries(run_map_matcher
+    ${PROJECT_NAME} gflags gtsam ${catkin_LIBRARIES})
+
   ## Declare a C++ executable: run_sparse_mapping_pose_adder
   add_executable(run_sparse_mapping_pose_adder tools/run_sparse_mapping_pose_adder.cc)
   add_dependencies(run_sparse_mapping_pose_adder ${catkin_EXPORTED_TARGETS})
@@ -125,6 +132,7 @@ install(TARGETS run_bag_imu_filterer DESTINATION bin)
 install(TARGETS run_depth_odometry_adder DESTINATION bin)
 install(TARGETS run_graph_bag DESTINATION bin)
 install(TARGETS run_imu_bias_tester_adder DESTINATION bin)
+install(TARGETS run_map_matcher DESTINATION bin)
 install(TARGETS run_sparse_mapping_pose_adder DESTINATION bin)
 install(CODE "execute_process(
   COMMAND ln -s ../../bin/convert_depth_msg share/${PROJECT_NAME}
@@ -132,6 +140,7 @@ install(CODE "execute_process(
   COMMAND ln -s ../../bin/run_depth_odometry_adder share/${PROJECT_NAME}
   COMMAND ln -s ../../bin/run_graph_bag share/${PROJECT_NAME}
   COMMAND ln -s ../../bin/run_imu_bias_tester_adder share/${PROJECT_NAME}
+  COMMAND ln -s ../../bin/run_map_matcher share/${PROJECT_NAME}
   COMMAND ln -s ../../bin/run_sparse_mapping_pose_adder share/${PROJECT_NAME}
   WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
   OUTPUT_QUIET

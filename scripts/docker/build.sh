@@ -23,7 +23,6 @@ usage: build.sh [-h] [-x] [-b] [-f] [-r] [-o <owner>] [-d]
 
 -h or --help: Print this help
 -x or --xenial: Build Ubuntu 16.04 docker images
--b or --bionic: Build Ubuntu 18.04 docker images
 -f or --focal: Build Ubuntu 20.04 docker images
 -r or --remote: Build first target on top of a pre-built remote image
 -o or --owner: Set ghcr.io owner for push action (default: nasa)
@@ -55,8 +54,8 @@ usage()
 # Parse options 1 (validate and normalize with getopt)
 ######################################################################
 
-shortopts="h,x,b,f,r,o:,d"
-longopts="help,xenial,bionic,focal,remote,owner:,dry-run"
+shortopts="h,x,f,r,o:,v:,d"
+longopts="help,xenial,focal,remote,owner:,revision:,dry-run"
 opts=$(getopt -a -n build.sh --options "$shortops" --longoptions "$longopts" -- "$@")
 if [ $? -ne 0 ]; then
     echo
@@ -91,13 +90,14 @@ while [ "$1" != "" ]; do
                                    ;;
         --xenial )                 os="xenial"
                                    ;;
-        --bionic )                 os="bionic"
-                                   ;;
         --focal )                  os="focal"
                                    ;;
         --remote )                 remote="true"
                                    ;;
         --owner )                  owner=$2
+                                   shift
+                                   ;;
+        --revision )               revision=$2
                                    shift
                                    ;;
         --dry-run )                dry_run="true"
@@ -143,9 +143,8 @@ done
 
 if [[ "$build_astrobee_base" == "true" \
           && "$remote" == "true" ]]; then
-    echo "Error: --remote doesn't make sense when first target is astrobee_base."
-    echo "Run with -h for help."
-    exit 1
+    echo "Warning: --remote doesn't make sense when first target is astrobee_base."
+    echo "It will be ignored."
 fi
 
 ######################################################################
@@ -156,11 +155,7 @@ UBUNTU_VERSION=16.04
 ROS_VERSION=kinetic
 PYTHON=''
 
-if [ "$os" = "bionic" ]; then
-    UBUNTU_VERSION=18.04
-    ROS_VERSION=melodic
-    PYTHON=''
-elif [ "$os" = "focal" ]; then
+if [ "$os" = "focal" ]; then
     UBUNTU_VERSION=20.04
     ROS_VERSION=noetic
     PYTHON='3'
@@ -258,8 +253,10 @@ if [ "$astrobee_quick" = "true" ]; then
     build astrobee_quick "${revision}-" "quick-"
 fi
 
+# When we publish the base, we always want it
+# to rewrite the latest for future use
 if [ "$push_astrobee_base" = "true" ]; then
-    push astrobee_base "${revision}-" "base-"
+    push astrobee_base "latest-" "base-"
 fi
 
 if [ "$push_astrobee" = "true" ]; then
