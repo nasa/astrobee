@@ -19,6 +19,12 @@
 
 from vector3d_plotter import Vector3dPlotter
 
+import numpy as np
+
+# Clip rotation angles so they stay between 0 and 360
+def unwrap_in_degrees(angles):
+    return np.rad2deg(np.unwrap(np.deg2rad(angles)))
+
 # Class for plotting YPR orientation values on the same and separate plots.
 class OrientationPlotter(Vector3dPlotter):
     def __init__(
@@ -37,9 +43,9 @@ class OrientationPlotter(Vector3dPlotter):
     ):
         super(OrientationPlotter, self).__init__(name,
             times,
-            y_vals,
-            p_vals,
-            r_vals,
+            unwrap_in_degrees(y_vals),
+            unwrap_in_degrees(p_vals),
+            unwrap_in_degrees(r_vals),
             ["Orientation (Yaw)", "Orientation (Roll)", "Orientation (Pitch)"],
             colors,
             linestyle,
