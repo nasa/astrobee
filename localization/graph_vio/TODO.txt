@@ -30,15 +30,34 @@
         - add num ml measurements! 
 
       - add ar measurements! (A)
-        - add to ros_graph_localizer!!!! (AAAA)
-            - make sure plots look good! (AC)
+          - ar tag measurements come in too early, more recent than latest vio msg time!
+              - check of timestamps, should more be in the interpolator??? (A)
+                - how could ar measurements be more recent?
+                  - add ar_msg buffer, fill if too recent (AAAA)
+                  - check ar_msg buffer when a VIO msg is received, add if recent enough!
+
+      - reset world_T_dock on frame changes in wrapper! (AB)
+        - subscribe to frame change calls? just do in nodelet?? (what did previous localizer do?)
+
         - publish localizer junk! (AC)
-            - world_T_body tf, ar pose, others?
+            - world_T_body tf, ar pose, others!
             - add option in nodelet to reestimate worldTdock on mode changes
             - add options to reset localizer!
+        - enable resets! (B)
 
 
       - test with sim! (B)
+
+      - handle flight mode changes!
+
+        - issue with odom_interpolator growing too large??? Add warning in code in pose extrapolator, pose node adder model, ros_graph_localizer_wrapper? (C)
+                - add new class with these! RollingPoseInterpolator! (CA)
+                    - pass max buffer size
+                    - keep rolling estimate
+                        - just multiplies poses since last received pose!!
+                    - if interpolate fails, try to subtract recent estimates still in buffer from rolling estimate so timestamps match!
+                    - update everything to use this!
+                      - add tests!!!!
 
       - tune factor covariances!
         - lessen ml factor val! (B)
