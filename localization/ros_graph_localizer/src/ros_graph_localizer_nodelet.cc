@@ -83,6 +83,12 @@ bool RosGraphLocalizerNodelet::SetMode(ff_msgs::SetEkfInput::Request& req, ff_ms
     ResetAndEnableLocalizer();
   }
 
+  // Reset world_T_dock when switch back to ar mode
+  if (input_mode == ff_msgs::SetEkfInputRequest::MODE_AR_TAGS &&
+      last_mode_ != ff_msgs::SetEkfInputRequest::MODE_AR_TAGS) {
+    LogInfo("SetMode: Switching to AR_TAG mode.");
+    ros_graph_localizer_wrapper_.ResetWorldTDock();
+  }
   last_mode_ = input_mode;
   return true;
 }

@@ -36,13 +36,9 @@
                   - add ar_msg buffer, fill if too recent (AAAA)
                   - check ar_msg buffer when a VIO msg is received, add if recent enough!
 
-      - reset world_T_dock on frame changes in wrapper! (AB)
-        - subscribe to frame change calls? just do in nodelet?? (what did previous localizer do?)
-
         - publish localizer junk! (AC)
             - add options to reset localizer! (AAAB)
                 - how are loading biases from file handled??
-            - add option in nodelet to reestimate worldTdock on mode changes (AAAC)
 
       - test with sim! (B)
 
