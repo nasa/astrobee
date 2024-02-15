@@ -40,15 +40,16 @@
         - subscribe to frame change calls? just do in nodelet?? (what did previous localizer do?)
 
         - publish localizer junk! (AC)
-            - world_T_body tf, ar pose, others!
-            - add option in nodelet to reestimate worldTdock on mode changes
-            - add options to reset localizer!
-        - enable resets! (B)
-
+            - add options to reset localizer! (AAAB)
+                - how are loading biases from file handled??
+            - add option in nodelet to reestimate worldTdock on mode changes (AAAC)
 
       - test with sim! (B)
 
+      - test on robot! (C)
+
       - handle flight mode changes!
+        - add support to vio stuff? others?
 
         - issue with odom_interpolator growing too large??? Add warning in code in pose extrapolator, pose node adder model, ros_graph_localizer_wrapper? (C)
                 - add new class with these! RollingPoseInterpolator! (CA)

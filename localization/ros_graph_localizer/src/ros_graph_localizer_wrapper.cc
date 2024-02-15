@@ -84,17 +84,22 @@ void RosGraphLocalizerWrapper::ARVisualLandmarksCallback(const ff_msgs::VisualLa
   // since the dock pose in the message is relative to the dock frame
   // and not the global frame
   if (!world_T_dock_) {
-    const auto world_T_latest_graph_body = *(graph_localizer_->pose_nodes().LatestNode());
-    const auto latest_graph_timestamp = *(graph_localizer_->pose_nodes().LatestTimestamp());
+    const auto world_T_latest_graph_body = LatestPose();
+    const auto latest_graph_timestamp = LatestTimestamp();
+    if (!world_T_latest_graph_body || !latest_graph_timestamp) {
+      LogError("ARVisualLandmarksCallback: Failed to get latest pose and timestamp.");
+      return;
+    }
+
     const auto dock_time = lc::TimeFromHeader(visual_landmarks_msg.header);
-    const auto latest_graph_body_T_body = odom_interpolator_.Relative(latest_graph_timestamp, dock_time);
+    const auto latest_graph_body_T_body = odom_interpolator_.Relative(*latest_graph_timestamp, dock_time);
     if (!latest_graph_body_T_body) {
-      LogError("LocalizationStateCallback: Failed to get latest_graph_body_T_body for provided times.");
+      LogError("ARVisualLandmarksCallback: Failed to get latest_graph_body_T_body for provided times.");
       return;
     }
     const auto dock_T_body = lc::PoseFromMsgWithExtrinsics(
       visual_landmarks_msg.pose, params_.ar_tag_loc_factor_adder.body_T_cam.inverse());
-    world_T_dock_ = world_T_latest_graph_body * lc::GtPose(*latest_graph_body_T_body) * dock_T_body.inverse();
+    world_T_dock_ = *world_T_latest_graph_body * lc::GtPose(*latest_graph_body_T_body) * dock_T_body.inverse();
   }
   if (Initialized()) {
     // Frame change the ar tag measurement from the dock to world frame before
@@ -155,12 +160,20 @@ void RosGraphLocalizerWrapper::ResetWorldTDock() { world_T_dock_ = boost::none; 
 
 boost::optional<gtsam::Pose3> RosGraphLocalizerWrapper::WorldTDock() const { return world_T_dock_; }
 
+boost::optional<lc::Time> RosGraphLocalizerWrapper::LatestTimestamp() const {
+  return graph_localizer_->pose_nodes().LatestTimestamp();
+}
+
+boost::optional<gtsam::Pose3> RosGraphLocalizerWrapper::LatestPose() const {
+  return graph_localizer_->pose_nodes().LatestNode();
+}
+
 boost::optional<ff_msgs::GraphLocState> RosGraphLocalizerWrapper::GraphLocStateMsg() {
   if (!Initialized()) {
     LogWarningEveryN(200, "GraphLocStateMsg: Localizer not yet initialized");
     return boost::none;
   }
-  const auto latest_timestamp = *(graph_localizer_->pose_nodes().LatestTimestamp());
+  const auto latest_timestamp = *LatestTimestamp();
   // Avoid sending repeat msgs.
   if (latest_msg_time_ && *latest_msg_time_ == latest_timestamp) {
     LogWarningEveryN(200, "GraphLocStateMsg: No new states added.");
@@ -169,7 +182,7 @@ boost::optional<ff_msgs::GraphLocState> RosGraphLocalizerWrapper::GraphLocStateM
   latest_msg_time_ = latest_timestamp;
   odom_interpolator_.RemoveBelowLowerBoundValues(latest_timestamp);
   ff_msgs::GraphLocState msg;
-  const auto latest_pose = *(graph_localizer_->pose_nodes().LatestNode());
+  const auto latest_pose = *LatestPose();
   const auto latest_keys = graph_localizer_->pose_nodes().Keys(latest_timestamp);
   const auto latest_pose_covariance = *(graph_localizer_->Covariance(latest_keys[0]));
   lc::PoseToMsg(latest_pose, msg.pose.pose);

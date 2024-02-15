@@ -145,8 +145,40 @@ void RosGraphLocalizerNodelet::PublishGraphMessages() {
 
   // TODO(rsoussan): Only publish if things have changed?
   PublishGraphLocalizerState();
+  PublishWorldTBodyTF();
   // if (ros_graph_localizer_wrapper_.publish_graph()) PublishLocalizerGraph();
   // if (ros_graph_localizer_wrapper_.save_graph_dot_file()) ros_graph_localizer_wrapper_.SaveGraphDotFile();
+}
+
+void RosGraphLocalizerNodelet::PublishWorldTBodyTF() {
+  const auto latest_pose = ros_graph_localizer_wrapper_.LatestPose();
+  const auto latest_timestamp = ros_graph_localizer_wrapper_.LatestTimestamp();
+  if (!latest_pose || !latest_timestamp) {
+    LogErrorEveryN(100, "PublishWorldTBodyTF: Failed to get latest pose and timestamp.");
+    return;
+  }
+
+  const auto world_T_body_tf = lc::PoseToTF(*latest_pose, "world", "body",
+                                            *latest_timestamp, platform_name_);
+  transform_pub_.sendTransform(world_T_body_tf);
+}
+
+void RosGraphLocalizerNodelet::PublishWorldTDockTF() {
+  const auto world_T_dock = ros_graph_localizer_wrapper_.WorldTDock();
+  if (!world_T_dock) return;
+  const auto world_T_dock_tf =
+    lc::PoseToTF(*world_T_dock, "world", "dock/body", lc::TimeFromRosTime(ros::Time::now()), platform_name_);
+  // If the rate is higher than the sim time, prevent sending repeat tfs
+  if (world_T_dock_tf.header.stamp == last_tf_dock_time_) return;
+  last_tf_dock_time_ = world_T_dock_tf.header.stamp;
+  transform_pub_.sendTransform(world_T_dock_tf);
+}
+
+void RosGraphLocalizerNodelet::ARVisualLandmarksCallback(
+  const ff_msgs::VisualLandmarks::ConstPtr& visual_landmarks_msg) {
+  if (!localizer_enabled()) return;
+  ros_graph_localizer_wrapper_.ARVisualLandmarksCallback(*visual_landmarks_msg);
+  PublishWorldTDockTF();
 }
 
 void RosGraphLocalizerNodelet::SparseMapVisualLandmarksCallback(

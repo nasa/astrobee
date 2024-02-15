@@ -87,6 +87,15 @@ class RosGraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
   // Publishes heartbeat message.
   void PublishHeartbeat();
 
+  // Publishes world_T_body transform
+  void PublishWorldTBodyTF();
+
+  // Publishes world_T_dock transform
+  void PublishWorldTDockTF();
+
+  // Passes ar tag visual landmarks msg to ros_graph_localizer_wrapper if Localizer is enabled.
+  void ARVisualLandmarksCallback(const ff_msgs::VisualLandmarks::ConstPtr& visual_landmarks_msg);
+
   // Passes sparse map visual landmarks msg to ros_graph_localizer_wrapper if Localizer is enabled.
   void SparseMapVisualLandmarksCallback(const ff_msgs::VisualLandmarks::ConstPtr& visual_landmarks_msg);
 
@@ -104,6 +113,7 @@ class RosGraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
   bool localizer_enabled_ = true;
   ros::Subscriber graph_vio_sub_, sparse_map_vl_sub_;
   ros::Publisher graph_loc_pub_, reset_pub_, heartbeat_pub_;
+  tf2_ros::TransformBroadcaster transform_pub_;
   ros::ServiceServer bias_srv_, bias_from_file_srv_, reset_map_srv_, reset_srv_, input_mode_srv_;
   std::string platform_name_;
   ff_msgs::Heartbeat heartbeat_;
@@ -111,6 +121,7 @@ class RosGraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
   int last_mode_ = -1;
 
   ros::Time last_heartbeat_time_;
+  ros::Time last_tf_dock_time_;
 };
 }  // namespace ros_graph_localizer
 
