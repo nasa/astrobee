@@ -202,6 +202,7 @@ build () {
            --build-arg UBUNTU_VERSION=${UBUNTU_VERSION} \
            --build-arg ROS_VERSION=${ROS_VERSION} \
            --build-arg PYTHON=${PYTHON} \
+           --build-arg REVISION=${tag_revision} \
            $remote_args \
            -t astrobee/astrobee:${tag_revision}${tag_stage}ubuntu${UBUNTU_VERSION}
     { set +x; } 2>/dev/null
@@ -238,7 +239,7 @@ cd "${checkout_dir}"
 { set +x; } 2>/dev/null
 
 if [ "$build_astrobee_base" = "true" ]; then
-    build astrobee_base "${revision}-" "base-"
+    build astrobee_base "latest-" "base-"
 fi
 
 if [ "$build_astrobee" = "true" ]; then
@@ -246,7 +247,7 @@ if [ "$build_astrobee" = "true" ]; then
 fi
 
 if [ "$build_test_astrobee" = "true" ]; then
-    build test_astrobee "" "test-"
+    build test_astrobee "${revision}-" "test-"
 fi
 
 if [ "$astrobee_quick" = "true" ]; then
