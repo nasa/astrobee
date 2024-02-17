@@ -161,10 +161,18 @@ void RosGraphLocalizerWrapper::ResetWorldTDock() { world_T_dock_ = boost::none; 
 boost::optional<gtsam::Pose3> RosGraphLocalizerWrapper::WorldTDock() const { return world_T_dock_; }
 
 boost::optional<lc::Time> RosGraphLocalizerWrapper::LatestTimestamp() const {
+  if (!Initialized()) {
+    LogWarningEveryN(200, "LatestTimestamp: Localizer not yet initialized");
+    return boost::none;
+  }
   return graph_localizer_->pose_nodes().LatestTimestamp();
 }
 
 boost::optional<gtsam::Pose3> RosGraphLocalizerWrapper::LatestPose() const {
+  if (!Initialized()) {
+    LogWarningEveryN(200, "LatestPose: Localizer not yet initialized");
+    return boost::none;
+  }
   return graph_localizer_->pose_nodes().LatestNode();
 }
 
