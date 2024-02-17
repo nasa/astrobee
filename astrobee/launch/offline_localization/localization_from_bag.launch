@@ -24,7 +24,7 @@
   <!-- Command line arguments -->
   <arg name="bagfile"/>             
   <arg name="record" default="false" />
-  <arg name="pose_extrapolator" default="true" />
+  <arg name="pose_extrapolator" default="false" />
   <arg name="depth_odometry" default="false" />
   <arg name="robot" default="bumble" />
   <arg name="world" default="iss" />
