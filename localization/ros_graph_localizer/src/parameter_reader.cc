@@ -24,7 +24,7 @@ namespace mc = msg_conversions;
 
 void LoadRosGraphLocalizerNodeletParams(config_reader::ConfigReader& config, RosGraphLocalizerNodeletParams& params,
                                         const std::string& prefix) {
-  LOAD_PARAM(params.max_graph_vio_state_buffer_size, config, prefix);
-  LOAD_PARAM(params.max_vl_matched_projections_buffer_size, config, prefix);
+  LOAD_PARAM(params.max_graph_vio_state_buffer_size, config, "rgl_" + prefix);
+  LOAD_PARAM(params.max_vl_matched_projections_buffer_size, config, "rgl_" + prefix);
 }
 }  // namespace ros_graph_localizer

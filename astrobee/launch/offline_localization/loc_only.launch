@@ -35,8 +35,4 @@
   <include file="$(find ros_graph_localizer)/launch/ros_graph_localizer.launch">
     <arg name="terminal" value=""/>
   </include>
-  <!-- Nodes to run -->
-  <include file="$(find ros_graph_vio)/launch/ros_graph_vio.launch">
-    <arg name="terminal" value=""/>
-  </include>
 </launch>
