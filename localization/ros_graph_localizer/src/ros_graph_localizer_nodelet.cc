@@ -51,7 +51,7 @@ void RosGraphLocalizerNodelet::Initialize(ros::NodeHandle* nh) {
 }
 
 void RosGraphLocalizerNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
-  graph_loc_pub_ = nh->advertise<std_msgs::Empty>(TOPIC_GRAPH_LOC_STATE, 10);
+  graph_loc_pub_ = nh->advertise<ff_msgs::GraphLocState>(TOPIC_GRAPH_LOC_STATE, 10);
   reset_pub_ = nh->advertise<std_msgs::Empty>(TOPIC_GNC_EKF_RESET, 10);
   heartbeat_pub_ = nh->advertise<ff_msgs::Heartbeat>(TOPIC_HEARTBEAT, 5, true);
   graph_vio_sub_ =
