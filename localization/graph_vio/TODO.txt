@@ -29,26 +29,23 @@
      - finish loc plotting script! 
         - add num ml measurements! 
 
-      - add ar measurements! (A)
           - ar tag measurements come in too early, more recent than latest vio msg time!
-              - check of timestamps, should more be in the interpolator??? (A)
+              - check of timestamps, should more be in the interpolator??? 
                 - how could ar measurements be more recent?
-                  - add ar_msg buffer, fill if too recent (AAAA)
+                  - add ar_msg buffer, fill if too recent (B)
                   - check ar_msg buffer when a VIO msg is received, add if recent enough!
 
-        - publish localizer junk! (AC)
-            - add options to reset localizer! (AAAB)
-                - how are loading biases from file handled??
-
-      - test with sim! (B)
+      - test with sim! (A)
+          - update astrobee config -> change imu aug to pose extrapolator!
+          - same with astrobee/launch!
 
       - test on robot! (C)
 
       - handle flight mode changes!
         - add support to vio stuff? others?
 
-        - issue with odom_interpolator growing too large??? Add warning in code in pose extrapolator, pose node adder model, ros_graph_localizer_wrapper? (C)
-                - add new class with these! RollingPoseInterpolator! (CA)
+        - issue with odom_interpolator growing too large??? Add warning in code in pose extrapolator, pose node adder model, ros_graph_localizer_wrapper? (D)
+                - add new class with these! RollingPoseInterpolator! (D)
                     - pass max buffer size
                     - keep rolling estimate
                         - just multiplies poses since last received pose!!
