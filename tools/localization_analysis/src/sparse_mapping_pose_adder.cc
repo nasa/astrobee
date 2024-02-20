@@ -19,7 +19,6 @@
 #include <ff_util/ff_names.h>
 #include <localization_analysis/sparse_mapping_pose_adder.h>
 #include <localization_analysis/utilities.h>
-#include <graph_localizer/utilities.h>
 #include <localization_common/utilities.h>
 
 #include <ff_msgs/VisualLandmarks.h>
@@ -43,7 +42,7 @@ void SparseMappingPoseAdder::AddPoses() {
         const auto world_T_body = world_T_nav_cam * nav_cam_T_body_;
         // TODO(rsoussan): put this in loc common
         const auto sparse_mapping_pose_msg =
-          graph_localizer::PoseMsg(world_T_body, lc::TimeFromHeader(vl_features->header));
+          PoseMsg(world_T_body, lc::TimeFromHeader(vl_features->header));
         const ros::Time timestamp = lc::RosTimeFromHeader(vl_features->header);
         output_bag_.write("/" + std::string(TOPIC_SPARSE_MAPPING_POSE), timestamp, sparse_mapping_pose_msg);
       }

@@ -72,7 +72,7 @@ if (USE_ROS)
     src/live_measurement_simulator.cc
     src/offline_replay.cc
     src/parameter_reader.cc
-    #src/sparse_mapping_pose_adder.cc
+    src/sparse_mapping_pose_adder.cc
     src/utilities.cc
   )
   add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
@@ -109,10 +109,10 @@ if (USE_ROS)
   #  ${PROJECT_NAME} gflags gtsam ${catkin_LIBRARIES})
 
   ## Declare a C++ executable: run_sparse_mapping_pose_adder
-  #add_executable(run_sparse_mapping_pose_adder tools/run_sparse_mapping_pose_adder.cc)
-  #add_dependencies(run_sparse_mapping_pose_adder ${catkin_EXPORTED_TARGETS})
-  #target_link_libraries(run_sparse_mapping_pose_adder
-  #  ${PROJECT_NAME} gflags gtsam ${catkin_LIBRARIES})
+  add_executable(run_sparse_mapping_pose_adder tools/run_sparse_mapping_pose_adder.cc)
+  add_dependencies(run_sparse_mapping_pose_adder ${catkin_EXPORTED_TARGETS})
+  target_link_libraries(run_sparse_mapping_pose_adder
+  ${PROJECT_NAME} gflags gtsam ${catkin_LIBRARIES})
 
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
