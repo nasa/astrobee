@@ -139,7 +139,7 @@ def absolute_poses_from_integrated_velocities(timestamped_velocities, groundtrut
             start_index = closest_matching_index
             starting_groundtruth_pose = groundtruth_poses[i]
             break
-    if not start_index:
+    if start_index is None:
         print("Failed to find corresponding groundtruth pose to graph VIO poses")
         sys.exit(0)  
     return integrate_velocities(timestamped_velocities[start_index:], starting_groundtruth_pose)
