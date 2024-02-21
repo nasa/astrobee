@@ -56,7 +56,9 @@ void RosPoseExtrapolatorNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
   // Use the imu nh so that speed mode changes arrive in order wrt IMU msgs
   flight_mode_sub_ =
     imu_nh_.subscribe(TOPIC_MOBILITY_FLIGHT_MODE, 10, &RosPoseExtrapolatorNodelet::FlightModeCallback, this);
-  state_sub_ = loc_nh_.subscribe(TOPIC_GRAPH_LOC_STATE, 1, &RosPoseExtrapolatorNodelet::LocalizationStateCallback, this,
+  loc_sub_ = loc_nh_.subscribe(TOPIC_GRAPH_LOC_STATE, 1, &RosPoseExtrapolatorNodelet::LocalizationStateCallback, this,
+                                 ros::TransportHints().tcpNoDelay());
+  vio_sub_ = vio_nh_.subscribe(TOPIC_GRAPH_VIO_STATE, 1, &RosPoseExtrapolatorNodelet::GraphVIOStateCallback, this,
                                  ros::TransportHints().tcpNoDelay());
 }
 

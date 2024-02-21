@@ -64,9 +64,9 @@ class RosPoseExtrapolatorNodelet : public ff_util::FreeFlyerNodelet {
 
   ros_pose_extrapolator::RosPoseExtrapolatorWrapper ros_pose_extrapolator_wrapper_;
   std::string platform_name_;
-  ros::NodeHandle imu_nh_, loc_nh_;
+  ros::NodeHandle imu_nh_, loc_nh_, vio_nh_;
   ros::CallbackQueue imu_queue_, loc_queue_;
-  ros::Subscriber imu_sub_, flight_mode_sub_, state_sub_;
+  ros::Subscriber imu_sub_, flight_mode_sub_, loc_sub_, vio_sub_;
   ros::Publisher state_pub_, pose_pub_, twist_pub_, heartbeat_pub_;
   ff_msgs::Heartbeat heartbeat_;
   tf2_ros::TransformBroadcaster transform_pub_;
