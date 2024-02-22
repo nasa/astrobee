@@ -27,6 +27,8 @@
   <build_depend>imu_augmentor</build_depend>
   <build_depend>lk_optical_flow</build_depend>
   <build_depend>localization_node</build_depend>
+  <build_depend>msg_conversions</build_depend>
+  <build_depend>parameter_reader</build_depend>
   <build_depend>ros_graph_localizer</build_depend>
   <build_depend>ros_graph_vio</build_depend>
   <build_depend>ros_pose_extrapolator</build_depend>
@@ -43,6 +45,8 @@
   <run_depend>graph_vio</run_depend>
   <run_depend>lk_optical_flow</run_depend>
   <run_depend>localization_node</run_depend>
+  <run_depend>msg_conversions</run_depend>
+  <run_depend>parameter_reader</run_depend>
   <run_depend>ros_graph_localizer</run_depend>
   <run_depend>ros_graph_vio</run_depend>
   <run_depend>ros_pose_extrapolator</run_depend>

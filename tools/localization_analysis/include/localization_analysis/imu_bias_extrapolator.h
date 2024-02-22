@@ -16,27 +16,37 @@
  * under the License.
  */
 
-#ifndef LOCALIZATION_ANALYSIS_IMU_BIAS_TESTER_ADDER_H_
-#define LOCALIZATION_ANALYSIS_IMU_BIAS_TESTER_ADDER_H_
+#ifndef LOCALIZATION_ANALYSIS_IMU_BIAS_EXTRAPOLATOR_H_
+#define LOCALIZATION_ANALYSIS_IMU_BIAS_EXTRAPOLATOR_H_
 
-#include <imu_bias_tester/imu_bias_tester_wrapper.h>
+#include <ff_msgs/GraphVIOState.h>
+#include <localization_common/timestamped_set.h>
+#include <imu_integration/imu_integrator.h>
 
 #include <rosbag/bag.h>
 #include <rosbag/view.h>
 
 #include <string>
+#include <vector>
 
 namespace localization_analysis {
-class ImuBiasTesterAdder {
+class ImuBiasExtrapolator {
  public:
-  ImuBiasTesterAdder(const std::string& input_bag_name, const std::string& output_bag_name);
-  void AddPredictions();
+  ImuBiasExtrapolator(const std::string& input_bag_name, const std::string& output_bag_name);
+  bool Initialized();
+  void Initialize(const localization_common::CombinedNavState& combined_nav_state);
+  std::vector<localization_common::CombinedNavState> VIOStateCallback(
+    const ff_msgs::GraphVIOState& graph_vio_state_msg);
+  void AddExtrapolatedStates();
 
  private:
-  imu_bias_tester::ImuBiasTesterWrapper imu_bias_tester_wrapper_;
+  std::unique_ptr<imu_integration::ImuIntegrator> imu_integrator_;
+  localization_common::TimestampedSet<localization_common::CombinedNavState> combined_nav_states_;
+  localization_common::CombinedNavState latest_extrapolated_state_;
+  bool initialized_;
   rosbag::Bag input_bag_;
   rosbag::Bag output_bag_;
 };
 }  // end namespace localization_analysis
 
-#endif  // LOCALIZATION_ANALYSIS_IMU_BIAS_TESTER_ADDER_H_
+#endif  // LOCALIZATION_ANALYSIS_IMU_BIAS_EXTRAPOLATOR_H_

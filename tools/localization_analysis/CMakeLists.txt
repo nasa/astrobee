@@ -34,9 +34,10 @@ if (USE_ROS)
     ff_common
     graph_localizer
     graph_vio
-    #imu_bias_tester
     lk_optical_flow
     localization_node
+    msg_conversions 
+    parameter_reader
     ros_graph_localizer
     ros_graph_vio
     ros_pose_extrapolator
@@ -48,8 +49,8 @@ if (USE_ROS)
   catkin_package(
     LIBRARIES ${PROJECT_NAME} ${OpenCV_LIBRARIES} 
     INCLUDE_DIRS include
-    CATKIN_DEPENDS roscpp rosbag camera depth_odometry ff_util ff_msgs ff_common graph_localizer #imu_bias_tester 
-    		   lk_optical_flow localization_node ros_graph_localizer ros_graph_vio ros_pose_extrapolator
+    CATKIN_DEPENDS roscpp rosbag camera depth_odometry ff_util ff_msgs ff_common graph_localizer
+    msg_conversions lk_optical_flow localization_node parameter_reader ros_graph_localizer ros_graph_vio ros_pose_extrapolator
   )
    
   ###########
@@ -68,7 +69,7 @@ if (USE_ROS)
     #src/depth_odometry_adder.cc
     src/graph_localizer_simulator.cc
     src/graph_vio_simulator.cc
-    #src/imu_bias_tester_adder.cc
+    src/imu_bias_extrapolator.cc
     src/live_measurement_simulator.cc
     src/offline_replay.cc
     src/parameter_reader.cc
