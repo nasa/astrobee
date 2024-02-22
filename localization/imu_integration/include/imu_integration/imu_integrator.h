@@ -44,7 +44,7 @@ class ImuIntegrator : public localization_common::TimestampedSet<localization_me
   // Buffers an imu measurement.
   void AddImuMeasurement(const localization_measurements::ImuMeasurement& imu_measurement);
 
-  // Creates an integrated GTSAM Pim using the provided bias and imu measurements 
+  // Creates an integrated GTSAM Pim using the provided bias and imu measurements
   // between the provided start and end times.
   boost::optional<gtsam::PreintegratedCombinedMeasurements> IntegratedPim(
     const gtsam::imuBias::ConstantBias& bias, const localization_common::Time start_time,

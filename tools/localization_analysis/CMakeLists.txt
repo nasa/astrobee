@@ -103,11 +103,11 @@ if (USE_ROS)
   target_link_libraries(run_offline_replay
     ${PROJECT_NAME} gflags gtsam ${catkin_LIBRARIES})
 
-  ## Declare a C++ executable: run_imu_bias_tester_adder
-  #add_executable(run_imu_bias_tester_adder tools/run_imu_bias_tester_adder.cc)
-  #add_dependencies(run_imu_bias_tester_adder ${catkin_EXPORTED_TARGETS})
-  #target_link_libraries(run_imu_bias_tester_adder
-  #  ${PROJECT_NAME} gflags gtsam ${catkin_LIBRARIES})
+  ## Declare a C++ executable: run_imu_bias_extrapolator
+  add_executable(run_imu_bias_extrapolator tools/run_imu_bias_extrapolator.cc)
+  add_dependencies(run_imu_bias_extrapolator ${catkin_EXPORTED_TARGETS})
+  target_link_libraries(run_imu_bias_extrapolator
+    ${PROJECT_NAME} gflags gtsam ${catkin_LIBRARIES})
 
   ## Declare a C++ executable: run_sparse_mapping_pose_adder
   add_executable(run_sparse_mapping_pose_adder tools/run_sparse_mapping_pose_adder.cc)
@@ -141,7 +141,7 @@ install(TARGETS ${PROJECT_NAME}
 #install(TARGETS run_bag_imu_filterer DESTINATION bin)
 #install(TARGETS run_depth_odometry_adder DESTINATION bin)
 install(TARGETS run_offline_replay DESTINATION bin)
-#install(TARGETS run_imu_bias_tester_adder DESTINATION bin)
+install(TARGETS run_imu_bias_extrapolator DESTINATION bin)
 #install(TARGETS run_sparse_mapping_pose_adder DESTINATION bin)
 install(CODE "execute_process(
   COMMAND ln -s ../../bin/run_offline_replay share/${PROJECT_NAME}

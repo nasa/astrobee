@@ -17,7 +17,7 @@
  */
 
 #include <ff_common/init.h>
-#include <localization_analysis/imu_bias_tester_adder.h>
+#include <localization_analysis/imu_bias_extrapolator.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
 
@@ -31,15 +31,13 @@ int main(int argc, char** argv) {
   std::string robot_config_file;
   std::string world;
   po::options_description desc(
-    "Adds imu bias tester predictions to a new bag file using recorded localization states and imu msgs");
+    "Adds imu bias extrapolated predictions to a new bag file using recorded vio states and imu msgs");
   desc.add_options()("help,h", "produce help message")("bagfile", po::value<std::string>()->required(),
-                                                       "Input bagfile")(
-    "config-path,c", po::value<std::string>()->required(), "Config path")(
-    "robot-config-file,r", po::value<std::string>(&robot_config_file)->default_value("config/robots/bumble.config"),
+                                                       "Input bagfile")
+    ("robot-config-file,r", po::value<std::string>(&robot_config_file)->default_value("bumble.config"),
     "Robot config file")("world,w", po::value<std::string>(&world)->default_value("iss"), "World name");
   po::positional_options_description p;
   p.add("bagfile", 1);
-  p.add("config-path", 1);
   po::variables_map vm;
   try {
     po::store(po::command_line_parser(argc, argv).options(desc).positional(p).run(), vm);
@@ -54,7 +52,6 @@ int main(int argc, char** argv) {
   }
 
   const std::string input_bag = vm["bagfile"].as<std::string>();
-  const std::string config_path = vm["config-path"].as<std::string>();
 
   // Only pass program name to free flyer so that boost command line options
   // are ignored when parsing gflags.
@@ -69,13 +66,7 @@ int main(int argc, char** argv) {
   boost::filesystem::path output_bag_path =
     input_bag_path.parent_path() /
     boost::filesystem::path(input_bag_path.stem().string() + "_with_imu_bias_tester_predictions.bag");
-  lc::SetEnvironmentConfigs(config_path, world, robot_config_file);
-  /*  config_reader::ConfigReader config;
-    config.AddFile("geometry.config");
-    if (!config.ReadFiles()) {
-      LogFatal("Failed to read config files.");
-    }*/
-
-  localization_analysis::ImuBiasTesterAdder imu_bias_tester_adder(input_bag, output_bag_path.string());
-  imu_bias_tester_adder.AddPredictions();
+  lc::SetEnvironmentConfigs(world, robot_config_file);
+  localization_analysis::ImuBiasExtrapolator imu_bias_extrapolator(input_bag, output_bag_path.string());
+  imu_bias_extrapolator.AddExtrapolatedStates();
 }

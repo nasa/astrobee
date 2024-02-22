@@ -37,13 +37,12 @@ void SaveExtrapolatedStates(const std::vector<lc::CombinedNavState>& extrapolate
     geometry_msgs::PoseStamped pose_msg;
     lc::PoseToMsg(state.pose(), pose_msg.pose);
     lc::TimeToHeader(state.timestamp(), pose_msg.header);
-    // TODO(rsoussan): change topic names!
     const ros::Time timestamp = lc::RosTimeFromHeader(pose_msg.header);
-    bag.write("/" + std::string(TOPIC_IMU_BIAS_TESTER_POSE), timestamp, pose_msg);
+    bag.write("/" + std::string(TOPIC_IMU_BIAS_EXTRAPOLATOR_POSE), timestamp, pose_msg);
     geometry_msgs::Vector3Stamped velocity_msg;
     mc::VectorToMsg(state.velocity(), velocity_msg.vector);
     lc::TimeToHeader(state.timestamp(), velocity_msg.header);
-    bag.write("/" + std::string(TOPIC_IMU_BIAS_TESTER_VELOCITY), timestamp, velocity_msg);
+    bag.write("/" + std::string(TOPIC_IMU_BIAS_EXTRAPOLATOR_VELOCITY), timestamp, velocity_msg);
   }
 }
 
