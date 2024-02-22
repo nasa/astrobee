@@ -118,7 +118,6 @@
 #define NODE_GRAPH_LOC                              "graph_loc"
 #define NODE_GRAPH_VIO                              "graph_vio"
 #define NODE_POSE_EXTR                              "pose_extr"
-#define NODE_IMU_BIAS_EXTRAPOLATOR                  "imu_extrapolator"
 #define NODE_SIM_LOC                                "sim_loc"
 #define NODE_FAM                                    "fam"
 #define NODE_SIM_WRAPPER                            "sim_wrapper"
@@ -129,8 +128,8 @@
 #define TOPIC_GRAPH_VIO_STATE                       "graph_vio/state"
 #define TOPIC_AR_TAG_POSE                           "ar_tag/pose"
 #define TOPIC_SPARSE_MAPPING_POSE                   "sparse_mapping/pose"
-#define TOPIC_IMU_BIAS_EXTRAPOLATOR_POSE            "imu_extrapolator/pose"
-#define TOPIC_IMU_BIAS_EXTRAPOLATOR_VELOCITY        "imu_extrapolator/velocity"
+#define TOPIC_IMU_BIAS_EXTRAPOLATOR_POSE            "imu_bias_extrapolator/pose"
+#define TOPIC_IMU_BIAS_EXTRAPOLATOR_VELOCITY        "imu_bias_extrapolator/velocity"
 
 #define ACTION_GNC_CTL_CONTROL                      "gnc/control"
 
