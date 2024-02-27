@@ -32,7 +32,6 @@ from multivector3d_plotter import MultiVector3dPlotter
 import plot_conversions
 import results_savers
 from timestamped_pose import TimestampedPose
-#import plotting_utilities
 
 import matplotlib
 matplotlib.use("pdf")
@@ -108,6 +107,8 @@ def plot_vio_results(
         linestyle="-",
     )
     integrated_velocity_poses_plotter.plot_positions(pdf)
+    results_savers.save_rmse(integrated_velocity_poses, groundtruth_poses, results_csv_file, pdf, "Graph VIO Integrated Velocity Poses") 
+
 
     absolute_imu_bias_extrapolated_poses = plot_conversions.absolute_poses_from_imu_bias_extrapolated_poses(imu_bias_extrapolated_poses, groundtruth_poses)
     imu_bias_extrapolated_poses_plotter = MultiPosePlotter("Time (s)", "Position (m)", "IMU Bias Extrapolated vs. Groundtruth Position", True)
@@ -125,6 +126,7 @@ def plot_vio_results(
         linestyle="-",
     )
     imu_bias_extrapolated_poses_plotter.plot(pdf)
+    results_savers.save_rmse(imu_bias_extrapolated_poses, groundtruth_poses, results_csv_file, pdf, "IMU Bias Extrapolated Poses") 
 
 
 
@@ -133,60 +135,6 @@ def plot_vio_results(
 
     update_time_plotter = plot_conversions.update_time_plotter_from_states(graph_vio_states)
     update_time_plotter.plot(pdf)
-
-#
-#    # Imu Augmented Loc vs. Loc
-#    position_plotter = vector3d_plotter.Vector3dPlotter(
-#        "Time (s)", "Position (m)", "Graph vs. IMU Augmented Graph Position", True
-#    )
-#    position_plotter.add_pose_position(
-#        graph_localization_states,
-#        linestyle="None",
-#        marker="o",
-#        markeredgewidth=0.1,
-#        markersize=1.5,
-#    )
-#
-#    position_plotter.add_pose_position(
-#        imu_augmented_graph_localization_poses, linewidth=0.5
-#    )
-#    position_plotter.plot(pdf)
-#
-#    # orientations
-#    orientation_plotter = vector3d_plotter.Vector3dPlotter(
-#        "Time (s)",
-#        "Orientation (deg)",
-#        "Graph vs. IMU Augmented Graph Orientation",
-#        True,
-#    )
-#    orientation_plotter.add_pose_orientation(
-#        graph_localization_states, marker="o", markeredgewidth=0.1, markersize=1.5
-#    )
-#    orientation_plotter.add_pose_orientation(
-#        imu_augmented_graph_localization_poses, linewidth=0.5
-#    )
-#    orientation_plotter.plot(pdf)
-#
-#    # Velocity
-#    # TODO: add plot_velocities function!!
-#    plt.figure()
-#    plot_helpers.plot_vector3ds(
-#        graph_localization_states.velocities, graph_localization_states.times, "Vel."
-#    )
-#    plt.xlabel("Time (s)")
-#    plt.ylabel("Velocities")
-#    plt.title("Graph Velocities")
-#    plt.legend(prop={"size": 6})
-#    pdf.savefig()
-#    plt.close()
-#
-#    # Integrated Velocities
-#    integrated_graph_localization_states = utilities.integrate_velocities(
-#        graph_localization_states
-#    )
-#    plot_positions(
-#        pdf, integrated_graph_localization_states, groundtruth_poses, ar_tag_poses
-#    )
 
 
 # Loads poses from the provided bagfile, generates plots, and saves results to a pdf and csv file.
@@ -231,20 +179,9 @@ def load_data_and_create_vio_plots(
             groundtruth_poses,
             graph_vio_states,
             imu_bias_extrapolated_poses,
-            #imu_augmented_graph_localization_states,
             results_csv_file, 
         )
-    #    add_other_loc_plots(
-    #        pdf, graph_localization_states, graph_localization_states
-    #    )
-    #    plot_loc_state_stats(
-    #    pdf,
-    #    graph_localization_states,
-    #    groundtruth_poses,
-    #    output_csv_file,
-    #    rmse_rel_start_time=rmse_rel_start_time,
-    #    rmse_rel_end_time=rmse_rel_end_time,
-    #)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
