@@ -191,7 +191,7 @@ if __name__ == "__main__":
     parser.add_argument("--output-file", default="vio_output.pdf", help="Output pdf file.")
     parser.add_argument(
         "--results-csv-file",
-        default="results.csv",
+        default="vio_results.csv",
         help="Output csv file containing results stats.",
     )
     parser.add_argument(
