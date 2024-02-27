@@ -45,8 +45,8 @@ def save_rmse(poses, groundtruth_poses, csv_file, pdf, prefix='', max_allowed_ti
     )
     with open(csv_file, "a") as output_csv:
         csv_writer = csv.writer(output_csv, lineterminator="\n")
-        csv_writer.writerow([prefix + " rmse", str(rmse[0])])
-        csv_writer.writerow([prefix + " orientation_rmse", str(rmse[1])])
+        csv_writer.writerow([prefix + " rmse", " " + str(rmse[0])])
+        csv_writer.writerow([prefix + " orientation_rmse", " " + str(rmse[1])])
     plt.figure()
     plt.axis("off")
     plt.text(0.0, 0.5, stats)
