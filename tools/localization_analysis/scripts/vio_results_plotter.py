@@ -30,6 +30,7 @@ import message_reader
 from multipose_plotter import MultiPosePlotter
 from multivector3d_plotter import MultiVector3dPlotter
 import plot_conversions
+import results_savers
 from timestamped_pose import TimestampedPose
 #import plotting_utilities
 
@@ -48,6 +49,7 @@ def plot_vio_results(
     groundtruth_poses,
     graph_vio_states,
     imu_bias_extrapolated_poses,
+    results_csv_file,
 ):
     poses_plotter = MultiPosePlotter("Time (s)", "Position (m)", "Graph vs. Groundtruth Position", True)
     poses_plotter.add_poses(
@@ -66,6 +68,7 @@ def plot_vio_results(
         linestyle="-",
     )
     poses_plotter.plot(pdf)
+    results_savers.save_rmse(graph_vio_poses, groundtruth_poses, results_csv_file, pdf, "Graph VIO Poses") 
 
     velocities_plotter = MultiVector3dPlotter("Time (s)", "Velocity (m/s)", "Graph VIO Velocities", True)
     graph_vio_velocity_plotter = plot_conversions.velocity_plotter_from_graph_vio_states(graph_vio_states) 
@@ -194,7 +197,7 @@ def plot_vio_results(
 def load_data_and_create_vio_plots(
     bagfile,
     output_pdf_file,
-    output_csv_file="vio_results.csv",
+    results_csv_file="vio_results.csv",
     groundtruth_bagfile=None,
     rmse_rel_start_time=0,
     rmse_rel_end_time=-1,
@@ -229,6 +232,7 @@ def load_data_and_create_vio_plots(
             graph_vio_states,
             imu_bias_extrapolated_poses,
             #imu_augmented_graph_localization_states,
+            results_csv_file, 
         )
     #    add_other_loc_plots(
     #        pdf, graph_localization_states, graph_localization_states
@@ -249,9 +253,9 @@ if __name__ == "__main__":
     parser.add_argument("bagfile", help="Input bagfile.")
     parser.add_argument("--output-file", default="vio_output.pdf", help="Output pdf file.")
     parser.add_argument(
-        "--output-csv-file",
+        "--results-csv-file",
         default="results.csv",
-        help="Output csv file containing localization stats.",
+        help="Output csv file containing results stats.",
     )
     parser.add_argument(
         "-g",
@@ -281,7 +285,7 @@ if __name__ == "__main__":
     load_data_and_create_vio_plots(
         args.bagfile,
         args.output_file,
-        args.output_csv_file,
+        args.results_csv_file,
         args.groundtruth_bagfile,
         args.rmse_rel_start_time,
         args.rmse_rel_end_time,
