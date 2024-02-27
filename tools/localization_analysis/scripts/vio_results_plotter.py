@@ -45,10 +45,10 @@ from matplotlib.backends.backend_pdf import PdfPages
 
 def plot_vio_results(
     pdf,
+    results_csv_file,
     groundtruth_poses,
     graph_vio_states,
     imu_bias_extrapolated_poses,
-    results_csv_file,
 ):
     poses_plotter = MultiPosePlotter("Time (s)", "Position (m)", "Graph vs. Groundtruth Position", True)
     poses_plotter.add_poses(
@@ -176,10 +176,10 @@ def load_data_and_create_vio_plots(
     with PdfPages(output_pdf_file) as pdf:
         plot_vio_results(
             pdf,
+            results_csv_file, 
             groundtruth_poses,
             graph_vio_states,
             imu_bias_extrapolated_poses,
-            results_csv_file, 
         )
 
 

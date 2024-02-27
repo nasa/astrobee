@@ -29,6 +29,7 @@ import message_reader
 from multipose_plotter import MultiPosePlotter
 from multivector3d_plotter import MultiVector3dPlotter
 import plot_conversions
+import results_savers
 from timestamped_pose import TimestampedPose
 #import plotting_utilities
 
@@ -44,6 +45,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 
 def plot_loc_results(
     pdf,
+    results_csv_file, 
     groundtruth_poses,
     graph_loc_states,
     extrapolated_loc_states,
@@ -75,6 +77,7 @@ def plot_loc_results(
         markersize=1.5,
     )
     poses_plotter.plot(pdf)
+    results_savers.save_rmse(graph_loc_poses, groundtruth_poses, results_csv_file, pdf, "Graph Loc Poses") 
 
     if extrapolated_loc_states:
         extrapolated_poses_plotter = MultiPosePlotter("Time (s)", "Position (m)", "Extrapolated Loc vs. Groundtruth Position", True)
@@ -94,6 +97,8 @@ def plot_loc_results(
             linestyle="-",
         )
         extrapolated_poses_plotter.plot(pdf)
+        results_savers.save_rmse(extrapolated_loc_poses, groundtruth_poses, results_csv_file, pdf, "Extrapolated Loc Poses") 
+
 
         extrapolated_velocities_plotter = MultiVector3dPlotter("Time (s)", "Velocity (m/s)", "Extrapolated Velocities", True)
         extrapolated_velocity_plotter = plot_conversions.velocity_plotter_from_extrapolated_loc_states(extrapolated_loc_states) 
@@ -116,65 +121,19 @@ def plot_loc_results(
             linestyle="-",
         )
         extrapolated_integrated_velocity_poses_plotter.plot_positions(pdf)
+        results_savers.save_rmse(extrapolated_integrated_velocity_poses, groundtruth_poses, results_csv_file, pdf, "Extrapolated Integrated Velocity Poses") 
 
-
-    
     ml_num_pose_factors_plotter = plot_conversions.ml_pose_factor_count_plotter_from_graph_loc_states(graph_loc_states)
     ml_num_pose_factors_plotter.plot(pdf)
 
     ml_num_projection_factors_plotter = plot_conversions.ml_projection_factor_count_plotter_from_graph_loc_states(graph_loc_states)
     ml_num_projection_factors_plotter.plot(pdf)
 
-
-
     optimization_time_plotter = plot_conversions.optimization_time_plotter_from_states(graph_loc_states)
     optimization_time_plotter.plot(pdf)
 
     update_time_plotter = plot_conversions.update_time_plotter_from_states(graph_loc_states)
     update_time_plotter.plot(pdf)
-
-
-
-    #of_count_plotter = plot_conversions.optical_flow_feature_count_plotter_from_graph_loc_states(graph_loc_states)
-    #of_count_plotter.plot(pdf)
-
-    #of_num_factors_plotter = plot_conversions.optical_flow_factor_count_plotter_from_graph_loc_states(graph_loc_states)
-    #of_num_factors_plotter.plot(pdf)
-
-#
-#    # Imu Augmented Loc vs. Loc
-#    position_plotter = vector3d_plotter.Vector3dPlotter(
-#        "Time (s)", "Position (m)", "Graph vs. IMU Augmented Graph Position", True
-#    )
-#    position_plotter.add_pose_position(
-#        graph_localization_states,
-#        linestyle="None",
-#        marker="o",
-#        markeredgewidth=0.1,
-#        markersize=1.5,
-#    )
-#
-#    position_plotter.add_pose_position(
-#        imu_augmented_graph_localization_poses, linewidth=0.5
-#    )
-#    position_plotter.plot(pdf)
-#
-#    # orientations
-#    orientation_plotter = vector3d_plotter.Vector3dPlotter(
-#        "Time (s)",
-#        "Orientation (deg)",
-#        "Graph vs. IMU Augmented Graph Orientation",
-#        True,
-#    )
-#    orientation_plotter.add_pose_orientation(
-#        graph_localization_states, marker="o", markeredgewidth=0.1, markersize=1.5
-#    )
-#    orientation_plotter.add_pose_orientation(
-#        imu_augmented_graph_localization_poses, linewidth=0.5
-#    )
-#    orientation_plotter.plot(pdf)
-#
-
 
 # Loads poses from the provided bagfile, generates plots, and saves results to a pdf and csv file.
 # The csv file contains results in (TODO: define format).
@@ -184,7 +143,7 @@ def plot_loc_results(
 def load_data_and_create_loc_plots(
     bagfile,
     output_pdf_file,
-    output_csv_file="loc_results.csv",
+    results_csv_file="loc_results.csv",
     groundtruth_bagfile=None,
     rmse_rel_start_time=0,
     rmse_rel_end_time=-1,
@@ -201,7 +160,6 @@ def load_data_and_create_loc_plots(
     groundtruth_poses = []
     message_reader.load_poses(groundtruth_poses, "/sparse_mapping/pose", groundtruth_bag, bag_start_time)
 
-
     # Load graph localization states 
     graph_loc_states = []
     message_reader.load_graph_loc_states(graph_loc_states, "/graph_loc/state", bag, bag_start_time)
@@ -215,28 +173,15 @@ def load_data_and_create_loc_plots(
     message_reader.load_poses(ar_tag_poses, "/ar_tag/pose", bag, bag_start_time)
     bag.close()
 
-
-
     with PdfPages(output_pdf_file) as pdf:
         plot_loc_results(
             pdf,
+            results_csv_file, 
             groundtruth_poses,
             graph_loc_states,
             extrapolated_loc_states,
             ar_tag_poses,
-            #imu_augmented_graph_localization_states,
         )
-    #    add_other_loc_plots(
-    #        pdf, graph_localization_states, graph_localization_states
-    #    )
-    #    plot_loc_state_stats(
-    #    pdf,
-    #    graph_localization_states,
-    #    groundtruth_poses,
-    #    output_csv_file,
-    #    rmse_rel_start_time=rmse_rel_start_time,
-    #    rmse_rel_end_time=rmse_rel_end_time,
-    #)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -245,7 +190,7 @@ if __name__ == "__main__":
     parser.add_argument("bagfile", help="Input bagfile.")
     parser.add_argument("--output-file", default="loc_output.pdf", help="Output pdf file.")
     parser.add_argument(
-        "--output-csv-file",
+        "--results-csv-file",
         default="results.csv",
         help="Output csv file containing localization stats.",
     )
@@ -277,7 +222,7 @@ if __name__ == "__main__":
     load_data_and_create_loc_plots(
         args.bagfile,
         args.output_file,
-        args.output_csv_file,
+        args.results_csv_file,
         args.groundtruth_bagfile,
         args.rmse_rel_start_time,
         args.rmse_rel_end_time,
