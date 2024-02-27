@@ -18,7 +18,7 @@
 #ifndef IMU_BIAS_TESTER_IMU_BIAS_TESTER_NODELET_H_
 #define IMU_BIAS_TESTER_IMU_BIAS_TESTER_NODELET_H_
 
-#include <ff_msgs/GraphState.h>
+#include <ff_msgs/GraphVIOState.h>
 #include <ff_util/ff_nodelet.h>
 #include <imu_bias_tester/imu_bias_tester_wrapper.h>
 

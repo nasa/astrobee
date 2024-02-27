@@ -124,6 +124,31 @@ def adjusted_graph_vio_poses_from_graph_vio_states(graph_vio_states, groundtruth
         adjusted_graph_vio_poses.append(TimestampedPose(adjusted_pose.orientation, adjusted_pose.position, graph_vio_state.timestamp))
     return adjusted_graph_vio_poses
 
+# Return list of imu bias extrapolated poses.
+# Poses are adjusted to start at the corresponding groundtruth pose at the earliest corresponding timestamp
+# so they can be plotted against groundtruth poses. The earliest corresponding timestamp is the first timestamp
+# with a dt <= max_diff compared to a imu bias extrapolated pose.
+def absolute_poses_from_imu_bias_extrapolated_poses(imu_bias_extrapolated_poses, groundtruth_poses, max_diff = 0.1):
+    imu_bias_times = np.array([imu_bias.timestamp for imu_bias in imu_bias_extrapolated_poses])
+    world_T_vio = None
+    for groundtruth_pose in groundtruth_poses:
+        closest_matching_imu_bias_index = np.argmin(np.abs(imu_bias_times - groundtruth_pose.timestamp))
+        timestamp_diff = np.abs(imu_bias_times[closest_matching_imu_bias_index] - groundtruth_pose.timestamp)
+        if timestamp_diff <= max_diff:
+            closest_imu_bias = imu_bias_extrapolated_poses[closest_matching_imu_bias_index]
+            world_T_vio = groundtruth_pose * imu_bias_extrapolated_poses[closest_matching_imu_bias_index].inverse()
+            break
+    if not world_T_vio:
+        print("Failed to find corresponding groundtruth pose to graph VIO poses")
+        sys.exit(0)     
+    adjusted_imu_bias_poses = []
+    for imu_bias in imu_bias_extrapolated_poses:
+        adjusted_pose = world_T_vio * TimestampedPose(imu_bias.orientation, imu_bias.position, imu_bias.timestamp)
+        adjusted_imu_bias_poses.append(TimestampedPose(adjusted_pose.orientation, adjusted_pose.position, imu_bias.timestamp))
+    return adjusted_imu_bias_poses
+
+
+
 # Return list of poses from integrated velocities.
 # Poses are adjusted to start at the corresponding groundtruth pose at the earliest corresponding timestamp
 # so they can be plotted against groundtruth poses. The earliest corresponding timestamp is the first timestamp

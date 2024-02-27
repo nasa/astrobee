@@ -47,6 +47,7 @@ def plot_vio_results(
     pdf,
     groundtruth_poses,
     graph_vio_states,
+    imu_bias_extrapolated_poses,
 ):
     poses_plotter = MultiPosePlotter("Time (s)", "Position (m)", "Graph vs. Groundtruth Position", True)
     poses_plotter.add_poses(
@@ -104,6 +105,25 @@ def plot_vio_results(
         linestyle="-",
     )
     integrated_velocity_poses_plotter.plot_positions(pdf)
+
+    absolute_imu_bias_extrapolated_poses = plot_conversions.absolute_poses_from_imu_bias_extrapolated_poses(imu_bias_extrapolated_poses, groundtruth_poses)
+    imu_bias_extrapolated_poses_plotter = MultiPosePlotter("Time (s)", "Position (m)", "IMU Bias Extrapolated vs. Groundtruth Position", True)
+    imu_bias_extrapolated_poses_plotter.add_poses(
+        "Groundtruth Poses", 
+        groundtruth_poses,
+        linestyle="None",
+        marker="o",
+        markeredgewidth=0.1,
+        markersize=1.5,
+    )
+    imu_bias_extrapolated_poses_plotter.add_poses(
+        "IMU Bias Extrapolated Poses", 
+        absolute_imu_bias_extrapolated_poses,
+        linestyle="-",
+    )
+    imu_bias_extrapolated_poses_plotter.plot(pdf)
+
+
 
     optimization_time_plotter = plot_conversions.optimization_time_plotter_from_states(graph_vio_states)
     optimization_time_plotter.plot(pdf)
@@ -194,13 +214,20 @@ def load_data_and_create_vio_plots(
     # Load graph VIO states 
     graph_vio_states = []
     message_reader.load_graph_vio_states(graph_vio_states, "/graph_vio/state", bag, bag_start_time)
+
+    # Load IMU bias extrapolated poses 
+    imu_bias_extrapolated_poses = []
+    message_reader.load_poses(imu_bias_extrapolated_poses, "/imu_bias_extrapolator/pose", bag, bag_start_time)
     bag.close()
+
+
 
     with PdfPages(output_pdf_file) as pdf:
         plot_vio_results(
             pdf,
             groundtruth_poses,
             graph_vio_states,
+            imu_bias_extrapolated_poses,
             #imu_augmented_graph_localization_states,
         )
     #    add_other_loc_plots(
