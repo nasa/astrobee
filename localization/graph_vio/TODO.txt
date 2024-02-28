@@ -36,25 +36,22 @@
                   - check ar_msg buffer when a VIO msg is received, add if recent enough!
 
       - test with sim! (A)
-          - add imu bias tester!! (AAA)
-            - update for new localizer
-                - remove imu bias tester package
-                - test! (A)
-            - add to plotting (AAB)
-              - is this sane for launch output?
-              - test with sim bag
-              - test with loc bag
-          - add csv file with errors! (B) 
-          - add tuning script! (C)
+            - update rmse test! (B)
+              - is orientation calculation correct???
+          - add bag and param sweep script! (AAA)
+            - make config file!
+            - test w/o running
+            - test w/o plotting
+            - update results plotter!!!!
+            - test w/ plotting!
+          - tune on granite table!
+          - start cross compile!
           - why is astrobee shaking?
             - fix bias estimation
               - should be zero???
               - print initialized value (AA)
               - change params so it is less likely to change (AB)
                   - does this fix issue?
-              - check sim of measurements (AC)
-                - off by some value?
-                  - why are velocities wonky?
 
           - update pose extrapolator using extrapolation method from world_T_dock calculation
             - should be more efficient....
