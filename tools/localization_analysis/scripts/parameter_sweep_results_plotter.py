@@ -100,7 +100,6 @@ def create_plot(pdf, csv_file, value_combos_file, rmse_type):
     plt.close()
 
 
-# TODO(rsoussan): Make this more generic, don't hardcode each RMSE type
 def create_plots(output_file, csv_file, value_combos_file):
     dataframe = pd.read_csv(csv_file)
     rmses = dataframe.columns
