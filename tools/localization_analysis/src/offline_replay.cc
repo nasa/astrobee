@@ -143,7 +143,6 @@ void OfflineReplay::Run() {
 
     const auto ar_msg = live_measurement_simulator_->GetARMessage(current_time);
     if (ar_msg) {
-      std::cout << "buffering ar msg!" << std::endl;
       graph_localizer_simulator_->BufferARVisualLandmarksMsg(*ar_msg);
       latest_ar_msg_ = ar_msg;
     }
