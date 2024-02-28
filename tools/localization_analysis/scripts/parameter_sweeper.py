@@ -52,7 +52,7 @@ def make_config_file(config_filename, new_output_dir, config_path, values, value
 
 def create_results_plots(output_dir, prefix):
     combined_results_file = os.path.join(output_dir, prefix + "_param_sweep_combined_results.csv")
-    value_combos_file = os.path.join(output_dir, prefix + "_param_sweep_all_value_combos.csv")
+    value_combos_file = os.path.join(output_dir, "all_value_combos.csv")
     results_pdf_file = os.path.join(output_dir, prefix + "_param_sweep_results.pdf")
     parameter_sweep_results_plotter.create_plots(
         results_pdf_file, combined_results_file, value_combos_file
