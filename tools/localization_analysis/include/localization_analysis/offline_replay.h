@@ -44,7 +44,7 @@ class OfflineReplay {
  public:
   OfflineReplay(const std::string& bag_name, const std::string& map_file, const std::string& image_topic,
                 const std::string& results_bag, const std::string& output_stats_file,
-                const bool use_image_features = true, const std::string& graph_config_path_prefix = "");
+                const bool use_bag_image_feature_msgs = true, const std::string& graph_config_path_prefix = "");
   void Run();
 
  private:

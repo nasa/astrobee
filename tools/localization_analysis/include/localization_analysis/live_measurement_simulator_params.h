@@ -35,7 +35,7 @@ struct LiveMeasurementSimulatorParams {
   std::string bag_name;
   std::string map_file;
   std::string image_topic;
-  bool use_image_features;
+  bool use_bag_image_feature_msgs;
   bool save_optical_flow_images;
 };
 }  // namespace localization_analysis

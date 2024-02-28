@@ -56,7 +56,7 @@ LiveMeasurementSimulator::LiveMeasurementSimulator(const LiveMeasurementSimulato
   topics.push_back(TOPIC_HARDWARE_IMU);
   topics.push_back(std::string("/") + kImageTopic_);
   topics.push_back(kImageTopic_);
-  if (params_.use_image_features) {
+  if (params_.use_bag_image_feature_msgs) {
     topics.push_back(std::string("/") + TOPIC_LOCALIZATION_OF_FEATURES);
     topics.push_back(TOPIC_LOCALIZATION_OF_FEATURES);
     topics.push_back(std::string("/") + TOPIC_LOCALIZATION_ML_FEATURES);
@@ -118,10 +118,10 @@ bool LiveMeasurementSimulator::ProcessMessage() {
     // Always use ar features until have data with dock cam images
     const ff_msgs::VisualLandmarksConstPtr ar_features = msg.instantiate<ff_msgs::VisualLandmarks>();
     ar_buffer_.BufferMessage(*ar_features);
-  } else if (params_.use_image_features && string_ends_with(msg.getTopic(), TOPIC_LOCALIZATION_OF_FEATURES)) {
+  } else if (params_.use_bag_image_feature_msgs && string_ends_with(msg.getTopic(), TOPIC_LOCALIZATION_OF_FEATURES)) {
     const ff_msgs::Feature2dArrayConstPtr of_features = msg.instantiate<ff_msgs::Feature2dArray>();
     of_buffer_.BufferMessage(*of_features);
-  } else if (params_.use_image_features && string_ends_with(msg.getTopic(), TOPIC_LOCALIZATION_ML_FEATURES)) {
+  } else if (params_.use_bag_image_feature_msgs && string_ends_with(msg.getTopic(), TOPIC_LOCALIZATION_ML_FEATURES)) {
     const ff_msgs::VisualLandmarksConstPtr vl_features = msg.instantiate<ff_msgs::VisualLandmarks>();
     vl_buffer_.BufferMessage(*vl_features);
   } else if (string_ends_with(msg.getTopic(), kImageTopic_)) {
@@ -129,7 +129,7 @@ bool LiveMeasurementSimulator::ProcessMessage() {
     if (params_.save_optical_flow_images) {
       img_buffer_.emplace(localization_common::TimeFromHeader(image_msg->header), image_msg);
     }
-    if (!params_.use_image_features) {
+    if (!params_.use_bag_image_feature_msgs) {
       const ff_msgs::Feature2dArray of_features = GenerateOFFeatures(image_msg);
       of_buffer_.BufferMessage(of_features);
 

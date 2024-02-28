@@ -44,7 +44,7 @@ namespace mc = msg_conversions;
 
 OfflineReplay::OfflineReplay(const std::string& bag_name, const std::string& map_file, const std::string& image_topic,
                              const std::string& results_bag, const std::string& output_stats_file,
-                             const bool use_image_features, const std::string& graph_config_path_prefix)
+                             const bool use_bag_image_feature_msgs, const std::string& graph_config_path_prefix)
     : results_bag_(results_bag, rosbag::bagmode::Write),
       // imu_bias_tester_wrapper_(graph_config_path_prefix),
       pose_extrapolator_wrapper_(graph_config_path_prefix),
@@ -64,7 +64,7 @@ OfflineReplay::OfflineReplay(const std::string& bag_name, const std::string& map
   // Load this seperately so this can be set independently of config file,
   // i.e. when running a bag sweep or param sweep
   // TODO(rsoussan): clean this up
-  params.use_image_features = use_image_features;
+  params.use_bag_image_feature_msgs = use_bag_image_feature_msgs;
   live_measurement_simulator_.reset(new LiveMeasurementSimulator(params));
 
   GraphLocalizerSimulatorParams graph_loc_params;

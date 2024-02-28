@@ -37,7 +37,7 @@ int main(int argc, char** argv) {
   std::string output_stats_file;
   std::string robot_config_file;
   std::string world;
-  bool use_image_features;
+  bool use_bag_image_feature_msgs;
   std::string graph_config_path_prefix;
   po::options_description desc(
     "Runs graph localization and VIO using a bagfile and saves the results to a new bagfile");
@@ -51,7 +51,8 @@ int main(int argc, char** argv) {
                                      "Output stats file")(
     "robot-config-file,r", po::value<std::string>(&robot_config_file)->default_value("bumble.config"),
     "Robot config file")("world,w", po::value<std::string>(&world)->default_value("iss"), "World name")(
-    "use-image-features,f", po::value<bool>(&use_image_features)->default_value(true), "Use image features")(
+    "use-bag-image-feature-msgs,f", po::value<bool>(&use_bag_image_feature_msgs)->default_value(true),
+    "Use image feature msgs from the bagfile or regenerate them from images.")(
     "graph-config-path-prefix,g", po::value<std::string>(&graph_config_path_prefix)->default_value(""),
     "Graph config path prefix");
   po::positional_options_description p;
@@ -106,7 +107,8 @@ int main(int argc, char** argv) {
   config_reader::ConfigReader config;
 
   localization_analysis::OfflineReplay offline_replay(input_bag, map_file, image_topic, output_bagfile,
-                                                      output_stats_file, use_image_features, graph_config_path_prefix);
+                                                      output_stats_file, use_bag_image_feature_msgs,
+                                                      graph_config_path_prefix);
 #ifdef GOOGLE_PROFILER
   ProfilerStart(boost::filesystem::current_path() + "/localization_analysis_prof.txt");
 #endif
