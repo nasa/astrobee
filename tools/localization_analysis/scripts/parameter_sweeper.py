@@ -50,6 +50,15 @@ def make_config_file(config_filename, new_output_dir, config_path, values, value
         values, value_names, config_filepath, new_config_filepath
     )
 
+def create_results_plots(output_dir, prefix):
+    combined_results_file = os.path.join(output_dir, prefix + "_param_sweep_combined_results.csv")
+    value_combos_file = os.path.join(output_dir, prefix + "_param_sweep_all_value_combos.csv")
+    results_pdf_file = os.path.join(output_dir, prefix + "_param_sweep_results.pdf")
+    parameter_sweep_results_plotter.create_plots(
+        results_pdf_file, combined_results_file, value_combos_file
+    )
+ 
+
 # Run graph localizer/vio with values.
 # Add traceback so errors are forwarded, otherwise
 # some errors are suppressed due to the multiprocessing
@@ -173,8 +182,8 @@ def parameter_sweep(
             )
         ),
     )
-    parameter_sweep_utilities.concat_results(job_ids, output_dir, "loc_graph_stats.csv")
-    parameter_sweep_utilities.concat_results(job_ids, output_dir, "vio_graph_stats.csv")
+    parameter_sweep_utilities.concat_results(job_ids, output_dir, "loc_graph_stats.csv", "loc")
+    parameter_sweep_utilities.concat_results(job_ids, output_dir, "vio_graph_stats.csv", "vio")
 
 # Create values for defined config options to sweep on
 def make_value_ranges():
@@ -235,12 +244,9 @@ def make_values_and_parameter_sweep(
         use_bag_image_msgs,
         groundtruth_bagfile,
     )
-    combined_results_file = os.path.join(output_dir, "param_sweep_combined_results.csv")
-    value_combos_file = os.path.join(output_dir, "param_sweep_all_value_combos.csv")
-    results_pdf_file = os.path.join(output_dir, "param_sweep_results.pdf")
-    parameter_sweep_results_plotter.create_plots(
-        results_pdf_file, combined_results_file, value_combos_file
-    )
+   
+    create_results_plots(output_dir, "loc") 
+    create_results_plots(output_dir, "vio") 
     return output_dir
 
 
