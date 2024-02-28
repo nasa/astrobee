@@ -31,10 +31,10 @@ import pandas as pd
 from matplotlib.backends.backend_pdf import PdfPages
 
 
-def create_plot(pdf, csv_file, value_combos_file, prefix=""):
+def create_plot(pdf, csv_file, value_combos_file, rmse_type):
     dataframe = pd.read_csv(csv_file)
     try:
-        rmses = dataframe[prefix + "rmse"]
+        rmses = dataframe[rmse_type]
     except:
         return
     x_axis_vals = []
@@ -70,8 +70,8 @@ def create_plot(pdf, csv_file, value_combos_file, prefix=""):
         markeredgewidth=0.1,
         markersize=10.5,
     )
-    plt.ylabel(prefix + " RMSE")
-    plt.title(prefix + " RMSE vs. " + x_axis_label)
+    plt.ylabel(rmse_type)
+    plt.title(rmse_type + " vs. " + x_axis_label)
     x_range = x_axis_vals[len(x_axis_vals) - 1] - x_axis_vals[0]
     first_x_val = x_axis_vals[0]
     last_x_val = x_axis_vals[len(x_axis_vals) - 1]
@@ -102,33 +102,8 @@ def create_plot(pdf, csv_file, value_combos_file, prefix=""):
 
 # TODO(rsoussan): Make this more generic, don't hardcode each RMSE type
 def create_plots(output_file, csv_file, value_combos_file):
+    dataframe = pd.read_csv(csv_file)
+    rmses = dataframe.columns
     with PdfPages(output_file) as pdf:
-        # Graph RMSEs
-        #create_plot(pdf, csv_file, value_combos_file)
-        create_plot(pdf, csv_file, value_combos_file, "Graph Loc Poses ")
-        #create_plot(pdf, csv_file, value_combos_file, "orientation_")
-        #create_plot(pdf, csv_file, value_combos_file, "integrated_")
-        #create_plot(pdf, csv_file, value_combos_file, "rel_")
-        #create_plot(pdf, csv_file, value_combos_file, "rel_orientation_")
-        #create_plot(pdf, csv_file, value_combos_file, "rel_integrated_")
-        ## IMU Augmented RMSEs
-        #create_plot(pdf, csv_file, value_combos_file, "imu_augmented_")
-        #create_plot(pdf, csv_file, value_combos_file, "imu_augmented_orientation_")
-        #create_plot(pdf, csv_file, value_combos_file, "imu_augmented_integrated_")
-        #create_plot(pdf, csv_file, value_combos_file, "rel_imu_augmented_")
-        #create_plot(pdf, csv_file, value_combos_file, "rel_imu_augmented_orientation_")
-        #create_plot(pdf, csv_file, value_combos_file, "rel_imu_augmented_integrated_")
-
-        ## IMU Bias Tester RMSEs
-        #create_plot(pdf, csv_file, value_combos_file, "imu_bias_tester_")
-        #create_plot(pdf, csv_file, value_combos_file, "imu_bias_tester_orientation_")
-        #create_plot(pdf, csv_file, value_combos_file, "rel_imu_bias_tester_")
-        #create_plot(
-        #    pdf, csv_file, value_combos_file, "rel_imu_bias_tester_orientation_"
-        #)
-
-        ## Depth Odometry RMSEs
-        #create_plot(pdf, csv_file, value_combos_file, "depth_odometry_")
-        #create_plot(pdf, csv_file, value_combos_file, "depth_odometry_orientation_")
-        #create_plot(pdf, csv_file, value_combos_file, "rel_depth_odometry_")
-        #create_plot(pdf, csv_file, value_combos_file, "rel_depth_odometry_orientation_")
+        for rmse_type in rmses:
+            create_plot(pdf, csv_file, value_combos_file, rmse_type) 
