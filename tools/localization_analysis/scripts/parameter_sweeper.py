@@ -100,10 +100,27 @@ def test_values(
     if image_topic is not None:
         run_command += " -i " + image_topic
     os.system(run_command)
-    output_pdf_file = os.path.join(new_output_dir, str(job_id) + "_output.pdf")
-    results_csv_file = os.path.join(new_output_dir, "loc_graph_stats.csv")
+
+    # Plot Loc results
+    output_pdf_file = os.path.join(new_output_dir_prefix, str(job_id) + "_loc_output.pdf")
+    results_csv_file = os.path.join(new_output_dir_prefix, "loc_graph_stats.csv")
     plot_command = (
         "rosrun localization_analysis loc_results_plotter.py "
+        + output_bag
+        + " --output-file "
+        + output_pdf_file
+        + " --results-csv-file "
+        + results_csv_file
+        + " -g "
+        + groundtruth_bagfile
+    )
+    os.system(plot_command)
+
+    # Plot VIO results
+    output_pdf_file = os.path.join(new_output_dir_prefix, str(job_id) + "_vio_output.pdf")
+    results_csv_file = os.path.join(new_output_dir_prefix, "vio_graph_stats.csv")
+    plot_command = (
+        "rosrun localization_analysis vio_results_plotter.py "
         + output_bag
         + " --output-file "
         + output_pdf_file
@@ -156,7 +173,8 @@ def parameter_sweep(
             )
         ),
     )
-    parameter_sweep_utilities.concat_results(job_ids, output_dir, "graph_stats.csv")
+    parameter_sweep_utilities.concat_results(job_ids, output_dir, "loc_graph_stats.csv")
+    parameter_sweep_utilities.concat_results(job_ids, output_dir, "vio_graph_stats.csv")
 
 # Create values for defined config options to sweep on
 def make_value_ranges():

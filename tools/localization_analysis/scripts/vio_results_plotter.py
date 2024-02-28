@@ -110,23 +110,24 @@ def plot_vio_results(
     results_savers.save_rmse(integrated_velocity_poses, groundtruth_poses, results_csv_file, pdf, "Graph VIO Integrated Velocity Poses") 
 
 
-    absolute_imu_bias_extrapolated_poses = plot_conversions.absolute_poses_from_imu_bias_extrapolated_poses(imu_bias_extrapolated_poses, groundtruth_poses)
-    imu_bias_extrapolated_poses_plotter = MultiPosePlotter("Time (s)", "Position (m)", "IMU Bias Extrapolated vs. Groundtruth Position", True)
-    imu_bias_extrapolated_poses_plotter.add_poses(
-        "Groundtruth Poses", 
-        groundtruth_poses,
-        linestyle="None",
-        marker="o",
-        markeredgewidth=0.1,
-        markersize=1.5,
-    )
-    imu_bias_extrapolated_poses_plotter.add_poses(
-        "IMU Bias Extrapolated Poses", 
-        absolute_imu_bias_extrapolated_poses,
-        linestyle="-",
-    )
-    imu_bias_extrapolated_poses_plotter.plot(pdf)
-    results_savers.save_rmse(imu_bias_extrapolated_poses, groundtruth_poses, results_csv_file, pdf, "IMU Bias Extrapolated Poses") 
+    if len(imu_bias_extrapolated_poses) != 0:
+        absolute_imu_bias_extrapolated_poses = plot_conversions.absolute_poses_from_imu_bias_extrapolated_poses(imu_bias_extrapolated_poses, groundtruth_poses)
+        imu_bias_extrapolated_poses_plotter = MultiPosePlotter("Time (s)", "Position (m)", "IMU Bias Extrapolated vs. Groundtruth Position", True)
+        imu_bias_extrapolated_poses_plotter.add_poses(
+            "Groundtruth Poses", 
+            groundtruth_poses,
+            linestyle="None",
+            marker="o",
+            markeredgewidth=0.1,
+            markersize=1.5,
+        )
+        imu_bias_extrapolated_poses_plotter.add_poses(
+            "IMU Bias Extrapolated Poses", 
+            absolute_imu_bias_extrapolated_poses,
+            linestyle="-",
+        )
+        imu_bias_extrapolated_poses_plotter.plot(pdf)
+        results_savers.save_rmse(imu_bias_extrapolated_poses, groundtruth_poses, results_csv_file, pdf, "IMU Bias Extrapolated Poses") 
 
 
 

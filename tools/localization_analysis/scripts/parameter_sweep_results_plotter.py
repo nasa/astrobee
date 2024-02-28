@@ -104,30 +104,31 @@ def create_plot(pdf, csv_file, value_combos_file, prefix=""):
 def create_plots(output_file, csv_file, value_combos_file):
     with PdfPages(output_file) as pdf:
         # Graph RMSEs
-        create_plot(pdf, csv_file, value_combos_file)
-        create_plot(pdf, csv_file, value_combos_file, "orientation_")
-        create_plot(pdf, csv_file, value_combos_file, "integrated_")
-        create_plot(pdf, csv_file, value_combos_file, "rel_")
-        create_plot(pdf, csv_file, value_combos_file, "rel_orientation_")
-        create_plot(pdf, csv_file, value_combos_file, "rel_integrated_")
-        # IMU Augmented RMSEs
-        create_plot(pdf, csv_file, value_combos_file, "imu_augmented_")
-        create_plot(pdf, csv_file, value_combos_file, "imu_augmented_orientation_")
-        create_plot(pdf, csv_file, value_combos_file, "imu_augmented_integrated_")
-        create_plot(pdf, csv_file, value_combos_file, "rel_imu_augmented_")
-        create_plot(pdf, csv_file, value_combos_file, "rel_imu_augmented_orientation_")
-        create_plot(pdf, csv_file, value_combos_file, "rel_imu_augmented_integrated_")
+        #create_plot(pdf, csv_file, value_combos_file)
+        create_plot(pdf, csv_file, value_combos_file, "Graph Loc Poses ")
+        #create_plot(pdf, csv_file, value_combos_file, "orientation_")
+        #create_plot(pdf, csv_file, value_combos_file, "integrated_")
+        #create_plot(pdf, csv_file, value_combos_file, "rel_")
+        #create_plot(pdf, csv_file, value_combos_file, "rel_orientation_")
+        #create_plot(pdf, csv_file, value_combos_file, "rel_integrated_")
+        ## IMU Augmented RMSEs
+        #create_plot(pdf, csv_file, value_combos_file, "imu_augmented_")
+        #create_plot(pdf, csv_file, value_combos_file, "imu_augmented_orientation_")
+        #create_plot(pdf, csv_file, value_combos_file, "imu_augmented_integrated_")
+        #create_plot(pdf, csv_file, value_combos_file, "rel_imu_augmented_")
+        #create_plot(pdf, csv_file, value_combos_file, "rel_imu_augmented_orientation_")
+        #create_plot(pdf, csv_file, value_combos_file, "rel_imu_augmented_integrated_")
 
-        # IMU Bias Tester RMSEs
-        create_plot(pdf, csv_file, value_combos_file, "imu_bias_tester_")
-        create_plot(pdf, csv_file, value_combos_file, "imu_bias_tester_orientation_")
-        create_plot(pdf, csv_file, value_combos_file, "rel_imu_bias_tester_")
-        create_plot(
-            pdf, csv_file, value_combos_file, "rel_imu_bias_tester_orientation_"
-        )
+        ## IMU Bias Tester RMSEs
+        #create_plot(pdf, csv_file, value_combos_file, "imu_bias_tester_")
+        #create_plot(pdf, csv_file, value_combos_file, "imu_bias_tester_orientation_")
+        #create_plot(pdf, csv_file, value_combos_file, "rel_imu_bias_tester_")
+        #create_plot(
+        #    pdf, csv_file, value_combos_file, "rel_imu_bias_tester_orientation_"
+        #)
 
-        # Depth Odometry RMSEs
-        create_plot(pdf, csv_file, value_combos_file, "depth_odometry_")
-        create_plot(pdf, csv_file, value_combos_file, "depth_odometry_orientation_")
-        create_plot(pdf, csv_file, value_combos_file, "rel_depth_odometry_")
-        create_plot(pdf, csv_file, value_combos_file, "rel_depth_odometry_orientation_")
+        ## Depth Odometry RMSEs
+        #create_plot(pdf, csv_file, value_combos_file, "depth_odometry_")
+        #create_plot(pdf, csv_file, value_combos_file, "depth_odometry_orientation_")
+        #create_plot(pdf, csv_file, value_combos_file, "rel_depth_odometry_")
+        #create_plot(pdf, csv_file, value_combos_file, "rel_depth_odometry_orientation_")
