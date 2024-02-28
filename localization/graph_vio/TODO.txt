@@ -38,13 +38,9 @@
       - test with sim! (A)
             - update rmse test! (B)
               - is orientation calculation correct???
-          - add bag and param sweep script! (AAA)
-            - make config file!
-            - test w/o running
-            - test w/o plotting
-            - update results plotter!!!!
-            - test w/ plotting!
-          - tune on granite table!
+          - tune on granite table bags!
+              - download bags? run on beehive?
+            
           - start cross compile!
           - why is astrobee shaking?
             - fix bias estimation

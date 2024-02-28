@@ -137,5 +137,5 @@ if __name__ == "__main__":
 
     offline_replay_params_list = bag_sweeper.load_params(args.config_file)
     bag_and_parameter_sweep(offline_replay_params_list, output_dir)
-    #create_results_plots(output_dir, "loc")
-    #create_results_plots(output_dir, "vio")
+    create_results_plots(output_dir, "loc")
+    create_results_plots(output_dir, "vio")
