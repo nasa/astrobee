@@ -83,7 +83,7 @@ void AstrobeeAstrobeeBridge::Initialize(ros::NodeHandle *nh) {
   std::string config_path = ff_common::GetConfigDir();
   config_path += "/communications/dds_intercomms/";
 
-  // Create fake argv containing only the particaptant name
+  // Create fake argv containing only the participant name
   // Participant name needs to uniue so combine robot name with timestamp
   ros::Time time = ros::Time::now();
   participant_name_ = agent_name_ + std::to_string(time.sec)
