@@ -189,13 +189,17 @@ def parameter_sweep(
 def make_value_ranges():
     value_ranges = []
     value_names = []
-    steps = 1
+    steps = 10
 
     # tune num smart factors
     # value_ranges.append(np.logspace(-1, -6, steps, endpoint=True))
     # value_names.append('accel_bias_sigma')
-    value_ranges.append(np.linspace(10, 20, steps, endpoint=True))
-    value_names.append("gl_fa_loc_sm_max_num_projection_factors")
+    value_ranges.append(np.logspace(-1, -6, steps, endpoint=True))
+    value_names.append("ii_gyro_sigma")
+    value_ranges.append(np.logspace(-1, -6, steps, endpoint=True))
+    value_names.append("ii_gyro_bias_sigma")
+
+
 
     # q_gyro
     # .001 -> 2 deg

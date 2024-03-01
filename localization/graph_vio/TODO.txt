@@ -38,8 +38,11 @@
       - test with sim! (A)
             - update rmse test! (B)
               - is orientation calculation correct???
+          - upgrade scripts to python 3! test on beehive!
+            - upgrade vm to ubuntu 20! (AA)
           - tune on granite table bags!
-              - download bags? run on beehive?
+            - what order to tune in????
+                - reset imu params to reasonable values? check gtsam? check original localization code?
             
           - start cross compile!
           - why is astrobee shaking?
