@@ -1,0 +1,205 @@
+\documentclass{article}
+
+\usepackage{graphicx}      % include this line if your document contains figures
+\usepackage{cite}        % required for bibliography
+\usepackage{amsmath,mathtools,amssymb}
+\usepackage{amsfonts}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usetikzlibrary{external}
+\tikzexternalize[prefix=tikz/]
+\usepackage{epstopdf}
+\usepackage[font=footnotesize, labelfont={sf,bf}, margin=1cm]{caption}
+\usepackage{graphicx}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{booktabs}
+\usepackage{caption}
+%
+\setlength\parindent{0pt}
+\setlength{\parskip}{1em}
+%
+%\makeatletter
+%\def\BState{\State\hskip-\ALG@thistlm}
+%\makeatother
+%
+%\newcommand{\dd}{{\mathrm{d}}}
+%
+%\usetikzlibrary{decorations.pathreplacing,calc}
+
+%\newcommand{\tikzmark}[1]{\tikz[overlay,remember picture] \node (#1) {};}
+%
+\newcommand{\R}{\mathbb{R}}
+%
+%\newlength\figurewidth
+%\newlength\figureheight
+%
+%\newtheorem{theorem}{Theorem}
+%\newtheorem{corollary}{Corollary}[theorem]
+%%\newtheorem{lemma}{Lemma}
+%\newtheorem{lemma}[theorem]{Lemma}
+%\newtheorem{assumption}{Assumption}
+%\newtheorem {Remark}[theorem]{Remark}
+%
+%\makeatletter
+%\renewcommand*\env@matrix[1][\arraystretch]{%
+%	\edef\arraystretch{#1}%
+%	\hskip -\arraycolsep
+%	\let\@ifnextchar\new@ifnextchar
+%	\array{*\c@MaxMatrixCols c}}
+%\makeatother
+
+%\newtheoremstyle{exampstyle}
+%  {\topsep} % Space above
+%  {\topsep} % Space below
+%  {} % Body font
+%  {} % Indent amount
+%  {\bfseries} % Theorem head font
+%  {.} % Punctuation after theorem head
+%  {.5em} % Space after theorem head
+%  {} % Theorem head spec (can be left empty, meaning `normal')
+
+%\definecolor{bluet}{RGB}{100,121,178}
+%\definecolor{redt}{RGB}{255,86,73}
+%\definecolor{dgreent}{RGB}{75,212,69}
+
+\expandafter\def\expandafter\normalsize\expandafter{%
+	\normalsize
+	\setlength\abovedisplayskip{10pt}
+	\setlength\belowdisplayskip{10pt}
+	\setlength\abovedisplayshortskip{10pt}
+	\setlength\belowdisplayshortskip{10pt}
+}
+%
+%
+%\def\nonfrenchspacing{\sfcode`\.3000\sfcode`\?3000\sfcode`\!3000%
+%	\sfcode`\:1000\sfcode`\;1500\sfcode`\,1250 }
+%%
+%\nonfrenchspacing
+%
+%\newcommand{\barr}{\begin{array}}
+%	\newcommand{\earr}{\end{array}}
+%\newcommand{\bvec}{ \left[ \!\! \barr{cccccccccccc} }
+%\newcommand{\evec}{ \earr \!\! \right] }
+%
+%
+%\hyphenation{op-tical net-works semi-conduc-tor}
+
+
+\title{Notes on Initialization Strategies for \\ Primal-Dual Interior Point Methods}
+\author{Andrea Zanelli}
+\let\endtitlepage\relax
+
+\begin{document}
+	
+\begin{titlepage}
+	\maketitle
+\end{titlepage}
+
+%\section{Initialization strategy for general polytopic constraints.}
+Consider the following convex quadratic problem (QP) with general polytopic constraints:
+\begin{equation}\label{eq:u_qp}
+\begin{aligned}
+&\underset{\begin{subarray}{c}
+	x \\
+	\end{subarray}}{\min}	&&\frac{1}{2}x^THx\\
+&\quad \text{s.t.} 		   	&&Ax  = b\\
+& 						&&Cx \leq d,
+\end{aligned}
+\end{equation}
+where $A \in \R^{m \times n}$, $C \in \R^{p \times n}$, $H \in \R ^{n\times n}$ and $H \succ 0$,  and $x \in \R^n$, $b \in \R^m$, $d \in \R^p$. We are interested in solving the above problem with a primal-dual infeasible interior-point method (IPM). To this end, we can write the following set of equations:
+\begin{equation}\label{eq:u_kkt}
+\begin{aligned}
+&Hx + A^T\lambda + C^T\nu &&= 0 \\
+&Ax - b 								&&= 0 \\
+&Cx - d + s								&&= 0 \\
+&S\nu									&&=0,
+\end{aligned}
+\end{equation}
+where the slack variable $s \in \R^p$ has been introduced. Equations \eqref{eq:u_kkt}, together with the positivity constraints $s, \,\nu \!> \!0$ constitute the first-order optimality, or Karush-Kuhn-Tucker conditions (KKTs) associated with \eqref{eq:u_qp}.
+\par
+
+When using infeasible IPMs, a feasible point with respect to inequalities is required to be available to initialize the algorithm in order to be able to prove convergence of the iterates to the solution of the problem (if it exists). However, finding a point that lies inside the set defined by the polytopic constraints $Cx \leq d$ might be a computationally expensive task. For this reason, the following modified problem formulation can be used:
+\begin{equation}\label{eq:qp}
+\begin{aligned}
+&\underset{\begin{subarray}{c}
+	x,\,y \\
+	\end{subarray}}{\min}	&&\frac{1}{2}x^THx\\
+&\quad \text{s.t.} 		   	&&Ax  = b\\
+& 						&&Cx = y \\
+& 						&&y \leq d,
+\end{aligned}
+\end{equation}
+where the additional constraint $Cx = y$ and the additional variable $y$ have been introduced in order to ``lift'' the inequality constraints and deal with the simpler constraint $y \leq d$. The Lagrangian of the modified problem is
+\begin{equation}
+\mathcal{L} = \frac{1}{2}x^THx + \lambda^T(Ax - b) + \mu^T(Cx - y) + \nu^T(y - d)
+\end{equation}
+and the KKTs associated with \eqref{eq:qp} read 
+\begin{equation}\label{eq:kkt}
+\begin{aligned}
+&Hx + A^T\lambda + C^T\mu &&= 0 \\
+&-\mu + \nu &&= 0 \\
+&Ax - b 								&&= 0 \\
+&Cx - y								&&= 0 \\
+&y - d + s									&&=0 \\
+&S\nu &&=0.
+\end{aligned}
+\end{equation} 
+When solving QP problems arising from MPC formulations, due to the presence of additional equality constraints $Cx = y$, the efficient Riccati-based factorization propsed in \cite{Frison2013} cannot be applied straightforwardly. For this reason, we propose below an efficient elimination technique is proposed that brings the problem into the same form as in \eqref{eq:u_kkt}. In this way the Ricatti-based factorization can be applied to the reduced problem.
+\par
+The Newton system associated with \eqref{eq:kkt} reads:
+\begin{equation}
+\begin{bmatrix}
+H & 0	& A^T 	& C^T	& 0 & 0 	\\
+0 & 0	& 0 	& -I	& I & 0		\\
+A & 0	& 0 	&  0	& 0 & 0		\\
+C & -I	& 0 	&  0	& 0 & 0		\\
+0 & I	& 0 	&  0	& 0 & I	\\
+0 & 0	& 0 	& 0		& S & V		\\
+\end{bmatrix}
+\begin{bmatrix}
+\Delta x \\ \Delta y \\ \Delta \lambda \\ \Delta \mu \\\Delta \nu \\ \Delta s
+\end{bmatrix}
+=
+-\begin{bmatrix}
+r_{S} \\ r_{S'} \\ r_E \\ r_{E'} \\ r_I \\ r_C
+\end{bmatrix}.
+\end{equation}
+The system can be efficiently reduced by eliminating $\Delta y$ using the fact that $\Delta y = -\Delta s - r_I$:
+\begin{equation}
+\begin{bmatrix}
+H 	& A^T 	& C^T	& 0 & 0 	\\
+0 	& 0 	& -I	& I & 0		\\
+A 	& 0 	&  0	& 0 & 0		\\
+C 	& 0 	&  0	& 0 & I	\\
+0 	& 0 	& 0		& S & V		\\
+\end{bmatrix}
+\begin{bmatrix}
+\Delta x \\ \Delta \lambda \\ \Delta \mu \\\Delta \nu \\ \Delta s
+\end{bmatrix}
+=
+-\begin{bmatrix}
+r_{S} \\ r_{S'} \\ r_E \\ r_{E''} \\ r_C
+\end{bmatrix},
+\end{equation}
+where $r_{E''} = r_{E'} + r_I$. Finally $\Delta \mu$ can be eliminated  using $\Delta \mu = \Delta \nu + r_{S'}$:
+\begin{equation}
+\begin{bmatrix}
+H 	& A^T 	& C^T 	&	 0 	\\
+A 	& 0 	& 0 	& 0		\\
+C 	& 0 	& 0 	& I	\\
+0 	& 0 	& S 	& V		\\
+\end{bmatrix}
+\begin{bmatrix}
+\Delta x \\ \Delta \lambda \\\Delta \nu \\ \Delta s
+\end{bmatrix}
+=
+-\begin{bmatrix}
+r_{S''}  \\ r_E \\ r_{E''} \\ r_C
+\end{bmatrix},
+\end{equation}
+where $r_{S''} = r_S + C^Tr_{S'}$
+\bibliographystyle{plain}
+\bibliography{syscop} 
+\end{document}

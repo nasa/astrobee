@@ -1,0 +1,259 @@
+{
+  "target": {
+    "type": "list",
+    "values": [
+      "X64_AMD_BULLDOZER",
+      "ARMV8A_ARM_CORTEX_A57",
+      "ARMV7A_ARM_CORTEX_A15",
+      "GENERIC",
+      "X64_INTEL_CORE",
+      "X64_INTEL_SANDY_BRIDGE",
+      "X64_INTEL_HASWELL"
+    ],
+    "default": [
+      "X64_INTEL_HASWELL"
+    ]
+  },
+  "la": {
+    "type": "list",
+    "values": [
+      "HIGH_PERFORMANCE",
+      "REFERENCE",
+      "EXTERNAL_BLAS_WRAPPER"
+    ],
+    "default": [
+      "HIGH_PERFORMANCE"
+    ]
+  },
+  "ref_blas": {
+    "type": "string",
+    "values": [
+      "OPENBLAS",
+      "BLIS",
+      "MKL",
+      "NETLIB",
+      "ATLAS"
+    ],
+    "default": "OPENBLAS"
+  },
+  "verbose": {
+    "values": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "default": 1
+  },
+  "build_lib": {
+    "default": 1
+  },
+  "deploy_libs": {
+    "values": [
+      0,
+      1
+    ],
+    "default": 1
+  },
+  "precision": {
+    "type": "list",
+    "values": [
+      "double",
+      "single"
+    ],
+    "default": [
+      "double",
+      "single"
+    ]
+  },
+  "min_kernel_sizes": {
+    "type": "list",
+    "values": [
+      "4x4"
+    ],
+    "default": [
+      "4x4"
+    ]
+  },
+  "classes": [
+    "lapack",
+    "aux",
+    "blas3",
+    "blas2",
+    "blas1",
+    "ext_dep",
+    "others"
+  ],
+  "routines": {
+    "blas1": {
+      "axy": {
+        "testclass_src": "axy.c",
+        "flags":{},
+        "routines": [
+          "axpy"
+        ]
+      }
+    },
+    "blas2": {
+      "gemv": {
+        "testclass_src": "gemv.c",
+        "flags":{},
+        "routines": [
+          "gemv"
+        ]
+      }
+    },
+    "blas3": {
+      "gemm": {
+        "testclass_src": "gemm.c",
+        "flags":{
+          "transa":["n","t"],
+          "transb":["n","t"]
+          },
+        "routines": [
+          "gemm_nn",
+          "gemm_nt",
+          "gemm_tn",
+          "gemm_tt",
+          "syrk_ln_mn"
+        ]
+      },
+      "syrk": {
+        "testclass_src": "syrk.c",
+        "flags":{
+          "uplo":["u","l"],
+          "trans":["n","t"]
+          },
+        "routines": [
+          "syrk_ln",
+          "syrk_lt",
+          "syrk_un",
+          "syrk_ut"
+        ]
+      },
+      "trsm": {
+        "testclass_src": "trm.c",
+        "flags":{
+          "side":["l","r"],
+          "uplo":["u","l"],
+          "transa":["n","t","c"],
+          "diag":["u","n"]
+          },
+        "routines": [
+          "trsm_llnu",
+          "trsm_llnn",
+          "trsm_lltu",
+          "trsm_lltn",
+          "trsm_lunu",
+          "trsm_lunn",
+          "trsm_lutu",
+          "trsm_lutn",
+          "trsm_rlnu",
+          "trsm_rlnn",
+          "trsm_rltu",
+          "trsm_rltn",
+          "trsm_runu",
+          "trsm_runn",
+          "trsm_rutu",
+          "trsm_rutn"
+        ]
+      },
+      "trmm": {
+        "testclass_src": "trm.c",
+        "flags":{
+          "side":["l","r"],
+          "uplo":["u","l"],
+          "transa":["n","t","c"],
+          "diag":["u","n"]
+          },
+        "routines": [
+          "trmm_llnn",
+          "trmm_llnu",
+          "trmm_lltn",
+          "trmm_lltu",
+          "trmm_lunn",
+          "trmm_lunu",
+          "trmm_lutn",
+          "trmm_lutu",
+          "trmm_rlnn",
+          "trmm_rlnu",
+          "trmm_rltn",
+          "trmm_rltu",
+          "trmm_runn",
+          "trmm_runu",
+          "trmm_rutn",
+          "trmm_rutu"
+        ]
+      }
+    },
+    "lapack": {
+      "getrf_rowpivot": {
+        "testclass_src": "getrf_rp.c",
+        "flags":{},
+        "routines": [
+          "getrf_rp"
+        ]
+      },
+      "getrf_nopivot": {
+        "testclass_src": "getrf_nopivot.c",
+        "flags":{},
+        "routines": [
+          "getrf_nowpivot"
+        ]
+      },
+      "getrf": {
+        "testclass_src": "getrf.c",
+        "flags":{},
+        "routines": [
+          "getrf"
+        ]
+      },
+      "geqf": {
+        "testclass_src": "geqf.c",
+        "flags":{},
+        "routines": [
+          "geqrf",
+          "gelqf"
+        ]
+      },
+      "potrf": {
+        "testclass_src": "potrf.c",
+        "flags":{"uplo":["l", "u"]},
+        "routines": [
+          "potrf_l",
+          "potrf_u"
+        ]
+      },
+      "potrf_mn": {
+        "testclass_src": "potrf_mn.c",
+        "flags":{},
+        "routines": [
+          "potrf_l_mn"
+        ]
+      }    },
+    "aux": {
+      "1args": {
+        "testclass_src": "aux1args.c",
+        "flags":{},
+        "routines": [
+          "gesc"
+        ]
+      },
+      "2args": {
+        "testclass_src": "aux2args.c",
+        "flags":{},
+        "routines": [
+          "gecp"
+        ]
+      },
+      "3args": {
+        "testclass_src": "aux3args.c",
+        "flags":{},
+        "routines": [
+          "gead",
+          "gecpsc"
+        ]
+      }
+    }
+  }
+}

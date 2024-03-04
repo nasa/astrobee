@@ -1,0 +1,163 @@
+###################################################################################################
+#                                                                                                 #
+# This file is part of HPIPM.                                                                     #
+#                                                                                                 #
+# HPIPM -- High-Performance Interior Point Method.                                                #
+# Copyright (C) 2019 by Gianluca Frison.                                                          #
+# Developed at IMTEK (University of Freiburg) under the supervision of Moritz Diehl.              #
+# All rights reserved.                                                                            #
+#                                                                                                 #
+# The 2-Clause BSD License                                                                        #
+#                                                                                                 #
+# Redistribution and use in source and binary forms, with or without                              #
+# modification, are permitted provided that the following conditions are met:                     #
+#                                                                                                 #
+# 1. Redistributions of source code must retain the above copyright notice, this                  #
+#    list of conditions and the following disclaimer.                                             #
+# 2. Redistributions in binary form must reproduce the above copyright notice,                    #
+#    this list of conditions and the following disclaimer in the documentation                    #
+#    and/or other materials provided with the distribution.                                       #
+#                                                                                                 #
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND                 #
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED                   #
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE                          #
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR                 #
+# ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES                  #
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;                    #
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND                     #
+# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT                      #
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS                   #
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                                    #
+#                                                                                                 #
+# Author: Gianluca Frison, gianluca.frison (at) imtek.uni-freiburg.de                             #
+#                                                                                                 #
+###################################################################################################
+
+
+# Do something in this makefile
+$(info Parsing Makefile.rule)
+
+# Get path of Makefile.rule as main project directory
+#CURRENT_DIR  := $(dir $(lastword $(MAKEFILE_LIST)))
+MAKEFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
+CURRENT_DIR := $(patsubst %/,%,$(dir $(MAKEFILE_PATH)))
+
+
+
+#################################################
+### main makefile options
+#################################################
+
+# Target architecture
+#TARGET = AVX512
+TARGET = AVX
+#TARGET = GENERIC
+
+# Use C99 extension to math library
+#
+# USE_C99_MATH = 0
+USE_C99_MATH = 1
+
+# BLAS and LAPACK version (for LA=BLAS in BLASFEO)
+REF_BLAS = 0
+#REF_BLAS = OPENBLAS
+#REF_BLAS = NETLIB
+#REF_BLAS = MKL
+#REF_BLAS = BLIS
+#REF_BLAS = ATLAS
+
+# Installation directory
+TOP = $(CURRENT_DIR)
+#TOP = $(shell pwd)
+#TOP = C:/cygwin64/home/gianluca/hpipm
+
+# operating system
+#UNAME_S := $(shell uname -s)
+#ifeq ($(UNAME_S),Linux)
+#    OS = LINUX
+#endif
+#ifeq ($(UNAME_S),Darwin)
+#    OS = MAC
+#endif
+#OS = LINUX
+#OS = MAC
+#OS = WINDOWS
+
+# C Compiler
+CC = gcc
+#CC = clang
+#CC = x86_64-w64-mingw32-gcc
+
+# Installation directory
+PREFIX = /opt
+
+# BLASFEO installation directory
+BLASFEO_PATH = /opt/blasfeo
+#BLASFEO_PATH = /home/gianluca/blasfeo
+#BLASFEO_PATH = C:/cygwin64/home/gianluca/blasfeo
+
+# enable runtine checks
+RUNTIME_CHECKS = 0
+#RUNTIME_CHECKS = 1
+
+# compiler flags
+CFLAGS  = 
+
+# optimization flags
+CFLAGS += -O2 -fPIC
+
+# debugging flags
+CFLAGS  += #-g #-Wall -pedantic -Wfloat-equal #-pg
+
+# search directories
+CFLAGS += -I$(BLASFEO_PATH)/include -I$(TOP)/include #-I$(TOP)/../../include
+
+# definirions
+#ifeq ($(OS), LINUX)
+#CFLAGS  += -DOS_LINUX
+#endif
+#ifeq ($(OS), MAC)
+#CFLAGS  += -DOS_MAC
+#endif
+#ifeq ($(OS), WINDOWS)
+#CFLAGS  += -DOS_WINDOWS
+#endif
+
+ifeq ($(USE_C99_MATH), 1)
+CFLAGS += -DUSE_C99_MATH
+endif
+
+ifeq ($(REF_BLAS), 0)
+CFLAGS  += 
+endif
+ifeq ($(REF_BLAS), OPENBLAS)
+CFLAGS  += -DREF_BLAS_OPENBLAS -I/opt/openblas/include
+endif
+ifeq ($(REF_BLAS), BLIS)
+CFLAGS  += -DREF_BLAS_BLIS -std=c99
+endif
+ifeq ($(REF_BLAS), NETLIB)
+CFLAGS  += -DREF_BLAS_NETLIB
+endif
+ifeq ($(REF_BLAS), MKL)
+CFLAGS  += -DREF_BLAS_MKL -m64 -I/opt/intel/mkl/include
+endif
+ifeq ($(REF_BLAS), ATLAS)
+CFLAGS  += -DREF_BLAS_ATLAS
+endif
+
+ifeq ($(RUNTIME_CHECKS), 1)
+CFLAGS += -DRUNTIME_CHECKS
+endif
+
+# architecture-specific flags
+ifeq ($(TARGET), AVX512)
+CFLAGS  += -mavx512f -mavx512vl -mfma -DTARGET_AVX512
+endif
+ifeq ($(TARGET), AVX)
+CFLAGS  += -mavx -DTARGET_AVX
+endif
+ifeq ($(TARGET), GENERIC)
+CFLAGS  += -DTARGET_GENERIC
+endif
+

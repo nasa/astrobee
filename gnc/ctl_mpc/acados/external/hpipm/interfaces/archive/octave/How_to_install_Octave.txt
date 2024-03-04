@@ -1,0 +1,7 @@
+On an Ubuntu machine, open a terminal and type
+
+	$ sudo apt-get install octave octave-control
+
+To install the tools to compile mex files in Octave, open a terminal and type
+
+	$ sudo apt-get install liboctave-dev

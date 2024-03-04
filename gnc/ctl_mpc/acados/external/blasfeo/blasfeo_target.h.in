@@ -1,0 +1,73 @@
+#ifndef TARGET_@TARGET@
+#define TARGET_@TARGET@
+#endif
+
+#ifndef TARGET_NEED_FEATURE_AVX2
+#cmakedefine TARGET_NEED_FEATURE_AVX2 @TARGET_NEED_FEATURE_AVX2@
+#endif
+
+#ifndef TARGET_NEED_FEATURE_FMA
+#cmakedefine TARGET_NEED_FEATURE_FMA @TARGET_NEED_FEATURE_FMA@
+#endif
+
+#ifndef TARGET_NEED_FEATURE_SSE3
+#cmakedefine TARGET_NEED_FEATURE_SSE3 @TARGET_NEED_FEATURE_SSE3@
+#endif
+
+#ifndef TARGET_NEED_FEATURE_AVX
+#cmakedefine TARGET_NEED_FEATURE_AVX @TARGET_NEED_FEATURE_AVX@
+#endif
+
+#ifndef TARGET_NEED_FEATURE_VFPv3
+#cmakedefine TARGET_NEED_FEATURE_VFPv3 @TARGET_NEED_FEATURE_VFPv3@
+#endif
+
+#ifndef TARGET_NEED_FEATURE_NEON
+#cmakedefine TARGET_NEED_FEATURE_NEON @TARGET_NEED_FEATURE_NEON@
+#endif
+
+#ifndef TARGET_NEED_FEATURE_VFPv4
+#cmakedefine TARGET_NEED_FEATURE_VFPv4 @TARGET_NEED_FEATURE_VFPv4@
+#endif
+
+#ifndef TARGET_NEED_FEATURE_NEONv2
+#cmakedefine TARGET_NEED_FEATURE_NEONv2 @TARGET_NEED_FEATURE_NEONv2@
+#endif
+
+#ifndef LA_@LA@
+#define LA_@LA@
+#endif
+
+#ifndef MF_@MF@
+#define MF_@MF@
+#endif
+
+#ifndef EXT_DEP
+#define ON 1
+#define OFF 0
+#if @EXT_DEP@==ON
+#define EXT_DEP
+#endif
+#undef ON
+#undef OFF
+#endif
+
+#ifndef BLAS_API
+#define ON 1
+#define OFF 0
+#if @BLAS_API@==ON
+#define BLAS_API
+#endif
+#undef ON
+#undef OFF
+#endif
+
+#ifndef FORTRAN_BLAS_API
+#define ON 1
+#define OFF 0
+#if @FORTRAN_BLAS_API@==ON
+#define FORTRAN_BLAS_API
+#endif
+#undef ON
+#undef OFF
+#endif
