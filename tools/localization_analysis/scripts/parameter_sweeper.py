@@ -38,26 +38,27 @@ import numpy as np
 import config_creator
 import localization_common.utilities as lu
 import parameter_sweep_utilities
-import parameter_sweep_results_plotter 
+import parameter_sweep_results_plotter
 
-# Create new config file with substituted values 
+# Create new config file with substituted values
 def make_config_file(config_filename, new_output_dir, config_path, values, value_names):
-    config_filepath = os.path.join(
-        config_path, config_filename
-    )
+    config_filepath = os.path.join(config_path, config_filename)
     new_config_filepath = os.path.join(new_output_dir, config_filename)
     config_creator.make_config(
         values, value_names, config_filepath, new_config_filepath
     )
 
+
 def create_results_plots(output_dir, prefix):
-    combined_results_file = os.path.join(output_dir, prefix + "_param_sweep_combined_results.csv")
+    combined_results_file = os.path.join(
+        output_dir, prefix + "_param_sweep_combined_results.csv"
+    )
     value_combos_file = os.path.join(output_dir, "all_value_combos.csv")
     results_pdf_file = os.path.join(output_dir, prefix + "_param_sweep_results.pdf")
     parameter_sweep_results_plotter.create_plots(
         results_pdf_file, combined_results_file, value_combos_file
     )
- 
+
 
 # Run graph localizer/vio with values.
 # Add traceback so errors are forwarded, otherwise
@@ -77,14 +78,24 @@ def test_values(
     use_bag_image_msgs,
     groundtruth_bagfile,
 ):
-    new_output_dir_prefix = os.path.join(output_dir, str(job_id)) 
-    new_output_dir = os.path.join(new_output_dir_prefix, "localization") 
+    new_output_dir_prefix = os.path.join(output_dir, str(job_id))
+    new_output_dir = os.path.join(new_output_dir_prefix, "localization")
     os.makedirs(new_output_dir)
-    config_path = os.path.join(rospkg.RosPack().get_path('astrobee'), "config/localization") 
-    make_config_file("graph_localizer.config", new_output_dir, config_path, values, value_names)
-    make_config_file("graph_vio.config", new_output_dir, config_path, values, value_names)
-    make_config_file("imu_integrator.config", new_output_dir, config_path, values, value_names)
-    make_config_file("imu_filter.config", new_output_dir, config_path, values, value_names)
+    config_path = os.path.join(
+        rospkg.RosPack().get_path("astrobee"), "config/localization"
+    )
+    make_config_file(
+        "graph_localizer.config", new_output_dir, config_path, values, value_names
+    )
+    make_config_file(
+        "graph_vio.config", new_output_dir, config_path, values, value_names
+    )
+    make_config_file(
+        "imu_integrator.config", new_output_dir, config_path, values, value_names
+    )
+    make_config_file(
+        "imu_filter.config", new_output_dir, config_path, values, value_names
+    )
     output_bag = os.path.join(new_output_dir, "results.bag")
     output_stats_file = os.path.join(new_output_dir, "graph_stats.csv")
     graph_config_prefix = new_output_dir_prefix + "/"
@@ -111,7 +122,9 @@ def test_values(
     os.system(run_command)
 
     # Plot Loc results
-    output_pdf_file = os.path.join(new_output_dir_prefix, str(job_id) + "_loc_output.pdf")
+    output_pdf_file = os.path.join(
+        new_output_dir_prefix, str(job_id) + "_loc_output.pdf"
+    )
     results_csv_file = os.path.join(new_output_dir_prefix, "loc_graph_stats.csv")
     plot_command = (
         "rosrun localization_analysis loc_results_plotter.py "
@@ -126,7 +139,9 @@ def test_values(
     os.system(plot_command)
 
     # Plot VIO results
-    output_pdf_file = os.path.join(new_output_dir_prefix, str(job_id) + "_vio_output.pdf")
+    output_pdf_file = os.path.join(
+        new_output_dir_prefix, str(job_id) + "_vio_output.pdf"
+    )
     results_csv_file = os.path.join(new_output_dir_prefix, "vio_graph_stats.csv")
     plot_command = (
         "rosrun localization_analysis vio_results_plotter.py "
@@ -146,6 +161,7 @@ def test_values(
 # passing a single argument to workers
 def test_values_helper(zipped_vals):
     return test_values(*zipped_vals)
+
 
 # Create parallel jobs for each generated parameter sweep config set
 def parameter_sweep(
@@ -182,22 +198,25 @@ def parameter_sweep(
             )
         ),
     )
-    parameter_sweep_utilities.concat_results(job_ids, output_dir, "loc_graph_stats.csv", "loc")
-    parameter_sweep_utilities.concat_results(job_ids, output_dir, "vio_graph_stats.csv", "vio")
+    parameter_sweep_utilities.concat_results(
+        job_ids, output_dir, "loc_graph_stats.csv", "loc"
+    )
+    parameter_sweep_utilities.concat_results(
+        job_ids, output_dir, "vio_graph_stats.csv", "vio"
+    )
+
 
 # Create values for defined config options to sweep on
 def make_value_ranges():
     value_ranges = []
     value_names = []
-    steps = 8
+    steps = 10
 
     # tune num smart factors
     # value_ranges.append(np.logspace(-1, -6, steps, endpoint=True))
     # value_names.append('accel_bias_sigma')
-    value_ranges.append(np.linspace(3, 10, steps, endpoint=True))
-    value_names.append("gv_op_nl_max_iterations")
-
-
+    value_ranges.append(np.linspace(5, 100, steps, endpoint=True))
+    value_names.append("gl_fa_loc_sm_projection_noise_scale")
 
     # q_gyro
     # .001 -> 2 deg
@@ -207,6 +226,7 @@ def make_value_ranges():
     # value_names.append('q_gyro')
 
     return value_ranges, value_names
+
 
 # Perform the parameter sweep using defined range of values
 def make_values_and_parameter_sweep(
@@ -246,9 +266,9 @@ def make_values_and_parameter_sweep(
         use_bag_image_msgs,
         groundtruth_bagfile,
     )
-   
-    create_results_plots(output_dir, "loc") 
-    create_results_plots(output_dir, "vio") 
+
+    create_results_plots(output_dir, "loc")
+    create_results_plots(output_dir, "vio")
     return output_dir
 
 
@@ -258,8 +278,18 @@ if __name__ == "__main__":
     )
     parser.add_argument("bag_file", help="Full path to bagfile.")
     parser.add_argument("map_file", help="Full path to map file.")
-    parser.add_argument("-i", "--image-topic", default="/mgt/img_sampler/nav_cam/image_record", help="Image topic.")
-    parser.add_argument("-r", "--robot-config", default="bumble.config", help="Relative path to robot config.")
+    parser.add_argument(
+        "-i",
+        "--image-topic",
+        default="/mgt/img_sampler/nav_cam/image_record",
+        help="Image topic.",
+    )
+    parser.add_argument(
+        "-r",
+        "--robot-config",
+        default="bumble.config",
+        help="Relative path to robot config.",
+    )
     parser.add_argument("-w", "--world", default="iss", help="World being used.")
     parser.add_argument(
         "--use-bag-image-feature-msgs",

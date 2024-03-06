@@ -55,9 +55,10 @@
                 - tune/lessen loc time! (AA)
                   - reduce graph duration
                   - limit num projection factors
+
+                - update relative covariance in pose_with_covariance_interpolator! (AAAA)
  
             
-          - start cross compile!
           - why is astrobee shaking?
             - fix bias estimation
               - should be zero???
