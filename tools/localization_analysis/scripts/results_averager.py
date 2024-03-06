@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 # Copyright (c) 2017, United States Government, as represented by the
 # Administrator of the National Aeronautics and Space Administration.
@@ -34,13 +34,11 @@ def combined_results(csv_files):
         exit()
     names = dataframes[0].iloc[:, 0]
     combined_dataframes = pd.DataFrame(None, None, names)
-    for dataframe in dataframes:
-        trimmed_dataframe = pd.DataFrame(
-            dataframe.transpose().values[1:2], columns=names
-        )
-        combined_dataframes = combined_dataframes.append(
-            trimmed_dataframe, ignore_index=True
-        )
+    trimmed_dataframes = [
+        pd.DataFrame(dataframe.transpose().values[1:2], columns=names)
+        for dataframe in dataframes
+    ]
+    combined_dataframes = pd.concat(trimmed_dataframes, ignore_index=True)
     return combined_dataframes
 
 

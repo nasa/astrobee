@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 # Copyright (c) 2017, United States Government, as represented by the
 # Administrator of the National Aeronautics and Space Administration.
@@ -189,15 +189,13 @@ def parameter_sweep(
 def make_value_ranges():
     value_ranges = []
     value_names = []
-    steps = 10
+    steps = 8
 
     # tune num smart factors
     # value_ranges.append(np.logspace(-1, -6, steps, endpoint=True))
     # value_names.append('accel_bias_sigma')
-    value_ranges.append(np.logspace(-1, -6, steps, endpoint=True))
-    value_names.append("ii_gyro_sigma")
-    value_ranges.append(np.logspace(-1, -6, steps, endpoint=True))
-    value_names.append("ii_gyro_bias_sigma")
+    value_ranges.append(np.linspace(3, 10, steps, endpoint=True))
+    value_names.append("gv_op_nl_max_iterations")
 
 
 

@@ -43,6 +43,19 @@
           - tune on granite table bags!
             - what order to tune in????
                 - reset imu params to reasonable values? check gtsam? check original localization code?
+
+                - fix adding too many loc projection factors! (A)
+                - tune/lessen vio time! (AB)
+                  - tune num factors
+                  - tune factor noise
+                  - tune standstill noise
+                  - tune starting imu bias noise values
+                  - tune max iterations
+                  - reduce num factors? reduce graph size?
+                - tune/lessen loc time! (AA)
+                  - reduce graph duration
+                  - limit num projection factors
+ 
             
           - start cross compile!
           - why is astrobee shaking?
