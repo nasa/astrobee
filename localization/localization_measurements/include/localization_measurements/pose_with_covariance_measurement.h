@@ -21,6 +21,7 @@
 
 #include <localization_common/pose_with_covariance.h>
 #include <localization_common/time.h>
+#include <localization_common/timestamped_set.h>
 #include <localization_measurements/measurement.h>
 
 #include <gtsam/geometry/Pose3.h>
@@ -29,23 +30,27 @@ namespace localization_measurements {
 using PoseCovariance = Eigen::Matrix<double, 6, 6>;
 struct PoseWithCovarianceMeasurement : public Measurement {
   PoseWithCovarianceMeasurement(const gtsam::Pose3& pose, const PoseCovariance& covariance,
-                                const localization_common::Time timestamp)
-      : Measurement(timestamp), pose(pose), covariance(covariance) {}
+                                const localization_common::Time timestamp,
+                                const localization_common::TimestampedSet<PoseCovariance>& correlation_covariances = {})
+      : Measurement(timestamp), pose(pose), covariance(covariance), correlation_covariances(correlation_covariances) {}
 
   PoseWithCovarianceMeasurement(const localization_common::PoseWithCovariance& pose_with_covariance,
                                 const localization_common::Time timestamp)
       : Measurement(timestamp),
         pose(localization_common::GtPose(pose_with_covariance.pose)),
-        covariance(pose_with_covariance.covariance) {}
+        covariance(pose_with_covariance.covariance),
+        correlation_covariances(pose_with_covariance.correlation_covariances) {}
 
   localization_common::PoseWithCovariance PoseWithCovariance() const {
-    return localization_common::PoseWithCovariance(localization_common::EigenPose(pose), covariance);
+    return localization_common::PoseWithCovariance(localization_common::EigenPose(pose), covariance,
+                                                   correlation_covariances);
   }
 
   PoseWithCovarianceMeasurement() = default;
 
   gtsam::Pose3 pose;
   PoseCovariance covariance;
+  localization_common::TimestampedSet<PoseCovariance> correlation_covariances;
 };
 }  // namespace localization_measurements
 

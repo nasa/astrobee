@@ -210,12 +210,12 @@ def parameter_sweep(
 def make_value_ranges():
     value_ranges = []
     value_names = []
-    steps = 10
+    steps = 1
 
     # tune num smart factors
     # value_ranges.append(np.logspace(-1, -6, steps, endpoint=True))
     # value_names.append('accel_bias_sigma')
-    value_ranges.append(np.linspace(5, 100, steps, endpoint=True))
+    value_ranges.append(np.linspace(60, 60, steps, endpoint=True))
     value_names.append("gl_fa_loc_sm_projection_noise_scale")
 
     # q_gyro

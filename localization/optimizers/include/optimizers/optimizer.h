@@ -43,6 +43,10 @@ class Optimizer {
   // By default uses the calculated marginals to compute the covariances.
   virtual boost::optional<gtsam::Matrix> Covariance(const gtsam::Key& key) const;
 
+  // Calculates the covariance matrix wrt two nodes using the provided keys.
+  // Requires a successful round of optimization to have been performed.
+  boost::optional<gtsam::Matrix> Covariance(const gtsam::Key& key_a, const gtsam::Key& key_b) const;
+
   // Returns marginals if they have been calculated.
   boost::optional<const gtsam::Marginals&> marginals() const;
 

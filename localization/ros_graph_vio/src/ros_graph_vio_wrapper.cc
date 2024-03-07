@@ -125,7 +125,8 @@ boost::optional<ff_msgs::GraphVIOState> RosGraphVIOWrapper::GraphVIOStateMsg() {
   const lc::Time latest_time = times.back();
   latest_msg_time_ = latest_time;
   ff_msgs::GraphVIOState msg;
-  for (const auto& time : times) {
+  for (int i = 0; i < static_cast<int>(times.size()); ++i) {
+    const auto time = times[i];
     const auto combined_nav_state = nodes.Node(time);
     const auto keys = nodes.Keys(time);
     if (!combined_nav_state || keys.empty() || keys.size() != 3) {
@@ -139,8 +140,21 @@ boost::optional<ff_msgs::GraphVIOState> RosGraphVIOWrapper::GraphVIOStateMsg() {
       LogError("CombinedNavStateArrayMsg: Failed to get combined nav state covariances.");
       return boost::none;
     }
-    msg.combined_nav_states.combined_nav_states.push_back(
-      lc::CombinedNavStateToMsg(*combined_nav_state, *pose_covariance, *velocity_covariance, *imu_bias_covariance));
+    lc::TimestampedSet<lc::PoseCovariance> correlation_covariances;
+    // Add correlation covariances between this state and later states
+    // Start with the same timestamp to ensure first covariance matix
+    // is the self covariance
+    for (int j = i; j < static_cast<int>(times.size()); ++j) {
+      const lc::Time time_j = times[j];
+      const auto key_j = nodes.Keys(time_j)[0];
+      const auto covariance = graph_vio_->Covariance(keys[0], key_j);
+      if (covariance) {
+        correlation_covariances.Add(time_j, *covariance);
+      }
+    }
+
+    msg.combined_nav_states.combined_nav_states.push_back(lc::CombinedNavStateToMsg(
+      *combined_nav_state, *pose_covariance, *velocity_covariance, *imu_bias_covariance, correlation_covariances));
   }
   lc::TimeToHeader(*(nodes.LatestTimestamp()), msg.header);
   msg.child_frame_id = "odom";

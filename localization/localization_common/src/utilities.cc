@@ -155,6 +155,15 @@ CombinedNavStateCovariances CombinedNavStateCovariancesFromMsg(const ff_msgs::Co
   return CombinedNavStateCovariances(pose_covariance, velocity_covariance, imu_bias_covariance);
 }
 
+TimestampedSet<PoseCovariance> CorrelationCovariancesFromMsg(const ff_msgs::CombinedNavState& msg) {
+  TimestampedSet<PoseCovariance> correlation_covariances;
+  for (const auto& correlation_covariance : msg.correlation_covariances) {
+    correlation_covariances.Add(TimeFromRosTime(correlation_covariance.time),
+                                mc::EigenCovarianceFromMsg<6>(correlation_covariance.covariance));
+  }
+  return correlation_covariances;
+}
+
 gtsam::Vector3 RemoveGravityFromAccelerometerMeasurement(const gtsam::Vector3& global_F_gravity,
                                                          const gtsam::Pose3& body_T_imu,
                                                          const gtsam::Pose3& global_T_body,
@@ -168,19 +177,28 @@ gtsam::Vector3 RemoveGravityFromAccelerometerMeasurement(const gtsam::Vector3& g
 ff_msgs::CombinedNavState CombinedNavStateToMsg(const CombinedNavState& combined_nav_state,
                                                 const PoseCovariance& pose_covariance,
                                                 const Eigen::Matrix3d& velocity_covariance,
-                                                const Eigen::Matrix<double, 6, 6>& imu_bias_covariance) {
+                                                const Eigen::Matrix<double, 6, 6>& imu_bias_covariance,
+                                                const TimestampedSet<PoseCovariance>& correlation_covariances) {
   ff_msgs::CombinedNavState msg;
   TimeToHeader(combined_nav_state.timestamp(), msg.header);
   // Write CombinedNavState
   PoseToMsg(combined_nav_state.pose(), msg.pose.pose.pose);
-  msg_conversions::VectorToMsg(combined_nav_state.velocity(), msg.velocity.velocity);
-  msg_conversions::VectorToMsg(combined_nav_state.bias().accelerometer(), msg.imu_bias.accelerometer_bias);
-  msg_conversions::VectorToMsg(combined_nav_state.bias().gyroscope(), msg.imu_bias.gyroscope_bias);
+  mc::VectorToMsg(combined_nav_state.velocity(), msg.velocity.velocity);
+  mc::VectorToMsg(combined_nav_state.bias().accelerometer(), msg.imu_bias.accelerometer_bias);
+  mc::VectorToMsg(combined_nav_state.bias().gyroscope(), msg.imu_bias.gyroscope_bias);
 
   // Write covariances
-  msg_conversions::EigenCovarianceToMsg(pose_covariance, msg.pose.pose.covariance);
-  msg_conversions::EigenCovarianceToMsg(velocity_covariance, msg.velocity.covariance);
-  msg_conversions::EigenCovarianceToMsg(imu_bias_covariance, msg.imu_bias.covariance);
+  mc::EigenCovarianceToMsg(pose_covariance, msg.pose.pose.covariance);
+  mc::EigenCovarianceToMsg(velocity_covariance, msg.velocity.covariance);
+  mc::EigenCovarianceToMsg(imu_bias_covariance, msg.imu_bias.covariance);
+
+  // Write correlation pose covariances if available
+  for (const auto& correlation_covariance : correlation_covariances.set()) {
+    ff_msgs::PoseCovarianceStamped covariance_msg;
+    mc::EigenCovarianceToMsg(correlation_covariance.second, covariance_msg.covariance);
+    TimeToMsg(correlation_covariance.first, covariance_msg.time);
+    msg.correlation_covariances.push_back(covariance_msg);
+  }
   return msg;
 }
 
@@ -276,9 +294,12 @@ PoseWithCovariance Interpolate(const PoseWithCovariance& lower_bound_pose, const
                                const double alpha) {
   const Eigen::Isometry3d interpolated_pose = Interpolate(lower_bound_pose.pose, upper_bound_pose.pose, alpha);
   // TODO(rsoussan): Implement this properly
-  const PoseCovariance interpolated_covariance =
+  const PoseCovariance&  interpolated_covariance =
     alpha > 0.5 ? upper_bound_pose.covariance : lower_bound_pose.covariance;
-  return PoseWithCovariance(interpolated_pose, interpolated_covariance);
+  const auto&  correlation_covariances =
+    alpha > 0.5 ? upper_bound_pose.correlation_covariances : lower_bound_pose.correlation_covariances;
+
+  return PoseWithCovariance(interpolated_pose, interpolated_covariance, correlation_covariances);
 }
 
 gtsam::noiseModel::Robust::shared_ptr Robust(const gtsam::SharedNoiseModel& noise, const double huber_k) {

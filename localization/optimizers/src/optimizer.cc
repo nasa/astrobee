@@ -33,6 +33,16 @@ boost::optional<gtsam::Matrix> Optimizer::Covariance(const gtsam::Key& key) cons
   }
 }
 
+boost::optional<gtsam::Matrix> Optimizer::Covariance(const gtsam::Key& key_a, const gtsam::Key& key_b) const {
+  if (!marginals_) return boost::none;
+  try {
+    return marginals_->jointMarginalCovariance({key_a, key_b}).fullMatrix();
+  } catch (...) {
+    LogError("Covariance: Failed to get covariance between key " << key_a << " and " << key_b);
+    return boost::none;
+  }
+}
+
 void Optimizer::CalculateMarginals(const gtsam::NonlinearFactorGraph& factors, const gtsam::Values& values) {
   try {
     marginals_ = gtsam::Marginals(factors, values, marginals_factorization_);

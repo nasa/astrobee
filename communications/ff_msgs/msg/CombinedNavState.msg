@@ -19,3 +19,4 @@ Header header
 geometry_msgs/PoseWithCovarianceStamped pose 
 VelocityWithCovariance velocity
 ImuBiasWithCovariance imu_bias
+PoseCovarianceStamped[] correlation_covariances

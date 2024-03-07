@@ -83,6 +83,10 @@ class GraphOptimizer {
   // Requires a successful round of optimization to have been performed.
   boost::optional<gtsam::Matrix> Covariance(const gtsam::Key& key) const;
 
+  // Calculates the covariance matrix wrt two nodes for the provided keys.
+  // Requires a successful round of optimization to have been performed.
+  boost::optional<gtsam::Matrix> Covariance(const gtsam::Key& key_a, const gtsam::Key& key_b) const;
+
   // Returns set of factors currently in the graph.
   const gtsam::NonlinearFactorGraph& factors() const;
 
