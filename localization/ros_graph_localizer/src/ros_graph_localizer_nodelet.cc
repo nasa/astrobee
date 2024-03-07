@@ -166,6 +166,8 @@ void RosGraphLocalizerNodelet::PublishWorldTBodyTF() {
 
   const auto world_T_body_tf = lc::PoseToTF(*latest_pose, "world", "body",
                                             *latest_timestamp, platform_name_);
+  if (world_T_body_tf.header.stamp == last_tf_body_time_) return;
+  last_tf_body_time_ = world_T_body_tf.header.stamp;
   transform_pub_.sendTransform(world_T_body_tf);
 }
 

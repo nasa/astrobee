@@ -121,6 +121,7 @@ class RosGraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
   int last_mode_ = -1;
 
   ros::Time last_heartbeat_time_;
+  ros::Time last_tf_body_time_;
   ros::Time last_tf_dock_time_;
 };
 }  // namespace ros_graph_localizer
