@@ -141,13 +141,13 @@ boost::optional<ff_msgs::GraphVIOState> RosGraphVIOWrapper::GraphVIOStateMsg() {
       return boost::none;
     }
     lc::TimestampedSet<lc::PoseCovariance> correlation_covariances;
-    // Add correlation covariances between this state and later states
-    // Start with the same timestamp to ensure first covariance matix
+    // Add correlation covariances between earlier states and this state
+    // End with the same timestamp to ensure last covariance matix
     // is the self covariance
-    for (int j = i; j < static_cast<int>(times.size()); ++j) {
+    for (int j = 0; j <= i; ++j) {
       const lc::Time time_j = times[j];
       const auto key_j = nodes.Keys(time_j)[0];
-      const auto covariance = graph_vio_->Covariance(keys[0], key_j);
+      const auto covariance = graph_vio_->Covariance(key_j, keys[0]);
       if (covariance) {
         correlation_covariances.Add(time_j, *covariance);
       }
