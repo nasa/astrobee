@@ -100,14 +100,13 @@ void OfflineReplay::Run() {
     if (params_.log_relative_time) LogInfo("Run: Rel t: " << current_time - start_time);
     const auto flight_mode_msg = live_measurement_simulator_->GetFlightModeMessage(current_time);
     if (flight_mode_msg) {
-      // graph_vio_simulator_->BufferFlightModeMsg(*flight_mode_msg);
+      graph_vio_simulator_->BufferFlightModeMsg(*flight_mode_msg);
       pose_extrapolator_wrapper_.FlightModeCallback(*flight_mode_msg);
     }
     const auto imu_msg = live_measurement_simulator_->GetImuMessage(current_time);
     if (imu_msg) {
       graph_vio_simulator_->BufferImuMsg(*imu_msg);
       pose_extrapolator_wrapper_.ImuCallback(*imu_msg);
-      // imu_bias_tester_wrapper_.ImuCallback(*imu_msg);
 
       // Save extrapolated loc msg if available
       const auto extrapolated_loc_msg = pose_extrapolator_wrapper_.LatestExtrapolatedLocalizationMsg();
@@ -197,10 +196,7 @@ void OfflineReplay::Run() {
       } else {
          pose_extrapolator_wrapper_.LocalizationStateCallback(*localization_msg);
         SaveMsg(*localization_msg, TOPIC_GRAPH_LOC_STATE, results_bag_);
-    /*const auto imu_bias_tester_predicted_states =
-      imu_bias_tester_wrapper_.LocalizationStateCallback(*localization_msg);
-    SaveImuBiasTesterPredictedStates(imu_bias_tester_predicted_states, results_bag_);*/
-      }
+     }
       // Save ar tag pose after updating graph so latest world_T_dock is estimated.
       if (latest_ar_msg_) {
         if (static_cast<int>(ar_msg->landmarks.size()) >= params_.ar_min_num_landmarks) {
