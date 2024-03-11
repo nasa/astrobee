@@ -309,6 +309,10 @@ void VocabDB::LoadProtobuf(google::protobuf::io::ZeroCopyInputStream* input, int
   }
 }
 
+size_t VocabDB::ReportMemoryUsage(std::vector<std::pair<std::string, size_t> >& partsOutput) {
+  return binary_db->reportMemoryUsage(partsOutput);
+}
+
 void BuildDB(std::string const& map_file,
                              std::string const& descriptor,
                              int depth, int branching_factor, int restarts) {

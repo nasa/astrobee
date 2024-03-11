@@ -262,6 +262,11 @@ struct SparseMap {
 
   std::string GetDetectorName() { return detector_.GetDetectorName(); }
 
+  /**
+   * Report data structure memory usage to stdout.
+   **/
+  void ReportMemoryUsage();
+
   // stored in map file
   std::vector<std::string> cid_to_filename_;
   // TODO(bcoltin) replace Eigen2Xd everywhere with one keypoint class
