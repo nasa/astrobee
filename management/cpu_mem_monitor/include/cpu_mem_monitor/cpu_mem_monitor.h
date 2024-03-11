@@ -33,6 +33,7 @@
 
 #include <sys/types.h>
 #include <sys/sysinfo.h>
+#include <shared_mutex>
 
 #include <config_reader/config_reader.h>
 #include <cpu_mem_monitor/cpu.h>
@@ -40,7 +41,7 @@
 #include <ff_msgs/CpuStateStamped.h>
 #include <ff_msgs/MemState.h>
 #include <ff_msgs/MemStateStamped.h>
-#include <ff_util/ff_names.h>
+#include <ff_common/ff_names.h>
 #include <ff_util/ff_nodelet.h>
 
 #include <cstdint>
@@ -74,7 +75,7 @@ class CpuMemMonitor : public ff_util::FreeFlyerNodelet {
 
  private:
   // Get the PIDs of the nodes to monitor
-  void GetPIDs(ros::TimerEvent const &te);
+  void GetPIDs();
 
   // Assert CPU loads and report if too high
   void AssertCPULoadHighFaultCallback(ros::TimerEvent const& te);
@@ -119,18 +120,19 @@ class CpuMemMonitor : public ff_util::FreeFlyerNodelet {
            virt_percentage;
   };
 
+  std::shared_timed_mutex pid_lock_;
+
   config_reader::ConfigReader config_params_;
   ros::Publisher cpu_state_pub_;            // Cpu stats publisher
   ros::Publisher mem_state_pub_;            // Memory stats publisher
   ros::Timer reload_params_timer_;          // Ckeck if parameters were updated
-  ros::Timer pid_timer_;                    // Update PIDs
   ros::Timer stats_timer_;                  // Update stats
   ros::Timer assert_cpu_load_fault_timer_;  // Check cpu load limits
   ros::Timer clear_cpu_load_fault_timer_;   // Clear cpu fault timer
   ros::Timer assert_mem_load_fault_timer_;  // Check memory load limits
   ros::Timer clear_mem_load_fault_timer_;   // Clear memory fault timer
   int pub_queue_size_;                      // Monitor publishing queue size
-  double update_freq_hz_, update_pid_hz_;   // Publishing and PID update frequency
+  double update_freq_hz_;                   // Publishing update frequency
   struct sysinfo mem_info_;                 // Scope memory info from sysinfo
 
   unsigned int ncpus_;          // Number of cpu's

@@ -19,6 +19,9 @@
 """
 Master script to apply all passes of processing needed to fix our legacy bag
 files. The actual processing steps are found in Makefile.rosbag_fix_all.
+
+Fixed bag files will be grouped by folder at the end and each group
+will be merged. To suppress this, use --no-merge.
 """
 
 from __future__ import print_function
@@ -38,7 +41,7 @@ def dosys(cmd):
 
 
 def rosbag_fix_all(
-    inbag_paths_in, jobs, debayer, decode_haz, filter_args, deserialize=False
+    inbag_paths_in, jobs, debayer, decode_haz, filter_args, no_merge, deserialize=False
 ):
     this_folder = os.path.dirname(os.path.realpath(__file__))
     makefile = os.path.join(this_folder, "Makefile.rosbag_fix_all")
@@ -119,29 +122,31 @@ def rosbag_fix_all(
     else:
         logging.warning("Not all bags were fixed successfully (see errors above).")
         logging.warning(
-            "You can debug any failed output bags - ending in .fix_all_pre_check.bag"
-        )
-        logging.warning(
-            "If you want to try again, clean first: rm *.fix_all_pre_check.bag"
+            "If you want to try again, you may need to clean the intermediate results."
         )
         return ret1
 
-    # Merge resulting bags
-    inbag_folders_in = list(set([os.path.split(p)[0] for p in inbag_paths_in]))
-    for inbag_folder_in in inbag_folders_in:
-        output_stream = os.popen(
-            "catkin_find --first-only bag_processing scripts/rosbag_merge.py"
-        )
-        if inbag_folder_in == "":
-            path = ""
-        else:
-            path = " -d " + inbag_folder_in
-        merge_bags_path = (
-            output_stream.read().rstrip() + path + " --input-bag-suffix .fix_all.bag"
-        )
-        ret2 = dosys(merge_bags_path)
+    if no_merge:
+        return ret1
 
-    return ret2
+    # Group fixed bags by folder and merge each group.
+    inbag_folders_in = list(
+        set([os.path.dirname(os.path.realpath(p)) for p in inbag_paths_in])
+    )
+    rosbag_merge = (
+        os.popen("catkin_find --first-only bag_processing scripts/rosbag_merge.py")
+        .read()
+        .rstrip()
+    )
+    merge_errors = 0
+    for inbag_folder_in in inbag_folders_in:
+        ret = dosys(
+            "%s -d %s --input-bag-suffix .fix_all.bag" % (rosbag_merge, inbag_folder_in)
+        )
+        if ret != 0:
+            merge_errors += 1
+
+    return 0 if (merge_errors == 0) else 1
 
 
 class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter):
@@ -184,6 +189,12 @@ if __name__ == "__main__":
         default="",
         type=str,
     )
+    parser.add_argument(
+        "--no-merge",
+        help="skip merging bag files grouped by directory",
+        default=False,
+        action="store_true",
+    )
     parser.add_argument("inbag", nargs="+", help="input bag")
 
     args = parser.parse_args()
@@ -195,6 +206,7 @@ if __name__ == "__main__":
         args.debayer,
         args.decode_haz,
         args.filter,
+        args.no_merge,
         deserialize=args.deserialize,
     )
 

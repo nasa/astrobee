@@ -20,7 +20,7 @@
 #include <ros/ros.h>
 
 // FSW standard naming
-#include <ff_util/ff_names.h>
+#include <ff_common/ff_names.h>
 
 // Standard messages
 #include <ff_hw_msgs/EpsBatteryLocation.h>

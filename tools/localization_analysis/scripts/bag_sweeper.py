@@ -28,9 +28,9 @@ import multiprocessing
 import os
 import sys
 
-import bag_sweep_results_plotter 
+import bag_sweep_results_plotter
 import localization_common.utilities as lu
-import results_averager 
+import results_averager
 
 
 class OfflineReplayParams(object):
@@ -61,13 +61,7 @@ def load_params(param_file):
         for row in reader:
             offline_replay_params_list.append(
                 OfflineReplayParams(
-                    row[0],
-                    row[1],
-                    row[2],
-                    row[3],
-                    row[4],
-                    row[5],
-                    row[6],
+                    row[0], row[1], row[2], row[3], row[4], row[5], row[6]
                 )
             )
 
@@ -88,6 +82,7 @@ def combine_results_in_csv_file(offline_replay_params, output_dir):
     combined_dataframe.insert(0, "Bag", bag_names)
     combined_dataframe.to_csv(combined_results_csv_file, index=False)
     return combined_results_csv_file
+
 
 # Ensure files in params exist
 def check_params(offline_replay_params_list):
@@ -120,10 +115,6 @@ def run_offline_replay(params, output_dir):
         + params.image_topic
         + " -o "
         + output_bag_path
-        + " -r "
-        + params.robot_config_file
-        + " -w "
-        + params.world
         + " -s "
         + output_csv_file
         + " -f "

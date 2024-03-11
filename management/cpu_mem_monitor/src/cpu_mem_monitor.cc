@@ -46,13 +46,11 @@ void CpuMemMonitor::Initialize(ros::NodeHandle *nh) {
   // All state messages are latching
   cpu_state_pub_ = nh->advertise<ff_msgs::CpuStateStamped>(
                                             TOPIC_MANAGEMENT_CPU_MONITOR_STATE,
-                                            pub_queue_size_,
-                                            true);
+                                            pub_queue_size_);
   // All state messages are latching
   mem_state_pub_ = nh->advertise<ff_msgs::MemStateStamped>(
                                             TOPIC_MANAGEMENT_MEM_MONITOR_STATE,
-                                            pub_queue_size_,
-                                            true);
+                                            pub_queue_size_);
 
   // Timer for asserting the cpu load too high fault
   assert_cpu_load_fault_timer_ = nh->createTimer(
@@ -85,13 +83,6 @@ void CpuMemMonitor::Initialize(ros::NodeHandle *nh) {
                               this,
                               true,
                               false);
-
-  // Timer for updating PID values of interest nodes
-  pid_timer_ = nh->createTimer(ros::Duration(1 / update_pid_hz_),
-                               &CpuMemMonitor::GetPIDs,
-                               this,
-                               false,
-                               true);
 
   // Timer for checking cpu and memory stats. Timer is not one shot and start it right away
   stats_timer_ = nh->createTimer(ros::Duration(1 / update_freq_hz_),
@@ -157,6 +148,9 @@ void CpuMemMonitor::Initialize(ros::NodeHandle *nh) {
   // Initialize the memory state message
   mem_state_msg_.name = monitor_host_;
   mem_state_msg_.nodes.resize(nodes_pid_.size());
+
+  std::thread pid_thread(&cpu_mem_monitor::CpuMemMonitor::GetPIDs, this);
+  pid_thread.detach();
 }
 
 bool CpuMemMonitor::ReadParams() {
@@ -172,15 +166,6 @@ bool CpuMemMonitor::ReadParams() {
   // Get table for this processor
   config_reader::ConfigReader::Table processor_config(&config_params_,
                                                       processor_name_.c_str());
-
-  // get udpate pid frequency
-  if (!processor_config.GetPosReal("update_pid_hz", &update_pid_hz_)) {
-    err_msg = "CPU monitor: Update PID frequency not specified for " +
-                                                                processor_name_;
-    FF_ERROR(err_msg);
-    this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
-    return false;
-  }
 
   // get udpate stats frequency
   if (!processor_config.GetPosReal("update_freq_hz", &update_freq_hz_)) {
@@ -257,16 +242,18 @@ bool CpuMemMonitor::ReadParams() {
     FF_ERROR(err_msg);
     this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
   }
-  for (int i = 0; i < nodes.GetSize(); i++) {
-    config_reader::ConfigReader::Table node;
-    if (!nodes.GetTable(i + 1, &node)) {
-      FF_ERROR("Could not get node table");
-      return false;
-    }
-    std::string name;
-    if (node.GetStr("name", &name)) {
-      NODELET_DEBUG_STREAM("Read node " << name);
-      nodes_pid_.insert(std::pair<std::string, int>(name, 0));
+  if (nodes_pid_.size() == 0) {  // modifying nodes while running not supported
+    for (int i = 0; i < nodes.GetSize(); i++) {
+      config_reader::ConfigReader::Table node;
+      if (!nodes.GetTable(i + 1, &node)) {
+        FF_ERROR("Could not get node table");
+        return false;
+      }
+      std::string name;
+      if (node.GetStr("name", &name)) {
+        NODELET_DEBUG_STREAM("Read node " << name);
+        nodes_pid_.insert(std::pair<std::string, int>(name, 0));
+      }
     }
   }
   return true;
@@ -310,7 +297,7 @@ void CpuMemMonitor::ClearMemLoadHighFaultCallback(ros::TimerEvent const& te) {
   load_fault_state_ = CLEARED;
 }
 
-void CpuMemMonitor::GetPIDs(ros::TimerEvent const &te) {
+void CpuMemMonitor::GetPIDs() {
   // Go through all the node list and get the PID
   XmlRpc::XmlRpcValue args, result, payload;
   std::map<std::string, int>::iterator it;
@@ -323,11 +310,13 @@ void CpuMemMonitor::GetPIDs(ros::TimerEvent const &te) {
       args[0] = ros::this_node::getName();
       args[1] = it->first;
       if (!ros::master::execute("lookupNode", args, result, payload, true)) {
+        std::unique_lock<std::shared_timed_mutex> lock(pid_lock_);
         it->second = -1;
         continue;
       }
       std::string node_host = getHostfromURI(result[2]);
       if (node_host.empty()) {
+        std::unique_lock<std::shared_timed_mutex> lock(pid_lock_);
         it->second = -1;
         continue;
       }
@@ -335,6 +324,7 @@ void CpuMemMonitor::GetPIDs(ros::TimerEvent const &te) {
       // If it is not in the same cpu
       if (node_host != monitor_host_) {
         // Insert it on the list
+        std::unique_lock<std::shared_timed_mutex> lock(pid_lock_);
         it->second = -1;
         std::string err_msg = "CPU Memory Monitor: Specified node " + it->first + "in" + monitor_host_ +
                               " and not in the same cpu as manager " + monitor_host_ + ".";
@@ -348,6 +338,7 @@ void CpuMemMonitor::GetPIDs(ros::TimerEvent const &te) {
       FILE* pipe = popen(("rosnode info " + it->first +
                           " 2>/dev/null | grep Pid| cut -d' ' -f2").c_str(), "r");
       if (!pipe) {
+        std::unique_lock<std::shared_timed_mutex> lock(pid_lock_);
         it->second = -1;
         std::string err_msg = "CPU Memory Monitor: Could not open rosnode process for node " + it->first;
         FF_ERROR(err_msg);
@@ -359,6 +350,7 @@ void CpuMemMonitor::GetPIDs(ros::TimerEvent const &te) {
 
       if (pid.empty()) {
         // Node not found
+        std::unique_lock<std::shared_timed_mutex> lock(pid_lock_);
         it->second = -1;
         std::string err_msg = "CPU Memory Monitor: Specified node " +
                               it->first + "does not have a PID.";
@@ -367,6 +359,7 @@ void CpuMemMonitor::GetPIDs(ros::TimerEvent const &te) {
       }
       pclose(pipe);
       // Insert it on the list
+      std::unique_lock<std::shared_timed_mutex> lock(pid_lock_);
       it->second = std::stoi(pid);
     }
   }
@@ -486,6 +479,7 @@ int CpuMemMonitor::CollectCPUStats() {
   std::map<std::string, int>::iterator it;
   std::map<std::string, uint64_t>::iterator it_load;
   int i;
+  std::shared_lock<std::shared_timed_mutex> lock(pid_lock_);
   for ( i = 0, it = nodes_pid_.begin(); it != nodes_pid_.end(); i++, it++ ) {
     // Look if PID is invalid
     if (it->second <= 0)
@@ -627,6 +621,7 @@ int CpuMemMonitor::CollectMemStats() {
   // Go through all the node list and check memory usage
   int i = -1;
   std::map<std::string, int>::iterator it;
+  std::shared_lock<std::shared_timed_mutex> lock(pid_lock_);
   for ( it = nodes_pid_.begin(); it != nodes_pid_.end(); it++ ) {
     // Increment counter
     i++;

@@ -39,13 +39,13 @@ PROJECT_NAME           = "NASA Astrobee Robot Software"
 # control system is used.
 
 
-PROJECT_NUMBER         = 0.16.6
+PROJECT_NUMBER         = 0.17.2
 
 # Using the PROJECT_BRIEF tag one can provide an optional one line description
 # for a project that appears at the top of each page and should give viewer a
 # quick idea about the purpose of the project. Keep the description short.
 
-PROJECT_BRIEF          = "Flight software for the Astrobee robot operating inside the International Space Station."
+PROJECT_BRIEF          = "Flight software for the Astrobee robots operating inside the International Space Station."
 
 # With the PROJECT_LOGO tag one can specify a logo or an icon that is included
 # in the documentation. The maximum height of the logo should not exceed 55
@@ -848,7 +848,6 @@ EXCLUDE                =
 #                         build \
 #                         armhf \
 #                         cmake \
-#                         gnc/matlab/code_generation \
 #                         submodules
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
@@ -865,10 +864,7 @@ EXCLUDE_SYMLINKS       = YES
 # Note that the wildcards are matched against the file with absolute path, so to
 # exclude all test directories for example use the pattern */test/*
 
-EXCLUDE_PATTERNS       = */external/*/* \
-                         */tools/visualeyez/matlab/* \
-                         */gnc/matlab/code_generation/* \
-                         */hardware/pmc_actuator/tools/*.csv \
+EXCLUDE_PATTERNS       = */hardware/pmc_actuator/tools/*.csv \
                          */diagrams/nodes_helper.puml \
                          */diagrams/nodes.puml \
                          */diagrams/colors.puml \

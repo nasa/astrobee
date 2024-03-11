@@ -30,7 +30,7 @@ find_package(catkin2 REQUIRED COMPONENTS
 )
 
 find_package(Eigen3 REQUIRED)
-SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
+LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
 find_package(JsonCpp REQUIRED)
 
 catkin_package(

@@ -25,6 +25,7 @@ import os
 import sys
 
 import rosbag
+
 import utilities.utilities
 
 if __name__ == "__main__":

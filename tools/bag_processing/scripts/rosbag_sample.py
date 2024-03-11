@@ -33,8 +33,9 @@ import os
 
 import genpy
 import rosbag
-import rosbag_rewrite_types as rrt
 import roslib
+
+import rosbag_rewrite_types as rrt
 
 
 def sample_bags(inbag_paths, outbag_path, rules_files, verbose=False):
@@ -80,10 +81,7 @@ if __name__ == "__main__":
         action="store_true",
     )
     parser.add_argument(
-        "-o",
-        "--output",
-        help="path for output bag",
-        default="sample_bags.bag",
+        "-o", "--output", help="path for output bag", default="sample_bags.bag"
     )
     parser.add_argument(
         "-r",

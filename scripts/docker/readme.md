@@ -48,6 +48,33 @@ You can manage your Dev Containers configuration using the files in the `.devcon
 
 You can start by selecting `View->Terminal` in the VSCode graphical interface. This will display a terminal session inside the Docker container where you can run arbitrary commands. Your container will persist throughout your VSCode session, and changes you make using the VSCode editor will be reflected inside the container, making it easy to do quick interactive edit/build/test cycles.
 
+## Enable x-forwarding from the Dev Container
+
+In a cmd line in your host environment (not in the docker container) run:
+```bash
+xhost local:docker
+```
+this needs to be done everytime you restart vscode, and enables the screen forwarding such that you can open graphical guis like rviz.
+
+## Building + testing the code
+
+This runs inside the Docker container:
+
+```bash
+catkin build
+catkin build --make-args tests
+catkin build --make-args test
+source devel/setup.bash
+catkin_test_results build
+```
+
+For testing, you can alternatively use the script to produces better debug output if there is a failed test:
+```bash
+./scripts/run_tests.sh
+```
+
+For more information on running the simulator and moving the robot, please see the \ref running-the-sim.
+
 (Going forward, we could add a lot of tips here about how best to use VSCode inside the container.)
 
 # Option 2: Using the Docker support scripts
@@ -124,7 +151,7 @@ All pre-built remote images are available on [GitHub here](https://github.com/na
 
 By default, the build script will automatically detect your host's Ubuntu OS version and configure the Docker image to use the same version using `Dockerfile` `ARGS`.
 
-However, there is no requirement for the host OS and the Docker image OS to match.  You can override the default and select a specific Docker image Ubuntu version by specifying `--xenial`, `--bionic`, or `--focal` for Ubuntu 16.04, 18.04, or 20.04 docker images, respectively.
+However, there is no requirement for the host OS and the Docker image OS to match.  You can override the default and select a specific Docker image Ubuntu version by specifying `--xenial` or `--focal` for Ubuntu 16.04 or 20.04 docker images, respectively.
 
 For more information about all the build arguments:
 
@@ -134,14 +161,13 @@ For more information about all the build arguments:
 
 The `build.sh` script normally manages these `Dockerfile` `ARGS` but you can set them yourself if you run `docker build` manually:
 
-- `UBUNTU_VERSION` - The version of Ubuntu to use. Valid values are "16.04", "18.04", and "20.04".
+- `UBUNTU_VERSION` - The version of Ubuntu to use. Valid values are "16.04" and "20.04".
 - `ROS_VERSION` - The version of ROS to use. Valid values are "kinetic", "melodic", and "noetic".
 - `PYTHON` - The version of Python to use. Valid values are "" (an empty string representing Python 2) and "3".
 
 Constraints:
 - If `UBUNTU_VERSION` is `"16.04"`, `ROS_VERSION` and `PYTHON` must be `"kinetic"` and `""` respectively.
-- If `UBUNTU_VERSION` is `"18.04"`, `ROS_VERSION` and `PYTHON` must be `"melodic"` and `""` respectively.
-- If `UBUNTU_VERSION` is `"20.04"`, `ROS_VERSION` and `PYTHON` must be `"neotic"` and `"3"` respectively.
+- If `UBUNTU_VERSION` is `"20.04"`, `ROS_VERSION` and `PYTHON` must be `"noetic"` and `"3"` respectively.
 
 The Docker files also accept args to use local or container registry images.
 
@@ -202,8 +228,8 @@ argument parsing more predictable.)
 
 As with `build.sh`, by default, the docker image OS version will be
 configured to match your host's OS version, but you can override that
-by specifying the `--xenial`, `--bionic`, or `--focal` option for
-Ubuntu 16.04, 18.04, or 20.04 docker images, respectively.
+by specifying the `--xenial` or `--focal` option for
+Ubuntu 16.04 or 20.04 docker images, respectively.
 
 Use `--remote` to fetch and run a pre-built Astrobee docker
 image. (Omit `--remote` to run using a docker image built locally by
@@ -239,7 +265,7 @@ The package argument is optional. The default is to build/test all
 packages.
 
 If debugging a CI failure that is specific to a particular OS version,
-remember to pass `run.sh` the `--xenial`, `--bionic`, or `--focal`
+remember to pass `run.sh` the `--xenial` or `--focal`
 option to select the right OS version to replicate the failure.
 
 Note: integration tests that use Gazebo simulation will be silently
@@ -283,7 +309,7 @@ Next, download the cross toolchain and install the chroot:
 mkdir -p $ARMHF_TOOLCHAIN
 cd $HOME/arm_cross
 $SOURCE_PATH/submodules/platform/fetch_toolchain.sh
-$SOURCE_PATH/submodules/platform/rootfs/make_xenial.sh dev $ARMHF_CHROOT_DIR
+$SOURCE_PATH/submodules/platform/rootfs/make_chroot.sh xenial dev $ARMHF_CHROOT_DIR
 ```
 
 From the root of the repository, run:

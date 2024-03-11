@@ -19,8 +19,6 @@
 #ifndef FAM_FAM_H_
 #define FAM_FAM_H_
 
-#include <gnc_autocode/fam.h>
-
 #include <ros/node_handle.h>
 #include <ros/publisher.h>
 #include <ros/subscriber.h>
@@ -28,7 +26,7 @@
 #include <ff_msgs/FamCommand.h>
 #include <ff_msgs/FlightMode.h>
 
-#include <ff_util/ff_names.h>
+#include <ff_common/ff_names.h>
 #include <ff_util/perf_timer.h>
 
 #include <Eigen/Dense>
@@ -48,34 +46,28 @@ class Fam {
  public:
   explicit Fam(ros::NodeHandle* nh);
   ~Fam();
-  void Step(ex_time_msg* ex_time, cmd_msg* cmd, ctl_msg* ctl);
+  void Step();
 
  protected:
   void ReadParams(void);
   void CtlCallBack(const ff_msgs::FamCommand & c);
   void FlightModeCallback(const ff_msgs::FlightMode::ConstPtr& mode);
   void InertiaCallback(const geometry_msgs::InertiaStamped::ConstPtr& inertia);
-  void TestTwoVectors(const char* name, const Eigen::Matrix<float, 6, 1> new_array,
-                      const float old_array[], float tolerance);
 
-  gnc_autocode::GncFamAutocode gnc_;
   pmc::Fam fam_;
 
   ros::Subscriber ctl_sub_;
   ros::Subscriber flight_mode_sub_, inertia_sub_;
   ros::Publisher pmc_pub_;
 
-  config_reader::ConfigReader config_;
+  // config_reader::ConfigReader config_;
   ff_util::PerfTimer pt_fam_;
-  ros::Timer config_timer_;
+  // ros::Timer config_timer_;
 
   std::mutex mutex_speed_;
-  uint8_t speed_;
   std::mutex mutex_mass_;
   Eigen::Vector3f center_of_mass_;
   bool inertia_received_;
-  bool use_old_fam_;
-  bool compare_fam_;
 
   pmc::FamInput input_;
 };

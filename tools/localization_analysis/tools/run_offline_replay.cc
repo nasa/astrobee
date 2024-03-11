@@ -55,10 +55,10 @@ int main(int argc, char** argv) {
     "Use image feature msgs from the bagfile or regenerate them from images.")(
     "graph-config-path-prefix,g", po::value<std::string>(&graph_config_path_prefix)->default_value(""),
     "Graph config path prefix");
+
   po::positional_options_description p;
   p.add("bagfile", 1);
   p.add("map-file", 1);
-  p.add("config-path", 1);
   po::variables_map vm;
   try {
     po::store(po::command_line_parser(argc, argv).options(desc).positional(p).run(), vm);

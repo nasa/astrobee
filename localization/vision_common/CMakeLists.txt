@@ -30,7 +30,7 @@ find_package(catkin2 REQUIRED COMPONENTS
 find_package(GTSAM REQUIRED)
 
 # Find OpenCV3
-SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
+LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
 find_package(OpenCV331 REQUIRED)
 
 find_package(Eigen3 REQUIRED)

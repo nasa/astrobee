@@ -24,7 +24,7 @@
 #include <ff_msgs/CompressedFile.h>
 #include <ff_msgs/CompressedFileAck.h>
 #include <ff_msgs/PlanStatusStamped.h>
-#include <ff_util/ff_names.h>
+#include <ff_common/ff_names.h>
 
 #include <boost/filesystem.hpp>
 
@@ -42,6 +42,8 @@
 #include <string>
 #include <vector>
 
+#define MAX_COUNT 6
+
 namespace fs = boost::filesystem;
 namespace io = boost::iostreams;
 
@@ -57,6 +59,8 @@ bool ValidateCompression(const char* name, std::string const &value) {
 
 DEFINE_string(compression, "none",
               "Type of compression [none, deflate, gzip]");
+DEFINE_string(ns, "", "Robot namespace");
+DEFINE_bool(remote, false, "Whether target command is remote robot");
 
 constexpr uintmax_t kMaxSize = 128 * 1024;
 
@@ -75,7 +79,10 @@ void on_cf_ack(ff_msgs::CompressedFileAckConstPtr const& cf_ack) {
   // compressed file ack is latched so we need to check the timestamp to make
   // sure this plan is being acked
   // ROS_WARN_STREAM(plan_pub_time << " : " << cf_ack->header.stamp);
-  if (plan_pub_time <= cf_ack->header.stamp) {
+
+  // If remote and in the granite lab, the clocks of the robots might not be
+  // properly synchronized because we do it manually
+  if (plan_pub_time <= cf_ack->header.stamp + ros::Duration(5.0)) {
     ROS_INFO("Compressed file ack is valid! Sending set plan!");
     ff_msgs::CommandStamped cmd;
     cmd.cmd_name = ff_msgs::CommandConstants::CMD_NAME_SET_PLAN;
@@ -90,7 +97,10 @@ void on_plan_status(ff_msgs::PlanStatusStamped::ConstPtr const& ps) {
   // plan status is latched so we need to check the timestamp to make sure this
   // plan is loaded
   // ROS_WARN_STREAM(plan_pub_time << " : " << ps->header.stamp);
-  if (plan_pub_time <= ps->header.stamp) {
+
+  // If remote and in the granite lab, the clocks of the robots might not be
+  // properly synchronized because we do it manually
+  if (plan_pub_time <= ps->header.stamp + ros::Duration(5.0)) {
     ff_msgs::CommandStamped cmd;
     cmd.cmd_name = ff_msgs::CommandConstants::CMD_NAME_RUN_PLAN;
     cmd.subsys_name = "Astrobee";
@@ -104,7 +114,7 @@ void on_plan_status(ff_msgs::PlanStatusStamped::ConstPtr const& ps) {
 int main(int argc, char** argv) {
   ff_common::InitFreeFlyerApplication(&argc, &argv);
   ros::init(argc, argv, "plan_pub");
-  ros::NodeHandle n;
+  ros::NodeHandle n(std::string("/") + FLAGS_ns);
 
   ros::Time::waitForValid();
 
@@ -164,8 +174,7 @@ int main(int argc, char** argv) {
   std::string sub_topic_plan = TOPIC_COMMUNICATIONS_DDS_PLAN;
 
   std::string sub_topic_command = TOPIC_COMMAND;
-  command_pub = n.advertise<ff_msgs::CommandStamped>(
-                                                    sub_topic_command, 5, true);
+  command_pub = n.advertise<ff_msgs::CommandStamped>(sub_topic_command, 5);
 
   ros::Subscriber cf_ack_sub = n.subscribe(TOPIC_MANAGEMENT_EXEC_CF_ACK, 10,
                                            &on_cf_ack);
@@ -173,10 +182,18 @@ int main(int argc, char** argv) {
   ros::Subscriber plan_status_sub =
     n.subscribe(TOPIC_MANAGEMENT_EXEC_PLAN_STATUS, 10, &on_plan_status);
 
-  while (cf_ack_sub.getNumPublishers() == 0 ||
+  // Timeout if it can't find anything in 3s or if remote
+  // If remote, this wait allows enough spin
+  int count = 0;
+  while ((cf_ack_sub.getNumPublishers() == 0 ||
          plan_status_sub.getNumPublishers() == 0 ||
-         command_pub.getNumSubscribers() == 0) {
+         command_pub.getNumSubscribers() == 0) && count < MAX_COUNT) {
+    count++;
     ros::Duration(0.5).sleep();
+  }
+  if (count == MAX_COUNT && !FLAGS_remote) {
+    ROS_ERROR("Could not connect");
+    return 1;
   }
 
   ros::Publisher plan_pub =

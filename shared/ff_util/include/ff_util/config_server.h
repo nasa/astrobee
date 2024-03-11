@@ -21,7 +21,7 @@
 
 #include <ros/ros.h>
 
-#include <ff_util/ff_names.h>
+#include <ff_common/ff_names.h>
 
 #include <config_reader/config_reader.h>
 

@@ -2,6 +2,14 @@
 
 # Package Overview
 The localization analysis package provides several tools for measuring localization performance as described below.
+Before running these scripts make sure you define the appropriate env variables (the scripts will complain if you don't)
+Example:
+
+	export ASTROBEE_RESOURCE_DIR=$HOME/astrobee/src/astrobee/resources
+	export ASTROBEE_CONFIG_DIR=$HOME/astrobee/src/astrobee/config
+	export ASTROBEE_WORLD=iss
+	export ASTROBEE_ROBOT=bumble
+
 
 ## Usage Instructions
 For each tool and script, run `rosrun localization_analysis tool_or_script_name -h` for further details and 
@@ -38,8 +46,8 @@ on parameter and bag sweeps.
 Runs the graph bag tool in parallel on multiple bag files.  It takes config file with bag names, map names, and robot configs and produces pdfs and result bagfiles for each entry.
 Example config file:   
 ```
-/home/bag_name.bag /home/map_name.map /mgt/img_sampler/nav_cam/image_record /home/astrobee/src/astrobee config/robots/bumble.config iss false  
-/home/bag_name_2.bag /home/map_name.map /mgt/img_sampler/nav_cam/image_record /home/astrobee/src/astrobee config/robots/bumble.config iss false
+/home/bag_name.bag /home/map_name.map /mgt/img_sampler/nav_cam/image_record false
+/home/bag_name_2.bag /home/map_name.map /mgt/img_sampler/nav_cam/image_record false
 ```
 Example bag sweep command:  
 ```

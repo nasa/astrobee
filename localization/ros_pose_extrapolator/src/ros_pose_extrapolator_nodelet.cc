@@ -16,7 +16,7 @@
  * under the License.
  */
 
-#include <ff_util/ff_names.h>
+#include <ff_common/ff_names.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
 #include <ros_pose_extrapolator/ros_pose_extrapolator_nodelet.h>

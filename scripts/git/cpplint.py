@@ -6125,54 +6125,18 @@ _HEADERS_CONTAINING_TEMPLATES = (
     ),
     ("<limits>", ("numeric_limits",)),
     ("<list>", ("list",)),
-    (
-        "<map>",
-        (
-            "map",
-            "multimap",
-        ),
-    ),
+    ("<map>", ("map", "multimap")),
     ("<memory>", ("allocator",)),
-    (
-        "<queue>",
-        (
-            "queue",
-            "priority_queue",
-        ),
-    ),
-    (
-        "<set>",
-        (
-            "set",
-            "multiset",
-        ),
-    ),
+    ("<queue>", ("queue", "priority_queue")),
+    ("<set>", ("set", "multiset")),
     ("<stack>", ("stack",)),
-    (
-        "<string>",
-        (
-            "char_traits",
-            "basic_string",
-        ),
-    ),
+    ("<string>", ("char_traits", "basic_string")),
     ("<utility>", ("pair",)),
     ("<vector>", ("vector",)),
     # gcc extensions.
     # Note: std::hash is their hash, ::hash is our hash
-    (
-        "<hash_map>",
-        (
-            "hash_map",
-            "hash_multimap",
-        ),
-    ),
-    (
-        "<hash_set>",
-        (
-            "hash_set",
-            "hash_multiset",
-        ),
-    ),
+    ("<hash_map>", ("hash_map", "hash_multimap")),
+    ("<hash_set>", ("hash_set", "hash_multiset")),
     ("<slist>", ("slist",)),
 )
 
@@ -6660,8 +6624,8 @@ def FlagCxx11Features(filename, clean_lines, linenum, error):
     if include and include.group(1) in (
         "cfenv",
         "fenv.h",
-        "condition_variable",
-        "future",
+        # "condition_variable",
+        # "future",
         "ratio",
         "regex",
         "system_error",

@@ -17,10 +17,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-files=$(git diff --diff-filter=d --cached --name-only | grep '\.py$')
+py_changed=$(git diff --diff-filter=d --cached --name-only | grep '\.py$')
 
-# If files is empty exit success
-if [ -z "${files}" ]; then
+# If py_changed is empty exit success
+if [ -z "${py_changed}" ]; then
   echo "=================================================="
   echo "  No Python files changed, no checks needed."
   exit 0
@@ -46,23 +46,38 @@ fi
 echo "=================================================="
 echo "  Analysing python code style with 'black'."
 # This check the files but they will not be commited
-if `black . --include ${files} --check --quiet`; then
+if `black . --include ${py_changed} --check --quiet`; then
     echo "Linter checks using 'black' passed."
 else
     echo "Errors detected with 'black'. Fixing them. Try to add and commit your files again."
-    black . --include ${files}
+    black . --include ${py_changed}
     failed_lint=true
 fi
 
 echo "=================================================="
 echo "  Analysing python code style with 'isort'."
-#if $(isort ${files} --extend-skip cmake --profile black --diff --check-only --quiet >/dev/null); then
-#    echo "Linter checks using 'isort' passed."
-#else
-#    echo "Errors detected with 'isort'. Fixing them. Try to add and commit your files again."
-#  isort ${files} --extend-skip cmake --profile black >/dev/null
-#  failed_lint=true
-#fi
+
+# We're running isort recursively on the top-level folder (not
+# limiting it to the changed files) in order to match how it is
+# invoked in the CI workflow. This is because isort determines what
+# imports are treated as first party, and therefore should be grouped
+# separately, in part based on what files it is asked to process. We
+# definitely don't want to have any disagreement where this pre-commit
+# hook wants things grouped one way but the CI workflow says that's
+# wrong. Note that our intention is for isort to treat all imports
+# found in the astrobee repo as first party, and we specify that using
+# the src_paths setting in the .isort.cfg file.  But we should still
+# run isort consistently in both places to avoid disagreement, which
+# could happen for example if the .isort.cfg src_paths list gets out
+# of date.
+
+if $(isort . --extend-skip cmake,submodules --profile black --diff --check-only --quiet >/dev/null); then
+    echo "Linter checks using 'isort' passed."
+else
+    echo "Errors detected with 'isort'. Fixing them. Try to add and commit your files again."
+  isort . --extend-skip cmake,submodules --profile black >/dev/null
+  failed_lint=true
+fi
 
 # Cancel commit if linter failed
 # The user should add manually the corrected files

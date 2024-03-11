@@ -48,19 +48,13 @@ Eigen::Quaterniond ros_to_eigen_quat(const geometry_msgs::Quaternion& q) {
 
 geometry_msgs::Quaternion eigen_to_ros_quat(const Eigen::Quaterniond& q) {
   geometry_msgs::Quaternion out;
-  out.x = q.x();
-  out.y = q.y();
-  out.z = q.z();
-  out.w = q.w();
+  RotationToMsg(q, out);
   return out;
 }
 
 geometry_msgs::Quaternion eigen_to_ros_quat(const Eigen::Vector4d& v) {
   geometry_msgs::Quaternion out;
-  out.x = v.x();
-  out.y = v.y();
-  out.z = v.z();
-  out.w = v.w();
+  RotationToMsg(v, out);
   return out;
 }
 
@@ -265,19 +259,28 @@ geometry_msgs::Pose ros_transform_to_ros_pose(const geometry_msgs::Transform& p)
 
 geometry_msgs::Quaternion tf2_quat_to_ros_quat(const tf2::Quaternion& q) {
   geometry_msgs::Quaternion out;
-      out.x = q.x();
-      out.y = q.y();
-      out.z = q.z();
-      out.w = q.w();
+  RotationToMsg(q, out);
   return out;
 }
 
 geometry_msgs::Pose tf2_transform_to_ros_pose(const tf2::Transform& p) {
   geometry_msgs::Pose transform;
-      transform.position.x = p.getOrigin().x();
-      transform.position.y = p.getOrigin().y();
-      transform.position.z = p.getOrigin().z();
-      transform.orientation = tf2_quat_to_ros_quat(p.getRotation());
+  VectorToMsg(p.getOrigin(), transform.position);
+  transform.orientation = tf2_quat_to_ros_quat(p.getRotation());
+  return transform;
+}
+
+geometry_msgs::Pose eigen_transform_to_ros_pose(const Eigen::Affine3d& p) {
+  geometry_msgs::Pose transform;
+  transform.position = eigen_to_ros_point(p.translation());
+  transform.orientation = eigen_to_ros_quat((Eigen::Quaterniond)p.linear());
+  return transform;
+}
+
+geometry_msgs::Transform eigen_transform_to_ros_transform(const Eigen::Affine3d& p) {
+  geometry_msgs::Transform transform;
+  transform.translation = eigen_to_ros_vector(p.translation());
+  transform.rotation = eigen_to_ros_quat((Eigen::Quaterniond)p.linear());
   return transform;
 }
 

@@ -34,9 +34,10 @@ import sys
 import cv2
 import rosbag
 import rospy
-import utilities.utilities
 from cv_bridge import CvBridge, CvBridgeError
 from sensor_msgs.msg import Image
+
+import utilities.utilities
 
 
 def print_info(splice_timestamps, bag_start_time, bag_end_time):
@@ -259,10 +260,7 @@ if __name__ == "__main__":
     )
     parser.add_argument("bagfile", help="Input bagfile.")
     parser.add_argument(
-        "-i",
-        "--image-topic",
-        default="/hw/cam_nav",
-        help="Image topic name.",
+        "-i", "--image-topic", default="/hw/cam_nav", help="Image topic name."
     )
 
     args = parser.parse_args()

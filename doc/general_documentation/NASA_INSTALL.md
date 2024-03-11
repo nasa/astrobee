@@ -2,16 +2,11 @@
 
 # Usage instructions for NASA users
 
-Install the 64-bit version of
-[Ubuntu16.04](http://releases.ubuntu.com/16.04) on a host machine, and
-make sure that you can checkout and build code.
+Make sure your system is up-to-date and:
 
     sudo apt-get install build-essential git
 
-*Note: Please ensure you install the 64-bit version of Ubuntu. We do not
-support running Astrobee Robot Software on 32-bit systems.*
-
-## Computer setup
+## Machine setup
 
 ### Username
 
@@ -37,9 +32,9 @@ This is the typical case for all wired computers in ARC TI, and simplifies
 your life greatly.
 
 Verify that you are in this situation with the command below should succeed
-(remove the Release.gpg file after being fetched).
+(certificate will be added later; remove the Release.gpg file after being fetched).
 
-    wget -v http://astrobee.ndc.nasa.gov/software/dists/xenial/Release.gpg
+    wget -v --no-check-certificate https://astrobee.ndc.nasa.gov/software_new/dists/focal/Release.gpg
 
 Before running the scripts in `scripts/setup` below, set this variable:
 
@@ -47,8 +42,7 @@ Before running the scripts in `scripts/setup` below, set this variable:
 
 #### If not on the ARC TI private network
 
-If you are outside the NASA ARC private network, there are two options to
-reach `astrobee.ndc.nasa.gov`:
+If you are outside the NASA ARC private network, to reach `astrobee.ndc.nasa.gov`:
 
   1. Use VPN to act like if you were inside the ARC TI private network and 
      obtain the correct kerberos credentials inside the VM with the following
@@ -57,14 +51,14 @@ reach `astrobee.ndc.nasa.gov`:
   is available at: https://babelfish.arc.nasa.gov/trac/freeflyer/wiki/SSHSetup
 
 For either solution, please verify that you can SSH to `m.ndc.nasa.gov` without
-entering your password (`m` is used to tunnel to `astrobee.ndc.nasa.gov`):
+entering your password (`m` can be used to tunnel to `astrobee.ndc.nasa.gov`):
 
    `ssh $NDC_USERNAME@m.ndc.nasa.gov`
    
 The command should succeed without entering your password. Once this is verified,
 exit this session on `m` with `<ctrl>+D`.
 
-- These notes apply to `install_desktop_16.04_packages.sh` and `make_xenial.sh`
+- These notes apply to `install_desktop_16.04_packages.sh` and `make_chroot.sh`
 
 
 ### Checkout the project source code
@@ -77,6 +71,7 @@ At this point you need to decide where you'd like to put the source code
 First, clone the flight software repository:
 
     git clone https://github.com/nasa/astrobee.git --branch develop $ASTROBEE_WS/src
+    pushd $ASTROBEE_WS/src
     git submodule update --init --depth 1 description/media
     git submodule update --init --depth 1 submodules/platform
 
@@ -94,7 +89,13 @@ The android module is necessary for guest science code; the avionics and platfor
 module is used when cross-compiling to test on the robot hardware.
 
 ### Dependencies
-Install dependencies:
+
+Next, install all required dependencies:
+
+*Note: `root` access is necessary to install the compiled debian packages below*
+
+*Note: Before running this please ensure that your system is completely updated
+by running 'sudo apt-get update' and then 'sudo apt-get upgrade'*
 
     pushd $ASTROBEE_WS
     cd src/scripts/setup
@@ -103,47 +104,10 @@ Install dependencies:
     ./install_desktop_packages.sh
     popd
 
-#### Extra options to install the dependencies
-
-- If you do not want to configure your `.ssh/config` to just get the
-dependencies, you can use the `NDC_USERNAME` variable.
-- By default, the custom debians are installed in `$SOURCE_PATH/.astrobee_deb`.
-If you prefer to install them at a different location, you can use the
-`ARS_DEB_DIR` variable.
-
-    export NDC_USERNAME=jdoe
-    export ARS_DEB_DIR=$HOME/astrobee_debs
-    ./add_local_repository.sh
-
-### Cross-compile setup
-
-If you are planning to compile code to run on the robot hardware, you will need
-to install a cross-compile chroot and toolchain. Select two directories for
-these:
-
-    export ARMHF_CHROOT_DIR=$HOME/arm_cross/rootfs
-    export ARMHF_TOOLCHAIN=$HOME/arm_cross/toolchain/gcc
-
-Append these lines to your .bashrc file, as you will need these two variables
-every time you cross compile.
-
-Next, download the cross toolchain and install the chroot:
-
-    mkdir -p $ARMHF_TOOLCHAIN
-    cd $HOME/arm_cross
-    $ASTROBEE_WS/src/submodules/platform/fetch_toolchain.sh
-    $ASTROBEE_WS/src/submodules/platform/rootfs/make_xenial.sh dev $ARMHF_CHROOT_DIR
-
-*Note: The last script shown above needs the packages `qemu-user-static` (not
-`qemu-arm-static`) and `multistrap` to be installed (can be installed through apt).*
 
 ## Configuring the build
 
-At this point you need to decide whether you'd like to compile natively
-[`native`] (run code against a simulator) or for an ARM target [`armhf`] (run
-the code on the robot itself). Please skip to the relevant subsection.
-
-### Note for both builds setup
+### Note for build setup
 
 When compiling, the `$WORKSPACE_PATH` defines where the `devel`, `build`, `logs` and
 `install` directories are created. If you want to customize the `install` path then the
@@ -161,7 +125,16 @@ the `-p` and `-w` options. For the simplicity of the instructions below,
 we assume that `$WORKSPACE_PATH` and `$INSTALL_PATH` contain the location of the
 build and install path for either `native` or `armhf` platforms.
 
-### Native build
+## Native vs Cross-Compile
+
+At this point you need to decide whether you'd like to compile natively
+[`native`] (run code against a simulator) or cross-compile for an ARM
+target [`armhf`] (run the code on the robot itself). Please skip to the
+relevant subsection.
+
+## Native - Running the code on your computer with simulator
+
+## Native build
 
 The configure script prepares your build directory for compiling the code. Note
 that `configure.sh` is simply a wrapper around CMake that provides an easy way
@@ -182,8 +155,65 @@ instead:
 
     ./scripts/configure.sh -l -p $INSTALL_PATH -w $WORKSPACE_PATH
 
-*Note: If a workspace is specified but not an explicit install distectory,
+*Note: If a workspace is specified but not an explicit install directory,
 install location will be $WORKSPACE_PATH/install.*
+
+
+### Building the code
+
+To build, run `catkin build` in the `$WORKSPACE_PATH`. Note that depending on your host
+machine, this might take in the order of tens of minutes to complete the first
+time round. Future builds will be faster, as only changes to the code are
+rebuilt, and not the entire code base.
+
+    pushd $ASTROBEE_WS
+    catkin build
+    popd
+
+Note: In low-memory systems, it is common to run out of memory while trying to compile
+ARS, which triggers a compilation error mentioning "arm-linux-gnueabihf-g++: internal 
+compiler error: Killed (program cc1plus)". A contributing factor is that
+catkin build by default runs multiple jobs in parallel based on the number of cores
+available in your environment, and all of these jobs draw on the same memory resources.
+If you run into this compile error, try compiling again with the -j1 option to restrict
+catkin to running one job at a time.
+
+For more information on running the simulator and moving the robot, please see the \ref running-the-sim.
+
+
+## Cross-compile - Running the code on a real robot
+
+In order to do this, you will need to follow the cross-compile build
+instructions.
+
+### Cross-compile setup
+
+If you are planning to compile code to run on the robot hardware, you will need
+to install a cross-compile chroot and toolchain. Select two directories for
+these:
+
+    export ARMHF_CHROOT_DIR=$HOME/arm_cross/rootfs
+    export ARMHF_TOOLCHAIN=$HOME/arm_cross/toolchain/gcc
+
+Append these lines to your .bashrc file, as you will need these two variables
+every time you cross compile.
+
+Next, download the cross toolchain and install the chroot:
+
+    mkdir -p $ARMHF_TOOLCHAIN
+    cd $HOME/arm_cross
+
+    DIST=$(. /etc/os-release && echo $UBUNTU_CODENAME)
+    if [ ${DIST} == "kinetic" ]; then
+        # Use pre-built toolchain for 16.04
+        $ASTROBEE_WS/src/submodules/platform/fetch_toolchain.sh
+    else
+        # Use packaged toolchain for 20.04
+        sudo apt install -y gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
+    fi
+    sudo apt install -y qemu-user-static multistrap
+
+    $ASTROBEE_WS/src/submodules/platform/rootfs/make_chroot.sh ${DIST} dev $ARMHF_CHROOT_DIR
 
 ### Cross-compile build
 
@@ -202,60 +232,16 @@ Or with explicit build and install paths:
 different than the paths for native build! See above for the default values 
 for these.*
 
-## Building the code
-
-To build, run `catkin build` in the `$WORKSPACE_PATH`. Note that depending on your host
-machine, this might take in the order of tens of minutes to complete the first
-time round. Future builds will be faster, as only changes to the code are
-rebuilt, and not the entire code base.
-
-    pushd $ASTROBEE_WS
-    catkin build
-    popd
-
-## Switching build profiles
-
-To alternate between native and armhf profiles:
-
-    catkin profile set native
-    catkin profile set armhf
-
-## Running a simulation
-
-In order to run a simulation you must have build natively. You will need to
-first setup your environment, so that ROS knows about the new packages provided
-by Astrobee flight software:
-
-    pushd $ASTROBEE_WS
-    source devel/setup.bash
-    popd
-
-After this command has completed, you should be able to run a simulator from any
-directory in your Linux filesystem. So, for example, to start a simulation of a
-single Astrobee in the Granite Lab, run the following:
-
-    roslaunch astrobee sim.launch
-
-This command tells ROS to look for the `sim.launch` file provided by the
-`astrobee` package, and use roslaunch to run it. Internally, ROS maintains a
-cache of information about package locations, libraries and executables. If you
-find that the above command doesn't work, try rebuilding the cache:
-
-    rospack profile
-
-For more information on running the simulator and moving the robot, please see the \ref sim-readme.
-
-## Running the code on a real robot
-
-In order to do this, you will need to have followed the cross-compile build
-instructions. Once the code has been built, it also installs the code to
+ Once the code has been built, it also installs the code to
 a singular location. CMake remembers what `$INSTALL_PATH` you specified, and
 will copy all products into this directory.
+
+### Install the code on the robot
 
 Once the installation has completed, copy the install directory to the robot.
 This script assumes that you are connected to the Astrobee network, as it uses
 rsync to copy the install directory to `~/armhf` on the two processors. It 
-takes the robot name as an argument. Here we use `p4d'.
+takes the robot name as an argument. Here we use `p4d`.
 
     pushd $ASTROBEE_WS
     ./src/scripts/install_to_astrobee.sh $INSTALL_PATH p4d
@@ -269,6 +255,13 @@ which starts the flight software as a background process.
     pushd $ASTROBEE_WS
     python ./src/tools/gnc_visualizer/scripts/visualizer --proto4
     popd
+
+## Switching build profiles
+
+To alternate between native and armhf profiles:
+
+    catkin profile set native
+    catkin profile set armhf
 
 # Further information
 

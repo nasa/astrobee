@@ -29,7 +29,7 @@
 
 #include <config_reader/config_reader.h>
 #include <ff_hw_msgs/SetEnabled.h>
-#include <ff_util/ff_names.h>
+#include <ff_common/ff_names.h>
 #include <ff_util/ff_nodelet.h>
 
 #include <i2c/i2c_new.h>

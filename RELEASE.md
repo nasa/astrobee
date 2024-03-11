@@ -1,5 +1,25 @@
 # Releases
 
+# Release 0.17.2
+
+  * Adding Generic comms bridge
+  * Multiple bug fixes
+  * Ubuntu 20 only supported now
+
+# Release 0.17.1
+
+  * Multiple bug fixes
+
+# Release 0.17.0
+
+  * Full compatibility and debians built for Ubuntu 20
+  * Deleted all simulink autocode for ctl and fam
+
+## Release 0.16.7
+
+  * Remove simulink auto-generated code
+  * improved documentation, other tools and fixes
+
 ## Release 0.16.6
 
   * switch map online possibility

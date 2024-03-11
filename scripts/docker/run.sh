@@ -24,7 +24,6 @@ usage: run.sh [-h] [-x] [-b] [-f] [-r] [-n] [-m] [-d]
 
 -h or --help: Print this help
 -x or --xenial: Use Ubuntu 16.04 docker image
--b or --bionic: Use Ubuntu 18.04 docker image
 -f or --focal: Use Ubuntu 20.04 docker image
 -r or --remote: Fetch pre-built remote docker image (vs. local image built by build.sh)
 -n or --no-display: Don't set up X forwarding. (For headless environment.)
@@ -57,8 +56,8 @@ usage()
 # Parse options 1 (validate and normalize with getopt)
 ######################################################################
 
-shortopts="h,x,b,f,r,n,g:,m,d,i:,a:"
-longopts="help,xenial,bionic,focal,remote,no-display,gpu:,mount,dry-run,image:,args:"
+shortopts="h,x,f,r,n,g:,m,d,i:,a:"
+longopts="help,xenial,focal,remote,no-display,gpu:,mount,dry-run,image:,args:"
 opts=$(getopt -a -n run.sh --options "$shortopts" --longoptions "$longopts" -- "$@")
 if [ $? -ne 0 ]; then
     echo
@@ -94,8 +93,6 @@ while [ "$1" != "" ]; do
                                    exit
                                    ;;
         -x | --xenial )            os="xenial"
-                                   ;;
-        -b | --bionic )            os="bionic"
                                    ;;
         -f | --focal )             os="focal"
                                    ;;
@@ -153,8 +150,6 @@ fi
 
 if [ "$os" = "xenial" ]; then
     tag=astrobee:latest-${image}ubuntu16.04
-elif [ "$os" = "bionic" ]; then
-    tag=astrobee:latest-${image}ubuntu18.04
 elif [ "$os" = "focal" ]; then
     tag=astrobee:latest-${image}ubuntu20.04
 fi

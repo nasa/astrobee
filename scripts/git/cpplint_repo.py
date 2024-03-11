@@ -65,7 +65,6 @@ def main():
         if (
             "Software" in root
             or "external" in root
-            or "gnc/matlab" in root
             or "submodules" in root
             or "debian" in root
             or "build" in root

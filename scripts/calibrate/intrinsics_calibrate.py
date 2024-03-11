@@ -27,8 +27,9 @@ import sys
 import numpy as np
 import numpy.linalg
 import yaml
-from calibration_utils import *
 from tf import transformations
+
+from calibration_utils import *
 
 
 # returns intrinsics, distortion, and transforms between cameras from a yaml file
@@ -221,7 +222,7 @@ def calibrate_camera(
         return None
 
     return (
-        bag_dir + "/camchain-" + bag_name + ".yaml"
+        bag_dir + "/" + bag_name + "-camchain.yaml"
     )  # The file where kalibr writes its output
 
 

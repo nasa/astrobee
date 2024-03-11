@@ -34,6 +34,9 @@ module rapid {
       const String64 EPS_STATE_TOPIC = "astrobee_eps_state";
       const String64 FAULT_CONFIG_TOPIC = "astrobee_fault_config";
       const String64 FAULT_STATE_TOPIC = "astrobee_fault_state";
+      const String64 GENERIC_COMMS_ADVERTISEMENT_INFO_TOPIC = "astrobee_generic_comms_advertisement_info";
+      const String64 GENERIC_COMMS_CONTENT_TOPIC = "astrobee_generic_comms_content";
+      const String64 GENERIC_COMMS_REQUEST_TOPIC = "astrobee_generic_comms_request";
       const String64 GNC_CONTROL_STATE_TOPIC = "astrobee_gnc_control_state";
       const String64 GNC_FAM_CMD_STATE_TOPIC = "astrobee_gnc_fam_cmd_state";
       const String64 GUEST_SCIENCE_CONFIG_TOPIC = "astrobee_guest_science_config";

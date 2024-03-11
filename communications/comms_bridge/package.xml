@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<package>
+  <name>comms_bridge</name>
+  <version>0.0.0</version>
+  <description>
+    The comms_bridge package
+  </description>
+  <license>
+    Apache License, Version 2.0
+  </license>
+  <author email="astrobee-fsw@nx.arc.nasa.gov">
+    Astrobee Flight Software
+  </author>
+  <maintainer email="astrobee-fsw@nx.arc.nasa.gov">
+    Astrobee Flight Software
+  </maintainer>
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>nodelet</build_depend>
+  <build_depend>message_generation</build_depend>
+  <build_depend>message_runtime</build_depend>
+  <build_depend>image_transport</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>ff_util</build_depend>
+  <build_depend>ff_msgs</build_depend>
+  <build_depend>topic_tools</build_depend>
+  <build_depend>config_reader</build_depend>
+  <build_depend>dds_msgs</build_depend>
+  <run_depend>roscpp</run_depend>
+  <run_depend>nodelet</run_depend>
+  <run_depend>message_generation</run_depend>
+  <run_depend>message_runtime</run_depend>
+  <run_depend>image_transport</run_depend>
+  <run_depend>std_msgs</run_depend>
+  <run_depend>sensor_msgs</run_depend>
+  <run_depend>ff_util</run_depend>
+  <run_depend>ff_msgs</run_depend>
+  <run_depend>topic_tools</run_depend>
+  <run_depend>config_reader</run_depend>
+  <run_depend>dds_msgs</run_depend>
+  <export>
+    <nodelet plugin="${prefix}/nodelet_plugins.xml" />
+  </export>
+</package>
