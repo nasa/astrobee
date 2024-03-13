@@ -30,6 +30,11 @@ die () {
   exit "${2:-1}"
 }
 
+cleanup() {
+  rm -rf ros-noetic-rosjava-build-tools ros-noetic-rosjava-bootstrap \
+    ros-noetic-genjava ros-noetic-rosjava-messages
+}
+
 # delete old files (-f avoids 'no such file' warning on first run)
 rm -f *.deb *.debian.tar.xz *.orig.tar.gz *.dsc *.build *.buildinfo *.changes *.ddeb
 
@@ -51,6 +56,7 @@ done
 build_list+=( build-tools bootstrap genjava messages )
 
 echo "Building debians"
+trap 'cleanup' EXIT
 
 for pkg in ${build_list[@]}
 do
