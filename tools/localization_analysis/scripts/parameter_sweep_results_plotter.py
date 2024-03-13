@@ -81,7 +81,7 @@ def create_plot(pdf, csv_file, value_combos_file, rmse_type):
         and last_x_val != 0
         and abs(math.log10(last_x_val) - math.log10(first_x_val)) > 3
     ):
-        plt.xscale("log", basex=10)
+        plt.xscale("log", base=10)
         # Extend x axis on either side using a log scale to make data more visible
         if first_x_val < last_x_val:
             plt.xlim([first_x_val * 0.1, last_x_val * 10.0])
@@ -105,4 +105,4 @@ def create_plots(output_file, csv_file, value_combos_file):
     rmses = dataframe.columns
     with PdfPages(output_file) as pdf:
         for rmse_type in rmses:
-            create_plot(pdf, csv_file, value_combos_file, rmse_type) 
+            create_plot(pdf, csv_file, value_combos_file, rmse_type)
