@@ -123,15 +123,14 @@ boost::optional<ff_msgs::GraphVIOState> RosGraphVIOWrapper::GraphVIOStateMsg() {
     return boost::none;
   }
   const lc::Time latest_time = times.back();
-  latest_msg_time_ = latest_time;
   ff_msgs::GraphVIOState msg;
-  for (int i = 0; i < static_cast<int>(times.size()); ++i) {
-    const auto time = times[i];
-    const auto combined_nav_state = nodes.Node(time);
-    const auto keys = nodes.Keys(time);
-    if (!combined_nav_state || keys.empty() || keys.size() != 3) {
-      LogError("CombinedNavStateArrayMsg: Failed to get combined nav state and keys.");
-      return boost::none;
+
+  // Only add latest state since this is used for localization relative factors
+  const auto combined_nav_state = nodes.Node(latest_time);
+  const auto keys = nodes.Keys(latest_time);
+  if (!combined_nav_state || keys.empty() || keys.size() != 3) {
+    LogError("CombinedNavStateArrayMsg: Failed to get combined nav state and keys.");
+    return boost::none;
     }
     const auto pose_covariance = graph_vio_->Covariance(keys[0]);
     const auto velocity_covariance = graph_vio_->Covariance(keys[1]);
@@ -140,28 +139,17 @@ boost::optional<ff_msgs::GraphVIOState> RosGraphVIOWrapper::GraphVIOStateMsg() {
       LogError("CombinedNavStateArrayMsg: Failed to get combined nav state covariances.");
       return boost::none;
     }
-    lc::TimestampedSet<lc::PoseCovariance> correlation_covariances;
-    // Add correlation covariances between earlier states and this state
-    // End with the same timestamp to ensure last covariance matix
-    // is the self covariance
-    for (int j = 0; j <= i; ++j) {
-      const lc::Time time_j = times[j];
-      const auto key_j = nodes.Keys(time_j)[0];
-      const auto covariance = graph_vio_->Covariance(key_j, keys[0]);
-      if (covariance) {
-        correlation_covariances.Add(time_j, *covariance);
-      }
-    }
 
     msg.combined_nav_states.combined_nav_states.push_back(lc::CombinedNavStateToMsg(
-      *combined_nav_state, *pose_covariance, *velocity_covariance, *imu_bias_covariance, correlation_covariances));
-  }
+      *combined_nav_state, *pose_covariance, *velocity_covariance, *imu_bias_covariance));
+
   lc::TimeToHeader(*(nodes.LatestTimestamp()), msg.header);
   msg.child_frame_id = "odom";
   msg.standstill = graph_vio_->standstill();
   msg.num_of_factors = graph_vio_->NumFactors<factor_adders::RobustSmartFactor>();
   msg.optimization_time = graph_vio_->optimization_timer().last_value();
   msg.update_time = graph_vio_->update_timer().last_value();
+  latest_msg_time_ = latest_time;
   // TODO(rsoussan): Add more stats here!
   return msg;
 }
