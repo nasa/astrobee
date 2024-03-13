@@ -119,7 +119,7 @@ boost::optional<ff_msgs::GraphVIOState> RosGraphVIOWrapper::GraphVIOStateMsg() {
 
   // Avoid sending repeat msgs
   if (times.empty() || (latest_msg_time_ && times.back() == *latest_msg_time_)) {
-        LogWarningEveryN(200, "No new graph VIO times added.");
+        LogWarningEveryN(2000, "No new graph VIO times added.");
     return boost::none;
   }
   const lc::Time latest_time = times.back();
