@@ -39,22 +39,15 @@
             - (then just lookup correlated covariance using keys of each node)
             - add function to compute relative covariance given marginals and key values?
       - send marginals instead of looking up all of them????  
-      - fix lag! (AAAA)
-        - time different ops in ros graph vio nodelet! (AAAAA)
-        - time receipt of of msg to when graph vio msg sent!
-          - how much online lag?
-        - how much lag between receipt of message and when processing starts?
-          time sliding window operation? other ops in optimizer??
 
-      - tune vio imu params on new bag! (BBBB)
-          - can you get rid of x error around 35 seconds?
+      - time ros_graph_vio ops! (AAA)
 
-      - tune relative cov scales! (CCCCC)
+      - tune relative cov scales! (BBBB)
         - make params for pose node adder?
 
-      - fix flight mode bug!
-        - use online replay! does it still occur?? (AAA)
-    
+      - tune iss params? (CCC)
+        - download recent bags and groundtruth (made for suyoung)
+
      - finish loc plotting script! 
         - add num ml measurements! 
 
