@@ -35,11 +35,11 @@ PoseWithCovariance PoseWithCovarianceInterpolater::Relative(const PoseWithCovari
   const double translation_norm = relative_pose.translation().norm();
   const double orientation_angle = Eigen::AngleAxisd(relative_pose.linear()).angle();
   constexpr double kMinCov = 1e-4;
-  constexpr double kTranslationScale = 0.1;
-  constexpr double kOrientationScale = 0.1;
+  constexpr double kTranslationScale = 1;
+  constexpr double kOrientationScale = 0.01;
   Eigen::Matrix<double, 6, 6> relative_covariance = Eigen::Matrix<double, 6, 6>::Zero();
   // Set translation part of covariance using translation norm
-  relative_covariance.block<3, 3>(3, 3) = Eigen::Matrix3d::Identity() * translation_norm * kTranslationScale;
+  relative_covariance.block<3, 3>(3, 3) = (relative_pose.translation().cwiseAbs() * kTranslationScale).asDiagonal();
   // Set orientation part of covariance using orientation angle
   relative_covariance.block<3, 3>(0, 0) = Eigen::Matrix3d::Identity() * orientation_angle * kOrientationScale;
   // Make sure no component of the covariance matrix is too small
@@ -48,6 +48,9 @@ PoseWithCovariance PoseWithCovarianceInterpolater::Relative(const PoseWithCovari
       relative_covariance(i, i) = kMinCov;
     }
   }
+  /*std::cout << "Relative Covariance: " << std::endl << relative_covariance.matrix() << std::endl;
+  std::cout << "A covariance: " << std::endl << a.covariance.matrix() << std::endl;
+  std::cout << "B covariance: " << std::endl << b.covariance.matrix() << std::endl;*/
   return PoseWithCovariance(relative_pose, relative_covariance);
 /*  // See https://gtsam.org/2021/02/23/uncertainties-part3.html
   // Adjoints
