@@ -8,5 +8,5 @@ Standards-Version: 3.9.2
 
 Package: ros-noetic-rosjava-build-tools
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, ant, openjdk-8-jdk | default-jdk, ros-noetic-catkin
+Depends: ${shlibs:Depends}, ${misc:Depends}, ant, openjdk-8-jdk, ros-noetic-catkin
 Description: Simple tools and catkin modules for rosjava development.
