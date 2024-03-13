@@ -2,7 +2,7 @@ Source: ros-noetic-rosjava-build-tools
 Section: misc
 Priority: extra
 Maintainer: Ruben Garcia <nospam@nospam.org>
-Build-Depends: debhelper (>= 9.0.0), ant, openjdk-8-jdk | default-jdk, ros-noetic-catkin
+Build-Depends: debhelper (>= 9.0.0), ant, openjdk-8-jdk, ros-noetic-catkin
 Homepage: http://ros.org/wiki/rosjava_build_tools
 Standards-Version: 3.9.2
 
