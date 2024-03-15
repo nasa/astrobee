@@ -17,7 +17,7 @@
  */
 
 #include <ff_common/init.h>
-#include <localization_analysis/sparse_mapping_pose_adder.h>
+#include <localization_analysis/ar_tag_pose_adder.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
 
@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
   std::string robot_config_file;
   std::string world;
   po::options_description desc(
-    "Adds sparse mapping poses to a new bag file using sparse mapping feature messages and body_T_nav_cam extrinsics");
+    "Adds sparse mapping poses to a new bag file using sparse mapping feature messages and body_T_dock_cam extrinsics");
   desc.add_options()("help,h", "produce help message")("bagfile", po::value<std::string>()->required(),
                                                        "Input bagfile")(
     "robot-config-file,r", po::value<std::string>(&robot_config_file)->default_value("bumble.config"),
@@ -67,7 +67,7 @@ int main(int argc, char** argv) {
   boost::filesystem::path input_bag_path(input_bag);
   boost::filesystem::path output_bag_path =
     input_bag_path.parent_path() /
-    boost::filesystem::path(input_bag_path.stem().string() + "_with_sparse_mapping_poses.bag");
+    boost::filesystem::path(input_bag_path.stem().string() + "_with_ar_tag_poses.bag");
   lc::SetEnvironmentConfigs(world, robot_config_file);
   config_reader::ConfigReader config;
   config.AddFile("geometry.config");
@@ -75,8 +75,8 @@ int main(int argc, char** argv) {
     LogFatal("Failed to read config files.");
   }
 
-  const gtsam::Pose3 body_T_nav_cam = lc::LoadTransform(config, "nav_cam_transform");
-  localization_analysis::SparseMappingPoseAdder sparse_mapping_pose_adder(input_bag, output_bag_path.string(),
-                                                                          body_T_nav_cam.inverse());
-  sparse_mapping_pose_adder.AddPoses();
+  const gtsam::Pose3 body_T_dock_cam = lc::LoadTransform(config, "dock_cam_transform");
+  localization_analysis::ArTagPoseAdder ar_tag_pose_adder(input_bag, output_bag_path.string(),
+                                                                          body_T_dock_cam.inverse());
+  ar_tag_pose_adder.AddPoses();
 }

@@ -40,7 +40,25 @@
             - add function to compute relative covariance given marginals and key values?
       - send marginals instead of looking up all of them????  
 
-      - time ros_graph_vio ops! (AAA)
+      - fix docking issue (AAAA)
+        - add ar tag pose adder!
+        - don't extrapolate with vio/imu? -> maybe just imu?
+            - add error if latest loc time diff is too large!!!
+        - decrease ar tag factor uncertainty?
+
+      - VIO undershooting!
+        - check nav cam noise param in config?
+        - check calibration model, undistortin of images? 
+          - is this accurate?
+        - return imu params?
+          - can you prevent undershooting?
+        - check optical flow params?
+          - underestimating movement?
+
+      - update bag sweep scripts, evaluation! (BBB)
+        - test on iss bags!
+
+      - update luisa's surf pr! (DD)
 
       - tune relative cov scales! (BBBB)
         - make params for pose node adder?

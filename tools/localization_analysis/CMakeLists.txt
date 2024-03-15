@@ -67,6 +67,7 @@ if (USE_ROS)
   add_library(${PROJECT_NAME}
     #src/bag_imu_filterer.cc
     #src/depth_odometry_adder.cc
+    src/ar_tag_pose_adder.cc
     src/graph_localizer_simulator.cc
     src/graph_vio_simulator.cc
     src/imu_bias_extrapolator.cc
@@ -116,6 +117,12 @@ if (USE_ROS)
   target_link_libraries(run_map_matcher
     ${PROJECT_NAME} gflags gtsam ${catkin_LIBRARIES})
 
+  ## Declare a C++ executable: run_ar_tag_pose_adder
+  add_executable(run_ar_tag_pose_adder tools/run_ar_tag_pose_adder.cc)
+  add_dependencies(run_ar_tag_pose_adder ${catkin_EXPORTED_TARGETS})
+  target_link_libraries(run_ar_tag_pose_adder
+  ${PROJECT_NAME} gflags gtsam ${catkin_LIBRARIES})
+
   ## Declare a C++ executable: run_sparse_mapping_pose_adder
   add_executable(run_sparse_mapping_pose_adder tools/run_sparse_mapping_pose_adder.cc)
   add_dependencies(run_sparse_mapping_pose_adder ${catkin_EXPORTED_TARGETS})
@@ -150,6 +157,7 @@ install(TARGETS ${PROJECT_NAME}
 install(TARGETS run_offline_replay DESTINATION bin)
 install(TARGETS run_imu_bias_extrapolator DESTINATION bin)
 install(TARGETS run_map_matcher DESTINATION bin)
+install(TARGETS run_ar_tag_pose_adder DESTINATION bin)
 install(TARGETS run_sparse_mapping_pose_adder DESTINATION bin)
 install(CODE "execute_process(
   COMMAND ln -s ../../bin/convert_depth_msg share/${PROJECT_NAME}
@@ -158,6 +166,7 @@ install(CODE "execute_process(
   COMMAND ln -s ../../bin/run_offline_replay share/${PROJECT_NAME}
   COMMAND ln -s ../../bin/run_imu_bias_extrapolator share/${PROJECT_NAME}
   COMMAND ln -s ../../bin/run_map_matcher share/${PROJECT_NAME}
+  COMMAND ln -s ../../bin/run_ar_tag_pose_adder share/${PROJECT_NAME}
   COMMAND ln -s ../../bin/run_sparse_mapping_pose_adder share/${PROJECT_NAME}
   WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
   OUTPUT_QUIET
