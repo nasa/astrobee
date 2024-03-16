@@ -70,7 +70,7 @@ std::vector<go::FactorsToAdd> StandstillFactorAdder::AddFactors(
                                                  feature_points_measurement.timestamp);
       gtsam::BetweenFactor<gtsam::Pose3>::shared_ptr pose_between_factor(new gtsam::BetweenFactor<gtsam::Pose3>(
         previous_between_key_info.UninitializedKey(), current_between_key_info.UninitializedKey(),
-        gtsam::Pose3::identity(), pose_between_noise));
+        gtsam::Pose3(), pose_between_noise));
       pose_between_factors_to_add.push_back(
         {{previous_between_key_info, current_between_key_info}, pose_between_factor});
       pose_between_factors_to_add.SetTimestamp(feature_points_measurement.timestamp);
