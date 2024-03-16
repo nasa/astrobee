@@ -77,7 +77,7 @@ CombinedNavStateNodeUpdaterParams DefaultCombinedNavStateNodeUpdaterParams() {
   params.starting_prior_gyro_bias_stddev = 0.001;
   params.huber_k = 1.345;
   params.global_N_body_start =
-    lc::CombinedNavState(gtsam::Pose3::identity(), gtsam::Velocity3::Zero(), gtsam::imuBias::ConstantBias(), 0.0);
+    lc::CombinedNavState(gtsam::Pose3(), gtsam::Velocity3::Zero(), gtsam::imuBias::ConstantBias(), 0.0);
   params.add_priors = true;
   params.graph_values = DefaultCombinedNavStateGraphValuesParams();
   params.threshold_bias_uncertainty = false;
@@ -86,13 +86,13 @@ CombinedNavStateNodeUpdaterParams DefaultCombinedNavStateNodeUpdaterParams() {
 
 GraphInitializerParams DefaultGraphInitializerParams() {
   GraphInitializerParams params;
-  params.global_T_body_start = gtsam::Pose3::identity();
+  params.global_T_body_start = gtsam::Pose3();
   params.global_V_body_start = gtsam::Velocity3::Zero();
   params.num_bias_estimation_measurements = 1;
   params.start_time = 0;
   params.initial_imu_bias = gtsam::imuBias::ConstantBias();
   params.gravity = gtsam::Vector3::Zero();
-  params.body_T_imu = gtsam::Pose3::identity();
+  params.body_T_imu = gtsam::Pose3();
   params.filter = imu_integration::ImuFilterParams();
   params.gyro_sigma = 0.001;
   params.accel_sigma = 0.001;
@@ -123,7 +123,7 @@ DepthOdometryFactorAdderParams DefaultDepthOdometryFactorAdderParams() {
   params.point_to_point_error_threshold = 100.0;
   params.pose_translation_norm_threshold = 100.0;
   params.max_num_points_between_factors = 100;
-  params.body_T_sensor = gtsam::Pose3::identity();
+  params.body_T_sensor = gtsam::Pose3();
   params.enabled = true;
   return params;
 }
