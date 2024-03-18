@@ -85,7 +85,6 @@ class RosGraphLocalizerWrapper {
   boost::optional<localization_common::Time> last_vio_msg_time_;
   boost::optional<localization_common::Time> latest_msg_time_;
   boost::optional<gtsam::Pose3> world_T_dock_;
-  localization_common::PoseInterpolater odom_interpolator_;
 };
 }  // namespace ros_graph_localizer
 
