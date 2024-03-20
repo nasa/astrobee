@@ -217,19 +217,26 @@ TimestampedNodeAdder<NodeType, TimestampedNodesType, NodeAdderModelType>::SlideW
   LogDebug("SlideWindowNewStartTime: Starting total duration is " << total_duration);
   const localization_common::Time ideal_oldest_allowed_state = std::max(0.0, *(EndTime()) - params_.ideal_duration);
 
+  // Find oldest timestamp that first prioritizes that the graph has at least min_num_states.
+  // Second priority, find the optimal oldest timestamp that additionally ensures the graph does not have more than
+  // max_num_states. Last priortity, find the optimial oldest timestamp that is also closest to the ideal oldest
+  // timestamp (and thus ensures the graph is <= the ideal duration).
   int num_states_to_be_removed = 0;
-  // Ensures that new oldest time is consistent with a number of states <= max_num_states
-  // and >= min_num_states.
-  // Assumes min_num_states < max_num_states.
   for (const auto& timestamp : nodes_->Timestamps()) {
-    if (timestamp > ideal_oldest_allowed_state) ++num_states_to_be_removed;
-    const int new_num_states = size - num_states_to_be_removed;
-    if (new_num_states > params_.max_num_states) continue;
+    const int new_num_states = size - num_states_to_be_removed++;
+    // First priority
     if (new_num_states <= params_.min_num_states) return timestamp;
+    // Second priority
+    if (new_num_states > params_.max_num_states) continue;
+    // Last priority
     if (timestamp >= ideal_oldest_allowed_state) return timestamp;
   }
 
-  // Shouldn't occur
+  // If the constraints aren't able to be satisfied, an error was made
+  // when setting the graph duration or state limit params
+  LogError("SlideWindowNewStartTime: Invalid sliding window params set, max num states: "
+           << params_.max_num_states << ", min num states: " << params_.min_num_states
+           << ", ideal duration: " << params_.ideal_duration);
   return boost::none;
 }
 
