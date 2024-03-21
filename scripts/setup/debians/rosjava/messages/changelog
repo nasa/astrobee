@@ -1,0 +1,5 @@
+ros-noetic-rosjava-messages (0.3.0-0astrobeefocal) focal; urgency=high
+
+  * Generate only Astrobee dependencies
+
+ -- Ruben Garcia <nospam@nospam.org>  Thu, 15 Feb 2024 02:00:00 -0000
