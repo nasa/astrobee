@@ -24,7 +24,7 @@
   <!-- Command line arguments -->
   <arg name="bagfile"/>             
   <arg name="record" default="false" />
-  <arg name="imu_augmentor" default="true" />
+  <arg name="pose_extrapolator" default="true" />
   <arg name="depth_odometry" default="false" />
   <arg name="robot" default="bumble" />
   <arg name="world" default="iss" />
@@ -51,16 +51,16 @@
     </include>
   </group>
 
-  <!-- Run imu augmentor if required -->
-  <group if="$(arg imu_augmentor)">
-    <include file="$(find imu_augmentor)/launch/imu_augmentor.launch">
+  <!-- Run pose extrapolator if required -->
+  <group if="$(arg pose_extrapolator)">
+    <include file="$(find ros_pose_extrapolator)/launch/ros_pose_extrapolator.launch">
       <arg name="terminal" value="terminator -x"/>
     </include>
   </group>
 
-  <include file="$(find imu_bias_tester)/launch/imu_bias_tester.launch">
+  <!-- include file="$(find imu_bias_tester)/launch/imu_bias_tester.launch">
     <arg name="terminal" value="terminator -x"/>
-  </include>
+  </include -->
 
   <!-- Nodes to run -->
   <group unless="$(arg image_features)">
@@ -71,7 +71,10 @@
       <arg name="terminal" value="terminator -x"/>
     </include>
   </group>
-  <include file="$(find graph_localizer)/launch/graph_localizer.launch">
+  <include file="$(find ros_graph_localizer)/launch/ros_graph_localizer.launch">
+    <arg name="terminal" value="terminator -x"/>
+  </include>
+  <include file="$(find ros_graph_vio)/launch/ros_graph_vio.launch">
     <arg name="terminal" value="terminator -x"/>
   </include>
   <group if="$(arg localization_manager)">

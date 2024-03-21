@@ -32,7 +32,7 @@
   <env name="ASTROBEE_RESOURCE_DIR" value="$(find astrobee)/resources" />
 
   <!-- Nodes to run -->
-  <include file="$(find graph_localizer)/launch/graph_localizer.launch">
+  <include file="$(find ros_graph_localizer)/launch/ros_graph_localizer.launch">
     <arg name="terminal" value=""/>
   </include>
 </launch>

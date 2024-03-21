@@ -20,23 +20,14 @@
 #include <localization_common/utilities.h>
 
 namespace localization_common {
-PoseInterpolater::PoseInterpolater(const std::vector<Time>& timestamps, const std::vector<Eigen::Isometry3d>& poses)
-    : TimestampedSet<Eigen::Isometry3d>(timestamps, poses) {}
+template <>
+Eigen::Isometry3d PoseInterpolater::Interpolate(const Eigen::Isometry3d& a, const Eigen::Isometry3d& b,
+                                                const double alpha) const {
+  return localization_common::Interpolate(a, b, alpha);
+}
 
-boost::optional<Eigen::Isometry3d> PoseInterpolater::Interpolate(const Time timestamp) const {
-  const auto lower_and_upper_bound = LowerAndUpperBound(timestamp);
-  // Check if equal timestamp exists
-  if (lower_and_upper_bound.second && lower_and_upper_bound.second->timestamp == timestamp)
-    return lower_and_upper_bound.second->value;
-  if (!lower_and_upper_bound.first || !lower_and_upper_bound.second) {
-    LogDebug("Interpolate: Failed to get lower and upper bound timestamps for query timestamp " << timestamp << ".");
-    return boost::none;
-  }
-
-  const Time lower_bound_time = lower_and_upper_bound.first->timestamp;
-  const Time upper_bound_time = lower_and_upper_bound.second->timestamp;
-  const double alpha = (timestamp - lower_bound_time) / (upper_bound_time - lower_bound_time);
-  return localization_common::Interpolate(lower_and_upper_bound.first->value, lower_and_upper_bound.second->value,
-                                          alpha);
+template <>
+Eigen::Isometry3d PoseInterpolater::Relative(const Eigen::Isometry3d& a, const Eigen::Isometry3d& b) const {
+  return a.inverse() * b;
 }
 }  // namespace localization_common

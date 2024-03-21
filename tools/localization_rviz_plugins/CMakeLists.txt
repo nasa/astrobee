@@ -18,7 +18,7 @@
 cmake_minimum_required(VERSION 3.0)
 project(localization_rviz_plugins)
 
-if (USE_ROS AND BUILD_LOC_RVIZ_PLUGINS)
+if (FALSE AND BUILD_LOC_RVIZ_PLUGINS)
  
   ## Compile as C++14, supported in ROS Kinetic and newer
   add_compile_options(-std=c++14)

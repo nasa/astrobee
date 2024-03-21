@@ -93,7 +93,7 @@ int main(int argc, char** argv) {
     save_noloc_imgs =
       boost::filesystem::current_path().string() + "/" + input_bag_path.stem().string() + "_nonloc_imgs.bag";
   }
-  lc::SetEnvironmentConfigs(config_path, world, robot_config_file);
+  lc::SetEnvironmentConfigs(world, robot_config_file);
   config_reader::ConfigReader config;
   localization_analysis::MapMatcher map_matcher(input_bag, map_file, image_topic, output_bagfile, config_path_prefix,
                                                 save_noloc_imgs);

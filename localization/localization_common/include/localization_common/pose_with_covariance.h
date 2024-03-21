@@ -19,6 +19,8 @@
 #ifndef LOCALIZATION_COMMON_POSE_WITH_COVARIANCE_H_
 #define LOCALIZATION_COMMON_POSE_WITH_COVARIANCE_H_
 
+#include <localization_common/timestamped_set.h>
+
 #include <Eigen/Geometry>
 
 namespace localization_common {
@@ -26,10 +28,16 @@ using PoseCovariance = Eigen::Matrix<double, 6, 6>;
 struct PoseWithCovariance {
   PoseWithCovariance(const Eigen::Isometry3d& pose, const PoseCovariance& covariance)
       : pose(pose), covariance(covariance) {}
+  PoseWithCovariance(const Eigen::Isometry3d& pose, const PoseCovariance& covariance,
+                     const TimestampedSet<PoseCovariance>& correlation_covariances)
+      : pose(pose), covariance(covariance), correlation_covariances(correlation_covariances) {}
+
   PoseWithCovariance() {}
 
   Eigen::Isometry3d pose;
   PoseCovariance covariance;
+  // Optional correlated covariances wrt other timestamped poses
+  TimestampedSet<PoseCovariance> correlation_covariances;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };

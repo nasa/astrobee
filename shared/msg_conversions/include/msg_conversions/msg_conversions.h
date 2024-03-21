@@ -37,6 +37,12 @@
 
 #include <string>
 
+// Helper macro to automatically load a parameter for a basic type (int/bool/double).
+// Assumes function is called as LOAD_PARAM(param.val, config, prefix) and assumes the format of
+// param.y for the variable name (passing simply y will fail.)
+#define LOAD_PARAM(val, config, prefix) \
+  msg_conversions::Load((config), (val), std::string(#val).substr(std::string(#val).find_last_of(".") + 1), (prefix))
+
 namespace msg_conversions {
 
 Eigen::Vector3d ros_point_to_eigen_vector(const geometry_msgs::Point& p);
@@ -88,12 +94,26 @@ bool config_read_vector(config_reader::ConfigReader::Table* t, geometry_msgs::Po
 bool SingleBoolTrue(const std::initializer_list<bool>& bools);
 
 // Alternative format for loading configs
-Eigen::Isometry3d LoadEigenTransform(config_reader::ConfigReader& config, const std::string& transform_config_name);
-double LoadDouble(config_reader::ConfigReader& config, const std::string& config_name);
-float LoadFloat(config_reader::ConfigReader& config, const std::string& config_name);
-int LoadInt(config_reader::ConfigReader& config, const std::string& config_name);
-bool LoadBool(config_reader::ConfigReader& config, const std::string& config_name);
-std::string LoadString(config_reader::ConfigReader& config, const std::string& config_name);
+Eigen::Isometry3d LoadEigenTransform(config_reader::ConfigReader& config, const std::string& transform_config_name,
+                                     const std::string& prefix = "");
+double LoadDouble(config_reader::ConfigReader& config, const std::string& config_name, const std::string& prefix = "");
+float LoadFloat(config_reader::ConfigReader& config, const std::string& config_name, const std::string& prefix = "");
+int LoadInt(config_reader::ConfigReader& config, const std::string& config_name, const std::string& prefix = "");
+bool LoadBool(config_reader::ConfigReader& config, const std::string& config_name, const std::string& prefix = "");
+std::string LoadString(config_reader::ConfigReader& config, const std::string& config_name,
+                       const std::string& prefix = "");
+// Overloads for parameter loading that enable LOAD_PARAM macro to work
+void Load(config_reader::ConfigReader& config, float& val, const std::string& config_name,
+          const std::string& prefix = "");
+void Load(config_reader::ConfigReader& config, double& val, const std::string& config_name,
+          const std::string& prefix = "");
+void Load(config_reader::ConfigReader& config, int& val, const std::string& config_name,
+          const std::string& prefix = "");
+void Load(config_reader::ConfigReader& config, bool& val, const std::string& config_name,
+          const std::string& prefix = "");
+void Load(config_reader::ConfigReader& config, std::string& val, const std::string& config_name,
+          const std::string& prefix = "");
+
 void EigenPoseToMsg(const Eigen::Isometry3d& pose, geometry_msgs::Pose& msg_pose);
 void EigenPoseToMsg(const Eigen::Isometry3d& pose, geometry_msgs::Transform& msg_transform);
 void VariancesToCovDiag(const Eigen::Vector3d& variances, float* const cov_diag);
@@ -139,13 +159,24 @@ void RotationToMsg(const RotationType& rotation, MsgRotationType& msg_rotation) 
   msg_rotation.z = rotation.z();
 }
 
-template <typename ArrayType>
-void EigenCovarianceToMsg(const Eigen::Matrix<double, 6, 6>& covariance, ArrayType& covariance_array) {
-  for (int i = 0; i < 6; ++i) {
-    for (int j = 0; j < 6; ++j) {
-      covariance_array[i*6 + j] = covariance(i, j);
+template <typename ArrayType, int Dim>
+void EigenCovarianceToMsg(const Eigen::Matrix<double, Dim, Dim>& covariance, ArrayType& covariance_array) {
+  for (int i = 0; i < Dim; ++i) {
+    for (int j = 0; j < Dim; ++j) {
+      covariance_array[i*Dim + j] = covariance(i, j);
     }
   }
+}
+
+template <int Dim, typename ArrayType>
+Eigen::Matrix<double, Dim, Dim> EigenCovarianceFromMsg(const ArrayType& covariance_array) {
+  Eigen::Matrix<double, Dim, Dim> covariance;
+  for (int i = 0; i < Dim; ++i) {
+    for (int j = 0; j < Dim; ++j) {
+      covariance(i, j) = covariance_array[i*Dim + j];
+    }
+  }
+  return covariance;
 }
 }  // namespace msg_conversions
 

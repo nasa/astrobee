@@ -1,0 +1,11 @@
+<library path="lib/libros_pose_extrapolator">
+  <class name="ros_pose_extrapolator/RosPoseExtrapolatorNodelet"
+	 type="ros_pose_extrapolator::RosPoseExtrapolatorNodelet"
+	 base_class_type="nodelet::Nodelet">
+    <description>
+      This nodelet wraps the ros_pose_extrapolator 
+    </description>
+  </class>
+</library>
+
+

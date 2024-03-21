@@ -20,6 +20,7 @@
 
 namespace localization_analysis {
 struct MessageBufferParams {
+  // Only make message available once this delay has passed.
   double msg_delay;
   // Some message providers drop messages too close together in time. Drop all messages < min_msg_spacing from each
   // other.

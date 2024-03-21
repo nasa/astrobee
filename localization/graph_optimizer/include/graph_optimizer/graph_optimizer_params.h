@@ -18,20 +18,14 @@
 #ifndef GRAPH_OPTIMIZER_GRAPH_OPTIMIZER_PARAMS_H_
 #define GRAPH_OPTIMIZER_GRAPH_OPTIMIZER_PARAMS_H_
 
-#include <string>
-
 namespace graph_optimizer {
 struct GraphOptimizerParams {
-  bool verbose;
-  bool fatal_failures;
-  bool log_on_destruction;
-  bool print_factor_info;
-  bool use_ceres_params;
-  int max_iterations;
-  std::string marginals_factorization;
-  bool add_marginal_factors;
+  // Huber k used for all factors.
   double huber_k;
-  int log_rate;
+  // Log statistics after destruction.
+  bool log_stats_on_destruction;
+  // Log factor graph info and stats after optimization.
+  bool print_after_optimization;
 };
 }  // namespace graph_optimizer
 

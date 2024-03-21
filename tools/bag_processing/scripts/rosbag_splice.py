@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # Copyright (c) 2017, United States Government, as represented by the
 # Administrator of the National Aeronautics and Space Administration.
 #
@@ -260,10 +260,7 @@ if __name__ == "__main__":
     )
     parser.add_argument("bagfile", help="Input bagfile.")
     parser.add_argument(
-        "-i",
-        "--image-topic",
-        default="/hw/cam_nav",
-        help="Image topic name.",
+        "-i", "--image-topic", default="/hw/cam_nav", help="Image topic name."
     )
 
     args = parser.parse_args()

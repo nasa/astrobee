@@ -23,11 +23,14 @@ add_compile_options(-std=c++14)
 
 ## Find catkin macros and libraries
 find_package(catkin2 REQUIRED COMPONENTS
-	config_reader
+  factor_adders
 	localization_common
-	localization_measurements
-	msg_conversions 
+  node_adders
+  optimizers
 )
+
+# Find GTSAM
+find_package(GTSAM REQUIRED)
 
 # System dependencies are found with CMake's conventions
 find_package(Eigen3 REQUIRED)
@@ -36,7 +39,7 @@ find_package(Eigen3 REQUIRED)
 catkin_package(
   LIBRARIES ${PROJECT_NAME} ${GLOG_LIBRARIES}
   INCLUDE_DIRS include ${GLOG_INCLUDE_DIRS}
-  CATKIN_DEPENDS config_reader localization_common localization_measurements msg_conversions
+  CATKIN_DEPENDS factor_adders localization_common node_adders optimizers 
 )
 
 ###########
@@ -54,13 +57,20 @@ include_directories(
 # Declare C++ libraries
 add_library(${PROJECT_NAME}
   src/graph_optimizer.cc
-  src/graph_values.cc
-  src/utilities.cc
-  src/graph_stats.cc
-  src/parameter_reader.cc
 )
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
+
+if(CATKIN_ENABLE_TESTING)
+  find_package(rostest REQUIRED)
+  add_rostest_gtest(test_graph_optimizer
+    test/test_graph_optimizer.test
+    test/test_graph_optimizer.cc
+  )
+  target_link_libraries(test_graph_optimizer
+    ${PROJECT_NAME} ${catkin_LIBRARIES} 
+  )
+endif() 
 
 #############
 ## Install ##

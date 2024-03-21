@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # Copyright (c) 2017, United States Government, as represented by the
 # Administrator of the National Aeronautics and Space Administration.
 #
@@ -53,6 +53,6 @@ if __name__ == "__main__":
         print(("Bag file " + args.bagfile + " does not exist."))
         sys.exit()
 
-    utilities.get_topic_rates(
+    utilities.utilities.get_topic_rates(
         args.bagfile, args.topic, args.max_time_diff, not args.use_receive_time, True
     )

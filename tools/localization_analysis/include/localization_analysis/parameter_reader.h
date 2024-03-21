@@ -19,20 +19,23 @@
 #define LOCALIZATION_ANALYSIS_PARAMETER_READER_H_
 
 #include <config_reader/config_reader.h>
-#include <localization_analysis/graph_bag_params.h>
 #include <localization_analysis/graph_localizer_simulator_params.h>
+#include <localization_analysis/graph_vio_simulator_params.h>
 #include <localization_analysis/live_measurement_simulator_params.h>
 #include <localization_analysis/message_buffer_params.h>
+#include <localization_analysis/offline_replay_params.h>
 
 #include <string>
 
 namespace localization_analysis {
-void LoadMessageBufferParams(config_reader::ConfigReader& config, MessageBufferParams& params);
+void LoadMessageBufferParams(config_reader::ConfigReader& config, MessageBufferParams& params,
+                             const std::string& prefix = "");
 void LoadLiveMeasurementSimulatorParams(config_reader::ConfigReader& config, const std::string& bag_name,
                                         const std::string& map_file, const std::string& image_topic,
                                         LiveMeasurementSimulatorParams& params);
 void LoadGraphLocalizerSimulatorParams(config_reader::ConfigReader& config, GraphLocalizerSimulatorParams& params);
-void LoadGraphBagParams(config_reader::ConfigReader& config, GraphBagParams& params);
+void LoadGraphVIOSimulatorParams(config_reader::ConfigReader& config, GraphVIOSimulatorParams& params);
+void LoadOfflineReplayParams(config_reader::ConfigReader& config, OfflineReplayParams& params);
 }  // namespace localization_analysis
 
 #endif  // LOCALIZATION_ANALYSIS_PARAMETER_READER_H_

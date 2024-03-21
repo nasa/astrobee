@@ -86,7 +86,7 @@ int main(int argc, char** argv) {
   int ff_argc = 1;
   ff_common::InitFreeFlyerApplication(&ff_argc, &argv);
 
-  lc::SetEnvironmentConfigs(config_path, world, robot_config_file);
+  lc::SetEnvironmentConfigs(world, robot_config_file);
   config_reader::ConfigReader config;
   config.AddFile("geometry.config");
   config.AddFile("cameras.config");

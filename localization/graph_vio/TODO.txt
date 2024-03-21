@@ -1,0 +1,276 @@
+- gt creation:
+  4 min 13 sec per image for matching
+      - 75 threads for ba
+      - images per bag: 6847 before remove low momemvent, 545 after
+      - images per surf base map: 2969!!!
+      - TODO: why is it only matching to last 1000 images in surf base map?? 
+        - starts with image 2970, not continuous but in increasing number (skips some numbers), goes to image 3
+        - what is asearch vs b search when finding matching tracks?? 
+          - search containers, cid_to_cid map for finding matches
+      - TODO: test with maxed threads, much faster matching per image?? 
+          - max threads (96) (0 image speed): 6m 49 sec
+          - 75 threads: 6m 20 sec 
+      - TODO: change jacobian to be analytic! (AB)
+      - TODO: find smaller base surf map????
+        - check sizes of other gt surf maps in maps dir! what is the range? (AA)
+          - 2972, similar
+
+- update tutorial with simple loc and odom!
+  - update simple localizer section!
+  - add simple odometry section!
+
+  - add tutorial for simple calibration (AACC)
+  - add tutorial for simple mapping (AADD)
+    - add examples package! make sure these compile!!!
+      - add unit tests for these!!!!
+
+
+    - test localizer!
+      - w/o writing:
+          cov time: 0.0275
+      - w/ writing: 0.0272 
+      - w/o lookup, w/ writing: negligable!
+      - joint marginal information: 0.0269 
+      - cholesky: 0.017 
+      - test serializing marginals! (AAAAAA)
+          - how big is this object?
+          - how long does it take? 
+          - also need to add key value for node...
+            - (then just lookup correlated covariance using keys of each node)
+            - add function to compute relative covariance given marginals and key values?
+      - send marginals instead of looking up all of them????  
+
+      - does VO graph restart when localization reset is called?? (AAA)
+          - add reset to ros pose extrapolator!!!! (AAABBBB)
+      - why does VIO graph go crazy after optical flow feature dropouts? (B)
+
+      - fix going crazy issue (AAA)
+        - print out graph duration and num states (AAAAA)
+
+      - fix drift issue! 
+        - add imu bias extrapolated poses!
+            - why does merge script change imu timestamp???
+                - debug this!
+        - download last bag from 3/19 test, look at this
+            - add plot of IMU raw measurements! (AAA)
+                - use vals from gnc/ekf? are these corrected?
+            - also add num nodes!
+                - divide by 3 for vio?
+            - retune smart factor noise? camera noise? other?
+            - look at feature tracks?
+            - test with longer feature tracks? more feature tracks?
+
+      - fix docking issue (AAAA)
+        - compare world_T_dock in new vs old localizer!
+          - run old localizer on beehive
+
+        - add ar tag pose adder!
+        - don't extrapolate with vio/imu? -> maybe just imu?
+            - add error if latest loc time diff is too large!!!
+        - decrease ar tag factor uncertainty?
+
+      - VIO undershooting!
+        - check nav cam noise param in config?
+          - sweep on cam noise + noise scale
+          - sweep on imu params?
+          - sweep on iterations
+          - sweep on others?
+            - num factors?
+            - points per factor?
+            - meas spacing
+            - retriangulation threshold?
+              - why is larger better?????? (AAAAAA)
+                - is this better on other granite bags too???
+                  - test!
+                  - better to turn off retriangulation???? why??? (AAAA)
+                      - only better for some bags :(
+            - min avg dist from mean?
+        - check calibration model, undistortin of images? 
+          - is this accurate?
+        - return imu params?
+          - can you prevent undershooting?
+        - check optical flow params?
+          - underestimating movement?
+          - add feature track images! (AAAAA)
+            - need to access smart factors, feature tracks! (AAA)
+              - do you have access to these from graph_vio???
+            - move to helper functions
+            - call from offline replay!
+              - compile, test! (BB)
+          - add imu measurements and num values to plots!
+
+      - update bag sweep scripts, evaluation! (BBB)
+        - test on iss bags!
+
+      - update luisa's surf pr! (DD)
+
+      - tune relative cov scales! (BBBB)
+        - make params for pose node adder?
+
+      - tune iss params? (CCC)
+        - download recent bags and groundtruth (made for suyoung)
+
+     - finish loc plotting script! 
+        - add num ml measurements! 
+
+          - ar tag measurements come in too early, more recent than latest vio msg time!
+              - check of timestamps, should more be in the interpolator??? 
+                - how could ar measurements be more recent?
+                  - add ar_msg buffer, fill if too recent (B)
+                  - check ar_msg buffer when a VIO msg is received, add if recent enough!
+
+      - test with sim! (A)
+            - update rmse test! (B)
+              - is orientation calculation correct???
+          - upgrade scripts to python 3! test on beehive!
+            - upgrade vm to ubuntu 20! (AA)
+          - tune on granite table bags!
+            - what order to tune in????
+                - reset imu params to reasonable values? check gtsam? check original localization code?
+
+                - fix adding too many loc projection factors! (A)
+                - tune/lessen vio time! (AB)
+                  - tune num factors
+                  - tune factor noise
+                  - tune standstill noise
+                  - tune starting imu bias noise values
+                  - tune max iterations
+                  - reduce num factors? reduce graph size?
+                - tune/lessen loc time! (AA)
+                  - reduce graph duration
+                  - limit num projection factors
+
+                - update relative covariance in pose_with_covariance_interpolator! (AAAA)
+ 
+            
+          - why is astrobee shaking?
+            - fix bias estimation
+              - should be zero???
+              - print initialized value (AA)
+              - change params so it is less likely to change (AB)
+                  - does this fix issue?
+
+          - update pose extrapolator using extrapolation method from world_T_dock calculation
+            - should be more efficient....
+          - update mlp launch to use different manager for vio nodelet!
+          - limit projection factors??? (A)
+          - update flight mode stuff
+
+      - test on robot! (C)
+
+      - handle flight mode changes!
+        - add support to vio stuff? others?
+
+        - issue with odom_interpolator growing too large??? Add warning in code in pose extrapolator, pose node adder model, ros_graph_localizer_wrapper? (D)
+                - add new class with these! RollingPoseInterpolator! (D)
+                    - pass max buffer size
+                    - keep rolling estimate
+                        - just multiplies poses since last received pose!!
+                    - if interpolate fails, try to subtract recent estimates still in buffer from rolling estimate so timestamps match!
+                    - update everything to use this!
+                      - add tests!!!!
+
+      - tune factor covariances!
+        - lessen ml factor val! (B)
+          - responds too quickly to these...
+        - tune max num ml factors!
+          - no limit currently?
+      - tune vio relative pose covariance based on duration???? (C)
+
+      - add tuning scripts!
+        - sweeps vs gt, tune variables!
+
+    - finish plot vio script! 
+            - add initilizing first vio value using groundtruth value! 
+              - why is first pose start way off??
+                - print adjusted pose positions! (AAA)
+            
+            - add integrated imu values??? (C)
+
+            - add plotting num features! (D)
+              - how to get num detected features???
+
+            - add plotting acceleration values? (these come from imu messages....) (E)
+              - bias corrected? raw?
+            - add plotting angular acceleration values! (F)
+              - bias corrected? raw?
+ 
+    - add comments!
+    - rename pose node adder to relative pose node adder??
+      - update comments/readme/test/documentation?
+    - update readme!
+
+- add regression tests?
+
+- update nodes interface!
+  - remove or update closestnode, lowerandupperboundnodes, oldnodes
+      - remove or return timestamped nodes! (no one uses these...)
+
+- standstill factors added using all timestamps (AB)
+  - should only spaced ones be used? adds more keys at timestamps between vo stamps!
+
+- dont add successive points in smart factors that are too close together
+
+offline replay:
+  - allow for vio msg delay? run vio first, buffer vio msgs, then run graph loc?
+
+ - add pose_extrapolator package?
+
+  unit tests:
+	ros_pose_extrapolator: update existing tests
+        ros_graph_vio: imu bias initializatoin? state changes? etc?
+        graph_vio: standstill code? others?
+        graph_localizer: system tests?
+    - add test for avoid getting covariance for first node in newly slid window if it hasn't been included in optiization yet
+    - add test in base class optimizer for accessing invalid covariance for key that hasn't been optimized!
+    - add test in sliding window optimizer for removing old measurements from cumulative factors!
+    - add test in sliding window optimizer for removing factors with old measurements!
+    - add test to remove nodes using key vector! make sure this works! (AC)
+
+
+  - graph vio:
+    - add better way of getting relative covariance??
+	- improve pose interpolator covariance calcualtion (relative and interpolated?)
+	- others?
+
+  ros_pose_extrapolator:
+    - improve covariances!! use loc covariance! use relative covariance!
+
+  - add sanity checkers to loc!
+    - drift wrt vl measurements
+
+  - ros_graph_vio_wrapper:
+    - add rest of opt stats to graph_vio
+
+  - ros graph vio nodelet:
+    - TODO: only publish states message if optimization has occured again!
+        - add indicator for this in graph optimizer? last optimize time? optimize count?
+
+  - ros graph loc nodelet:
+    - add rest of opt stats to graph loc message in ros_Graph_loc_wraper!
+
+  isam2 optimizer issues!
+    - need to account for values removed when sliding window!
+      - since these have keys, just check for removed keys!
+    - need to account for factors removed when sliding window!
+      (i.e. smart factors!)
+        - since these are pts, just make sets of ptr values and check for new and removed ones!!!
+
+  - add ordering back to sliding window optimizer now that window is slid after optimization!
+
+  - TODO: implement others!
+
+- TODO: how to access opt iterations????
+
+- send pose/cov history from vio, add all poses/covs in pose node (update old values) (C)
+  - add support for this in timestamped_set? (updating old values)
+
+- how to add a second measurement to combined nav node update model????? (AE)
+  - why is this needed???
+    - fan rate!!!!!!
+  - add to imu measurement???
+- move serialization from graph_vio/loc to respective packages??
+- initialize vio graph with identity pose, set fixed!!!
+    - is this actually necessary? graph vio in AstroLoc worked fine...
+ - rename pimpredict in other packages to extrapolate 
+  - tools: loc rvz plugins, imu bias tester

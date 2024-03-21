@@ -1,0 +1,55 @@
+  - send pose/cov history from vio, add all poses/covs in pose node (update old values) (C)
+      - add support for this in timestamped_set? (updating old values)
+
+  - add grah_vio! (A)
+    - inherit from sliding window optimizer
+    - add combined imu node adder, vo and standstill factor adders
+    - publish odometry message!
+      - add new message type?
+      - convert velocity from odom frame to global frame??
+        - is velocity in global frame or body frame??
+      - add better way of getting relative covariance??
+
+  - add graph_localizer! (C)
+    - use pose node updater with odometry message! 
+    - add loc factor adder!
+
+    - add parameter reader! (G)
+      - fail if parameter not read!!
+      - how to unit test these??
+
+  isam2 optimizer issues!
+    - need to account for values removed when sliding window!
+      - since these have keys, just check for removed keys!
+    - need to account for factors removed when sliding window!
+      (i.e. smart factors!)
+        - since these are pts, just make sets of ptr values and check for new and removed ones!!!
+
+  - add ordering back to sliding window optimizer now that window is slid after optimization!
+
+  - TODO: implement others!
+
+
+
+- TODO: how to access opt iterations????
+- move serialization.cc back to graph optimizer?
+      - make graph optimizer depend on graph_Factors?
+  - add test with graph optimizer, simple factor adder, and simple node updater!!
+
+- add graph vio to graph bag!
+  - run_graph_Bag, plot_graph_bag
+  - use graph bag???? 
+    - copy graph bag and run for VIO only?? Or modify current graph bag tool??
+      - (probably modify current tool?)
+- how to add a second measurement to combined nav node update model????? (AE)
+  - why is this needed???
+    - fan rate!!!!!!
+  - add to imu measurement???
+- move param loading and serialization from graph_vio/loc to respective packages!
+- initialize graph with identity pose, set fixed!!!
+  - TODO: need to always have fixed identity pose as origin! how to do this?
+    - set start pose fixed after maginalize????
+- rename pimpredict in other packages to extrapolate 
+  - tools: loc rvz plugins, imu bias tester
+- update imu_augmentor, make sure it compiles!
+  - add tests?

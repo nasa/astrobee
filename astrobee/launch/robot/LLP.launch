@@ -31,7 +31,7 @@
     <node pkg="nodelet" type="nodelet" args="manager"
           name="llp_gnc" output="$(arg output)"/>
     <node pkg="nodelet" type="nodelet" args="manager"
-          name="llp_imu_aug" output="$(arg output)"/>
+          name="llp_pose_extr" output="$(arg output)"/>
     <node pkg="nodelet" type="nodelet" args="manager"
         name="llp_monitors" output="$(arg output)"/>
     <node pkg="nodelet" type="nodelet" args="manager"
@@ -49,9 +49,9 @@
   <!-- Launch GNC nodes -->
   <group unless="$(arg gtloc)">
     <include file="$(find ff_util)/launch/ff_nodelet.launch">
-      <arg name="class" value="imu_augmentor/ImuAugmentorNodelet" />
-      <arg name="name" value="imu_aug" />
-      <arg name="manager" value="llp_imu_aug" />
+      <arg name="class" value="ros_pose_extrapolator/RosPoseExtrapolatorNodelet" />
+      <arg name="name" value="pose_extr" />
+      <arg name="manager" value="llp_pose_extr" />
       <arg name="spurn" value="$(arg spurn)" />
       <arg name="nodes" value="$(arg nodes)" />
       <arg name="extra" value="$(arg extra)" />

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # Copyright (c) 2017, United States Government, as represented by the
 # Administrator of the National Aeronautics and Space Administration.
 #
@@ -107,10 +107,7 @@ if __name__ == "__main__":
         help="Output merged bag. By default this is merged_prefix.bag where prefix is the provided bag prefix.",
     )
     parser.add_argument(
-        "-d",
-        "--directory",
-        default=".",
-        help="Directory to where to find the bags",
+        "-d", "--directory", default=".", help="Directory to where to find the bags"
     )
     parser.add_argument(
         "--only-loc-topics",

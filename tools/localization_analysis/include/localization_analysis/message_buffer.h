@@ -25,6 +25,8 @@
 #include <map>
 
 namespace localization_analysis {
+// Buffers messages and only provides them once the provided delay has passed.
+// Optionally drops messages that are too close together in time.
 template <typename MessageType>
 class MessageBuffer {
  public:

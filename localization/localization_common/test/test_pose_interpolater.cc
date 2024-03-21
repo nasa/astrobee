@@ -59,6 +59,41 @@ TEST(PoseInterpolaterTester, Interpolate) {
   }
 }
 
+TEST(PoseInterpolaterTester, Relative) {
+  std::vector<Eigen::Isometry3d> poses;
+  std::vector<lc::Time> timestamps;
+  for (int i = 0; i < 10; ++i) {
+    poses.emplace_back(lc::RandomIsometry3d());
+    timestamps.emplace_back(i);
+  }
+  lc::PoseInterpolater interpolater(timestamps, poses);
+
+  // Too low
+  {
+    const auto relative_pose = interpolater.Relative(-1, 5);
+    EXPECT_TRUE(relative_pose == boost::none);
+  }
+  // Too high
+  {
+    const auto relative_pose = interpolater.Relative(5, 11);
+    EXPECT_TRUE(relative_pose == boost::none);
+  }
+  // Valid
+  {
+    const auto relative_pose = interpolater.Relative(2.2, 3.3);
+    ASSERT_TRUE(relative_pose != boost::none);
+    const auto expected_relative_pose =
+      lc::Interpolate(poses[2], poses[3], 0.2).inverse() * lc::Interpolate(poses[3], poses[4], 0.3);
+    EXPECT_MATRIX_NEAR((*relative_pose), expected_relative_pose, 1e-6);
+  }
+  // Exact pose/timestamp
+  {
+    const auto relative_pose = interpolater.Relative(7, 8);
+    ASSERT_TRUE(relative_pose != boost::none);
+    EXPECT_MATRIX_NEAR((*relative_pose), poses[7].inverse() * poses[8], 1e-6);
+  }
+}
+
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);

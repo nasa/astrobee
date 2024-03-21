@@ -20,6 +20,8 @@
 
 namespace localization_analysis {
 struct GraphLocalizerSimulatorParams {
+  // Simulated optimization time. Messages that are received during optimization
+  // are added once this duration has passed.
   double optimization_time;
 };
 }  // namespace localization_analysis

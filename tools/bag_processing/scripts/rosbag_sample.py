@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # Copyright (c) 2017, United States Government, as represented by the
 # Administrator of the National Aeronautics and Space Administration.
 #
@@ -81,10 +81,7 @@ if __name__ == "__main__":
         action="store_true",
     )
     parser.add_argument(
-        "-o",
-        "--output",
-        help="path for output bag",
-        default="sample_bags.bag",
+        "-o", "--output", help="path for output bag", default="sample_bags.bag"
     )
     parser.add_argument(
         "-r",
