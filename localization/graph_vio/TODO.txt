@@ -40,7 +40,30 @@
             - add function to compute relative covariance given marginals and key values?
       - send marginals instead of looking up all of them????  
 
+      - does VO graph restart when localization reset is called?? (AAA)
+          - add reset to ros pose extrapolator!!!! (AAABBBB)
+      - why does VIO graph go crazy after optical flow feature dropouts? (B)
+
+      - fix going crazy issue (AAA)
+        - print out graph duration and num states (AAAAA)
+
+      - fix drift issue! 
+        - add imu bias extrapolated poses!
+            - why does merge script change imu timestamp???
+                - debug this!
+        - download last bag from 3/19 test, look at this
+            - add plot of IMU raw measurements! (AAA)
+                - use vals from gnc/ekf? are these corrected?
+            - also add num nodes!
+                - divide by 3 for vio?
+            - retune smart factor noise? camera noise? other?
+            - look at feature tracks?
+            - test with longer feature tracks? more feature tracks?
+
       - fix docking issue (AAAA)
+        - compare world_T_dock in new vs old localizer!
+          - run old localizer on beehive
+
         - add ar tag pose adder!
         - don't extrapolate with vio/imu? -> maybe just imu?
             - add error if latest loc time diff is too large!!!
@@ -48,12 +71,33 @@
 
       - VIO undershooting!
         - check nav cam noise param in config?
+          - sweep on cam noise + noise scale
+          - sweep on imu params?
+          - sweep on iterations
+          - sweep on others?
+            - num factors?
+            - points per factor?
+            - meas spacing
+            - retriangulation threshold?
+              - why is larger better?????? (AAAAAA)
+                - is this better on other granite bags too???
+                  - test!
+                  - better to turn off retriangulation???? why??? (AAAA)
+                      - only better for some bags :(
+            - min avg dist from mean?
         - check calibration model, undistortin of images? 
           - is this accurate?
         - return imu params?
           - can you prevent undershooting?
         - check optical flow params?
           - underestimating movement?
+          - add feature track images! (AAAAA)
+            - need to access smart factors, feature tracks! (AAA)
+              - do you have access to these from graph_vio???
+            - move to helper functions
+            - call from offline replay!
+              - compile, test! (BB)
+          - add imu measurements and num values to plots!
 
       - update bag sweep scripts, evaluation! (BBB)
         - test on iss bags!

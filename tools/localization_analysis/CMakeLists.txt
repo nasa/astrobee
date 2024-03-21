@@ -67,6 +67,7 @@ if (USE_ROS)
   add_library(${PROJECT_NAME}
     #src/bag_imu_filterer.cc
     #src/depth_odometry_adder.cc
+    src/feature_track_image_adder.cc
     src/graph_localizer_simulator.cc
     src/graph_vio_simulator.cc
     src/imu_bias_extrapolator.cc

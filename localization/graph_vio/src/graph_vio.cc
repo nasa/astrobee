@@ -72,4 +72,7 @@ const no::CombinedNavStateNodes& GraphVIO::combined_nav_state_nodes() const {
 
 bool GraphVIO::standstill() const { return standstill_; }
 
+const vc::SpacedFeatureTracker& GraphVIO::feature_tracker() const {
+  return vo_smart_projection_factor_adder_->feature_tracker();
+}
 }  // namespace graph_vio

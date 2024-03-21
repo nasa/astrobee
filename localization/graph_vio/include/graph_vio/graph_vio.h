@@ -28,7 +28,7 @@
 #include <node_adders/combined_nav_state_node_adder.h>
 #include <nodes/combined_nav_state_nodes.h>
 #include <sliding_window_graph_optimizer/sliding_window_graph_optimizer.h>
-// #include <vision_common/feature_tracker.h>
+#include <vision_common/feature_tracker.h>
 
 #include <boost/serialization/serialization.hpp>
 
@@ -57,6 +57,9 @@ class GraphVIO : public sliding_window_graph_optimizer::SlidingWindowGraphOptimi
 
   // Returns whether standstill is detected or not.
   bool standstill() const;
+
+  // Const accesor to feature tracker used for smart factor creation
+  const vision_common::SpacedFeatureTracker& feature_tracker() const;
 
  private:
   // Uses the latest feature track points to detect standstill.

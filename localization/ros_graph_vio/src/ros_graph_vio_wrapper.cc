@@ -153,4 +153,8 @@ boost::optional<ff_msgs::GraphVIOState> RosGraphVIOWrapper::GraphVIOStateMsg() {
   // TODO(rsoussan): Add more stats here!
   return msg;
 }
+
+const std::unique_ptr<graph_vio::GraphVIO>& RosGraphVIOWrapper::graph_vio() {
+  return graph_vio_;
+}
 }  // namespace ros_graph_vio

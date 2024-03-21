@@ -93,6 +93,10 @@ class GraphOptimizer {
   // Returns set of factors currently in the graph.
   gtsam::NonlinearFactorGraph& factors();
 
+  // Returns set of factors of FactorType currently in the graph.
+  template <typename FactorType>
+  std::vector<boost::shared_ptr<const FactorType>> Factors() const;
+
   // Returns number of factors currently in the graph.
   int num_factors() const;
 
@@ -178,6 +182,16 @@ class GraphOptimizer {
 
 // Implementation
 template <typename FactorType>
+std::vector<boost::shared_ptr<const FactorType>> GraphOptimizer::Factors() const {
+  std::vector<boost::shared_ptr<const FactorType>> factors_vector;
+  for (const auto& factor : factors()) {
+    const auto casted_factor = boost::dynamic_pointer_cast<const FactorType>(factor);
+    if (casted_factor) factors_vector.emplace_back(casted_factor);
+  }
+  return factors_vector;
+}
+
+template <typename FactorType>
 int GraphOptimizer::NumFactors() const {
   int num_factors = 0;
   for (const auto& factor : factors()) {
@@ -186,8 +200,6 @@ int GraphOptimizer::NumFactors() const {
   }
   return num_factors;
 }
-
-
 }  // namespace graph_optimizer
 
 #endif  // GRAPH_OPTIMIZER_GRAPH_OPTIMIZER_H_

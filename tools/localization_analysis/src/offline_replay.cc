@@ -18,6 +18,7 @@
 
 #include <ff_common/ff_names.h>
 #include <ff_common/utils.h>
+#include <localization_analysis/feature_track_image_adder.h>
 #include <localization_analysis/offline_replay.h>
 #include <localization_analysis/parameter_reader.h>
 #include <localization_analysis/utilities.h>
@@ -78,16 +79,6 @@ OfflineReplay::OfflineReplay(const std::string& bag_name, const std::string& map
   LoadOfflineReplayParams(config, params_);
 }
 
-/*void OfflineReplay::SaveOpticalFlowTracksImage(const sensor_msgs::ImageConstPtr& image_msg,
-                                          const GraphVIOSimulator& graph_vio) {
-  std::vector<const SmartFactor*> smart_factors;
-  if (graph_vio.graph_vio()) smart_factors = SmartFactors(*(graph_vio.graph_vio()));
-  const auto feature_track_image_msg =
-    CreateFeatureTrackImage(image_msg, *(graph_vio.feature_tracks()), *params_.nav_cam_params, smart_factors);
-  if (!feature_track_image_msg) return;
-  SaveMsg(**feature_track_image_msg, kFeatureTracksImageTopic_, results_bag_);
-}*/
-
 void OfflineReplay::Run() {
   // Required to start bias estimation
   graph_vio_simulator_->ResetBiasesAndVIO();
@@ -125,8 +116,14 @@ void OfflineReplay::Run() {
       graph_vio_simulator_->BufferOpticalFlowMsg(*of_msg);
       if (params_.save_optical_flow_images) {
         const auto img_msg = live_measurement_simulator_->GetImageMessage(lc::TimeFromHeader(of_msg->header));
-        /*if (img_msg && graph_vio_simulator_->feature_tracks())
-          SaveOpticalFlowTracksImage(*img_msg, *graph_vio_simulator_);*/
+        const auto& graph_vio = graph_vio_simulator_->graph_vio();
+        if (img_msg && graph_vio) {
+          const auto smart_factors = graph_vio->Factors<factor_adders::RobustSmartFactor>();
+          const auto feature_track_image_msg =
+            CreateFeatureTrackImage(*img_msg, graph_vio->feature_tracker(), *params_.nav_cam_params, smart_factors);
+          if (!feature_track_image_msg) return;
+          SaveMsg(**feature_track_image_msg, kFeatureTracksImageTopic_, results_bag_);
+        }
       }
     }
     const auto vl_msg = live_measurement_simulator_->GetVLMessage(current_time);
