@@ -1,0 +1,121 @@
+Index: ros-noetic-rosjava-build-tools/src/rosjava_build_tools/__init__.py
+===================================================================
+--- ros-noetic-rosjava-build-tools.orig/src/rosjava_build_tools/__init__.py
++++ ros-noetic-rosjava-build-tools/src/rosjava_build_tools/__init__.py
+@@ -4,10 +4,11 @@
+ # Imports
+ ##############################################################################
+ 
+-import console
+-from create_package import init_android_package, init_rosjava_package
+-from create_android_project import create_android_project
+-from create_rosjava_project import create_rosjava_project, create_rosjava_msg_project, create_rosjava_library_project
+-from utils import which
+-from release import scrape_for_release_message_packages
+-import catkin
++from rosjava_build_tools import console
++from rosjava_build_tools.create_package import init_android_package, init_rosjava_package
++from rosjava_build_tools.create_android_project import create_android_project
++from rosjava_build_tools.create_rosjava_project import create_rosjava_project, create_rosjava_msg_project, create_rosjava_library_project
++from rosjava_build_tools.utils import which
++from rosjava_build_tools.release import scrape_for_release_message_packages
++from rosjava_build_tools import catkin
++
+Index: ros-noetic-rosjava-build-tools/src/rosjava_build_tools/create_android_project.py
+===================================================================
+--- ros-noetic-rosjava-build-tools.orig/src/rosjava_build_tools/create_android_project.py
++++ ros-noetic-rosjava-build-tools/src/rosjava_build_tools/create_android_project.py
+@@ -11,11 +11,10 @@ import sys
+ import argparse
+ import subprocess
+ import shutil
+-import exceptions
+ 
+ # local imports
+-import utils
+-import console
++from rosjava_build_tools import utils
++from rosjava_build_tools import console
+ 
+ ##############################################################################
+ # Methods
+@@ -72,9 +71,9 @@ def actually_create_android_project(pack
+     except subprocess.CalledProcessError:
+         print("Error")
+         raise subprocess.CalledProcessError("failed to create android project.")
+-    except exceptions.OSError as e:
++    except OSError as e:
+         print("OS error" + str(e))
+-        raise exceptions.OSError()
++        raise OSError()
+ 
+     # This is in the old form, let's shovel the shit around to the new form
+     utils.mkdir_p(os.path.join(path, 'src', 'main', 'java'))
+Index: ros-noetic-rosjava-build-tools/src/rosjava_build_tools/create_package.py
+===================================================================
+--- ros-noetic-rosjava-build-tools.orig/src/rosjava_build_tools/create_package.py
++++ ros-noetic-rosjava-build-tools/src/rosjava_build_tools/create_package.py
+@@ -12,8 +12,8 @@ import catkin_pkg
+ from catkin_pkg.package_templates import create_package_xml, PackageTemplate
+ 
+ # local imports
+-import utils
+-import console
++from rosjava_build_tools import utils
++from rosjava_build_tools import console
+ 
+ ##############################################################################
+ # Methods
+Index: ros-noetic-rosjava-build-tools/src/rosjava_build_tools/create_rosjava_project.py
+===================================================================
+--- ros-noetic-rosjava-build-tools.orig/src/rosjava_build_tools/create_rosjava_project.py
++++ ros-noetic-rosjava-build-tools/src/rosjava_build_tools/create_rosjava_project.py
+@@ -13,8 +13,8 @@ import argparse
+ import xml.etree.ElementTree as ElementTree
+ 
+ # local imports
+-import utils
+-import console
++from rosjava_build_tools import utils
++from rosjava_build_tools import console
+ 
+ ##############################################################################
+ # Methods
+Index: ros-noetic-rosjava-build-tools/src/rosjava_build_tools/release.py
+===================================================================
+--- ros-noetic-rosjava-build-tools.orig/src/rosjava_build_tools/release.py
++++ ros-noetic-rosjava-build-tools/src/rosjava_build_tools/release.py
+@@ -6,7 +6,7 @@
+ 
+ import rosdistro
+ import catkin_pkg
+-from . import catkin
++from rosjava_build_tools import catkin
+ 
+ ##############################################################################
+ # Imports
+@@ -16,9 +16,9 @@ from . import catkin
+ def scrape_for_release_message_packages(track):
+     url = rosdistro.get_index_url()
+     index = rosdistro.get_index(url)
+-    cache = rosdistro.get_release_cache(index, 'kinetic')
++    cache = rosdistro.get_release_cache(index, 'noetic')
+     packages = []
+-    for package_name, package_string in cache.package_xmls.iteritems():
++    for package_name, package_string in cache.package_xmls.items():
+         package = catkin_pkg.package.parse_package_string(package_string)
+         #print("  Name: %s" % package_name)
+         #print("  Buildtool Depends %s" % package.build)
+Index: ros-noetic-rosjava-build-tools/src/rosjava_build_tools/utils.py
+===================================================================
+--- ros-noetic-rosjava-build-tools.orig/src/rosjava_build_tools/utils.py
++++ ros-noetic-rosjava-build-tools/src/rosjava_build_tools/utils.py
+@@ -8,7 +8,7 @@ import os
+ import sys
+ import errno
+ import pwd
+-import console
++from rosjava_build_tools import console
+ 
+ ##############################################################################
+ # Methods
