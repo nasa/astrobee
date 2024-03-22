@@ -25,17 +25,16 @@ FROM ${REMOTE}/${REPO}:msgs-ubuntu20.04
 
 COPY scripts/setup/debians/rosjava /src/msgs/src/scripts
 
-# install dependencies for rosjava build script
-RUN apt-get update && apt-get install -y devscripts equivs
-
 # make sure there is a python binary
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 1
 
-# build rosjava debians
-RUN cd /src/msgs/src/scripts && /bin/bash build_rosjava_debians.sh --install-with-deps
+# install dependencies for rosjava build script
+RUN apt-get update && apt-get install -y devscripts equivs
 
-# remove to save disk space
-RUN rm -rf /var/lib/apt/lists/*
+# build rosjava debians
+RUN cd /src/msgs/src/scripts \
+    && /bin/bash build_rosjava_debians.sh --install-with-deps \
+    && rm -rf /var/lib/apt/lists/*
 
 # compile msg jar files, genjava_message_artifacts only works with bash
 RUN ["/bin/bash", "-c", "cd /src/msgs \
