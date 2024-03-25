@@ -15,7 +15,7 @@
 # License for the specific language governing permissions and limitations
 # under the License. #
 #
-# A generic service for toggling availability
+# Service for setting camera exposure
 
 uint16 exposure
 ---
