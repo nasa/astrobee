@@ -225,8 +225,10 @@ namespace is_camera {
       false, true);
 
     pub_ = nh->advertise<sensor_msgs::Image>(camera_topic_, 1);
-    info_pub_ = nh->advertise<sensor_msgs::CameraInfo>(camera_topic_ + "/camera_info", 1);
+    info_pub_ = nh->advertise<sensor_msgs::CameraInfo>(camera_topic_ + TOPIC_HARDWARE_CAM_INFO, 1);
     pub_exposure_ = nh->advertise<std_msgs::Int32MultiArray>(camera_topic_ + "_ctrl", 1);
+
+    srv_exposure_ = nh->advertiseService(camera_topic_ + SERVICE_SET_EXPOSURE, &CameraNodelet::SetExposure, this);
 
     // Allocate space for our output msg buffer
     for (size_t i = 0; i < kImageMsgBuffer; i++) {
@@ -241,6 +243,17 @@ namespace is_camera {
     v4l_.reset(new V4LStruct(camera_device_, camera_gain_, camera_exposure_));
     thread_running_ = true;
     thread_ = std::thread(&CameraNodelet::PublishLoop, this);
+  }
+
+  // Set the exposure
+  bool CameraNodelet::SetExposure(ff_msgs::SetExposure::Request  &req,
+                          ff_msgs::SetExposure::Response &res) {
+    // Set exposure
+    camera_exposure_ = req.exposure;
+    // Success!
+    res.success = true;
+    res.status_message = "Success";
+    return true;
   }
 
   size_t CameraNodelet::getNumBayerSubscribers(void) {
