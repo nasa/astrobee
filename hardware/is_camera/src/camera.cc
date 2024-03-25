@@ -248,11 +248,19 @@ namespace is_camera {
   // Set the exposure
   bool CameraNodelet::SetExposure(ff_msgs::SetExposure::Request  &req,
                           ff_msgs::SetExposure::Response &res) {
-    // Set exposure
-    camera_exposure_ = req.exposure;
-    // Success!
-    res.success = true;
-    res.status_message = "Success";
+    if (thread_running_ && !auto_exposure_) {
+      // Set exposure
+      camera_exposure_ = req.exposure;
+      v4l_->SetParameters(camera_gain_, camera_exposure_);
+      // Success!
+      res.success = true;
+      res.status_message = "Success";
+    } else {
+      // Failed
+      res.success = false;
+      res.status_message = "Failed! Either thread not running or auto-exposure on";
+    }
+
     return true;
   }
 
@@ -286,7 +294,7 @@ namespace is_camera {
     }
 
     if (!camera.GetInt("exposure", &camera_exposure_)) {
-      FF_FATAL("Gain not specified.");
+      FF_FATAL("Exposure not specified.");
       exit(EXIT_FAILURE);
     }
 
