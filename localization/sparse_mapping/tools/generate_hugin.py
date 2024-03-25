@@ -144,10 +144,8 @@ def main():
         srcImage.setFilename(img)
         p.addImage(srcImage)
 
-    # make a c++ std::ofstream to write to
-    ofs = ofstream(output_hugin)
     # write the modified panorama to that stream
-    p.writeData(ofs)
+    p.WritePTOFile(output_hugin)
     # done with it
     del ofs
 
