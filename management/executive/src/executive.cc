@@ -1641,13 +1641,15 @@ bool Executive::AutoReturn(ff_msgs::CommandStampedPtr const& cmd) {
                                             ff_msgs::MobilityState::PERCHING) {
     err_msg = "Astrobee cannot attempt to dock while it is perched(ing).";
   } else {
-    // TODO(Katie) Currently this is just the dock 1 command with return to dock
-    // set to true! Change to be actual code
     successful = true;
     cmd->cmd_name = "dock";
-    cmd->args.resize(1);
-    cmd->args[0].data_type = ff_msgs::CommandArg::DATA_TYPE_INT;
-    cmd->args[0].i = 1;
+    // The berth number was added to the command after GDS development. If the
+    // command is received without a berth, set it to 0
+    if (cmd->args.size() != 1) {
+      cmd->args.resize(1);
+      cmd->args[0].data_type = ff_msgs::CommandArg::DATA_TYPE_INT;
+      cmd->args[0].i = 1;
+    }
     if (!FillDockGoal(cmd, true)) {
       return false;
     }
