@@ -815,13 +815,14 @@
         {
           "type": "ParamSpec",
           "id": "cameraName",
-          "parent": "Settiings.CameraName"
+          "parent": "Settings.CameraName"
         },
         {
           "type": "ParamSpec",
           "id": "exposure",
           "valueType": "float",
           "notes": "The value to set the exposurec to."
+        }
       ]
     },
 
