@@ -1,0 +1,26 @@
+{
+	"dockerFile": "Dockerfile",
+	"build": {
+		"args": {
+			"WORKSPACE": "${containerWorkspaceFolder}"
+		}
+	},
+	"remoteUser": "root",
+	"overrideCommand": false,
+	"forwardPorts": [
+		5900
+	],
+	"runArgs": [
+		"-ti",
+		"--rm",
+		"--cap-add=SYS_PTRACE",
+		"--security-opt=seccomp:unconfined",
+		"--security-opt=apparmor:unconfined"
+	],
+	"containerEnv": {
+		"DISPLAY": ":0",
+		"LIBGL_ALWAYS_SOFTWARE": "1" // Needed for software rendering of opengl
+	},
+	"workspaceMount": "source=${localWorkspaceFolder},target=/src/astrobee/src,type=bind",
+	"workspaceFolder": "/src/astrobee/src"
+}
