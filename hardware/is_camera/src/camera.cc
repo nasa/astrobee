@@ -258,7 +258,8 @@ namespace is_camera {
     } else {
       // Failed
       res.success = false;
-      res.status_message = "Failed! Either thread not running or auto-exposure on";
+      res.status_message = "Failed! Either thread not running (" + std::to_string(thread_running_) +
+                           ") or auto-exposure on (" + std::to_string(auto_exposure_) + ")";
     }
 
     return true;
