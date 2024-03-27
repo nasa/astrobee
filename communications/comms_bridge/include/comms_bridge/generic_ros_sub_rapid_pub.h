@@ -38,13 +38,58 @@
 
 namespace ff {
 
+class TopicEntry {
+ public:
+  TopicEntry() : connecting_robot_(""),
+                 out_topic_(""),
+                 rate_seconds_(0),
+                 last_time_pub_(0),
+                 seq_num_(0),
+                 type_md5_sum_(""),
+                 data_size_(0),
+                 data_(NULL) {}
+  TopicEntry(std::string robot_in, std::string topic_in, double rate_in) :
+      connecting_robot_(robot_in),
+      out_topic_(topic_in),
+      rate_seconds_(rate_in),
+      last_time_pub_(0),
+      seq_num_(0),
+      type_md5_sum_(""),
+      data_size_(0),
+      data_(NULL) {}
+
+  void SetDataToSend(const int seq_num,
+                     std::string const& md5_sum,
+                     const size_t data_size,
+                     uint8_t const* data) {
+    seq_num_ = seq_num;
+    type_md5_sum_ = md5_sum;
+    data_size_ = data_size;
+    data_ = data;
+  }
+
+  std::string connecting_robot_;
+  std::string out_topic_;
+  double rate_seconds_;
+
+  // Info only needed for rate messages. A little wasted space but quicker
+  // program execution
+  double last_time_pub_;
+  int seq_num_;
+  std::string type_md5_sum_;
+  size_t data_size_;
+  uint8_t const* data_;
+};
+
 class GenericROSSubRapidPub : public BridgeSubscriber {
  public:
-  GenericROSSubRapidPub();
+  explicit GenericROSSubRapidPub(ros::NodeHandle const* nh);
   ~GenericROSSubRapidPub();
 
   void AddTopics(std::map<std::string,
-       std::vector<std::pair<std::string, std::string>>> const& link_entries);
+       std::vector<std::shared_ptr<TopicEntry>>> const& link_entries);
+
+  float FloatMod(float x, float y);
 
   void InitializeDDS(std::vector<std::string> const& connections);
 
@@ -62,11 +107,16 @@ class GenericROSSubRapidPub : public BridgeSubscriber {
   void ConvertRequest(rapid::ext::astrobee::GenericCommsRequest const* data,
                       std::string const& connecting_robot);
 
- private:
-  bool dds_initialized_;
+  void CheckPubMsg(const ros::TimerEvent& event);
 
-  std::map<std::string, std::vector<std::pair<std::string, std::string>>> topic_mapping_;
+ private:
+  bool dds_initialized_, pub_rate_msgs_;
+
+  ros::Timer rate_msg_pub_timer_;
+
+  std::map<std::string, std::vector<std::shared_ptr<TopicEntry>>> topic_mapping_;
   std::map<std::string, GenericRapidPubPtr> robot_connections_;
+  std::vector<std::shared_ptr<TopicEntry>> rate_topic_entries_;
 };
 
 }  // end namespace ff

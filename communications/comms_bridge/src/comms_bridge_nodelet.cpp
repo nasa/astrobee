@@ -112,7 +112,7 @@ class CommsBridgeNodelet : public ff_util::FreeFlyerNodelet {
     }
     ROS_INFO_STREAM("Comms Bridge Nodelet: agent name " << agent_name_);
 
-    ros_sub_ = std::make_shared<ff::GenericROSSubRapidPub>();
+    ros_sub_ = std::make_shared<ff::GenericROSSubRapidPub>(nh);
 
     int fake_argc = 1;
 
@@ -367,6 +367,7 @@ class CommsBridgeNodelet : public ff_util::FreeFlyerNodelet {
                       int &num_topics) {
     config_reader::ConfigReader::Table relay_table, relay_item;
     std::string in_topic, out_topic;
+    double rate = -1.0;
     if (link_table.GetTable(table_name.c_str(), &relay_table)) {
       num_topics += relay_table.GetSize();
       for (size_t i = 1; i <= relay_table.GetSize(); i++) {
@@ -380,10 +381,16 @@ class CommsBridgeNodelet : public ff_util::FreeFlyerNodelet {
           out_topic = current_robot_ns + in_topic;
         }
 
+        if (!relay_item.GetReal("rate", &rate)) {
+          rate = -1.0;
+        }
+
         // Save all output topics under the same in topic since we don't want
         // to subscribe to the same topic multiple times
-        link_entries_[in_topic].push_back(std::make_pair(connection_robot,
-                                                         out_topic));
+        link_entries_[in_topic].push_back(
+            std::make_shared<ff::TopicEntry>(connection_robot,
+                                             out_topic,
+                                             rate));
       }
     }
   }
@@ -401,7 +408,7 @@ class CommsBridgeNodelet : public ff_util::FreeFlyerNodelet {
   std::shared_ptr<ff::GenericROSSubRapidPub> ros_sub_;
 
   std::string agent_name_, participant_name_;
-  std::map<std::string, std::vector<std::pair<std::string, std::string>>> link_entries_;
+  std::map<std::string, std::vector<std::shared_ptr<ff::TopicEntry>>> link_entries_;
   ros::ServiceServer dds_initialize_srv_;
 };
 
