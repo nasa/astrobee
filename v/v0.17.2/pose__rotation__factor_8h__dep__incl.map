@@ -1,0 +1,7 @@
+<map id="localization/graph_localizer/include/graph_localizer/pose_rotation_factor.h" name="localization/graph_localizer/include/graph_localizer/pose_rotation_factor.h">
+<area shape="rect" id="node1" title=" " alt="" coords="252,5,429,76"/>
+<area shape="rect" id="node2" href="$graph__localizer_8cc.html" title=" " alt="" coords="5,124,153,180"/>
+<area shape="rect" id="node3" href="$graph__localizer__stats_8cc.html" title=" " alt="" coords="177,124,325,180"/>
+<area shape="rect" id="node4" href="$rotation__factor__adder_8cc.html" title=" " alt="" coords="350,124,513,180"/>
+<area shape="rect" id="node5" href="$serialization_8cc.html" title=" " alt="" coords="537,131,747,173"/>
+</map>

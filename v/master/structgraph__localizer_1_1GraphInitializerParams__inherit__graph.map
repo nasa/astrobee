@@ -1,0 +1,5 @@
+<map id="graph_localizer::GraphInitializerParams" name="graph_localizer::GraphInitializerParams">
+<area shape="rect" id="node1" title=" " alt="" coords="5,417,235,568"/>
+<area shape="rect" id="node2" href="$structimu__integration_1_1LatestImuIntegratorParams.html" title=" " alt="" coords="21,263,219,369"/>
+<area shape="rect" id="node3" href="$structimu__integration_1_1ImuIntegratorParams.html" title=" " alt="" coords="9,5,231,215"/>
+</map>

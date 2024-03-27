@@ -1,0 +1,82 @@
+<map id="communications/dds_ros_bridge/src/dds_ros_bridge.cc" name="communications/dds_ros_bridge/src/dds_ros_bridge.cc">
+<area shape="rect" id="node1" title=" " alt="" coords="4785,5,4942,61"/>
+<area shape="rect" id="node2" href="$dds__ros__bridge_8h.html" title=" " alt="" coords="4790,109,4937,151"/>
+<area shape="rect" id="node3" title=" " alt="" coords="5,206,148,247"/>
+<area shape="rect" id="node4" title=" " alt="" coords="2005,414,2055,441"/>
+<area shape="rect" id="node5" title=" " alt="" coords="3158,414,3235,441"/>
+<area shape="rect" id="node6" title=" " alt="" coords="4655,496,4714,523"/>
+<area shape="rect" id="node7" title=" " alt="" coords="2112,496,2175,523"/>
+<area shape="rect" id="node8" href="$config__reader_8h.html" title=" " alt="" coords="7132,310,7285,351"/>
+<area shape="rect" id="node22" href="$rapid__command__ros__command__plan_8h.html" title=" " alt="" coords="1120,303,1313,359"/>
+<area shape="rect" id="node26" title=" " alt="" coords="717,407,874,448"/>
+<area shape="rect" id="node37" href="$rapid__compressed__file__ros__compressed__file_8h.html" title=" " alt="" coords="1389,303,1551,359"/>
+<area shape="rect" id="node40" href="$rapid__pub_8h.html" title=" " alt="" coords="1575,310,1733,351"/>
+<area shape="rect" id="node41" href="$ros__access__control_8h.html" title=" " alt="" coords="4194,310,4338,351"/>
+<area shape="rect" id="node42" title=" " alt="" coords="4478,407,4622,448"/>
+<area shape="rect" id="node43" href="$ros__ack_8h.html" title=" " alt="" coords="4026,310,4170,351"/>
+<area shape="rect" id="node44" href="$ros__agent__state_8h.html" title=" " alt="" coords="2026,310,2170,351"/>
+<area shape="rect" id="node45" href="$ros__arm__joint__sample_8h.html" title=" " alt="" coords="6231,310,6389,351"/>
+<area shape="rect" id="node46" href="$ros__arm__state_8h.html" title=" " alt="" coords="2394,310,2538,351"/>
+<area shape="rect" id="node47" href="$ros__battery__state_8h.html" title=" " alt="" coords="2949,310,3093,351"/>
+<area shape="rect" id="node48" title=" " alt="" coords="4353,206,4497,247"/>
+<area shape="rect" id="node49" href="$ros__command__config__rapid__command__config_8h.html" title=" " alt="" coords="5020,199,5200,255"/>
+<area shape="rect" id="node50" href="$ros__compressed__file__ack_8h.html" title=" " alt="" coords="3117,310,3295,351"/>
+<area shape="rect" id="node51" href="$ros__compressed__file__rapid__compressed__file_8h.html" title=" " alt="" coords="2195,303,2369,359"/>
+<area shape="rect" id="node52" href="$ros__compressed__image__rapid__image_8h.html" title=" " alt="" coords="6516,303,6712,359"/>
+<area shape="rect" id="node53" href="$ros__cpu__state_8h.html" title=" " alt="" coords="5002,310,5146,351"/>
+<area shape="rect" id="node54" href="$ros__data__to__disk_8h.html" title=" " alt="" coords="4362,310,4506,351"/>
+<area shape="rect" id="node55" href="$ros__disk__state_8h.html" title=" " alt="" coords="2613,310,2757,351"/>
+<area shape="rect" id="node56" href="$ros__fault__config_8h.html" title=" " alt="" coords="3522,310,3666,351"/>
+<area shape="rect" id="node57" href="$ros__fault__state_8h.html" title=" " alt="" coords="3690,310,3834,351"/>
+<area shape="rect" id="node58" href="$ros__gnc__fam__cmd__state_8h.html" title=" " alt="" coords="5221,310,5393,351"/>
+<area shape="rect" id="node59" href="$ros__gnc__control__state_8h.html" title=" " alt="" coords="5417,310,5573,351"/>
+<area shape="rect" id="node60" href="$ros__guest__science_8h.html" title=" " alt="" coords="3858,310,4002,351"/>
+<area shape="rect" id="node61" href="$ros__inertia_8h.html" title=" " alt="" coords="4631,310,4775,351"/>
+<area shape="rect" id="node62" href="$ros__log__sample_8h.html" title=" " alt="" coords="5598,310,5742,351"/>
+<area shape="rect" id="node63" href="$ros__odom__rapid__position_8h.html" title=" " alt="" coords="4800,310,4977,351"/>
+<area shape="rect" id="node64" href="$ros__payload__state_8h.html" title=" " alt="" coords="2781,310,2925,351"/>
+<area shape="rect" id="node65" href="$ros__plan__status__rapid__plan__status_8h.html" title=" " alt="" coords="3319,303,3498,359"/>
+<area shape="rect" id="node66" href="$ros__pmc__cmd__state_8h.html" title=" " alt="" coords="5766,310,5910,351"/>
+<area shape="rect" id="node67" href="$ros__pose__rapid__position_8h.html" title=" " alt="" coords="5934,310,6105,351"/>
+<area shape="rect" id="node68" href="$ros__string__rapid__text__message_8h.html" title=" " alt="" coords="6839,310,7056,351"/>
+<area shape="rect" id="node69" title=" " alt="" coords="6878,414,7017,441"/>
+<area shape="rect" id="node70" href="$ros__telemetry__rapid__telemetry_8h.html" title=" " alt="" coords="6035,206,6249,247"/>
+<area shape="rect" id="node71" href="$ros__zones__rapid__compressed__file_8h.html" title=" " alt="" coords="1808,303,2001,359"/>
+<area shape="rect" id="node72" title=" " alt="" coords="6913,213,7053,240"/>
+<area shape="rect" id="node73" href="$ff__names_8h.html" title=" " alt="" coords="6617,213,6787,240"/>
+<area shape="rect" id="node74" title=" " alt="" coords="7129,213,7269,240"/>
+<area shape="rect" id="node75" title=" " alt="" coords="7294,213,7449,240"/>
+<area shape="rect" id="node76" title=" " alt="" coords="7473,213,7672,240"/>
+<area shape="rect" id="node77" title=" " alt="" coords="7696,206,7884,247"/>
+<area shape="rect" id="node78" title=" " alt="" coords="7909,213,8063,240"/>
+<area shape="rect" id="node79" title=" " alt="" coords="8087,213,8194,240"/>
+<area shape="rect" id="node80" title=" " alt="" coords="8218,213,8309,240"/>
+<area shape="rect" id="node9" title=" " alt="" coords="7239,414,7293,441"/>
+<area shape="rect" id="node10" title=" " alt="" coords="7317,414,7388,441"/>
+<area shape="rect" id="node11" title=" " alt="" coords="6489,414,6568,441"/>
+<area shape="rect" id="node12" title=" " alt="" coords="6593,414,6707,441"/>
+<area shape="rect" id="node13" title=" " alt="" coords="7450,496,7517,523"/>
+<area shape="rect" id="node14" title=" " alt="" coords="6732,414,6803,441"/>
+<area shape="rect" id="node15" title=" " alt="" coords="7546,496,7631,523"/>
+<area shape="rect" id="node16" title=" " alt="" coords="7655,496,7751,523"/>
+<area shape="rect" id="node17" title=" " alt="" coords="7775,496,7850,523"/>
+<area shape="rect" id="node18" title=" " alt="" coords="7041,414,7104,441"/>
+<area shape="rect" id="node19" title=" " alt="" coords="7128,414,7215,441"/>
+<area shape="rect" id="node20" href="$init_8h.html" title=" " alt="" coords="6231,414,6363,441"/>
+<area shape="rect" id="node21" href="$watch__files_8h.html" title=" " alt="" coords="7515,407,7668,448"/>
+<area shape="rect" id="node23" title=" " alt="" coords="1808,414,1879,441"/>
+<area shape="rect" id="node24" title=" " alt="" coords="2231,414,2330,441"/>
+<area shape="rect" id="node25" title=" " alt="" coords="3058,414,3125,441"/>
+<area shape="rect" id="node27" title=" " alt="" coords="3729,414,3886,441"/>
+<area shape="rect" id="node28" title=" " alt="" coords="463,414,642,441"/>
+<area shape="rect" id="node29" title=" " alt="" coords="899,414,1113,441"/>
+<area shape="rect" id="node30" title=" " alt="" coords="223,407,439,448"/>
+<area shape="rect" id="node31" title=" " alt="" coords="4209,414,4403,441"/>
+<area shape="rect" id="node32" title=" " alt="" coords="1138,414,1309,441"/>
+<area shape="rect" id="node33" title=" " alt="" coords="1333,414,1495,441"/>
+<area shape="rect" id="node34" title=" " alt="" coords="1519,414,1733,441"/>
+<area shape="rect" id="node35" title=" " alt="" coords="5595,414,5793,441"/>
+<area shape="rect" id="node36" title=" " alt="" coords="3961,414,4134,441"/>
+<area shape="rect" id="node38" title=" " alt="" coords="2405,414,2599,441"/>
+<area shape="rect" id="node39" title=" " alt="" coords="3377,414,3603,441"/>
+</map>

@@ -1,0 +1,9 @@
+<map id="communications/comms_bridge/include/comms_bridge/generic_rapid_pub.h" name="communications/comms_bridge/include/comms_bridge/generic_rapid_pub.h">
+<area shape="rect" id="node1" title=" " alt="" coords="243,5,449,61"/>
+<area shape="rect" id="node2" href="$generic__ros__sub__rapid__pub_8h.html" title=" " alt="" coords="151,109,333,180"/>
+<area shape="rect" id="node7" href="$generic__rapid__pub_8cpp.html" title=" " alt="" coords="357,117,543,173"/>
+<area shape="rect" id="node3" href="$rapid__sub__request_8h.html" title=" " alt="" coords="139,228,345,284"/>
+<area shape="rect" id="node4" href="$comms__bridge__nodelet_8cpp.html" title=" " alt="" coords="5,332,199,388"/>
+<area shape="rect" id="node6" href="$generic__ros__sub__rapid__pub_8cpp.html" title=" " alt="" coords="369,228,552,284"/>
+<area shape="rect" id="node5" href="$rapid__sub__request_8cpp.html" title=" " alt="" coords="223,332,405,388"/>
+</map>

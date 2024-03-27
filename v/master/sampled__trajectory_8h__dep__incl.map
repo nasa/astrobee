@@ -1,0 +1,10 @@
+<map id="mobility/mapper/include/mapper/sampled_trajectory.h" name="mobility/mapper/include/mapper/sampled_trajectory.h">
+<area shape="rect" id="node1" title=" " alt="" coords="303,5,519,47"/>
+<area shape="rect" id="node2" href="$mapper__nodelet_8h.html" title=" " alt="" coords="248,184,447,225"/>
+<area shape="rect" id="node7" href="$structs_8h.html" title=" " alt="" coords="321,95,502,136"/>
+<area shape="rect" id="node8" href="$sampled__trajectory_8cc.html" title=" " alt="" coords="526,95,694,136"/>
+<area shape="rect" id="node3" href="$callbacks_8cc.html" title=" " alt="" coords="5,273,159,315"/>
+<area shape="rect" id="node4" href="$mapper__nodelet_8cc.html" title=" " alt="" coords="183,273,336,315"/>
+<area shape="rect" id="node5" href="$services_8cc.html" title=" " alt="" coords="360,273,513,315"/>
+<area shape="rect" id="node6" href="$threads_8cc.html" title=" " alt="" coords="537,273,691,315"/>
+</map>

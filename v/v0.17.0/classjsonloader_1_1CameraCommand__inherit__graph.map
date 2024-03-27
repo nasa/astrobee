@@ -1,0 +1,7 @@
+<map id="jsonloader::CameraCommand" name="jsonloader::CameraCommand">
+<area shape="rect" id="node1" title=" " alt="" coords="251,219,467,311"/>
+<area shape="rect" id="node3" href="$classjsonloader_1_1RecordCameraCommand.html" title=" " alt="" coords="5,373,216,480"/>
+<area shape="rect" id="node4" href="$classjsonloader_1_1SetCameraCommand.html" title=" " alt="" coords="240,359,477,495"/>
+<area shape="rect" id="node5" href="$classjsonloader_1_1StreamCameraCommand.html" title=" " alt="" coords="501,373,713,480"/>
+<area shape="rect" id="node2" href="$classjsonloader_1_1Command.html" title=" " alt="" coords="276,5,441,171"/>
+</map>

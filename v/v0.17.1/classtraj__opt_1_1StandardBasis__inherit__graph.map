@@ -1,0 +1,8 @@
+<map id="traj_opt::StandardBasis" name="traj_opt::StandardBasis">
+<area shape="rect" id="node1" title=" " alt="" coords="294,263,467,428"/>
+<area shape="rect" id="node3" href="$classtraj__opt_1_1BezierBasis.html" title=" " alt="" coords="5,483,161,561"/>
+<area shape="rect" id="node4" href="$classtraj__opt_1_1ChebyshevBasis.html" title=" " alt="" coords="186,483,373,561"/>
+<area shape="rect" id="node5" href="$classtraj__opt_1_1EndPointBasis.html" title=" " alt="" coords="397,483,569,561"/>
+<area shape="rect" id="node6" href="$classtraj__opt_1_1LegendreBasis.html" title=" " alt="" coords="593,476,768,568"/>
+<area shape="rect" id="node2" href="$classtraj__opt_1_1Basis.html" title=" " alt="" coords="316,5,445,215"/>
+</map>

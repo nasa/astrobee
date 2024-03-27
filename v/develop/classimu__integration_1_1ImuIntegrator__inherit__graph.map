@@ -1,0 +1,6 @@
+<map id="imu_integration::ImuIntegrator" name="imu_integration::ImuIntegrator">
+<area shape="rect" id="node1" title=" " alt="" coords="240,5,468,288"/>
+<area shape="rect" id="node2" href="$classimu__augmentor_1_1ImuAugmentor.html" title=" " alt="" coords="5,358,236,450"/>
+<area shape="rect" id="node3" href="$classimu__bias__tester_1_1ImuBiasTester.html" title=" " alt="" coords="261,351,447,457"/>
+<area shape="rect" id="node4" href="$classimu__integration_1_1LatestImuIntegrator.html" title=" " alt="" coords="472,336,740,472"/>
+</map>
