@@ -20,10 +20,12 @@
 #define COMMS_BRIDGE_GENERIC_RAPID_MSG_ROS_PUB_H_
 
 #include <comms_bridge/bridge_publisher.h>
+#include <comms_bridge/rapid_pub_request.h>
 #include <comms_bridge/util.h>
 
-#include <string>
 #include <map>
+#include <string>
+#include <vector>
 
 #include "dds_msgs/GenericCommsAdvertisementInfoSupport.h"
 #include "dds_msgs/GenericCommsContentSupport.h"
@@ -38,8 +40,20 @@ class GenericRapidMsgRosPub : public BridgePublisher {
   explicit GenericRapidMsgRosPub(double ad2pub_delay = DEFAULT_ADVERTISE_TO_PUB_DELAY);
   virtual ~GenericRapidMsgRosPub();
 
-  void ConvertData(rapid::ext::astrobee::GenericCommsAdvertisementInfo const* data);
-  void ConvertData(rapid::ext::astrobee::GenericCommsContent const* data);
+  void InitializeDDS(std::vector<std::string> const& connections, bool enable_advertisement_info_request);
+
+  void ConvertAdvertisementInfo(
+              rapid::ext::astrobee::GenericCommsAdvertisementInfo const* data);
+  void ConvertContent(rapid::ext::astrobee::GenericCommsContent const* data,
+                      std::string const& connecting_robot);
+
+  void RequestAdvertisementInfo(std::string const& output_topic,
+                                std::string const& connecting_robot);
+
+ private:
+  bool dds_initialized_, enable_advertisement_info_request_;
+
+  std::map<std::string, RapidPubRequestPtr> robot_connections_;
 };
 
 }  // end namespace ff

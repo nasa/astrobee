@@ -94,11 +94,11 @@ void GenericROSSubRapidPub::advertiseTopic(const RelayTopicInfo& relay_info) {
       continue;
     }
 
-    robot_connections_[robot_name]->ProcessAdvertisementInfo(out_topic,
-                                                             info.latching,
-                                                             info.data_type,
-                                                             info.md5_sum,
-                                                             info.definition);
+    robot_connections_[robot_name]->SendAdvertisementInfo(out_topic,
+                                                          info.latching,
+                                                          info.data_type,
+                                                          info.md5_sum,
+                                                          info.definition);
   }
 }
 
@@ -128,12 +128,75 @@ void GenericROSSubRapidPub::relayMessage(const RelayTopicInfo& topic_info,
       continue;
     }
 
-    robot_connections_[robot_name]->ProcessContent(out_topic,
-                                                   content_info.type_md5_sum,
-                                                   content_info.data,
-                                                   content_info.data_size,
-                                                   topic_info.relay_seqnum);
+    robot_connections_[robot_name]->SendContent(out_topic,
+                                                content_info.type_md5_sum,
+                                                content_info.data,
+                                                content_info.data_size,
+                                                topic_info.relay_seqnum);
   }
+}
+
+void GenericROSSubRapidPub::ConvertRequest(
+                        rapid::ext::astrobee::GenericCommsRequest const* data,
+                        std::string const& connecting_robot) {
+  const std::lock_guard<std::mutex> lock(m_mutex_);
+
+  std::string out_topic, robot_out_topic = data->outputTopic;
+  bool found = false;
+
+  // This is the output topic on the robot and may not match the keyed output
+  // topic so we need to find the keyed one
+  // First check if it is the keyed topic
+  auto search = topic_mapping_.find(robot_out_topic);
+  if (search != topic_mapping_.end()) {
+    out_topic = robot_out_topic;
+    found = true;
+  } else {
+    // If it is not the keyed topic, try to find it.
+    for (auto it = topic_mapping_.begin(); it != topic_mapping_.end() && !found; it++) {
+      for (size_t i = 0; it->second.size() && !found; i++) {
+        if (robot_out_topic == it->second[i].second) {
+          out_topic = it->first;
+          found = true;
+        }
+      }
+    }
+  }
+
+  // Make sure we found the keyed topic
+  if (!found) {
+    ROS_ERROR("Received request for topic %s but it wasn't added to the ros sub rapid pub.\n",
+              robot_out_topic.c_str());
+    return;
+  }
+
+  std::map<std::string, RelayTopicInfo>::iterator iter = m_relay_topics_.begin();
+  while (iter != m_relay_topics_.end()) {
+    if (iter->second.out_topic == out_topic)
+      break;
+    iter++;
+  }
+
+  if (iter == m_relay_topics_.end()) {
+    ROS_ERROR("Received request for topic %s but it wasn't added to the bridge subscriber.\n",
+              out_topic.c_str());
+    return;
+  }
+
+  ROS_INFO("Received reset for topic %s\n", out_topic.c_str());
+
+  // Check robot connection exists
+  if (robot_connections_.find(connecting_robot) == robot_connections_.end()) {
+    ROS_ERROR("Comms Bridge: No connection for %s\n", connecting_robot.c_str());
+    return;
+  }
+
+  const AdvertisementInfo &info = iter->second.ad_info;
+  robot_connections_[connecting_robot]->SendAdvertisementInfo(robot_out_topic,
+                                                              info.latching,
+                                                              info.data_type,
+                                                              info.md5_sum,
+                                                              info.definition);
 }
 
 }  // end namespace ff

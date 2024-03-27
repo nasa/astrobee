@@ -46,17 +46,17 @@ class GenericRapidPub {
                   std::string const& data_name,
                   std::string const& topic);
 
-  void ProcessAdvertisementInfo(std::string const& output_topic,
-                                bool latching,
-                                std::string const& data_type,
-                                std::string const& md5_sum,
-                                std::string definition);
+  void SendAdvertisementInfo(std::string const& output_topic,
+                             bool latching,
+                             std::string const& data_type,
+                             std::string const& md5_sum,
+                             std::string definition);
 
-  void ProcessContent(std::string const& output_topic,
-                      std::string const& md5_sum,
-                      uint8_t const* data,
-                      const size_t data_size,
-                      const int seq_num);
+  void SendContent(std::string const& output_topic,
+                   std::string const& md5_sum,
+                   uint8_t const* data,
+                   const size_t data_size,
+                   const int seq_num);
 
  private:
   using AdvertisementInfoSupplier =
