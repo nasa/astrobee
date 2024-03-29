@@ -18,162 +18,323 @@
 # under the License.
 
 """
-Test pixel_utils.py. This is currently copy/paste from a Jupyter notebook.
-Some of it can probably be turned into real unit tests. Other tests require
-manual review of output.
+Test pixel_utils.py.
 """
+
+import pathlib
+import unittest
+from typing import Dict, List, Tuple
 
 import numpy as np
 from matplotlib import pyplot as plt
 
 import pixel_utils as pu
 
-
-def test_get_pixel_color(y: int, x: int, expected: pu.RgbChannel):
-    "Test get_pixel_color()."
-    c = pu.get_pixel_color(pu.NAVCAM_BAYER_CONVENTION, y, x)
-    assert c == expected
-    print(f"test_get_pixel_color: y={y} x={x} expected={expected} result={c}")
+# Coordinates of hot pixels in test data
+HOT_Y = np.array([0, 0, 1, 5, 5])
+HOT_X = np.array([0, 3, 4, 1, 7])
 
 
-def test_get_bayer_mask():
-    "Test get_bayer_mask()."
+def get_rgb_bayer_pattern() -> pu.RgbImage:
+    "Return a small RGB image visualizing the NavCam Bayer pattern."
     test_image = np.zeros((6, 8, 3), dtype=np.uint8)
     for channel_num, channel in enumerate("RGB"):
         test_image[:, :, channel_num] = 255 * pu.get_bayer_mask(
             test_image.shape, channel, pu.NAVCAM_BAYER_CONVENTION
         )
-    plt.imshow(test_image)
-    # Visually inspect that the color pattern matches our convention according to
-    # https://docs.opencv.org/3.4/de/d25/imgproc_color_conversions.html
+    return test_image
 
 
-def test_neighbor_offsets_from_kernel():
-    "Test neighbor_offsets_from_kernel()."
-    print(pu.neighbor_offsets_from_kernel(pu.RB_KERNEL))
-    print(pu.neighbor_offsets_from_kernel(pu.G_KERNEL))
+def get_channel_rgb(channel: pu.RgbChannel) -> np.ndarray:
+    "Return RGB values for `channel`."
+    if channel == "R":
+        return np.array([255, 0, 0])
+    if channel == "G":
+        return np.array([0, 255, 0])
+    if channel == "B":
+        return np.array([0, 0, 255])
+    raise RuntimeError("Never reach this point")
 
 
-def test_median_filter():
-    "Test median_filter()."
-    rng = np.random.default_rng()
-
-    # start with grey image
+def get_hot_pixel_test_images(
+    gradient: bool = False,
+) -> Tuple[pu.MonoImage, pu.MonoImage]:
+    """
+    Return a pair of images (truth, observed) where truth is the "actual" image and observed has
+    been degraded with hot pixels. Useful for testing correction algorithms that try to
+    reconstruct truth from observed.
+    """
     h, w = 6, 8
-    im = (128 * np.ones((h, w))).astype(np.int16)
+    if gradient:
+        # Start with gradient image
+        x_grid, _ = np.meshgrid(np.arange(w), np.arange(h))
+        truth = (50 + 10 * x_grid).astype(np.int16)
+    else:
+        # Start with constant gray image
+        truth = np.ones((h, w)) * 128
 
-    # add some random noise
-    noise_max = 10
-    noise = rng.integers(low=-noise_max, high=noise_max, size=im.shape, dtype=np.int16)
-    im += noise
+    # Add some 'hot pixels' that we will correct. For a median filter, fairly good correction should
+    # be possible as long as the majority of 8-connected neighbors of each pixel are valid.
+    observed = truth.copy()
+    observed[HOT_Y, HOT_X] = 255
 
-    # add some 'hot pixels'. neighboring bad pixels should be ok, assuming enough other pixels
-    hot_y = np.array([0, 0, 1, 5, 5])
-    hot_x = np.array([0, 3, 4, 1, 7])
-    im[hot_y, hot_x] = 255
+    return truth, observed
 
+
+def get_median_corrected(observed: pu.MonoImage):
+    "Return the result of correcting `observed` with a median filter and an 8-connected kernel."
     # set kernel to be 1x1 box kernel with missing center pixel
     kernel = np.ones((3, 3), dtype=np.uint8)
     kernel[1, 1] = 0
 
     # apply median filter
-    corr = pu.median_filter(im, kernel)
-
-    # all pixels should be in the original noise range
-    assert np.all((128 - noise_max <= corr) & (corr < 128 + noise_max))
-
-    fig, axes = plt.subplots(1, 2)
-    axes[0].imshow(im, vmin=0, vmax=255)
-    axes[1].imshow(corr, vmin=0, vmax=255)
-    fig.set_size_inches((20, 8))
+    return pu.median_filter(observed, kernel)
 
 
 def get_bayer_test_image() -> pu.BayerImage:
     """
     Return a test image in raw Bayer format where all pixels with the same filter color have the
-    same value, but different colors have different values. Handy for certain tests.
+    same value, but different colors have different values. Handy for testing that processing
+    steps are respecting the Bayer color structure.
     """
     result = np.zeros((6, 8), dtype=np.uint8)
-    rgb_values = [150, 100, 50]  # arbitrary constant color value for each channel
+    rgb_values = [255, 128, 0]  # arbitrary constant color value for each channel
     for channel_num, channel in enumerate("RGB"):
         mask = pu.get_bayer_mask(result.shape, channel, pu.NAVCAM_BAYER_CONVENTION)
         result[mask] = rgb_values[channel_num]
     return result
 
 
-def test_estimate_from_bayer_neighbors():
-    "Test estimate_from_bayer_neighbors()."
-    test2_in = get_bayer_test_image()
-    test2_out = pu.estimate_from_bayer_neighbors(test2_in, pu.NAVCAM_BAYER_CONVENTION)
+def get_test_images_for_stats(gradient: bool = False) -> List[pu.BayerImage]:
+    """
+    Return a minimal set of test images for get_image_stats().
+    """
+    _, observed = get_hot_pixel_test_images(gradient)
+    hot = observed == 255
 
-    assert np.all(test2_in == test2_out)
-
-    fig, axes = plt.subplots(1, 2)
-
-    im = axes[0].imshow(test2_in)
-    plt.colorbar(im, ax=axes[0])
-    axes[0].set_title("input")
-
-    im = axes[1].imshow(test2_out)
-    plt.colorbar(im, ax=axes[1])
-    axes[1].set_title("estimated output (should be the same)")
-
-    fig.set_size_inches((20, 8))
+    in1 = observed - 1
+    in1[hot] = 255
+    in2 = observed + 1
+    in2[hot] = 255
+    return [in1, in2]
 
 
-def test_get_bad_pixel_coords(stats: pu.ImageStats) -> None:
-    "Test get_bad_pixel_coords()."
-    bad_coords = pu.get_bad_pixel_coords(stats)
-    disp = np.zeros(stats.rms_err.shape)
-    disp[bad_coords] = stats.rms_err[bad_coords]
+class TestPixelUtils(unittest.TestCase):
+    "TestCase for testing pixel_utils."
 
-    fig, _ = plt.subplots()
-    plt.jet()
-    plt.imshow(disp)
-    plt.colorbar(fraction=0.035, pad=0.04)
-    fig.set_size_inches((80, 60))
-    print(np.count_nonzero(disp))
+    def get_pixel_color_case(self, y: int, x: int, expected: pu.RgbChannel) -> None:
+        "One case for test_get_pixel_color()."
+        c = pu.get_pixel_color(pu.NAVCAM_BAYER_CONVENTION, y, x)
+        self.assertEqual(c, expected)
 
+    def test_get_pixel_color(self) -> None:
+        "Test get_pixel_color()."
+        self.get_pixel_color_case(y=1, x=0, expected="B")
+        self.get_pixel_color_case(y=0, x=3, expected="R")
 
-def test_bad_pixel_corrector():
-    "Test BadPixelCorrector."
-    # Choose R, G, B pixels. The last pair are (blue) same-color neighbors.
-    bad_coords = (np.array([0, 1, 3, 5]), np.array([1, 3, 2, 2]))
+    def test_get_bayer_mask(self) -> None:
+        "Test get_bayer_mask()."
+        test_image = get_rgb_bayer_pattern()
 
-    test2_in = get_bayer_test_image()
+        h, w, _ = test_image.shape
+        for patch_y in range(0, h, 2):
+            for patch_x in range(0, w, 2):
+                patch = test_image[patch_y : (patch_y + 2), patch_x : (patch_x + 2)]
+                np.testing.assert_allclose(
+                    patch[0, 0, :], get_channel_rgb(pu.NAVCAM_BAYER_CONVENTION[0])
+                )
+                np.testing.assert_allclose(
+                    patch[0, 1, :], get_channel_rgb(pu.NAVCAM_BAYER_CONVENTION[1])
+                )
+                np.testing.assert_allclose(
+                    patch[1, 0, :], get_channel_rgb(pu.NAVCAM_BAYER_CONVENTION[2])
+                )
+                np.testing.assert_allclose(
+                    patch[1, 1, :], get_channel_rgb(pu.NAVCAM_BAYER_CONVENTION[3])
+                )
 
-    corrupted = test2_in.copy()
-    corrupted[bad_coords] = 0
+    def demo_get_bayer_mask(self) -> None:
+        "Demo get_bayer_mask()."
+        _, ax = plt.subplots()
+        ax.imshow(get_rgb_bayer_pattern())
+        out_path = "output/demo_get_bayer_mask.png"
+        plt.savefig(out_path)
+        print()
+        print("== demo_get_bayer_mask")
+        print(f"Wrote to: {out_path}")
+        print(
+            "You can visually verify that the color pattern matches our convention according to:"
+        )
+        print("  https://docs.opencv.org/3.4/de/d25/imgproc_color_conversions.html")
+        print(
+            "  https://github.com/nasa/astrobee/blob/develop/hardware/is_camera/src/camera.cc#L522 [GRBG convention]"
+        )
 
-    corrector = pu.BadPixelCorrector(corrupted.shape, bad_coords)
-    corrected = corrector(corrupted)
+    def test_neighbor_offsets_from_kernel(self) -> None:
+        "Test neighbor_offsets_from_kernel()."
+        x_rb, y_rb = pu.neighbor_offsets_from_kernel(pu.RB_KERNEL)
+        np.testing.assert_allclose(x_rb, np.array([-2, -2, -2, 0, 0, 2, 2, 2]))
+        np.testing.assert_allclose(y_rb, np.array([-2, 0, 2, -2, 2, -2, 0, 2]))
+        x_g, y_g = pu.neighbor_offsets_from_kernel(pu.G_KERNEL)
+        np.testing.assert_allclose(x_g, np.array([-2, -1, -1, 0, 0, 1, 1, 2]))
+        np.testing.assert_allclose(y_g, np.array([0, -1, 1, -2, 2, -1, 1, 0]))
 
-    fig, axes = plt.subplots(1, 3)
+    def test_median_filter(self) -> None:
+        "Test median_filter()."
+        truth, observed = get_hot_pixel_test_images(gradient=True)
+        corrected = get_median_corrected(observed)
+        # Corrected pixels should match ground truth, up to max error bounded by the slope of the
+        # image gradient in truth.
+        np.testing.assert_allclose(corrected, truth, atol=10, rtol=9999)
 
-    obj = axes[0].imshow(test2_in)
-    plt.colorbar(obj, ax=axes[0], fraction=0.035, pad=0.04)
-    axes[0].set_title("Input")
+        truth, observed = get_hot_pixel_test_images(gradient=False)
+        corrected = get_median_corrected(observed)
+        # With no gradient, the match should be exact
+        np.testing.assert_allclose(corrected, truth)
 
-    obj = axes[1].imshow(corrupted)
-    plt.colorbar(obj, ax=axes[1], fraction=0.035, pad=0.04)
-    axes[1].set_title("Corrupted")
+    def demo_median_filter(self) -> None:
+        "Demo median_filter()."
+        truth, observed = get_hot_pixel_test_images(gradient=True)
+        corrected = get_median_corrected(observed)
 
-    obj = axes[2].imshow(corrected)
-    plt.colorbar(obj, ax=axes[2], fraction=0.035, pad=0.04)
-    axes[2].set_title("Corrected")
+        images_to_plot = {
+            "truth": truth,
+            "observed": observed,
+            "corrected": corrected,
+        }
+        fig, axes = plt.subplots(len(images_to_plot), 1)
+        plt.jet()
+        for i, (title, im) in enumerate(images_to_plot.items()):
+            axes[i].imshow(im, vmin=0, vmax=255)
+            axes[i].set_title(title)
+        fig.set_size_inches((8, 20))
+        out_path = "output/demo_median_filter.png"
+        plt.savefig(out_path)
+        print()
+        print("== demo_median_filter")
+        print(f"Wrote to: {out_path}")
+        print("You should see that 'corrected' closely matches 'truth'.")
 
-    fig.set_size_inches((30, 10))
+    def test_estimate_from_bayer_neighbors(self) -> None:
+        "Test estimate_from_bayer_neighbors()."
+        observed = get_bayer_test_image()
+        estimated = pu.estimate_from_bayer_neighbors(
+            observed, pu.NAVCAM_BAYER_CONVENTION
+        )
+        # In this case, since all pixels of the same color have the same value in the input image,
+        # running the filter shouldn't change anything. However, if the filter doesn't respect the
+        # Bayer same-color structure, it will change the values.
+        np.testing.assert_allclose(observed, estimated)
 
-    assert (test2_in == corrected).all()
+    def demo_estimate_from_bayer_neighbors(self) -> None:
+        "Test estimate_from_bayer_neighbors()."
+        observed = get_bayer_test_image()
+        estimated = pu.estimate_from_bayer_neighbors(
+            observed, pu.NAVCAM_BAYER_CONVENTION
+        )
+
+        images_to_plot = {
+            "observed": observed,
+            "estimated": estimated,
+        }
+        fig, axes = plt.subplots(len(images_to_plot), 1)
+        plt.jet()
+        for i, (title, im) in enumerate(images_to_plot.items()):
+            axes[i].imshow(im, vmin=0, vmax=255)
+            axes[i].set_title(title)
+        fig.set_size_inches((8, 20))
+        out_path = "output/demo_estimate_from_bayer_neighbors.png"
+        plt.savefig(out_path)
+        print()
+        print("== demo_estimate_from_bayer_neighbors")
+        print(f"Wrote to: {out_path}")
+        print("You should see that 'estimated' equals 'observed'.")
+
+    def test_get_image_stats(self) -> None:
+        "Test get_image_stats()."
+        _, observed = get_hot_pixel_test_images()
+        test_images = get_test_images_for_stats()
+        stats = pu.get_image_stats(test_images)
+        hot = observed == 255
+        expected_hot_mean_err = 255 - 128
+        expected_hot_rms_err = np.sqrt(np.mean(np.square([255 - 127, 255 - 129])))
+        np.testing.assert_allclose(stats.mean, observed)
+        np.testing.assert_allclose(stats.stdev[hot], 0)
+        np.testing.assert_allclose(stats.stdev[~hot], np.std([-1, 1]))
+        np.testing.assert_allclose(stats.mean_err[hot], expected_hot_mean_err)
+        np.testing.assert_allclose(stats.mean_err[~hot], 0)
+        np.testing.assert_allclose(stats.rms_err[hot], expected_hot_rms_err)
+        np.testing.assert_allclose(stats.rms_err[~hot], 0)
+        np.testing.assert_allclose(stats.stdev_err[hot], np.std([-1, 1]))
+        np.testing.assert_allclose(stats.stdev_err[~hot], 0)
+        # not yet testing slope, intercept, unsat_count
+
+    def test_get_bad_pixel_coords(self) -> None:
+        "Test get_bad_pixel_coords()."
+        test_images = get_test_images_for_stats()
+        stats = pu.get_image_stats(test_images)
+        bad_y, bad_x = pu.get_bad_pixel_coords(stats)
+        np.testing.assert_allclose(bad_y, HOT_Y)
+        np.testing.assert_allclose(bad_x, HOT_X)
+
+    def test_bad_pixel_corrector(self) -> None:
+        "Test BadPixelCorrector."
+        truth, _ = get_hot_pixel_test_images()
+        test_images = get_test_images_for_stats()
+        # test_images are [truth - 1, truth + 1] (both corrupted with hot pixels)
+        m1, p1 = test_images
+        stats = pu.get_image_stats(test_images)
+        bad_coords = pu.get_bad_pixel_coords(stats)
+        corrector = pu.BadPixelCorrector(stats.mean.shape, bad_coords)
+        self.assertTrue(np.allclose(corrector(m1), truth - 1))
+        self.assertTrue(np.allclose(corrector(p1), truth + 1))
+
+    def plot_bad_pixel_corrector(self, images_to_plot: Dict[str, np.ndarray]) -> None:
+        "Plot for demo_bad_pixel_corrector()."
+        fig, axes = plt.subplots(3, 1)
+        plt.jet()
+        for i, (title, im) in enumerate(images_to_plot.items()):
+            obj = axes[i].imshow(im, vmin=0, vmax=255)
+            plt.colorbar(obj, ax=axes[i], fraction=0.035, pad=0.04)
+            axes[i].set_title(title)
+        fig.set_size_inches((10, 30))
+        out_path = "output/demo_bad_pixel_corrector.png"
+        plt.savefig(out_path)
+        print()
+        print("== demo_bad_pixel_corrector")
+        print(f"Wrote to: {out_path}")
+        print("You should see that 'corrected' closely matches 'truth'.")
+
+    def demo_bad_pixel_corrector(self) -> None:
+        "Demo BadPixelCorrector."
+        truth, observed = get_hot_pixel_test_images(gradient=True)
+        test_images = get_test_images_for_stats(gradient=True)
+        stats = pu.get_image_stats(test_images)
+        bad_coords = pu.get_bad_pixel_coords(stats)
+        corrector = pu.BadPixelCorrector(stats.mean.shape, bad_coords)
+        corrected = corrector(observed)
+
+        images_to_plot = {
+            "truth": truth,
+            "observed": observed,
+            "corrected": corrected,
+        }
+        self.plot_bad_pixel_corrector(images_to_plot)
+
+    def demo_all(self) -> None:
+        "Call all demo_x() methods."
+        pathlib.Path("output").mkdir(exist_ok=True)
+        self.demo_get_bayer_mask()
+        self.demo_median_filter()
+        self.demo_estimate_from_bayer_neighbors()
+        self.demo_bad_pixel_corrector()
 
 
 def main():
     "Main testing function."
-    test_get_pixel_color(y=1, x=0, expected="B")
-    test_get_pixel_color(y=0, x=3, expected="R")
-    test_get_bayer_mask()
-    test_neighbor_offsets_from_kernel()
-    test_median_filter()
-    test_estimate_from_bayer_neighbors()
-    # test_get_bad_pixel_coords(stats)  # figure out what stats to test this one
-    test_bad_pixel_corrector()
+    TestPixelUtils().demo_all()
+    unittest.main()
+
+
+if __name__ == "__main__":
+    main()

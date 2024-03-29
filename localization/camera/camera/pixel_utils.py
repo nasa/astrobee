@@ -23,7 +23,7 @@ Utilities for detecting and correcting bad pixels.
 
 import glob
 from dataclasses import dataclass
-from typing import Callable, List, Optional, Tuple
+from typing import Callable, Generator, Iterable, List, Optional, Tuple
 
 import cv2
 import matplotlib
@@ -81,12 +81,12 @@ G_KERNEL = np.array(
 
 def get_bayer_patch(bayer_convention: str) -> BayerImagePatch:
     "Return 2 x 2 `bayer_convention` patch."
-    return np.array(list(bayer_convention)).reshape((2, 2)).T
+    return np.array(list(bayer_convention)).reshape((2, 2))
 
 
 def get_pixel_color(bayer_convention: str, y: int, x: int) -> RgbChannel:
     "Return the color of pixel `y`, `x` according to `bayer_convention`."
-    return get_bayer_patch(bayer_convention)[x % 2, y % 2]
+    return get_bayer_patch(bayer_convention)[y % 2, x % 2]
 
 
 def get_bayer_mask(
@@ -99,8 +99,8 @@ def get_bayer_mask(
     patch = get_bayer_patch(bayer_convention) == channel
     patch_y = np.arange(im_shape[0]) % 2
     patch_x = np.arange(im_shape[1]) % 2
-    pcoord = np.meshgrid(patch_x, patch_y)
-    return patch[tuple(pcoord)]
+    grid_x, grid_y = np.meshgrid(patch_x, patch_y)
+    return patch[grid_y, grid_x]
 
 
 def get_bayer_neighbor_kernel(channel: RgbChannel) -> Kernel:
@@ -203,22 +203,35 @@ class ImageStats:  # pylint:disable=too-many-instance-attributes
     "Count of frames in which pixel and neighbors were unsaturated"
 
 
-def get_image_stats(
-    image_paths: List[str],
-    preprocess: Optional[BayerImageFilter] = None,
-) -> ImageStats:
+class ImageSourcePaths:  # pylint: disable=too-few-public-methods # use __iter__()
+    "A source of images read from paths. Lazy loading avoids having all images in memory."
+
+    def __init__(self, paths: List[str], preprocess: Optional[BayerImageFilter] = None):
+        """
+        :param paths: Paths to read images from.
+        :param preprocess: If specified, apply this filter to incoming images before analysis.
+        """
+        self.paths = paths
+        self.preprocess = preprocess
+
+    def __iter__(self) -> Generator[BayerImage, None, None]:
+        "Lazily yield images. This method gives instances of this class type Iterable[BayerImage]."
+        for path in self.paths:
+            im = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+            if self.preprocess is not None:
+                im = self.preprocess(im)
+            yield im
+
+
+def get_image_stats(images: Iterable[BayerImage]) -> ImageStats:
     """
-    Compute image stats for bad pixel detection from `image_paths`.
-    :param preprocess: If specified, apply this filter to incoming images before analysis.
+    Compute image stats for bad pixel detection from `images`.
     """
 
     box55 = np.ones(
         (5, 5), dtype=np.uint8
     )  # overkill: better to use bayer-aware kernel here
-    for i, im_path in enumerate(image_paths):
-        im = cv2.imread(im_path, cv2.IMREAD_GRAYSCALE)
-        if preprocess is not None:
-            im = preprocess(im)
+    for i, im in enumerate(images):
         if i == 0:
             sum_actual = np.zeros(im.shape, dtype=np.float64)
             sum_actual_sq = np.zeros(im.shape, dtype=np.float64)
@@ -537,16 +550,16 @@ def process_images() -> None:
     # last_frame = "images/1703871226255847821.png"
     # paths = [path for path in paths if first_frame <= path <= last_frame]
 
-    stats = get_image_stats(paths, preprocess=None)
+    stats = get_image_stats(ImageSourcePaths(paths, preprocess=None))
     plot_image_stats(stats)
 
     bad_coords = get_bad_pixel_coords(stats)
     corrector = BadPixelCorrector(stats.mean.shape, bad_coords)
 
-    stats2 = get_image_stats(paths, preprocess=corrector)
+    stats2 = get_image_stats(ImageSourcePaths(paths, preprocess=corrector))
     plot_image_stats(stats2)
 
     bad_coords2 = coords_union(bad_coords, get_bad_pixel_coords(stats2))
     corrector2 = BadPixelCorrector(stats.mean.shape, bad_coords2)
-    stats3 = get_image_stats(paths, preprocess=corrector2)
+    stats3 = get_image_stats(ImageSourcePaths(paths, preprocess=corrector2))
     plot_image_stats(stats3)
