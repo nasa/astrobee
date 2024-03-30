@@ -11,19 +11,12 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Build image astrobee/astrobee:msgs-ubuntu16.04
+    - name: Build image astrobee/astrobee:msgs-ubuntu20.04
       run: docker build . -f ./scripts/docker/astrobee_msgs.Dockerfile
-                                 --build-arg UBUNTU_VERSION=16.04
-                                 --build-arg ROS_VERSION=kinetic
-                                 --build-arg PYTHON=''
-                                 -t astrobee/astrobee:msgs-ubuntu16.04
+                                 -t astrobee/astrobee:msgs-ubuntu20.04
 
-    - name: Build image astrobee/astrobee:latest-msgs-jar-ubuntu16.04
+    - name: Build image astrobee/astrobee:latest-msgs-jar-ubuntu20.04
       run: docker build . -f ./scripts/docker/build_msgs_jar.Dockerfile
-                              --build-arg UBUNTU_VERSION=16.04
-                              --build-arg ROS_VERSION=kinetic
-                              --build-arg PYTHON=''
-                              --build-arg REPO=astrobee
                               -t ghcr.io/${{ github.repository_owner }}/astrobee:latest-msgs-jar
 
     - name: Copy jar files

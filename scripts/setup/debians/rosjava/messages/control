@@ -1,0 +1,12 @@
+Source: ros-noetic-rosjava-messages
+Section: misc
+Priority: extra
+Maintainer: Ruben Garcia <nospam@nospam.org>
+Build-Depends: debhelper (>= 9.0.0), ros-noetic-actionlib-msgs, ros-noetic-catkin, ros-noetic-genjava, ros-noetic-geometry-msgs,   ros-noetic-roscpp, ros-noetic-rosjava-build-tools, ros-noetic-sensor-msgs, ros-noetic-std-msgs, ros-noetic-trajectory-msgs
+Homepage: http://ros.org/wiki/rosjava_messages
+Standards-Version: 3.9.2
+
+Package: ros-noetic-rosjava-messages
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-noetic-genjava, ros-noetic-rosjava-build-tools
+Description: Message generation for rosjava.

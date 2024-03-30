@@ -1,0 +1,12 @@
+Source: ros-noetic-rosjava-build-tools
+Section: misc
+Priority: extra
+Maintainer: Ruben Garcia <nospam@nospam.org>
+Build-Depends: debhelper (>= 9.0.0), ant, openjdk-8-jdk, ros-noetic-catkin
+Homepage: http://ros.org/wiki/rosjava_build_tools
+Standards-Version: 3.9.2
+
+Package: ros-noetic-rosjava-build-tools
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ant, openjdk-8-jdk, ros-noetic-catkin
+Description: Simple tools and catkin modules for rosjava development.

@@ -24,6 +24,7 @@
 #include <nodelet/nodelet.h>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <ff_msgs/SetBool.h>
+#include <ff_msgs/SetExposure.h>
 #include <ff_util/ff_nodelet.h>
 #include <std_msgs/Int32MultiArray.h>
 
@@ -79,6 +80,7 @@ class CameraNodelet : public ff_util::FreeFlyerNodelet {
   void EnableBayer(bool enable);
   void AutoExposure();
   size_t getNumBayerSubscribers();
+  bool SetExposure(ff_msgs::SetExposure::Request  &req, ff_msgs::SetExposure::Response &res);
 
   sensor_msgs::CameraInfo info_msg_;
 
@@ -93,6 +95,7 @@ class CameraNodelet : public ff_util::FreeFlyerNodelet {
   ros::Publisher info_pub_;
   ros::Publisher bayer_pub_;
   ros::Publisher pub_exposure_;
+  ros::ServiceServer srv_exposure_;
   std::shared_ptr<V4LStruct> v4l_;
 
   config_reader::ConfigReader config_;
