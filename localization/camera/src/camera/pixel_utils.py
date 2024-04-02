@@ -21,9 +21,17 @@
 Utilities for detecting and correcting bad pixels.
 """
 
+import abc
 import glob
+import itertools
+import json
+import multiprocessing as mp
+import multiprocessing.pool
+import pathlib
+import threading
+from abc import abstractmethod
 from dataclasses import dataclass
-from typing import Callable, Generator, Iterable, List, Optional, Tuple
+from typing import Any, Callable, Dict, Generator, Iterable, List, Optional, Tuple
 
 import cv2
 import matplotlib
@@ -45,13 +53,14 @@ MonoImage = np.ndarray  # Image with array shape (H, W), dtype=np.uint8
 FloatImage = np.ndarray  # Image with array shape (H, W), dtype=np.float64
 CountImage = np.ndarray  # Image with array shape (H, W), dtype=np.uint32
 BayerImageFilter = Callable[[BayerImage], BayerImage]
+JsonObject = Dict[
+    str, Any
+]  # A mapping object compatible with json.dump() / json.load()
+Self = Any  # Older mypy we're stuck on can't handle real Self type
 
 # https://github.com/nasa/astrobee/blob/develop/hardware/is_camera/src/camera.cc#L522
 # https://docs.opencv.org/3.4/de/d25/imgproc_color_conversions.html
 NAVCAM_BAYER_CONVENTION = "GRBG"
-
-# Pixels are considered saturated during analysis if >= SAT_THRESHOLD.
-SAT_THRESHOLD = 256  # Value >255 effectively disables saturation check for now
 
 # Pixels are considered bad if rms_err > RMS_ERROR_THRESHOLD.
 RMS_ERROR_THRESHOLD = 40
@@ -139,7 +148,7 @@ def median_filter(im: MonoImage, kernel: Kernel) -> MonoImage:
 
     neighbor_vals = np.ma.array(np.zeros(x.shape), mask=~valid)
     neighbor_vals[valid] = im[y[valid], x[valid]]
-    result = np.ma.median(neighbor_vals, axis=0)
+    result = np.ma.median(neighbor_vals, axis=0, overwrite_input=True)
     return result
 
 
@@ -178,6 +187,12 @@ def estimate_from_bayer_neighbors(
 class ImageStats:  # pylint:disable=too-many-instance-attributes
     "Statistics from bad pixel analysis over a set of images."
 
+    count: int
+    "Number of images used to generate stats."
+
+    shape: Tuple[int, ...]
+    "Image shape: (height, width)"
+
     mean: FloatImage
     "Mean of actual value"
 
@@ -193,14 +208,17 @@ class ImageStats:  # pylint:disable=too-many-instance-attributes
     stdev_err: FloatImage
     "Standard deviation of actual - estimated"
 
+    unsat_mean_err: FloatImage
+    "Mean of actual - estimated, calculated from unsaturated samples only"
+
     slope: FloatImage
-    "Value m from: actual = m * estimated + b"
+    "Value m from least-squares fit to linear model: actual = m * estimated + b"
 
     intercept: FloatImage
-    "Value b from: actual = m * estimated + b"
+    "Value b from model"
 
     unsat_count: CountImage
-    "Count of frames in which pixel and neighbors were unsaturated"
+    "Count of unsaturated samples"
 
 
 class ImageSourcePaths:  # pylint: disable=too-few-public-methods # use __iter__()
@@ -220,59 +238,190 @@ class ImageSourcePaths:  # pylint: disable=too-few-public-methods # use __iter__
             im = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
             if self.preprocess is not None:
                 im = self.preprocess(im)
-            yield im
+            return im
+
+
+class ImageStatsAccumulator:  # pylint: disable=too-many-instance-attributes
+    "Represents intermediate accumulated stats for generating a final ImageStats."
+
+    def __init__(self, shape: ArrayShape):
+        self.shape = shape
+        self.sum_actual = np.zeros(shape, dtype=np.float64)
+        self.sum_actual_sq = np.zeros(shape, dtype=np.float64)
+        self.sum_est = np.zeros(shape, dtype=np.float64)
+        self.sum_err_sq = np.zeros(shape, dtype=np.float64)
+        self.n = 0
+
+        self.unsat_sum_actual = np.zeros(shape, dtype=np.float64)
+        self.unsat_sum_actual_sq = np.zeros(shape, dtype=np.float64)
+        self.unsat_sum_est = np.zeros(shape, dtype=np.float64)
+        self.unsat_sum_est_sq = np.zeros(shape, dtype=np.float64)
+        self.unsat_sum_err_sq = np.zeros(shape, dtype=np.float64)
+        self.unsat_sum_prod = np.zeros(shape, dtype=np.float64)
+        self.unsat_n = np.zeros(shape, dtype=np.uint32)
+
+    def add(self, im: BayerImage) -> None:
+        "Add `im` to accumulated stats."
+        # These values are calculated for all pixels.
+        est = estimate_from_bayer_neighbors(im, NAVCAM_BAYER_CONVENTION)
+        self.sum_actual += im
+        self.sum_actual_sq += np.square(im, dtype=np.float64)
+        self.sum_est += est
+        self.sum_err_sq += np.square(im - est, dtype=np.float64)
+        self.n += 1
+
+        # A pixel is considered unsaturated for statistics purposes if both the pixel's actual and
+        # estimated values are unsaturated.
+        unsat = (im < 255) & (est < 255)
+        unsat_ok = unsat != 0
+
+        # These values are calculated for unsaturated pixels only.
+        self.unsat_sum_actual[unsat_ok] += im[unsat_ok]
+        self.unsat_sum_actual_sq[unsat_ok] += np.square(im[unsat_ok], dtype=np.float64)
+        self.unsat_sum_est[unsat_ok] += est[unsat_ok]
+        self.unsat_sum_est_sq[unsat_ok] += np.square(est[unsat_ok], dtype=np.float64)
+        self.unsat_sum_err_sq[unsat_ok] += np.square(
+            im[unsat_ok] - est[unsat_ok], dtype=np.float64
+        )
+        self.unsat_sum_prod[unsat_ok] += np.multiply(
+            im[unsat_ok], est[unsat_ok], dtype=np.float64
+        )
+        self.unsat_n[unsat == 1] += 1
+
+    def get_sum_fields(self) -> Tuple[Any, ...]:
+        "Return array fields of self that accumulate sums."
+        return (
+            self.sum_actual,
+            self.sum_actual_sq,
+            self.sum_est,
+            self.sum_err_sq,
+            self.unsat_sum_actual,
+            self.unsat_sum_actual_sq,
+            self.unsat_sum_est,
+            self.unsat_sum_est_sq,
+            self.unsat_sum_err_sq,
+            self.unsat_sum_prod,
+            self.unsat_n,
+        )
+
+    def merge(self, acc: "ImageStatsAccumulator") -> None:
+        "Merge `acc` into accumulated stats."
+        for self_field, acc_field in zip(self.get_sum_fields(), acc.get_sum_fields()):
+            self_field += acc_field
+        # Can't be handled like the others because it's a primitive value
+        self.n += acc.n
+
+    def get_stats(self) -> ImageStats:
+        "Return output stats based on accumulated values."
+        # standard least-squares linear regression
+        unsat_ok = self.unsat_n != 0
+        denom = self.unsat_n * self.unsat_sum_est_sq - np.square(self.unsat_sum_est)
+        denom_ok = denom != 0
+
+        slope = np.ones(self.shape, dtype=np.float64)
+        slope[denom_ok] = (
+            self.unsat_n[denom_ok] * self.unsat_sum_prod[denom_ok]
+            - self.unsat_sum_est[denom_ok] * self.unsat_sum_actual[denom_ok]
+        ) / denom[denom_ok]
+        intercept = np.zeros(self.shape, dtype=np.float64)
+        intercept[unsat_ok] = (
+            self.unsat_sum_actual[unsat_ok]
+            - slope[unsat_ok] * self.unsat_sum_est[unsat_ok]
+        ) / self.unsat_n[unsat_ok]
+
+        unsat_mean_err = np.zeros(self.shape, dtype=np.float64)
+        unsat_mean_err[unsat_ok] = (
+            self.unsat_sum_actual[unsat_ok] - self.unsat_sum_est[unsat_ok]
+        ) / self.unsat_n[unsat_ok]
+
+        # mypy doesn't like expressions below because np.sqrt() can blow up for negative inputs, but these
+        # inputs should be guaranteed positive by construction.
+        return ImageStats(
+            count=self.n,
+            shape=self.shape,
+            mean=self.sum_actual / self.n,
+            stdev=np.sqrt((self.sum_actual_sq / self.n) - np.square(self.sum_actual / self.n)),  # type: ignore
+            mean_err=(self.sum_actual - self.sum_est) / self.n,
+            rms_err=np.sqrt(self.sum_err_sq / self.n),  # type: ignore
+            stdev_err=np.sqrt(  # type: ignore
+                (self.sum_err_sq / self.n)
+                - np.square((self.sum_est - self.sum_actual) / self.n)
+            ),
+            unsat_mean_err=unsat_mean_err,
+            slope=slope,
+            intercept=intercept,
+            unsat_count=self.unsat_n,
+        )
 
 
 def get_image_stats(images: Iterable[BayerImage]) -> ImageStats:
-    """
-    Compute image stats for bad pixel detection from `images`.
-    """
-
-    box55 = np.ones(
-        (5, 5), dtype=np.uint8
-    )  # overkill: better to use bayer-aware kernel here
+    "Return image stats for bad pixel detection computed from `images`."
     for i, im in enumerate(images):
         if i == 0:
-            sum_actual = np.zeros(im.shape, dtype=np.float64)
-            sum_actual_sq = np.zeros(im.shape, dtype=np.float64)
-            sum_est = np.zeros(im.shape, dtype=np.float64)
-            sum_est_sq = np.zeros(im.shape, dtype=np.float64)
-            sum_err_sq = np.zeros(im.shape, dtype=np.float64)
-            sum_prod = np.zeros(im.shape, dtype=np.float64)
-            unsat_count = np.zeros(im.shape, dtype=np.uint32)
-        est = estimate_from_bayer_neighbors(im, NAVCAM_BAYER_CONVENTION)
-        unsat0 = (im < SAT_THRESHOLD).astype(np.uint8)
-        unsat = cv2.erode(unsat0, kernel=box55, borderType=cv2.BORDER_REPLICATE)
-        valid = unsat != 0
-        sum_actual[valid] += im[valid]
-        sum_actual_sq[valid] += np.square(im[valid], dtype=np.float64)
-        sum_est[valid] += est[valid]
-        sum_est_sq[valid] += np.square(est[valid], dtype=np.float64)
-        sum_err_sq[valid] += np.square(im[valid] - est[valid], dtype=np.float64)
-        sum_prod[valid] += np.multiply(im[valid], est[valid], dtype=np.float64)
-        unsat_count[unsat == 1] += 1
+            acc = ImageStatsAccumulator(im.shape)
+        acc.add(im)
+    return acc.get_stats()
 
-    n = unsat_count
 
-    # standard least-squares linear regression
-    denom = n * sum_est_sq - np.square(sum_est)
-    nz = denom != 0
-    slope = np.ones(sum_prod.shape, dtype=np.float64)
-    slope[nz] = (n[nz] * sum_prod[nz] - sum_est[nz] * sum_actual[nz]) / denom[nz]
-    intercept = (sum_actual - slope * sum_est) / n
+def image_stats_read(
+    images: Iterable[BayerImage],
+    input_queue: "mp.Queue[Optional[BayerImage]]",
+    num_workers: int,
+) -> None:
+    """
+    Target for reader thread. Put (lazily read) `images` into `input_queue`, then send
+    `num_workers` None values to signal completion to all workers.
+    """
+    for im in images:
+        input_queue.put(im)
+    for _ in range(num_workers):
+        # Each None entry signals end of input to one worker
+        input_queue.put(None)
 
-    # Type-checking errors below because np.sqrt() can blow up for negative inputs, but these
-    # inputs should be guaranteed positive by construction.
-    return ImageStats(
-        mean=sum_actual / n,
-        stdev=np.sqrt((sum_actual_sq / n) - np.square(sum_actual / n)),  # type: ignore
-        mean_err=(sum_actual - sum_est) / n,
-        rms_err=np.sqrt(sum_err_sq / n),  # type: ignore
-        stdev_err=np.sqrt((sum_err_sq / n) - np.square((sum_est - sum_actual) / n)),  # type: ignore
-        slope=slope,
-        intercept=intercept,
-        unsat_count=unsat_count,
-    )
+
+def image_stats_accum(
+    args: Tuple[ArrayShape, "mp.Queue[Optional[BayerImage]]"],
+) -> ImageStatsAccumulator:
+    """
+    Target for accumulator thread. Create an ImageStatsAccumulator with `shape`. Process incoming
+    images on `input_queue` until a None entry is received, then return the accumulator.
+    """
+    shape, input_queue = args
+    acc = ImageStatsAccumulator(shape)
+    while True:
+        im = input_queue.get()
+        if im is None:
+            return acc
+        acc.add(im)
+    return acc
+
+
+def get_image_stats_parallel(
+    images: Iterable[BayerImage], num_workers: int = mp.cpu_count()
+) -> ImageStats:
+    """
+    Return image stats for bad pixel detection computed from `images`, using `num_workers`
+    accumulator workers.
+    """
+    images, images_copy = itertools.tee(images)
+    shape = next(images_copy).shape
+    del images_copy
+
+    input_queue: "mp.Queue[Optional[BayerImage]]" = mp.Queue(1)
+    threading.Thread(
+        target=image_stats_read, args=(images, input_queue, num_workers)
+    ).start()
+
+    with multiprocessing.pool.ThreadPool(num_workers) as pool:
+        accums = pool.imap_unordered(
+            image_stats_accum, [(shape, input_queue) for _ in range(num_workers)]
+        )
+        for i, acc in enumerate(accums):
+            if i == 0:
+                merge_acc = acc
+            else:
+                merge_acc.merge(acc)
+    return merge_acc.get_stats()
 
 
 def plot_image_stats1(
@@ -327,8 +476,37 @@ def get_bad_pixel_coords(stats: ImageStats) -> CoordArray:
     return np.nonzero(stats.rms_err >= RMS_ERROR_THRESHOLD)
 
 
+class BadPixelCorrector(abc.ABC):
+    "Abstract filter for correcting bad pixels."
+
+    @abstractmethod
+    def __call__(self, im: BayerImage) -> BayerImage:
+        "Return the result of correcting `im`."
+
+    @classmethod
+    @abstractmethod
+    def from_json_object(cls, obj: JsonObject) -> Self:
+        "Return an instance of `cls` constructed from `obj`."
+
+    @abstractmethod
+    def to_json_object(self) -> JsonObject:
+        "Return the JsonObject representation of the corrector."
+
+    @classmethod
+    def load(cls, path: pathlib.Path) -> Self:
+        "Return an instance of `cls` loaded from JSON file at `path`."
+        with path.open("r", encoding="utf-8") as stream:
+            return cls.from_json_object(json.load(stream))
+
+    def save(self, path: pathlib.Path) -> None:
+        "Write corrector JSON representation to `path`."
+        with path.open("w", encoding="utf-8") as stream:
+            json.dump(self.to_json_object(), stream, separators=(",", ":"))
+        print(f"Wrote to {path}")
+
+
 @dataclass
-class BadPixel:
+class NeighborBadPixel:
     "Represents a bad pixel to be corrected."
 
     y: int
@@ -347,8 +525,10 @@ class BadPixel:
     "Determines order to fill in bad pixels. Earlier order filled sooner."
 
 
-class BadPixelCorrector:  # pylint:disable=too-few-public-methods # use __call__()
-    "A processor that can correct bad pixels in images."
+class NeighborMeanCorrector(
+    BadPixelCorrector
+):  # pylint:disable=too-few-public-methods # use __call__()
+    "Filter for replacing bad pixel values with the mean of their neighbors."
 
     def __init__(self, image_shape: ArrayShape, bad_coords: CoordArray):
         """
@@ -356,13 +536,13 @@ class BadPixelCorrector:  # pylint:disable=too-few-public-methods # use __call__
         :param bad_coords: Bad pixel coords represented as tuple (y, x) of 1D arrays
         """
         self.image_shape = image_shape
-        self.bad_pixels: List[BadPixel] = []
+        self.bad_pixels: List[NeighborBadPixel] = []
         self._init_filter(bad_coords)
 
     def _init_filter(self, bad_coords: CoordArray) -> None:
         "Initialize self.bad_pixels for interpolation."
         bad_image = np.zeros(self.image_shape, dtype=np.bool)
-        bad_image[bad_coords] = True
+        bad_image[tuple(bad_coords)] = True
         for y, x in zip(*bad_coords):
             color = get_pixel_color(NAVCAM_BAYER_CONVENTION, y=y, x=x)
             kernel = get_bayer_neighbor_kernel(color)
@@ -400,9 +580,9 @@ class BadPixelCorrector:  # pylint:disable=too-few-public-methods # use __call__
                 raise RuntimeError()
 
             self.bad_pixels.append(
-                BadPixel(
-                    y=y,
-                    x=x,
+                NeighborBadPixel(
+                    y=int(y),
+                    x=int(x),
                     y_neighbors=y_neighbors2,
                     x_neighbors=x_neighbors2,
                     order=order,
@@ -417,6 +597,29 @@ class BadPixelCorrector:  # pylint:disable=too-few-public-methods # use __call__
             n = len(pix.y_neighbors)
             result[pix.y, pix.x] = im[pix.y_neighbors, pix.x_neighbors].sum() / n
         return result
+
+    @classmethod
+    def from_json_object(cls, obj: JsonObject) -> "NeighborMeanCorrector":
+        "Return an instance of `cls` constructed from `obj`."
+        assert obj["type"] == "NeighborMeanCorrector"
+        assert obj["version"] == "1"
+        return cls(
+            image_shape=(obj["height"], obj["width"]), bad_coords=(obj["y"], obj["x"])
+        )
+
+    def to_json_object(self) -> JsonObject:
+        "Return the JsonObject representation of the corrector."
+        bad_coord_tuples = [(pix.y, pix.x) for pix in self.bad_pixels]
+        y, x = list(zip(*bad_coord_tuples))
+        height, width = self.image_shape
+        return {
+            "type": "NeighborMeanCorrector",
+            "version": "1",
+            "width": width,
+            "height": height,
+            "x": x,
+            "y": y,
+        }
 
 
 def coords_union(coords1: CoordArray, coords2: CoordArray) -> CoordArray:
@@ -482,7 +685,7 @@ def label_with_circles(im: RgbImage, coords: CoordArray, radius: int = 7) -> Rgb
 def plot_image_correction_example(
     im_path: str,
     stats: ImageStats,
-    corrector: BadPixelCorrector,
+    corrector: NeighborMeanCorrector,
     bad_coords: CoordArray,
 ) -> None:
     """
@@ -554,12 +757,12 @@ def process_images() -> None:
     plot_image_stats(stats)
 
     bad_coords = get_bad_pixel_coords(stats)
-    corrector = BadPixelCorrector(stats.mean.shape, bad_coords)
+    corrector = NeighborMeanCorrector(stats.mean.shape, bad_coords)
 
     stats2 = get_image_stats(ImageSourcePaths(paths, preprocess=corrector))
     plot_image_stats(stats2)
 
     bad_coords2 = coords_union(bad_coords, get_bad_pixel_coords(stats2))
-    corrector2 = BadPixelCorrector(stats.mean.shape, bad_coords2)
+    corrector2 = NeighborMeanCorrector(stats.mean.shape, bad_coords2)
     stats3 = get_image_stats(ImageSourcePaths(paths, preprocess=corrector2))
     plot_image_stats(stats3)

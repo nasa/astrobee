@@ -21,14 +21,16 @@
 Test pixel_utils.py.
 """
 
+import os
 import pathlib
+import tempfile
 import unittest
 from typing import Dict, List, Tuple
 
 import numpy as np
 from matplotlib import pyplot as plt
 
-import pixel_utils as pu
+from camera import pixel_utils as pu
 
 # Coordinates of hot pixels in test data
 HOT_Y = np.array([0, 0, 1, 5, 5])
@@ -81,7 +83,7 @@ def get_hot_pixel_test_images(
     return truth, observed
 
 
-def get_median_corrected(observed: pu.MonoImage):
+def get_median_filtered(observed: pu.MonoImage):
     "Return the result of correcting `observed` with a median filter and an 8-connected kernel."
     # set kernel to be 1x1 box kernel with missing center pixel
     kernel = np.ones((3, 3), dtype=np.uint8)
@@ -182,25 +184,25 @@ class TestPixelUtils(unittest.TestCase):
     def test_median_filter(self) -> None:
         "Test median_filter()."
         truth, observed = get_hot_pixel_test_images(gradient=True)
-        corrected = get_median_corrected(observed)
+        corrected = get_median_filtered(observed)
         # Corrected pixels should match ground truth, up to max error bounded by the slope of the
         # image gradient in truth.
         np.testing.assert_allclose(corrected, truth, atol=10, rtol=9999)
 
         truth, observed = get_hot_pixel_test_images(gradient=False)
-        corrected = get_median_corrected(observed)
+        corrected = get_median_filtered(observed)
         # With no gradient, the match should be exact
         np.testing.assert_allclose(corrected, truth)
 
     def demo_median_filter(self) -> None:
         "Demo median_filter()."
         truth, observed = get_hot_pixel_test_images(gradient=True)
-        corrected = get_median_corrected(observed)
+        filtered = get_median_filtered(observed)
 
         images_to_plot = {
             "truth": truth,
             "observed": observed,
-            "corrected": corrected,
+            "filtered": filtered,
         }
         fig, axes = plt.subplots(len(images_to_plot), 1)
         plt.jet()
@@ -213,7 +215,7 @@ class TestPixelUtils(unittest.TestCase):
         print()
         print("== demo_median_filter")
         print(f"Wrote to: {out_path}")
-        print("You should see that 'corrected' closely matches 'truth'.")
+        print("You should see that 'filtered' closely matches 'truth'.")
 
     def test_estimate_from_bayer_neighbors(self) -> None:
         "Test estimate_from_bayer_neighbors()."
@@ -277,20 +279,22 @@ class TestPixelUtils(unittest.TestCase):
         np.testing.assert_allclose(bad_y, HOT_Y)
         np.testing.assert_allclose(bad_x, HOT_X)
 
-    def test_bad_pixel_corrector(self) -> None:
-        "Test BadPixelCorrector."
+    def test_neighbor_mean_corrector(self) -> None:
+        "Test NeighborMeanCorrector."
         truth, _ = get_hot_pixel_test_images()
         test_images = get_test_images_for_stats()
         # test_images are [truth - 1, truth + 1] (both corrupted with hot pixels)
         m1, p1 = test_images
         stats = pu.get_image_stats(test_images)
         bad_coords = pu.get_bad_pixel_coords(stats)
-        corrector = pu.BadPixelCorrector(stats.mean.shape, bad_coords)
-        self.assertTrue(np.allclose(corrector(m1), truth - 1))
-        self.assertTrue(np.allclose(corrector(p1), truth + 1))
+        corrector = pu.NeighborMeanCorrector(stats.mean.shape, bad_coords)
+        np.testing.assert_allclose(corrector(m1), truth - 1)
+        np.testing.assert_allclose(corrector(p1), truth + 1)
 
-    def plot_bad_pixel_corrector(self, images_to_plot: Dict[str, np.ndarray]) -> None:
-        "Plot for demo_bad_pixel_corrector()."
+    def plot_neighbor_mean_corrector(
+        self, images_to_plot: Dict[str, np.ndarray]
+    ) -> None:
+        "Plot for demo_neighbor_mean_corrector()."
         fig, axes = plt.subplots(3, 1)
         plt.jet()
         for i, (title, im) in enumerate(images_to_plot.items()):
@@ -298,20 +302,20 @@ class TestPixelUtils(unittest.TestCase):
             plt.colorbar(obj, ax=axes[i], fraction=0.035, pad=0.04)
             axes[i].set_title(title)
         fig.set_size_inches((10, 30))
-        out_path = "output/demo_bad_pixel_corrector.png"
+        out_path = "output/demo_neighbor_mean_corrector.png"
         plt.savefig(out_path)
         print()
-        print("== demo_bad_pixel_corrector")
+        print("== demo_neighbor_mean_corrector")
         print(f"Wrote to: {out_path}")
         print("You should see that 'corrected' closely matches 'truth'.")
 
-    def demo_bad_pixel_corrector(self) -> None:
-        "Demo BadPixelCorrector."
+    def demo_neighbor_mean_corrector(self) -> None:
+        "Demo NeighborMeanCorrector."
         truth, observed = get_hot_pixel_test_images(gradient=True)
         test_images = get_test_images_for_stats(gradient=True)
         stats = pu.get_image_stats(test_images)
         bad_coords = pu.get_bad_pixel_coords(stats)
-        corrector = pu.BadPixelCorrector(stats.mean.shape, bad_coords)
+        corrector = pu.NeighborMeanCorrector(stats.mean.shape, bad_coords)
         corrected = corrector(observed)
 
         images_to_plot = {
@@ -319,7 +323,7 @@ class TestPixelUtils(unittest.TestCase):
             "observed": observed,
             "corrected": corrected,
         }
-        self.plot_bad_pixel_corrector(images_to_plot)
+        self.plot_neighbor_mean_corrector(images_to_plot)
 
     def demo_all(self) -> None:
         "Call all demo_x() methods."
@@ -327,12 +331,52 @@ class TestPixelUtils(unittest.TestCase):
         self.demo_get_bayer_mask()
         self.demo_median_filter()
         self.demo_estimate_from_bayer_neighbors()
-        self.demo_bad_pixel_corrector()
+        self.demo_neighbor_mean_corrector()
+
+    def check_nbp_equal(self, a: pu.NeighborBadPixel, b: pu.NeighborBadPixel) -> None:
+        "Test that `a` and `b` are equal."
+        self.assertEqual(a.y, b.y)
+        self.assertEqual(a.x, b.x)
+        np.testing.assert_allclose(a.y_neighbors, b.y_neighbors)
+        np.testing.assert_allclose(a.x_neighbors, b.x_neighbors)
+        self.assertEqual(a.order, b.order)
+
+    def check_nbp_list_equal(
+        self, a: List[pu.NeighborBadPixel], b: List[pu.NeighborBadPixel]
+    ) -> None:
+        "Test that `a` and `b` are equal."
+        for a_val, b_val in zip(a, b):
+            self.check_nbp_equal(a_val, b_val)
+
+    def test_neighbor_mean_corrector_save_load(self) -> None:
+        "Test NeighborMeanCorrector save() and load()."
+        test_images = get_test_images_for_stats(gradient=True)
+        stats = pu.get_image_stats(test_images)
+        bad_coords = pu.get_bad_pixel_coords(stats)
+        corrector = pu.NeighborMeanCorrector(stats.mean.shape, bad_coords)
+        temp_fd, temp_name = tempfile.mkstemp(
+            "test_neighbor_mean_corrector_save_load.json"
+        )
+        os.close(temp_fd)
+        temp_path = pathlib.Path(temp_name)
+        corrector.save(temp_path)
+        corrector_copy = pu.NeighborMeanCorrector.load(temp_path)
+        self.assertEqual(corrector.image_shape, corrector_copy.image_shape)
+        self.check_nbp_list_equal(corrector.bad_pixels, corrector_copy.bad_pixels)
+
+    def test_get_image_stats_parallel(self) -> None:
+        "Test get_image_stats_parallel()."
+        test_images = get_test_images_for_stats(gradient=True)
+        stats = pu.get_image_stats(test_images)
+        stats2 = pu.get_image_stats_parallel(test_images, num_workers=2)
+        np.testing.assert_allclose(stats.mean, stats2.mean)
 
 
 def main():
     "Main testing function."
     TestPixelUtils().demo_all()
+    print()
+    print("== Unit testing")
     unittest.main()
 
 
