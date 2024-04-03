@@ -22,12 +22,14 @@ Utilities for detecting and correcting bad pixels.
 """
 
 import abc
+import base64
 import glob
 import itertools
 import json
 import multiprocessing as mp
 import multiprocessing.pool
 import pathlib
+import queue
 import threading
 from abc import abstractmethod
 from dataclasses import dataclass
@@ -36,6 +38,8 @@ from typing import Any, Callable, Dict, Generator, Iterable, List, Optional, Tup
 import cv2
 import matplotlib
 import numpy as np
+import rosbag
+from cv_bridge import CvBridge
 from matplotlib import pyplot as plt
 
 # pylint: disable=c-extension-no-member  # because pylint can't find cv2 members
@@ -52,6 +56,7 @@ Kernel = np.ndarray  # An NxN kernel with N odd
 MonoImage = np.ndarray  # Image with array shape (H, W), dtype=np.uint8
 FloatImage = np.ndarray  # Image with array shape (H, W), dtype=np.float64
 CountImage = np.ndarray  # Image with array shape (H, W), dtype=np.uint32
+SignedImage = np.ndarray  # Image with array shape (H, W), dtype=np.int16
 BayerImageFilter = Callable[[BayerImage], BayerImage]
 JsonObject = Dict[
     str, Any
@@ -64,6 +69,8 @@ NAVCAM_BAYER_CONVENTION = "GRBG"
 
 # Pixels are considered bad if rms_err > RMS_ERROR_THRESHOLD.
 RMS_ERROR_THRESHOLD = 40
+
+PNG_BASE64_PREFIX = "png:base64:"
 
 # Kernels representing 8 nearest same-color neighbors of a pixel depending on its color
 RB_KERNEL = np.array(
@@ -212,7 +219,7 @@ class ImageStats:  # pylint:disable=too-many-instance-attributes
     "Mean of actual - estimated, calculated from unsaturated samples only"
 
     slope: FloatImage
-    "Value m from least-squares fit to linear model: actual = m * estimated + b"
+    "Value m from least-squares fit to linear model: estimated = m * actual + b"
 
     intercept: FloatImage
     "Value b from model"
@@ -224,21 +231,42 @@ class ImageStats:  # pylint:disable=too-many-instance-attributes
 class ImageSourcePaths:  # pylint: disable=too-few-public-methods # use __iter__()
     "A source of images read from paths. Lazy loading avoids having all images in memory."
 
-    def __init__(self, paths: List[str], preprocess: Optional[BayerImageFilter] = None):
+    def __init__(self, paths: List[str]):
         """
         :param paths: Paths to read images from.
-        :param preprocess: If specified, apply this filter to incoming images before analysis.
         """
         self.paths = paths
-        self.preprocess = preprocess
 
     def __iter__(self) -> Generator[BayerImage, None, None]:
         "Lazily yield images. This method gives instances of this class type Iterable[BayerImage]."
         for path in self.paths:
             im = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
-            if self.preprocess is not None:
-                im = self.preprocess(im)
-            return im
+            yield im
+
+
+class ImageSourceBagPaths:  # pylint: disable=too-few-public-methods # use __iter__()
+    "A source of images read from bags."
+
+    def __init__(
+        self,
+        bag_paths: List[str],
+        topic: str = "/hw/cam_nav_bayer",
+    ):
+        """
+        :param bag_paths: ROS bag paths to read images from.
+        :param topic: Topic that relevant images are on.
+        """
+        self.bag_paths = bag_paths
+        self.topic = topic
+
+    def __iter__(self) -> Generator[BayerImage, None, None]:
+        "Lazily yield images. This method gives instances of this class type Iterable[BayerImage]."
+        bridge = CvBridge()
+        for path in self.bag_paths:
+            with rosbag.Bag(path, "r") as bag:
+                for _, msg, _ in bag.read_messages([self.topic]):
+                    im = bridge.imgmsg_to_cv2(msg, "bayer_grbg8")
+                    yield im
 
 
 class ImageStatsAccumulator:  # pylint: disable=too-many-instance-attributes
@@ -315,18 +343,20 @@ class ImageStatsAccumulator:  # pylint: disable=too-many-instance-attributes
         "Return output stats based on accumulated values."
         # standard least-squares linear regression
         unsat_ok = self.unsat_n != 0
-        denom = self.unsat_n * self.unsat_sum_est_sq - np.square(self.unsat_sum_est)
+        denom = self.unsat_n * self.unsat_sum_actual_sq - np.square(
+            self.unsat_sum_actual
+        )
         denom_ok = denom != 0
 
         slope = np.ones(self.shape, dtype=np.float64)
         slope[denom_ok] = (
             self.unsat_n[denom_ok] * self.unsat_sum_prod[denom_ok]
-            - self.unsat_sum_est[denom_ok] * self.unsat_sum_actual[denom_ok]
+            - self.unsat_sum_actual[denom_ok] * self.unsat_sum_est[denom_ok]
         ) / denom[denom_ok]
         intercept = np.zeros(self.shape, dtype=np.float64)
         intercept[unsat_ok] = (
-            self.unsat_sum_actual[unsat_ok]
-            - slope[unsat_ok] * self.unsat_sum_est[unsat_ok]
+            self.unsat_sum_est[unsat_ok]
+            - slope[unsat_ok] * self.unsat_sum_actual[unsat_ok]
         ) / self.unsat_n[unsat_ok]
 
         unsat_mean_err = np.zeros(self.shape, dtype=np.float64)
@@ -354,9 +384,13 @@ class ImageStatsAccumulator:  # pylint: disable=too-many-instance-attributes
         )
 
 
-def get_image_stats(images: Iterable[BayerImage]) -> ImageStats:
+def get_image_stats(
+    images: Iterable[BayerImage], preprocess: Optional[BayerImageFilter] = None
+) -> ImageStats:
     "Return image stats for bad pixel detection computed from `images`."
     for i, im in enumerate(images):
+        if preprocess is not None:
+            im = preprocess(im)
         if i == 0:
             acc = ImageStatsAccumulator(im.shape)
         acc.add(im)
@@ -365,7 +399,7 @@ def get_image_stats(images: Iterable[BayerImage]) -> ImageStats:
 
 def image_stats_read(
     images: Iterable[BayerImage],
-    input_queue: "mp.Queue[Optional[BayerImage]]",
+    input_queue: "queue.Queue[Optional[BayerImage]]",
     num_workers: int,
 ) -> None:
     """
@@ -380,24 +414,30 @@ def image_stats_read(
 
 
 def image_stats_accum(
-    args: Tuple[ArrayShape, "mp.Queue[Optional[BayerImage]]"],
+    args: Tuple[
+        ArrayShape, "queue.Queue[Optional[BayerImage]]", Optional[BayerImageFilter]
+    ],
 ) -> ImageStatsAccumulator:
     """
     Target for accumulator thread. Create an ImageStatsAccumulator with `shape`. Process incoming
     images on `input_queue` until a None entry is received, then return the accumulator.
     """
-    shape, input_queue = args
+    shape, input_queue, preprocess = args
     acc = ImageStatsAccumulator(shape)
     while True:
         im = input_queue.get()
         if im is None:
             return acc
+        if preprocess is not None:
+            im = preprocess(im)
         acc.add(im)
     return acc
 
 
 def get_image_stats_parallel(
-    images: Iterable[BayerImage], num_workers: int = mp.cpu_count()
+    images: Iterable[BayerImage],
+    preprocess: Optional[BayerImageFilter] = None,
+    num_workers: int = mp.cpu_count(),
 ) -> ImageStats:
     """
     Return image stats for bad pixel detection computed from `images`, using `num_workers`
@@ -407,14 +447,15 @@ def get_image_stats_parallel(
     shape = next(images_copy).shape
     del images_copy
 
-    input_queue: "mp.Queue[Optional[BayerImage]]" = mp.Queue(1)
+    input_queue: "queue.Queue[Optional[BayerImage]]" = queue.Queue(1)
     threading.Thread(
         target=image_stats_read, args=(images, input_queue, num_workers)
     ).start()
 
     with multiprocessing.pool.ThreadPool(num_workers) as pool:
         accums = pool.imap_unordered(
-            image_stats_accum, [(shape, input_queue) for _ in range(num_workers)]
+            image_stats_accum,
+            [(shape, input_queue, preprocess) for _ in range(num_workers)],
         )
         for i, acc in enumerate(accums):
             if i == 0:
@@ -544,47 +585,40 @@ class NeighborMeanCorrector(
         bad_image = np.zeros(self.image_shape, dtype=np.bool)
         bad_image[tuple(bad_coords)] = True
         for y, x in zip(*bad_coords):
-            color = get_pixel_color(NAVCAM_BAYER_CONVENTION, y=y, x=x)
-            kernel = get_bayer_neighbor_kernel(color)
+            kernel = get_bayer_neighbor_kernel(
+                get_pixel_color(NAVCAM_BAYER_CONVENTION, y=y, x=x)
+            )
             y_offsets, x_offsets = neighbor_offsets_from_kernel(kernel)
-            y_neighbors0 = y_offsets + y
-            x_neighbors0 = x_offsets + x
+            y_neighbors = y_offsets + y
+            x_neighbors = x_offsets + x
 
             ny, nx = self.image_shape
             in_bounds = (
-                (0 <= y_neighbors0)
-                & (y_neighbors0 < ny)
-                & (0 <= x_neighbors0)
-                & (x_neighbors0 < nx)
+                (0 <= y_neighbors)
+                & (y_neighbors < ny)
+                & (0 <= x_neighbors)
+                & (x_neighbors < nx)
             )
-            y_neighbors1 = y_neighbors0[in_bounds]
-            x_neighbors1 = x_neighbors0[in_bounds]
+            y_neighbors = y_neighbors[in_bounds]
+            x_neighbors = x_neighbors[in_bounds]
 
             # pylint:disable-next=singleton-comparison # this is an array operation
-            not_bad = bad_image[y_neighbors1, x_neighbors1] != True
-            y_neighbors2 = y_neighbors1
-            x_neighbors2 = x_neighbors1
+            not_bad = bad_image[y_neighbors, x_neighbors] != True
             if not_bad.any():
-                y_neighbors2 = y_neighbors1[not_bad]
-                x_neighbors2 = x_neighbors1[not_bad]
+                y_neighbors = y_neighbors[not_bad]
+                x_neighbors = x_neighbors[not_bad]
                 order = 0
             else:
                 # If all neighbors are bad, fill them first, then use
                 # them to fill this pixel.
                 order = 1
 
-            if y_neighbors2.size == 0:
-                print(
-                    f"neighbors: {not_bad} {y_neighbors0} {x_neighbors0} {y_neighbors1} {x_neighbors1}"
-                )
-                raise RuntimeError()
-
             self.bad_pixels.append(
                 NeighborBadPixel(
                     y=int(y),
                     x=int(x),
-                    y_neighbors=y_neighbors2,
-                    x_neighbors=x_neighbors2,
+                    y_neighbors=y_neighbors,
+                    x_neighbors=x_neighbors,
                     order=order,
                 )
             )
@@ -620,6 +654,102 @@ class NeighborMeanCorrector(
             "x": x,
             "y": y,
         }
+
+
+class BiasCorrector(
+    BadPixelCorrector
+):  # pylint:disable=too-few-public-methods # use __call__()
+    """
+    Filter for bias correction of pixel values. Two steps are applied:
+    1) All pixels are corrected according to: v_out = v_in - bias
+    2) At pixel locations where the original v_in was saturated, v_out is replaced with the
+       mean of its eight closest same-color Bayer neighbors.
+    """
+
+    def __init__(self, bias: SignedImage):
+        """
+        :param bias: Bias represented as int8.
+        """
+        assert bias.dtype == np.int16
+        self.bias = bias
+
+    def __call__(self, im: BayerImage) -> BayerImage:
+        "Return the result of correcting `im`."
+        result = self.apply_bias(im)
+        self.correct_saturated_from_neighbors(im, result)
+        return result
+
+    def apply_bias(self, im: BayerImage) -> BayerImage:
+        "Return the result of applying the affine correction to `im`."
+        assert im.dtype == np.uint8
+        result16 = im.astype(np.int16)
+        result16 -= self.bias
+        return result16.clip(0, 255).astype(np.uint8)
+
+    def correct_saturated_from_neighbors(
+        self, im: BayerImage, result: BayerImage
+    ) -> None:
+        """
+        Apply an in-place correction to `result` at locations where `im` has saturated pixels.
+        The correction replaces each value in `result` with the mean of its 8 closest same-color
+        neighbors.
+        """
+        sat = im == 255
+        # This could probably be done more efficiently because saturated pixels are very sparse.
+        est = estimate_from_bayer_neighbors(
+            result, NAVCAM_BAYER_CONVENTION, use_median=False
+        )
+        result[sat] = est[sat]
+
+    @staticmethod
+    def from_image_stats(stats: ImageStats) -> "BiasCorrector":
+        "Return a BiasCorrector constructed from `stats`."
+        return BiasCorrector(
+            bias=np.clip(stats.unsat_mean_err, -32768, 32767).astype(np.int16)
+        )
+
+    @staticmethod
+    def to_png_base64(im: SignedImage) -> str:
+        "Return the png:base64 JSON encoded from `im`."
+        return PNG_BASE64_PREFIX + base64.b64encode(
+            cv2.imencode(".png", im.view(np.uint16))[1].tobytes()
+        ).decode("ascii")
+
+    @staticmethod
+    def from_png_base64(buf: str) -> SignedImage:
+        "Return the SignedImage decoded from png:base64 JSON `buf`."
+        if not buf.startswith(PNG_BASE64_PREFIX):
+            raise ValueError(
+                f"Expected png:base64 JSON field to start with '{PNG_BASE64_PREFIX}'"
+            )
+        data = buf[len(PNG_BASE64_PREFIX) :]
+        result = cv2.imdecode(
+            np.frombuffer(base64.b64decode(data.encode("ascii")), dtype=np.uint8),
+            cv2.IMREAD_ANYDEPTH,
+        )
+        assert result.dtype == np.uint16
+        return result.astype(np.int16)
+
+    @classmethod
+    def from_json_object(cls, obj: JsonObject) -> "BiasCorrector":
+        "Return an instance of `cls` constructed from `obj`."
+        assert obj["type"] == "BiasCorrector"
+        assert obj["version"] == "1"
+        return cls(
+            bias=cls.from_png_base64(obj["bias"]),
+        )
+
+    def to_json_object(self) -> JsonObject:
+        "Return the JsonObject representation of the corrector."
+        return {
+            "type": "BiasCorrector",
+            "version": "1",
+            "bias": self.to_png_base64(self.bias),
+        }
+
+    def assert_equal(self, other: "BiasCorrector") -> None:
+        "Raise AssertionError if `self` and `other` are not equal."
+        np.testing.assert_equal(self.bias, other.bias)
 
 
 def coords_union(coords1: CoordArray, coords2: CoordArray) -> CoordArray:
@@ -683,49 +813,34 @@ def label_with_circles(im: RgbImage, coords: CoordArray, radius: int = 7) -> Rgb
 
 
 def plot_image_correction_example(
-    im_path: str,
-    stats: ImageStats,
+    im_bayer: BayerImage,
     corrector: NeighborMeanCorrector,
-    bad_coords: CoordArray,
+    levels: np.ndarray,
+    scale: float = 1.8,
+    bad_coords: Optional[CoordArray] = None,
 ) -> None:
     """
     Plot how an image looks before and after correction, zooming in on the center.
-    This is copy/paste from a Jupyter notebook, needs to be refactored a bit.
     """
-    im_bayer = cv2.imread(im_path, cv2.IMREAD_GRAYSCALE)
     corr_bayer = corrector(im_bayer)
-    im = cv2.cvtColor(im_bayer, cv2.COLOR_BayerGB2RGB)
-    corr = cv2.cvtColor(corr_bayer, cv2.COLOR_BayerGB2RGB)
-    levels = get_levels(stats)
-    scale = 1.4
-    corr_fixed = fix_levels(corr, levels, scale=scale)
-    fig, ax = plt.subplots()
-    plot_image_stats1(ax, corr_fixed, "raw", colorbar=False, crop_center=0.2)
-    # plt.imshow(corr_fixed)
-    fig.set_size_inches((100, 75))
-
-    # plot with and without fix
-    fig, axes = plt.subplots(2, 1)
-    plot_image_stats1(
-        axes[0], fix_levels(im, levels, scale), "raw", colorbar=False, crop_center=0.2
+    im = fix_levels(cv2.cvtColor(im_bayer, cv2.COLOR_BayerGB2RGB), levels, scale=scale)
+    corr = fix_levels(
+        cv2.cvtColor(corr_bayer, cv2.COLOR_BayerGB2RGB), levels, scale=scale
     )
-    plot_image_stats1(
-        axes[1],
-        fix_levels(corr, levels, scale),
-        "corr",
-        colorbar=False,
-        crop_center=0.2,
-    )
-    fig.set_size_inches((100, 75))
 
-    im_c = label_with_circles(fix_levels(im, levels, scale), bad_coords)
-    corr_c = label_with_circles(fix_levels(corr, levels, scale), bad_coords)
+    if bad_coords is not None:
+        im = label_with_circles(im, bad_coords)
+        corr = label_with_circles(corr, bad_coords)
 
-    # plot with and without fix -- labeled with circles
-    fig, axes = plt.subplots(2, 1)
-    plot_image_stats1(axes[0], im_c, "raw labeled", colorbar=False, crop_center=0.15)
-    plot_image_stats1(axes[1], corr_c, "corr labeled", colorbar=False, crop_center=0.15)
-    fig.set_size_inches((100, 150))
+    images_to_plot = {
+        "input": im,
+        "corrected": corr,
+    }
+    fig, axes = plt.subplots(1, len(images_to_plot))
+    for i, (title, image) in enumerate(images_to_plot.items()):
+        plot_image_stats1(axes[i], image, title, colorbar=False, crop_center=0.15)
+    fig.set_size_inches((30, 40 * len(images_to_plot)))
+    plt.tight_layout()
 
 
 def plot_bayer_crop_example(ax: matplotlib.axes.Axes, im_bayer: BayerImage) -> None:
@@ -753,16 +868,16 @@ def process_images() -> None:
     # last_frame = "images/1703871226255847821.png"
     # paths = [path for path in paths if first_frame <= path <= last_frame]
 
-    stats = get_image_stats(ImageSourcePaths(paths, preprocess=None))
+    stats = get_image_stats(ImageSourcePaths(paths))
     plot_image_stats(stats)
 
     bad_coords = get_bad_pixel_coords(stats)
     corrector = NeighborMeanCorrector(stats.mean.shape, bad_coords)
 
-    stats2 = get_image_stats(ImageSourcePaths(paths, preprocess=corrector))
+    stats2 = get_image_stats(ImageSourcePaths(paths), preprocess=corrector)
     plot_image_stats(stats2)
 
     bad_coords2 = coords_union(bad_coords, get_bad_pixel_coords(stats2))
     corrector2 = NeighborMeanCorrector(stats.mean.shape, bad_coords2)
-    stats3 = get_image_stats(ImageSourcePaths(paths, preprocess=corrector2))
+    stats3 = get_image_stats(ImageSourcePaths(paths), preprocess=corrector2)
     plot_image_stats(stats3)

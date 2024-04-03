@@ -142,16 +142,16 @@ class TestPixelUtils(unittest.TestCase):
         for patch_y in range(0, h, 2):
             for patch_x in range(0, w, 2):
                 patch = test_image[patch_y : (patch_y + 2), patch_x : (patch_x + 2)]
-                np.testing.assert_allclose(
+                np.testing.assert_equal(
                     patch[0, 0, :], get_channel_rgb(pu.NAVCAM_BAYER_CONVENTION[0])
                 )
-                np.testing.assert_allclose(
+                np.testing.assert_equal(
                     patch[0, 1, :], get_channel_rgb(pu.NAVCAM_BAYER_CONVENTION[1])
                 )
-                np.testing.assert_allclose(
+                np.testing.assert_equal(
                     patch[1, 0, :], get_channel_rgb(pu.NAVCAM_BAYER_CONVENTION[2])
                 )
-                np.testing.assert_allclose(
+                np.testing.assert_equal(
                     patch[1, 1, :], get_channel_rgb(pu.NAVCAM_BAYER_CONVENTION[3])
                 )
 
@@ -175,11 +175,11 @@ class TestPixelUtils(unittest.TestCase):
     def test_neighbor_offsets_from_kernel(self) -> None:
         "Test neighbor_offsets_from_kernel()."
         x_rb, y_rb = pu.neighbor_offsets_from_kernel(pu.RB_KERNEL)
-        np.testing.assert_allclose(x_rb, np.array([-2, -2, -2, 0, 0, 2, 2, 2]))
-        np.testing.assert_allclose(y_rb, np.array([-2, 0, 2, -2, 2, -2, 0, 2]))
+        np.testing.assert_equal(x_rb, np.array([-2, -2, -2, 0, 0, 2, 2, 2]))
+        np.testing.assert_equal(y_rb, np.array([-2, 0, 2, -2, 2, -2, 0, 2]))
         x_g, y_g = pu.neighbor_offsets_from_kernel(pu.G_KERNEL)
-        np.testing.assert_allclose(x_g, np.array([-2, -1, -1, 0, 0, 1, 1, 2]))
-        np.testing.assert_allclose(y_g, np.array([0, -1, 1, -2, 2, -1, 1, 0]))
+        np.testing.assert_equal(x_g, np.array([-2, -1, -1, 0, 0, 1, 1, 2]))
+        np.testing.assert_equal(y_g, np.array([0, -1, 1, -2, 2, -1, 1, 0]))
 
     def test_median_filter(self) -> None:
         "Test median_filter()."
@@ -191,7 +191,7 @@ class TestPixelUtils(unittest.TestCase):
 
         truth, observed = get_hot_pixel_test_images(gradient=False)
         corrected = get_median_filtered(observed)
-        # With no gradient, the match should be exact
+        # With no gradient, the match should be exact up to roundoff
         np.testing.assert_allclose(corrected, truth)
 
     def demo_median_filter(self) -> None:
@@ -276,8 +276,8 @@ class TestPixelUtils(unittest.TestCase):
         test_images = get_test_images_for_stats()
         stats = pu.get_image_stats(test_images)
         bad_y, bad_x = pu.get_bad_pixel_coords(stats)
-        np.testing.assert_allclose(bad_y, HOT_Y)
-        np.testing.assert_allclose(bad_x, HOT_X)
+        np.testing.assert_equal(bad_y, HOT_Y)
+        np.testing.assert_equal(bad_x, HOT_X)
 
     def test_neighbor_mean_corrector(self) -> None:
         "Test NeighborMeanCorrector."
@@ -337,8 +337,8 @@ class TestPixelUtils(unittest.TestCase):
         "Test that `a` and `b` are equal."
         self.assertEqual(a.y, b.y)
         self.assertEqual(a.x, b.x)
-        np.testing.assert_allclose(a.y_neighbors, b.y_neighbors)
-        np.testing.assert_allclose(a.x_neighbors, b.x_neighbors)
+        np.testing.assert_equal(a.y_neighbors, b.y_neighbors)
+        np.testing.assert_equal(a.x_neighbors, b.x_neighbors)
         self.assertEqual(a.order, b.order)
 
     def check_nbp_list_equal(
@@ -371,13 +371,25 @@ class TestPixelUtils(unittest.TestCase):
         stats2 = pu.get_image_stats_parallel(test_images, num_workers=2)
         np.testing.assert_allclose(stats.mean, stats2.mean)
 
+    def test_bias_corrector_save_load(self) -> None:
+        "Test BiasCorrector save() and load()."
+        test_images = get_test_images_for_stats(gradient=True)
+        stats = pu.get_image_stats(test_images)
+        corrector = pu.BiasCorrector.from_image_stats(stats)
+        temp_fd, temp_name = tempfile.mkstemp("test_bias_corrector_save_load.json")
+        os.close(temp_fd)
+        temp_path = pathlib.Path(temp_name)
+        corrector.save(temp_path)
+        corrector_copy = pu.BiasCorrector.load(temp_path)
+        corrector.assert_equal(corrector_copy)
+
 
 def main():
     "Main testing function."
-    TestPixelUtils().demo_all()
-    print()
-    print("== Unit testing")
     unittest.main()
+    print()
+    print("== Demo")
+    TestPixelUtils().demo_all()
 
 
 if __name__ == "__main__":
