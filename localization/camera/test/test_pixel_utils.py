@@ -25,6 +25,7 @@ import os
 import pathlib
 import tempfile
 import unittest
+from dataclasses import dataclass
 from typing import Dict, List, Tuple
 
 import numpy as np
@@ -119,6 +120,40 @@ def get_test_images_for_stats(gradient: bool = False) -> List[pu.BayerImage]:
     in2 = observed + 1
     in2[hot] = 255
     return [in1, in2]
+
+
+@dataclass
+class AffineTestData:
+    """
+    Test data for slope/intercept calculation. Each image in data.images should satisfy:
+      - est[data.y, data.x] = data.m * image[data.y, data.x] + data.b
+    Assuming:
+      - est = estimate_from_bayer_neighbors(image)
+      - As with real images, pixel values won't follow the model past saturation (255).
+    """
+
+    images: List[pu.BayerImage]
+    y: np.ndarray
+    x: np.ndarray
+    m: np.ndarray
+    b: np.ndarray
+    vals: np.ndarray
+
+    @staticmethod
+    def get() -> "AffineTestData":
+        "Return test data."
+        shape = (6, 8)
+        y = np.array([0, 4, 2, 1, 5])
+        x = np.array([0, 2, 5, 7, 7])
+        m = np.array([1.1, 0.9, 1.2, 0.8, 1.25], dtype=np.float64)
+        b = np.array([0, -5, -8, -10, -100], dtype=np.float64)
+        images = []
+        vals = np.arange(256, dtype=np.uint8)
+        for val in vals:
+            img = np.full(shape, val, dtype=np.uint8)
+            img[y, x] = np.clip((val - b) / m, 0, 255).astype(np.uint8)
+            images.append(img)
+        return AffineTestData(images=images, y=y, x=x, m=m, b=b, vals=vals)
 
 
 class TestPixelUtils(unittest.TestCase):
@@ -256,7 +291,7 @@ class TestPixelUtils(unittest.TestCase):
         "Test get_image_stats()."
         _, observed = get_hot_pixel_test_images()
         test_images = get_test_images_for_stats()
-        stats = pu.get_image_stats(test_images)
+        stats = pu.DebugStatsAccumulator.get_image_stats(test_images)
         hot = observed == 255
         expected_hot_mean_err = 255 - 128
         expected_hot_rms_err = np.sqrt(np.mean(np.square([255 - 127, 255 - 129])))
@@ -274,7 +309,7 @@ class TestPixelUtils(unittest.TestCase):
     def test_get_bad_pixel_coords(self) -> None:
         "Test get_bad_pixel_coords()."
         test_images = get_test_images_for_stats()
-        stats = pu.get_image_stats(test_images)
+        stats = pu.DebugStatsAccumulator.get_image_stats(test_images)
         bad_y, bad_x = pu.get_bad_pixel_coords(stats)
         np.testing.assert_equal(bad_y, HOT_Y)
         np.testing.assert_equal(bad_x, HOT_X)
@@ -285,7 +320,7 @@ class TestPixelUtils(unittest.TestCase):
         test_images = get_test_images_for_stats()
         # test_images are [truth - 1, truth + 1] (both corrupted with hot pixels)
         m1, p1 = test_images
-        stats = pu.get_image_stats(test_images)
+        stats = pu.DebugStatsAccumulator.get_image_stats(test_images)
         bad_coords = pu.get_bad_pixel_coords(stats)
         corrector = pu.NeighborMeanCorrector(stats.mean.shape, bad_coords)
         np.testing.assert_allclose(corrector(m1), truth - 1)
@@ -313,7 +348,7 @@ class TestPixelUtils(unittest.TestCase):
         "Demo NeighborMeanCorrector."
         truth, observed = get_hot_pixel_test_images(gradient=True)
         test_images = get_test_images_for_stats(gradient=True)
-        stats = pu.get_image_stats(test_images)
+        stats = pu.DebugStatsAccumulator.get_image_stats(test_images)
         bad_coords = pu.get_bad_pixel_coords(stats)
         corrector = pu.NeighborMeanCorrector(stats.mean.shape, bad_coords)
         corrected = corrector(observed)
@@ -351,7 +386,7 @@ class TestPixelUtils(unittest.TestCase):
     def test_neighbor_mean_corrector_save_load(self) -> None:
         "Test NeighborMeanCorrector save() and load()."
         test_images = get_test_images_for_stats(gradient=True)
-        stats = pu.get_image_stats(test_images)
+        stats = pu.DebugStatsAccumulator.get_image_stats(test_images)
         bad_coords = pu.get_bad_pixel_coords(stats)
         corrector = pu.NeighborMeanCorrector(stats.mean.shape, bad_coords)
         temp_fd, temp_name = tempfile.mkstemp(
@@ -367,14 +402,16 @@ class TestPixelUtils(unittest.TestCase):
     def test_get_image_stats_parallel(self) -> None:
         "Test get_image_stats_parallel()."
         test_images = get_test_images_for_stats(gradient=True)
-        stats = pu.get_image_stats(test_images)
-        stats2 = pu.get_image_stats_parallel(test_images, num_workers=2)
+        stats = pu.DebugStatsAccumulator.get_image_stats(test_images)
+        stats2 = pu.DebugStatsAccumulator.get_image_stats_parallel(
+            test_images, num_workers=2
+        )
         np.testing.assert_allclose(stats.mean, stats2.mean)
 
     def test_bias_corrector_save_load(self) -> None:
         "Test BiasCorrector save() and load()."
         test_images = get_test_images_for_stats(gradient=True)
-        stats = pu.get_image_stats(test_images)
+        stats = pu.BiasStatsAccumulator.get_image_stats(test_images)
         corrector = pu.BiasCorrector.from_image_stats(stats)
         temp_fd, temp_name = tempfile.mkstemp("test_bias_corrector_save_load.json")
         os.close(temp_fd)
@@ -383,13 +420,25 @@ class TestPixelUtils(unittest.TestCase):
         corrector_copy = pu.BiasCorrector.load(temp_path)
         corrector.assert_equal(corrector_copy)
 
+    def test_slope_intercept(self) -> None:
+        "Test DebugStatsAccumulator slope/intercept calculations."
+        data = AffineTestData.get()
+        stats = pu.DebugStatsAccumulator.get_image_stats(data.images)
+        np.testing.assert_allclose(
+            stats.slope[data.y, data.x], data.m, rtol=999, atol=1e-3
+        )
+        np.testing.assert_allclose(
+            stats.intercept[data.y, data.x], data.b, rtol=999, atol=1
+        )
+
 
 def main():
     "Main testing function."
+    if os.environ.get("TEST_PIXEL_UTILS_NO_DEMO") is None:
+        TestPixelUtils().demo_all()
+        print()
+        print("== Unit testing")
     unittest.main()
-    print()
-    print("== Demo")
-    TestPixelUtils().demo_all()
 
 
 if __name__ == "__main__":
