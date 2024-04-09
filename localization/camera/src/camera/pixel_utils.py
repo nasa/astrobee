@@ -22,7 +22,6 @@ Utilities for detecting and correcting bad pixels.
 """
 
 import abc
-import base64
 import glob
 import itertools
 import json
@@ -48,7 +47,6 @@ from typing import (
     Tuple,
     Type,
     TypeVar,
-    Union,
 )
 
 import cv2
@@ -59,6 +57,7 @@ from cv_bridge import CvBridge
 from matplotlib import pyplot as plt
 
 # pylint: disable=c-extension-no-member  # because pylint can't find cv2 members
+# pylint: disable=line-too-long  # let black handle this
 
 # Type aliases
 RgbChannel = str  # "R", "G", or "B"
@@ -88,8 +87,6 @@ NAVCAM_BAYER_CONVENTION = "GRBG"
 # Pixels are considered bad if rms_err > RMS_ERROR_THRESHOLD.
 RMS_ERROR_THRESHOLD = 40
 
-PNG_BASE64_PREFIX = "png:base64:"
-
 # Kernels representing 8 nearest same-color neighbors of a pixel depending on its color
 RB_KERNEL = np.array(
     [
@@ -113,6 +110,11 @@ G_KERNEL = np.array(
 )
 
 MF_TIMING = bool(os.environ.get("MEDIAN_FILTER_TIMING"))
+
+# Registers the corrector class and accumulator class for making a `corrector_type` instance.
+CORRECTOR_REGISTRY: Dict[
+    str, "Tuple[Type[BadPixelCorrector], Type[ImageStatsAccumulator]]"
+] = {}
 
 
 def get_bayer_patch(bayer_convention: str) -> BayerImagePatch:
@@ -612,7 +614,6 @@ class BiasStatsAccumulator(
     def __init__(self, shape: ArrayShape):
         super().__init__(shape)
         self.unsat_n = np.zeros(shape, dtype=np.uint16)
-        self.diff_tmp = np.zeros(shape, dtype=np.int16)
         self.unsat_sum_err = np.zeros(shape, dtype=np.float64)
 
     def add(self, im: BayerImage) -> None:
@@ -623,27 +624,22 @@ class BiasStatsAccumulator(
         unsat = (im < 255) & (est < 255)
         unsat_ok = unsat != 0
         self.unsat_n[unsat_ok] += 1
-        np.subtract(
-            im[unsat_ok], est[unsat_ok], dtype=np.int16, out=self.diff_tmp[unsat_ok]
-        )
-        self.unsat_sum_err[unsat_ok] += self.diff_tmp[unsat_ok]
+        self.unsat_sum_err[unsat_ok] += im[unsat_ok].astype(np.float64) - est[unsat_ok]
 
     def merge(self, acc: Self) -> None:
         "Merge `acc` into accumulated stats."
+        self.unsat_n += acc.unsat_n
         self.unsat_sum_err += acc.unsat_sum_err
 
     def finish_stats(self) -> BiasStats:
         "Return output stats based on accumulated values."
 
-        # standard least-squares linear regression
         unsat_ok = self.unsat_n != 0
         unsat_mean_err = np.zeros(self.shape, dtype=np.int16)
         unsat_mean_err[unsat_ok] = (
             self.unsat_sum_err[unsat_ok] / self.unsat_n[unsat_ok]
         ).astype(np.int16)
 
-        # mypy doesn't like expressions below because np.sqrt() can blow up for negative inputs, but these
-        # inputs should be guaranteed positive by construction.
         return BiasStats(
             unsat_mean_err=unsat_mean_err,
         )
@@ -704,30 +700,46 @@ def get_bad_pixel_coords(stats: DebugStats) -> CoordArray:
 class BadPixelCorrector(abc.ABC):
     "Abstract filter for correcting bad pixels."
 
+    def __init__(self, note: str):
+        self.note = note
+
     @abstractmethod
     def __call__(self, im: BayerImage) -> BayerImage:
         "Return the result of correcting `im`."
 
     @classmethod
-    @abstractmethod
-    def from_json_object(cls, obj: JsonObject) -> Self:
+    def from_json_object(cls, obj: JsonObject, path: pathlib.Path) -> Self:
         "Return an instance of `cls` constructed from `obj`."
+        subclass, _ = cls.get_classes(obj["type"])
+        return subclass.from_json_object(obj, path)
 
     @abstractmethod
-    def to_json_object(self) -> JsonObject:
+    def to_json_object(self, path: pathlib.Path) -> JsonObject:
         "Return the JsonObject representation of the corrector."
 
     @classmethod
     def load(cls, path: pathlib.Path) -> Self:
         "Return an instance of `cls` loaded from JSON file at `path`."
         with path.open("r", encoding="utf-8") as stream:
-            return cls.from_json_object(json.load(stream))
+            return cls.from_json_object(json.load(stream), path)
 
     def save(self, path: pathlib.Path) -> None:
         "Write corrector JSON representation to `path`."
         with path.open("w", encoding="utf-8") as stream:
-            json.dump(self.to_json_object(), stream, separators=(",", ":"))
+            json.dump(self.to_json_object(path), stream, separators=(",", ":"))
         print(f"Wrote to {path}")
+
+    @classmethod
+    @abstractmethod
+    def from_image_stats(cls, stats: ImageStats, note: str = "") -> Self:
+        "Return an instance of `cls` constructed from `stats`."
+
+    @staticmethod
+    def get_classes(
+        corrector_type: str,
+    ) -> "Tuple[Type[BadPixelCorrector], Type[ImageStatsAccumulator]]":
+        "Return the corrector class and accumulator class for making a `corrector_type` instance."
+        return CORRECTOR_REGISTRY[corrector_type]
 
 
 @dataclass
@@ -755,11 +767,12 @@ class NeighborMeanCorrector(
 ):  # pylint:disable=too-few-public-methods # use __call__()
     "Filter for replacing bad pixel values with the mean of their neighbors."
 
-    def __init__(self, image_shape: ArrayShape, bad_coords: CoordArray):
+    def __init__(self, image_shape: ArrayShape, bad_coords: CoordArray, note: str = ""):
         """
         :param image_shape: The shape of images that will be corrected.
         :param bad_coords: Bad pixel coords represented as tuple (y, x) of 1D arrays
         """
+        super().__init__(note)
         self.image_shape = image_shape
         self.bad_pixels: List[NeighborBadPixel] = []
         self._init_filter(bad_coords)
@@ -817,15 +830,19 @@ class NeighborMeanCorrector(
         return result
 
     @classmethod
-    def from_json_object(cls, obj: JsonObject) -> "NeighborMeanCorrector":
+    def from_json_object(
+        cls, obj: JsonObject, path: pathlib.Path
+    ) -> "NeighborMeanCorrector":
         "Return an instance of `cls` constructed from `obj`."
         assert obj["type"] == "NeighborMeanCorrector"
         assert obj["version"] == "1"
         return cls(
-            image_shape=(obj["height"], obj["width"]), bad_coords=(obj["y"], obj["x"])
+            image_shape=(obj["height"], obj["width"]),
+            bad_coords=(obj["y"], obj["x"]),
+            note=obj["note"],
         )
 
-    def to_json_object(self) -> JsonObject:
+    def to_json_object(self, path: pathlib.Path) -> JsonObject:
         "Return the JsonObject representation of the corrector."
         bad_coord_tuples = [(pix.y, pix.x) for pix in self.bad_pixels]
         y, x = list(zip(*bad_coord_tuples))
@@ -837,7 +854,19 @@ class NeighborMeanCorrector(
             "height": height,
             "x": x,
             "y": y,
+            "note": self.note,
         }
+
+    @classmethod
+    def from_image_stats(cls, stats: ImageStats, note: str = "") -> Self:
+        "Return a NeighborMeanCorrector constructed from `stats`."
+        assert isinstance(stats, DebugStats)
+        bad_coords = get_bad_pixel_coords(stats)
+        return cls(
+            image_shape=stats.shape,
+            bad_coords=bad_coords,
+            note=note,
+        )
 
 
 class BiasCorrector(
@@ -850,10 +879,11 @@ class BiasCorrector(
        mean of its eight closest same-color Bayer neighbors.
     """
 
-    def __init__(self, bias: SignedImage):
+    def __init__(self, bias: SignedImage, note: str = ""):
         """
         :param bias: Bias represented as int8.
         """
+        super().__init__(note)
         assert bias.dtype == np.int16
         self.bias = bias
 
@@ -885,50 +915,46 @@ class BiasCorrector(
         )
         result[sat] = est[sat]
 
-    @staticmethod
-    def from_image_stats(stats: Union[BiasStats, DebugStats]) -> "BiasCorrector":
+    @classmethod
+    def from_image_stats(cls, stats: ImageStats, note: str = "") -> Self:
         "Return a BiasCorrector constructed from `stats`."
-        return BiasCorrector(
-            bias=np.clip(stats.unsat_mean_err, -32768, 32767).astype(np.int16)
+        assert isinstance(stats, (BiasStats, DebugStats))
+        return cls(
+            bias=np.clip(stats.unsat_mean_err, -32768, 32767).astype(np.int16),
+            note=note,
         )
 
     @staticmethod
-    def to_png_base64(im: SignedImage) -> str:
-        "Return the png:base64 JSON encoded from `im`."
-        return PNG_BASE64_PREFIX + base64.b64encode(
-            cv2.imencode(".png", im.view(np.uint16))[1].tobytes()
-        ).decode("ascii")
+    def write_png(path: pathlib.Path, im: SignedImage) -> None:
+        "Write `im` (np.int16) to `path` in 16-bit PNG format."
+        cv2.imwrite(str(path), im.view(np.uint16))
 
     @staticmethod
-    def from_png_base64(buf: str) -> SignedImage:
-        "Return the SignedImage decoded from png:base64 JSON `buf`."
-        if not buf.startswith(PNG_BASE64_PREFIX):
-            raise ValueError(
-                f"Expected png:base64 JSON field to start with '{PNG_BASE64_PREFIX}'"
-            )
-        data = buf[len(PNG_BASE64_PREFIX) :]
-        result = cv2.imdecode(
-            np.frombuffer(base64.b64decode(data.encode("ascii")), dtype=np.uint8),
-            cv2.IMREAD_ANYDEPTH,
-        )
+    def read_png(path: pathlib.Path) -> SignedImage:
+        "Return the image (np.int16) read from 16-bit PNG at `path`."
+        result = cv2.imread(str(path), cv2.IMREAD_ANYDEPTH)
         assert result.dtype == np.uint16
         return result.astype(np.int16)
 
     @classmethod
-    def from_json_object(cls, obj: JsonObject) -> "BiasCorrector":
+    def from_json_object(cls, obj: JsonObject, path: pathlib.Path) -> "BiasCorrector":
         "Return an instance of `cls` constructed from `obj`."
         assert obj["type"] == "BiasCorrector"
         assert obj["version"] == "1"
-        return cls(
-            bias=cls.from_png_base64(obj["bias"]),
-        )
+        bias = cls.read_png(path.parent / obj["bias"])
+        note = obj["note"]
+        return cls(bias=bias, note=note)
 
-    def to_json_object(self) -> JsonObject:
+    def to_json_object(self, path: pathlib.Path) -> JsonObject:
         "Return the JsonObject representation of the corrector."
+        bias_path = path.parent / (path.stem + "_bias.png")
+        self.write_png(bias_path, self.bias)
         return {
             "type": "BiasCorrector",
             "version": "1",
-            "bias": self.to_png_base64(self.bias),
+            "implementation": "https://github.com/nasa/astrobee/tree/develop/localization/camera/src/camera/pixel_utils.py",
+            "bias": str(bias_path.name),
+            "note": self.note,
         }
 
     def assert_equal(self, other: "BiasCorrector") -> None:
@@ -1069,3 +1095,9 @@ def process_images() -> None:
         ImageSourcePaths(paths), preprocess=corrector2
     )
     plot_image_stats(stats3)
+
+
+CORRECTOR_REGISTRY = {
+    "BiasCorrector": (BiasCorrector, BiasStatsAccumulator),
+    "NeighborMeanCorrector": (NeighborMeanCorrector, DebugStatsAccumulator),
+}

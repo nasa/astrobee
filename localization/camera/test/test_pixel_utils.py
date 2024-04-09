@@ -156,7 +156,7 @@ class AffineTestData:
         return AffineTestData(images=images, y=y, x=x, m=m, b=b, vals=vals)
 
 
-class TestPixelUtils(unittest.TestCase):
+class TestPixelUtils(unittest.TestCase):  # pylint: disable=too-many-public-methods
     "TestCase for testing pixel_utils."
 
     def get_pixel_color_case(self, y: int, x: int, expected: pu.RgbChannel) -> None:
@@ -304,7 +304,7 @@ class TestPixelUtils(unittest.TestCase):
         np.testing.assert_allclose(stats.rms_err[~hot], 0)
         np.testing.assert_allclose(stats.stdev_err[hot], np.std([-1, 1]))
         np.testing.assert_allclose(stats.stdev_err[~hot], 0)
-        # not yet testing slope, intercept, unsat_count
+        # stats.slope and stats.intercept tested in test_slope_intercept()
 
     def test_get_bad_pixel_coords(self) -> None:
         "Test get_bad_pixel_coords()."

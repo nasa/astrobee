@@ -20,17 +20,20 @@ Converts bayer encoded images from the provided bagfile to grayscale and color i
 """
 
 import argparse
+import glob
 import os
-import shutil
+import pathlib
 import sys
+import time
+from typing import Optional
 
 import cv2
 import rosbag
-import rospy
 from cv_bridge import CvBridge, CvBridgeError
-from sensor_msgs.msg import Image
 
-import utilities.utilities
+from camera import pixel_utils as pu
+
+# pylint: disable=c-extension-no-member  # because pylint can't find cv2 members
 
 
 def convert_bayer(
@@ -41,6 +44,7 @@ def convert_bayer(
     gray_image_topic,
     color_image_topic,
     save_all_topics=False,
+    corrector: Optional[pu.BadPixelCorrector] = None,
 ):
     bridge = CvBridge()
     topics = dict((bayer_image_topic.replace("nav", cam), cam) for cam in list_cam)
@@ -50,21 +54,29 @@ def convert_bayer(
     with rosbag.Bag(bagfile, "r") as bag:
         for topic, msg, t in bag.read_messages(topics_bag):
             if topic in topics:
+                try:
+                    bayer_image = bridge.imgmsg_to_cv2(msg, msg.encoding)
+                except CvBridgeError as exc:
+                    print(exc)
+                    continue
+
+                if corrector is not None:
+                    bayer_image = corrector(bayer_image)
+
                 # Check if we should save greyscale image
                 if gray_image_topic != "":
-                    try:
-                        image = bridge.imgmsg_to_cv2(msg, "mono8")
-                    except (CvBridgeError) as e:
-                        print(e)
-                    # TODO(rsoussan): Update/remove comment when color conversion issue resolved.
-                    # We suspect this hard-coded RGB color mapping is not correct for the Astrobee NavCam/DockCam
-                    # camera Bayer pattern. It may have swapped color channels.
-                    # A color channel swap has a subtle effect on grayscale output because different color channels
-                    # have different weighting factors when outputting luminance calibrated for human perception.
-                    # However, for the purposes of this script, the key requirement is to exactly replicate the onboard
-                    # debayer conversion performed in the FSW is_camera ROS node, so localization features will be the same
-                    # regardless of which tool is used to do the conversion.
-                    gray_image = cv2.cvtColor(image, cv2.COLOR_BAYER_GR2GRAY)
+                    # Technically this color conversion should be using cv2.COLOR_BAYER_GB2GRAY to
+                    # match the true Bayer convention of the Astrobee NavCam/DockCam. Using
+                    # cv2.COLOR_BAYER_GR2GRAY swaps the R/B channels of the Bayer pattern.  A color
+                    # channel swap has a subtle effect on grayscale output because different color
+                    # channels have different weighting factors when outputting luminance calibrated
+                    # for human perception.  However, for the purposes of this script, the key
+                    # requirement is to exactly replicate the (similarly erroneous) onboard debayer
+                    # conversion performed in the FSW is_camera ROS node, so localization features
+                    # will be the same regardless of which tool is used to do the conversion.
+                    # https://github.com/nasa/astrobee/blob/develop/hardware/is_camera/src/camera.cc#L522
+                    # https://docs.opencv.org/3.4/de/d25/imgproc_color_conversions.html
+                    gray_image = cv2.cvtColor(bayer_image, cv2.COLOR_BAYER_GR2GRAY)
                     gray_image_msg = bridge.cv2_to_imgmsg(gray_image, encoding="mono8")
                     gray_image_msg.header = msg.header
                     output_bag.write(
@@ -74,11 +86,9 @@ def convert_bayer(
                     )
                 # Check if we should save color image
                 if color_image_topic != "":
-                    try:
-                        image = bridge.imgmsg_to_cv2(msg, "bayer_grbg8")
-                    except (CvBridgeError) as e:
-                        print(e)
-                    color_image = cv2.cvtColor(image, cv2.COLOR_BAYER_GB2BGR)
+                    # Here we are using the correct Bayer convention because we want the color image
+                    # to look right and we have no need to replicate legacy onboard debayering.
+                    color_image = cv2.cvtColor(bayer_image, cv2.COLOR_BAYER_GB2BGR)
                     color_image_msg = bridge.cv2_to_imgmsg(color_image, encoding="bgr8")
                     color_image_msg.header = msg.header
                     output_bag.write(
@@ -91,7 +101,7 @@ def convert_bayer(
     output_bag.close()
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
@@ -149,6 +159,23 @@ if __name__ == "__main__":
         help="Save all topics from input bagfile to output bagfile.",
     )
     parser.add_argument(
+        "--no-correct",
+        action="store_true",
+        default=False,
+        help="Skip bad pixel correction",
+    )
+    parser.add_argument(
+        "--load-corrector",
+        default=None,
+        help="Load pre-configured bad pixel corrector from specified path",
+    )
+    parser.add_argument(
+        "--generate-corrector",
+        choices=("BiasCorrector", "NeighborMeanCorrector"),
+        default="BiasCorrector",
+        help="Generate bad pixel corrector of specified type, if needed",
+    )
+    parser.add_argument(
         "-n",
         dest="do_nothing",
         action="store_true",
@@ -162,6 +189,29 @@ if __name__ == "__main__":
         args.color_image_topic = ""
 
     inbag_paths = args.inbag if args.inbag is not None else glob.glob("*.bag")
+
+    if args.do_nothing or args.no_correct:
+        corrector = None
+    else:
+        if args.load_corrector is not None:
+            # Load pre-configured BadPixelCorrector
+            print(f"Loading corrector from {args.load_corrector}")
+            corrector = pu.BadPixelCorrector.load(pathlib.Path(args.load_corrector))
+        else:
+            # Generate BadPixelCorrector of specified type
+            t0 = time.time()
+            print(f"Generating {args.generate_corrector} by analyzing images... ", end="")
+            sys.stdout.flush()
+            corrector_class, accum_class = pu.BadPixelCorrector.get_classes(
+                args.generate_corrector
+            )
+            images = pu.ImageSourceBagPaths(inbag_paths)
+            stats = accum_class.get_image_stats_parallel(images)
+            note = f"Generated from: {inbag_paths}"
+            corrector = corrector_class.from_image_stats(stats, note)
+            t1 = time.time()
+            print(f"done in {t1 - t0:.1f}s")
+            corrector.save(pathlib.Path("corrector.json"))
 
     for inbag_path in inbag_paths:
         # Check if input bag exists
@@ -183,6 +233,11 @@ if __name__ == "__main__":
                 args.gray_image_topic,
                 args.color_image_topic,
                 args.save_all_topics,
+                corrector,
             )
         else:
             os.rename(inbag_path, output_bag_name)
+
+
+if __name__ == "__main__":
+    main()
