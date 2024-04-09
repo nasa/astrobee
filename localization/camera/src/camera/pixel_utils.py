@@ -726,7 +726,7 @@ class BadPixelCorrector(abc.ABC):
     def save(self, path: pathlib.Path) -> None:
         "Write corrector JSON representation to `path`."
         with path.open("w", encoding="utf-8") as stream:
-            json.dump(self.to_json_object(path), stream, separators=(",", ":"))
+            json.dump(self.to_json_object(path), stream, indent=4)
         print(f"Wrote to {path}")
 
     @classmethod
@@ -926,15 +926,15 @@ class BiasCorrector(
 
     @staticmethod
     def write_png(path: pathlib.Path, im: SignedImage) -> None:
-        "Write `im` (np.int16) to `path` in 16-bit PNG format."
-        cv2.imwrite(str(path), im.view(np.uint16))
+        "Write `im` (-256..255, np.int16) to `path` in low 9 bits of 16-bit PNG format."
+        cv2.imwrite(str(path), (im + 256).view(np.uint16))
 
     @staticmethod
     def read_png(path: pathlib.Path) -> SignedImage:
-        "Return the image (np.int16) read from 16-bit PNG at `path`."
+        "Return the image (-256..255, np.int16) read from low 9 bits of 16-bit PNG at `path`."
         result = cv2.imread(str(path), cv2.IMREAD_ANYDEPTH)
         assert result.dtype == np.uint16
-        return result.astype(np.int16)
+        return result.astype(np.int16) - 256
 
     @classmethod
     def from_json_object(cls, obj: JsonObject, path: pathlib.Path) -> "BiasCorrector":
