@@ -10,8 +10,6 @@ Before running these instructions, make sure you visit the main Astrobee INSTALL
 
 You may find it helpful to use VSCode's Docker integration to help you interactively develop inside a Docker container.
 
-Our team is tentatively moving in the direction of encouraging all developers using docker to work this way, but our VSCode approach is still considered highly experimental and could change a lot.
-
 ## Install VSCode and the Dev Containers plugin
 
 There are many valid ways to install VSCode. These commands are for an APT-style installation on Ubuntu:
@@ -35,7 +33,10 @@ Tthe Dev Containers plugin will download a pre-built ARS Docker image from our o
 
 Start VS Code, run the `Dev Containers: Open Folder in Container...` command from the Command Palette (F1); Or you can open the `$ASTROBEE_WS/src` folder through the VSCode graphical interface, and you should then see a popup dialog from the Dev Containers plugin. Click the "Reopen in Container" button.
 
-You can choose between the `local` and `remote` profile. The `remote` profile is designed to run on remote servers and it is configured to open a vnc server and broadcast it in port 5900. If you use `DISPLAY=:0` (default), it will open the graphical application on the vnc server, if you use `DISPLAY=:1` it will forward using X11. To open the vnc viewer in your local:
+You can choose between the `local` and `remote` profile. The `remote` profile is designed to run on remote servers and it is configured to open a vnc server and broadcast it in port 5900.
+
+After the devcontainer has started, if you continue using `DISPLAY=:0` (default), it will open the graphical application on the vnc server, if you set `DISPLAY=:1` in the terminal with `export DISPLAY=:1`, it will forward using X11 (you can switch back to `:0` for vnc).
+To open the vnc viewer in your local:
 
 ```bash
 sudo apt-get install xtightvncviewer
