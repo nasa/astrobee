@@ -74,6 +74,8 @@ void RosGraphLocalizerWrapper::SparseMapVisualLandmarksCallback(const ff_msgs::V
       if (!GraphVIOStateCallback(graph_vio_msg->value)) return;
     }
   } else if (Initialized()) {  // Otherwise add measurement to graph
+    const auto world_T_body = lc::PoseFromMsgWithExtrinsics(visual_landmarks_msg.pose,
+                                                            params_.sparse_map_loc_factor_adder.body_T_cam.inverse());
     graph_localizer_->AddSparseMapMatchedProjectionsMeasurement(
       lm::MakeMatchedProjectionsMeasurement(visual_landmarks_msg));
   }
@@ -84,21 +86,39 @@ void RosGraphLocalizerWrapper::ARVisualLandmarksCallback(const ff_msgs::VisualLa
   // since the dock pose in the message is relative to the dock frame
   // and not the global frame
   if (!world_T_dock_) {
-    const auto world_T_body = LatestPose();
-    const auto latest_timestamp = LatestTimestamp();
-    if (!world_T_body || !latest_timestamp) {
+    const auto world_T_latest_graph_body = LatestPose();
+    const auto latest_graph_timestamp = LatestTimestamp();
+    if (!world_T_latest_graph_body || !latest_graph_timestamp) {
       LogError("ARVisualLandmarksCallback: Failed to get latest pose and timestamp.");
       return;
     }
 
+    if (odom_interpolator_.empty()) {
+      LogError("ARVisualLandmarksCallback: No odometry poses available for extrapolation.");
+      return;
+    }
+
+
+
     const auto dock_time = lc::TimeFromHeader(visual_landmarks_msg.header);
-    if (std::abs(dock_time - *latest_timestamp) > 2.0) {
-      LogError("ARVisualLandmarksCallback: Latest graph timestamp too old, waiting for more recent graph estimate.");
+    const auto latest_odom_time = odom_interpolator_.Latest()->timestamp;
+    if (std::abs(dock_time - latest_odom_time) > 0.5) {
+      LogWarning("ARVisualLandmarksCallback: Latest odometry time vs. dock time "
+                 << std::abs(dock_time - latest_odom_time) << " larger than 0.5 seconds.");
+    }
+
+    // Extrapolate up to dock time if odometry messages exist that are more recent than this,
+    // otherwise extrapolate to latest odometry message
+    const auto extrapolation_time = dock_time > latest_odom_time ? latest_odom_time : dock_time;
+    const auto latest_graph_body_T_body = odom_interpolator_.Relative(*latest_graph_timestamp, extrapolation_time);
+    if (!latest_graph_body_T_body) {
+      LogError("ARVisualLandmarksCallback: Failed to get latest_graph_body_T_body for provided times.");
       return;
     }
     const auto dock_T_body = lc::PoseFromMsgWithExtrinsics(
       visual_landmarks_msg.pose, params_.ar_tag_loc_factor_adder.body_T_cam.inverse());
-    world_T_dock_ = *world_T_body * dock_T_body.inverse();
+    const auto world_T_body = *world_T_latest_graph_body * lc::GtPose(*latest_graph_body_T_body);
+    world_T_dock_ = world_T_body * dock_T_body.inverse();
   }
   if (Initialized()) {
     // Frame change the ar tag measurement from the dock to world frame before
@@ -136,6 +156,7 @@ bool RosGraphLocalizerWrapper::GraphVIOStateCallback(const ff_msgs::GraphVIOStat
     latest_correlation_covariances);
   graph_localizer_->AddPoseMeasurement(pose_measurement);
   last_vio_msg_time_ = timestamp;
+  odom_interpolator_.Add(latest_combined_nav_state.timestamp(), lc::EigenPose(latest_combined_nav_state.pose()));
   return true;
 }
 
@@ -188,6 +209,7 @@ boost::optional<ff_msgs::GraphLocState> RosGraphLocalizerWrapper::GraphLocStateM
     return boost::none;
   }
   latest_msg_time_ = latest_timestamp;
+  odom_interpolator_.RemoveBelowLowerBoundValues(latest_timestamp);
   ff_msgs::GraphLocState msg;
   const auto latest_pose = *LatestPose();
   const auto latest_keys = graph_localizer_->pose_nodes().Keys(latest_timestamp);

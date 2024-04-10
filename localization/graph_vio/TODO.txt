@@ -63,6 +63,23 @@
       - fix docking issue (AAAA)
         - compare world_T_dock in new vs old localizer!
           - run old localizer on beehive
+          - print timestamps of most recent loc and ar tag pose! 
+              dock time: 1710812129.70097
+              latest time: 1710812128.1214
+          - print pose of most recent vl pose! 
+          - why is there a jump in ar vs ml pose position in plot??
+            - does this exist on old version too?
+                - no!
+          - remove check for latest graph timestamp vs ar timestamp! (AA)
+            - never going to get a closer estimate since vl msgs stop when ar turned on...
+          - test w/ and w/o adding extrapolated VO data! (AB)
+            - extrapolate to latest vo if latest vo not more than a second from latest dock! (AAAAA)
+              - add warning if timestamp diff too large
+              - add warning if extrapolation time since last loc graph pose too large
+            - test w/ and w/o adding VO+IMU data? (AC)
+
+          - print results on sweep of vl noise params? 
+              - also view pdfs, which look better?
 
         - add ar tag pose adder!
         - don't extrapolate with vio/imu? -> maybe just imu?
@@ -91,12 +108,12 @@
           - can you prevent undershooting?
         - check optical flow params?
           - underestimating movement?
-          - add feature track images! (AAAAA)
-            - need to access smart factors, feature tracks! (AAA)
-              - do you have access to these from graph_vio???
-            - move to helper functions
-            - call from offline replay!
-              - compile, test! (BB)
+            - check feature tracks!!! (AAAAA)
+                - what do colors mean?
+                - why does smart factor measurement drift from track?
+                - add projected smart factor??
+                - compare w/ and w/o retriangulation -> what changes????? (BBBBB)
+
           - add imu measurements and num values to plots!
 
       - update bag sweep scripts, evaluation! (BBB)
