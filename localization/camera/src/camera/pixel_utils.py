@@ -22,7 +22,6 @@ Utilities for detecting and correcting bad pixels.
 """
 
 import abc
-import glob
 import itertools
 import json
 import multiprocessing as mp
@@ -726,7 +725,7 @@ class BadPixelCorrector(abc.ABC):
     def save(self, path: pathlib.Path) -> None:
         "Write corrector JSON representation to `path`."
         with path.open("w", encoding="utf-8") as stream:
-            json.dump(self.to_json_object(path), stream, indent=4)
+            json.dump(self.to_json_object(path), stream, separators=(",", ":"))
         print(f"Wrote to {path}")
 
     @classmethod
@@ -850,6 +849,7 @@ class NeighborMeanCorrector(
         return {
             "type": "NeighborMeanCorrector",
             "version": "1",
+            "implementation": "https://github.com/nasa/astrobee/tree/develop/localization/camera/src/camera/pixel_utils.py",
             "width": width,
             "height": height,
             "x": x,
@@ -980,11 +980,29 @@ def coords_union(coords1: CoordArray, coords2: CoordArray) -> CoordArray:
     return np.array(y), np.array(x)
 
 
-def plot_mean_vs_rms_error(stats: DebugStats) -> None:
-    "Plot mean vs. RMS error."
-    plt.scatter(stats.rms_err.flatten(), stats.mean_err.flatten())
-    plt.xlabel("RMS err")
-    plt.ylabel("Mean err")
+def plot_mean_vs_rms_err(
+    ax: matplotlib.axes.Axes, stats: DebugStats, title: str
+) -> None:
+    "Plot `stats.mean_err` vs. `stats.rms_err`."
+    fields = {
+        "RMS error": stats.rms_err,
+        "Mean error": stats.mean_err,
+    }
+    x, y = fields.values()
+    hist, xedges, yedges = np.histogram2d(x.flatten(), y.flatten(), bins=300)
+    plt.jet()
+    disp = np.log(hist.T + 1)
+    disp[disp != 0] += 5  # type: ignore # improve visibility of single points
+    ax.imshow(
+        disp,
+        interpolation="lanczos",
+        origin="low",
+        extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]],
+    )
+    xlabel, ylabel = fields.keys()
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    ax.set_title(title)
 
 
 def get_levels(stats: DebugStats) -> np.ndarray:
@@ -1001,14 +1019,14 @@ def get_levels(stats: DebugStats) -> np.ndarray:
 
 def fix_levels(im: RgbImage, levels: np.ndarray, scale: float) -> RgbImage:
     """
-    Return `im` adjusted to make RGB `levels` even, and optional contrast stretch with `scale`.
+    Return `im` white-balanced to make RGB `levels` even, and optional contrast stretch with `scale`.
     :param levels: Levels returned by `get_levels()`.
     :param scale: Specify scale factor > 1 if contrast stretch is desired (usually helps).
     """
-    inv = 1.0 / levels
-    return np.clip(
-        np.multiply(im, scale * inv[np.newaxis, np.newaxis, :]), 0, 255
-    ).astype(np.uint8)
+    coeff = scale / levels
+    return np.clip(np.multiply(im, coeff[np.newaxis, np.newaxis, :]), 0, 255).astype(
+        np.uint8
+    )
 
 
 def label_with_circles(im: RgbImage, coords: CoordArray, radius: int = 7) -> RgbImage:
@@ -1024,13 +1042,14 @@ def label_with_circles(im: RgbImage, coords: CoordArray, radius: int = 7) -> Rgb
 
 def plot_image_correction_example(
     im_bayer: BayerImage,
-    corrector: NeighborMeanCorrector,
+    corrector: BadPixelCorrector,
     levels: np.ndarray,
     scale: float = 1.8,
     bad_coords: Optional[CoordArray] = None,
-) -> None:
+):
     """
-    Plot how an image looks before and after correction, zooming in on the center.
+    Plot how an image looks before and after correction, zooming in on the center. (This creates
+    a new figure with two subplots.)
     """
     corr_bayer = corrector(im_bayer)
     im = fix_levels(cv2.cvtColor(im_bayer, cv2.COLOR_BayerGB2RGB), levels, scale=scale)
@@ -1043,14 +1062,13 @@ def plot_image_correction_example(
         corr = label_with_circles(corr, bad_coords)
 
     images_to_plot = {
-        "input": im,
-        "corrected": corr,
+        "Raw image": im,
+        "Corrected image": corr,
     }
     fig, axes = plt.subplots(1, len(images_to_plot))
     for i, (title, image) in enumerate(images_to_plot.items()):
         plot_image_stats1(axes[i], image, title, colorbar=False, crop_center=0.15)
-    fig.set_size_inches((30, 40 * len(images_to_plot)))
-    plt.tight_layout()
+    return fig
 
 
 def plot_bayer_crop_example(ax: matplotlib.axes.Axes, im_bayer: BayerImage) -> None:
@@ -1060,41 +1078,6 @@ def plot_bayer_crop_example(ax: matplotlib.axes.Axes, im_bayer: BayerImage) -> N
         ax, im_bayer, "bayer", colorbar=False, crop_center=0.15, cmap="gray"
     )
     fig.set_size_inches((100, 75))
-
-
-def process_images() -> None:
-    """
-    Build up a corrector through multiple rounds of analyze/correct. Can probably do this
-    in one pass now that we use median_filter().
-    """
-
-    # limit number of images to run faster
-    limit_images = 1000
-
-    paths = glob.glob("images/*.png")[:limit_images]
-
-    # This subset of frames is dark enough that we can think of them as dark frames; can reduce artifacts
-    # first_frame = "images/1703871209207275120.png"
-    # last_frame = "images/1703871226255847821.png"
-    # paths = [path for path in paths if first_frame <= path <= last_frame]
-
-    stats = DebugStatsAccumulator.get_image_stats(ImageSourcePaths(paths))
-    plot_image_stats(stats)
-
-    bad_coords = get_bad_pixel_coords(stats)
-    corrector = NeighborMeanCorrector(stats.shape, bad_coords)
-
-    stats2 = DebugStatsAccumulator.get_image_stats(
-        ImageSourcePaths(paths), preprocess=corrector
-    )
-    plot_image_stats(stats2)
-
-    bad_coords2 = coords_union(bad_coords, get_bad_pixel_coords(stats2))
-    corrector2 = NeighborMeanCorrector(stats.shape, bad_coords2)
-    stats3 = DebugStatsAccumulator.get_image_stats(
-        ImageSourcePaths(paths), preprocess=corrector2
-    )
-    plot_image_stats(stats3)
 
 
 CORRECTOR_REGISTRY = {

@@ -124,3 +124,7 @@ install(DIRECTORY include/${PROJECT_NAME}/
 
 find_package(catkin REQUIRED COMPONENTS rospy)
 catkin_python_setup()
+
+if (CATKIN_ENABLE_TESTING)
+  catkin_add_nosetests(test/test_pixel_utils.py)
+endif()
