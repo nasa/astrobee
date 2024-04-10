@@ -1,0 +1,8 @@
+<class_libraries>
+  <library path="lib/libcomms_bridge">
+    <class name="comms_bridge/CommsBridgeNodelet" type="comms_bridge::CommsBridgeNodelet"
+           base_class_type="nodelet::Nodelet">
+      <description>Nodelet for the comms bridge</description>
+    </class>
+  </library>
+</class_libraries>

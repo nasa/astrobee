@@ -23,7 +23,6 @@ usage: build.sh [-h] [-x] [-b] [-f] [-r] [-o <owner>] [-d]
 
 -h or --help: Print this help
 -x or --xenial: Build Ubuntu 16.04 docker images
--b or --bionic: Build Ubuntu 18.04 docker images
 -f or --focal: Build Ubuntu 20.04 docker images
 -r or --remote: Build first target on top of a pre-built remote image
 -o or --owner: Set ghcr.io owner for push action (default: nasa)
@@ -55,8 +54,8 @@ usage()
 # Parse options 1 (validate and normalize with getopt)
 ######################################################################
 
-shortopts="h,x,b,f,r,o:,v:,d"
-longopts="help,xenial,bionic,focal,remote,owner:,revision:,dry-run"
+shortopts="h,x,f,r,o:,v:,d"
+longopts="help,xenial,focal,remote,owner:,revision:,dry-run"
 opts=$(getopt -a -n build.sh --options "$shortops" --longoptions "$longopts" -- "$@")
 if [ $? -ne 0 ]; then
     echo
@@ -90,8 +89,6 @@ while [ "$1" != "" ]; do
                                    exit
                                    ;;
         --xenial )                 os="xenial"
-                                   ;;
-        --bionic )                 os="bionic"
                                    ;;
         --focal )                  os="focal"
                                    ;;
@@ -158,11 +155,7 @@ UBUNTU_VERSION=16.04
 ROS_VERSION=kinetic
 PYTHON=''
 
-if [ "$os" = "bionic" ]; then
-    UBUNTU_VERSION=18.04
-    ROS_VERSION=melodic
-    PYTHON=''
-elif [ "$os" = "focal" ]; then
+if [ "$os" = "focal" ]; then
     UBUNTU_VERSION=20.04
     ROS_VERSION=noetic
     PYTHON='3'
@@ -209,6 +202,7 @@ build () {
            --build-arg UBUNTU_VERSION=${UBUNTU_VERSION} \
            --build-arg ROS_VERSION=${ROS_VERSION} \
            --build-arg PYTHON=${PYTHON} \
+           --build-arg REVISION=${tag_revision} \
            $remote_args \
            -t astrobee/astrobee:${tag_revision}${tag_stage}ubuntu${UBUNTU_VERSION}
     { set +x; } 2>/dev/null
@@ -245,7 +239,7 @@ cd "${checkout_dir}"
 { set +x; } 2>/dev/null
 
 if [ "$build_astrobee_base" = "true" ]; then
-    build astrobee_base "${revision}-" "base-"
+    build astrobee_base "latest-" "base-"
 fi
 
 if [ "$build_astrobee" = "true" ]; then
@@ -253,7 +247,7 @@ if [ "$build_astrobee" = "true" ]; then
 fi
 
 if [ "$build_test_astrobee" = "true" ]; then
-    build test_astrobee "" "test-"
+    build test_astrobee "${revision}-" "test-"
 fi
 
 if [ "$astrobee_quick" = "true" ]; then

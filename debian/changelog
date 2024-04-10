@@ -1,3 +1,11 @@
+astrobee (0.17.2) UNRELEASED; urgency=medium
+
+  * Adding Generic comms bridge
+  * Multiple bug fixes
+  * Ubuntu 20 only supported now
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Mon, 12 Feb 2024 12:33:07 -0800
+
 astrobee (0.17.1) testing; urgency=medium
 
   * Multiple bug fixes

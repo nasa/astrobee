@@ -266,8 +266,6 @@ ff_path=`canonicalize ${rootpath}`
 DIST=`cat /etc/os-release | grep -oP "(?<=VERSION_CODENAME=).*"`
 if [ "$DIST" = "xenial" ]; then
     ros_version=kinetic
-elif [ "$DIST" = "bionic" ]; then
-    ros_version=melodic
 elif [ "$DIST" = "focal" ]; then
     ros_version=noetic
 fi

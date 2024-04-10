@@ -34,7 +34,7 @@ your life greatly.
 Verify that you are in this situation with the command below should succeed
 (certificate will be added later; remove the Release.gpg file after being fetched).
 
-    wget -v --no-check-certificate http://astrobee.ndc.nasa.gov/software/dists/xenial/Release.gpg
+    wget -v --no-check-certificate https://astrobee.ndc.nasa.gov/software_new/dists/focal/Release.gpg
 
 Before running the scripts in `scripts/setup` below, set this variable:
 
@@ -155,7 +155,7 @@ instead:
 
     ./scripts/configure.sh -l -p $INSTALL_PATH -w $WORKSPACE_PATH
 
-*Note: If a workspace is specified but not an explicit install distectory,
+*Note: If a workspace is specified but not an explicit install directory,
 install location will be $WORKSPACE_PATH/install.*
 
 
@@ -183,7 +183,7 @@ For more information on running the simulator and moving the robot, please see t
 
 ## Cross-compile - Running the code on a real robot
 
-In order to do this, you will need to followe the cross-compile build
+In order to do this, you will need to follow the cross-compile build
 instructions.
 
 ### Cross-compile setup
@@ -202,11 +202,18 @@ Next, download the cross toolchain and install the chroot:
 
     mkdir -p $ARMHF_TOOLCHAIN
     cd $HOME/arm_cross
-    $ASTROBEE_WS/src/submodules/platform/fetch_toolchain.sh
-    $ASTROBEE_WS/src/submodules/platform/rootfs/make_chroot.sh xenial dev $ARMHF_CHROOT_DIR
 
-*Note: The last script shown above needs the packages `qemu-user-static` (not
-`qemu-arm-static`) and `multistrap` to be installed (can be installed through apt).*
+    DIST=$(. /etc/os-release && echo $UBUNTU_CODENAME)
+    if [ ${DIST} == "kinetic" ]; then
+        # Use pre-built toolchain for 16.04
+        $ASTROBEE_WS/src/submodules/platform/fetch_toolchain.sh
+    else
+        # Use packaged toolchain for 20.04
+        sudo apt install -y gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
+    fi
+    sudo apt install -y qemu-user-static multistrap
+
+    $ASTROBEE_WS/src/submodules/platform/rootfs/make_chroot.sh ${DIST} dev $ARMHF_CHROOT_DIR
 
 ### Cross-compile build
 
