@@ -42,7 +42,9 @@ WHITE_BALANCE_LEVELS = np.array([1.0000, 0.5250, 0.6818])
 CONTRAST_ENHANCE = 1.8
 
 
-def message_source(bagfiles: List[str], topic: str) -> Iterable[Tuple[sensor_msgs.msg.Image, rospy.rostime.Time]]:
+def message_source(
+    bagfiles: List[str], topic: str
+) -> Iterable[Tuple[sensor_msgs.msg.Image, rospy.rostime.Time]]:
     "Return a generator that reads `bagfiles` on `topic` and yields (message, timestamp) pairs."
     for bagfile in bagfiles:
         with rosbag.Bag(bagfile, "r") as bag:
@@ -62,7 +64,7 @@ def rosbag_extract_images(
     bridge = CvBridge()
     messages = message_source(bagfiles, topic)
     if not (head is None and ratio == 1):
-        msg = f"Processing 1 out of every {ratio} images"
+        msg = f"Extracting 1 out of every {ratio} images"
         if head is not None:
             msg += f" for the first {head} images"
         print(msg)

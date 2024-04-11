@@ -39,10 +39,16 @@ option. This has the following advantages:
   camera due to ongoing radiation damage or other factors, so it may be better to configure a new
   corrector for each activity.)
 
-WARNING: The optimal corrector configuration is likely to vary across bags with different camera exposure
-settings, as when tuned to operate in darker modules like NOD2 or USL. (This hasn't been confirmed yet.)
-You may want to take extra care to use separate bad pixel correctors for bags that have different exposure
-settings.
+Caveats:
+- The optimal corrector configuration is likely to vary across bags with different camera exposure
+  settings, as when tuned to operate in darker modules like NOD2 or USL. (This hasn't been confirmed
+  yet.)  You may want to take extra care to use separate bad pixel correctors for bags that have
+  different exposure settings.
+- Calibrating bad pixel correction with typical data from Astrobee ops requires enough images (say
+  30+, not well tested yet), with enough camera motion so that local texture from the scene is not
+  "burned in" to sections of the corrected images. Or if you happen to have uniformly dark frames
+  with minimal texture, you may need fewer of those. If your bag doesn't have enough images, you may
+  want to supplement it with earlier bags to have enough imagery to work with.
 """
 
 import argparse
@@ -101,6 +107,7 @@ def report(
     stats2 = pu.DebugStatsAccumulator.get_image_stats_parallel(
         all_images(), preprocess=corrector
     )
+    assert stats2 is not None  # should have enough data if we got to this point
     t1 = time.time()
     print(f"done in {t1 - t0:.1f}s")
 
@@ -178,6 +185,10 @@ def analyze_bad_pixels(
         note = f"bags={bags} topic='{topic}'"
         t1 = time.time()
         print(f"done in {t1 - t0:.1f}s")
+
+        if stats is None:
+            print(f"Not enough {cam} images were found, not generating correctors")
+            continue
 
         corrector_classes = [
             pu.BadPixelCorrector.get_classes(corrector_name)[0]

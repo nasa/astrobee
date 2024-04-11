@@ -292,6 +292,7 @@ class TestPixelUtils(unittest.TestCase):  # pylint: disable=too-many-public-meth
         _, observed = get_hot_pixel_test_images()
         test_images = get_test_images_for_stats()
         stats = pu.DebugStatsAccumulator.get_image_stats(test_images)
+        assert stats is not None
         hot = observed == 255
         expected_hot_mean_err = 255 - 128
         expected_hot_rms_err = np.sqrt(np.mean(np.square([255 - 127, 255 - 129])))
@@ -310,6 +311,7 @@ class TestPixelUtils(unittest.TestCase):  # pylint: disable=too-many-public-meth
         "Test get_bad_pixel_coords()."
         test_images = get_test_images_for_stats()
         stats = pu.DebugStatsAccumulator.get_image_stats(test_images)
+        assert stats is not None
         bad_y, bad_x = pu.get_bad_pixel_coords(stats)
         np.testing.assert_equal(bad_y, HOT_Y)
         np.testing.assert_equal(bad_x, HOT_X)
@@ -321,6 +323,7 @@ class TestPixelUtils(unittest.TestCase):  # pylint: disable=too-many-public-meth
         # test_images are [truth - 1, truth + 1] (both corrupted with hot pixels)
         m1, p1 = test_images
         stats = pu.DebugStatsAccumulator.get_image_stats(test_images)
+        assert stats is not None
         bad_coords = pu.get_bad_pixel_coords(stats)
         corrector = pu.NeighborMeanCorrector(stats.mean.shape, bad_coords)
         np.testing.assert_allclose(corrector(m1), truth - 1)
@@ -349,6 +352,7 @@ class TestPixelUtils(unittest.TestCase):  # pylint: disable=too-many-public-meth
         truth, observed = get_hot_pixel_test_images(gradient=True)
         test_images = get_test_images_for_stats(gradient=True)
         stats = pu.DebugStatsAccumulator.get_image_stats(test_images)
+        assert stats is not None
         bad_coords = pu.get_bad_pixel_coords(stats)
         corrector = pu.NeighborMeanCorrector(stats.mean.shape, bad_coords)
         corrected = corrector(observed)
@@ -387,6 +391,7 @@ class TestPixelUtils(unittest.TestCase):  # pylint: disable=too-many-public-meth
         "Test NeighborMeanCorrector save() and load()."
         test_images = get_test_images_for_stats(gradient=True)
         stats = pu.DebugStatsAccumulator.get_image_stats(test_images)
+        assert stats is not None
         bad_coords = pu.get_bad_pixel_coords(stats)
         corrector = pu.NeighborMeanCorrector(stats.mean.shape, bad_coords)
         temp_fd, temp_name = tempfile.mkstemp(
@@ -403,15 +408,18 @@ class TestPixelUtils(unittest.TestCase):  # pylint: disable=too-many-public-meth
         "Test get_image_stats_parallel()."
         test_images = get_test_images_for_stats(gradient=True)
         stats = pu.DebugStatsAccumulator.get_image_stats(test_images)
+        assert stats is not None
         stats2 = pu.DebugStatsAccumulator.get_image_stats_parallel(
             test_images, num_workers=2
         )
+        assert stats2 is not None
         np.testing.assert_allclose(stats.mean, stats2.mean)
 
     def test_bias_corrector_save_load(self) -> None:
         "Test BiasCorrector save() and load()."
         test_images = get_test_images_for_stats(gradient=True)
         stats = pu.BiasStatsAccumulator.get_image_stats(test_images)
+        assert stats is not None
         corrector = pu.BiasCorrector.from_image_stats(stats)
         temp_fd, temp_name = tempfile.mkstemp("test_bias_corrector_save_load.json")
         os.close(temp_fd)
@@ -424,6 +432,7 @@ class TestPixelUtils(unittest.TestCase):  # pylint: disable=too-many-public-meth
         "Test DebugStatsAccumulator slope/intercept calculations."
         data = AffineTestData.get()
         stats = pu.DebugStatsAccumulator.get_image_stats(data.images)
+        assert stats is not None
         np.testing.assert_allclose(
             stats.slope[data.y, data.x], data.m, rtol=999, atol=1e-3
         )

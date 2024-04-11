@@ -435,7 +435,7 @@ class ImageStatsAccumulator(abc.ABC, Generic[ImageStatsT]):
         "Merge `acc` into accumulated stats."
 
     @abstractmethod
-    def finish_stats(self) -> ImageStatsT:
+    def finish_stats(self) -> Optional[ImageStatsT]:
         "Return output stats based on accumulated values."
 
     @classmethod
@@ -443,8 +443,11 @@ class ImageStatsAccumulator(abc.ABC, Generic[ImageStatsT]):
         cls,
         images: Iterable[BayerImage],
         preprocess: Optional[BayerImageFilter] = None,
-    ) -> ImageStatsT:
-        "Return image stats for bad pixel detection computed from `images`."
+    ) -> Optional[ImageStatsT]:
+        """
+        Return image stats for bad pixel detection computed from `images`, or return None if there
+        were not enough `images`.
+        """
         for i, im in enumerate(images):
             if preprocess is not None:
                 im = preprocess(im)
@@ -459,14 +462,20 @@ class ImageStatsAccumulator(abc.ABC, Generic[ImageStatsT]):
         images: Iterable[BayerImage],
         preprocess: Optional[BayerImageFilter] = None,
         num_workers: int = mp.cpu_count(),
-    ) -> ImageStatsT:
+    ) -> Optional[ImageStatsT]:
         """
         Return image stats for bad pixel detection computed from `images`, using `num_workers`
-        accumulator workers.
+        accumulator workers, or return None if there were not enough `images`.
         """
-        images, images_copy = itertools.tee(images)
-        shape = next(images_copy).shape
-        del images_copy
+        images_iterator = iter(images)
+        try:
+            image0 = next(images_iterator)
+        except StopIteration:
+            print(f"get_image_stats_parallel(): got no images, not generating stats")
+            return None
+        images = itertools.chain([image0], images_iterator)
+        shape = image0.shape
+        del image0
 
         input_queue: "queue.Queue[Optional[BayerImage]]" = queue.Queue(1)
         threading.Thread(
@@ -560,8 +569,14 @@ class DebugStatsAccumulator(
         # Can't be handled like the others because it's a primitive value
         self.n += acc.n
 
-    def finish_stats(self) -> DebugStats:
-        "Return output stats based on accumulated values."
+    def finish_stats(self) -> Optional[DebugStats]:
+        "Return output stats based on accumulated values, or None if there were not enough images."
+        if self.n < 2:
+            print(
+                f"DebugStatsAccumulator: expected >= 2 images, got {self.n}, not generating stats"
+            )
+            return None
+
         # standard least-squares linear regression
         unsat_ok = self.unsat_n != 0
         denom = self.unsat_n * self.unsat_sum_actual_sq - np.square(
@@ -612,6 +627,7 @@ class BiasStatsAccumulator(
 
     def __init__(self, shape: ArrayShape):
         super().__init__(shape)
+        self.n = 0
         self.unsat_n = np.zeros(shape, dtype=np.uint16)
         self.unsat_sum_err = np.zeros(shape, dtype=np.float64)
 
@@ -620,6 +636,7 @@ class BiasStatsAccumulator(
         est = estimate_from_bayer_neighbors(im, NAVCAM_BAYER_CONVENTION)
         # A pixel is considered unsaturated for statistics purposes if both the pixel's actual and
         # estimated values are unsaturated.
+        self.n += 1
         unsat = (im < 255) & (est < 255)
         unsat_ok = unsat != 0
         self.unsat_n[unsat_ok] += 1
@@ -627,11 +644,17 @@ class BiasStatsAccumulator(
 
     def merge(self, acc: Self) -> None:
         "Merge `acc` into accumulated stats."
+        self.n += acc.n
         self.unsat_n += acc.unsat_n
         self.unsat_sum_err += acc.unsat_sum_err
 
-    def finish_stats(self) -> BiasStats:
-        "Return output stats based on accumulated values."
+    def finish_stats(self) -> Optional[BiasStats]:
+        "Return output stats based on accumulated values, or None if there were not enough images."
+        if self.n < 1:
+            print(
+                f"BiasStatsAccumulator: expected >= 1 image, got {self.n}, not generating stats"
+            )
+            return None
 
         unsat_ok = self.unsat_n != 0
         unsat_mean_err = np.zeros(self.shape, dtype=np.int16)

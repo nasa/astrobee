@@ -44,8 +44,8 @@ def get_correctors(
     no_correct: bool,
     load_corrector: Optional[str],
     generate_corrector: str,
-) -> Dict[str, pu.BadPixelCorrector]:
-    out: Dict[str, pu.BadPixelCorrector] = {}
+) -> Dict[str, Optional[pu.BadPixelCorrector]]:
+    out: Dict[str, Optional[pu.BadPixelCorrector]] = {}
     if no_correct:
         return out
     corrector_class, accum_class = pu.BadPixelCorrector.get_classes(generate_corrector)
@@ -54,7 +54,9 @@ def get_correctors(
             # Load pre-configured BadPixelCorrector
             corrector_path = pathlib.Path(load_corrector.format(cam=cam))
             print(f"Loading corrector for {cam} from {corrector_path}")
-            corrector = pu.BadPixelCorrector.load(corrector_path)
+            corrector: Optional[pu.BadPixelCorrector] = pu.BadPixelCorrector.load(
+                corrector_path
+            )
         else:
             # Generate BadPixelCorrector of specified type
             t0 = time.time()
@@ -66,12 +68,20 @@ def get_correctors(
             topic = bayer_image_topic.format(cam=cam)
             images = pu.ImageSourceBagPaths(inbag_paths, topic=topic)
             stats = accum_class.get_image_stats_parallel(images)
-            note = f"bags={inbag_paths} topic='{topic}'"
-            corrector = corrector_class.from_image_stats(stats, note)
+            if stats is None:
+                corrector = None
+            else:
+                note = f"bags={inbag_paths} topic='{topic}'"
+                corrector = corrector_class.from_image_stats(stats, note)
             t1 = time.time()
             print(f"done in {t1 - t0:.1f}s")
-            corrector.save(pathlib.Path("corrector_{cam}_cam.json".format(cam=cam)))
-            out[cam] = corrector
+            if corrector is None:
+                print(f"Can't generate corrector for {cam}, not enough images")
+            else:
+                corrector.save(
+                    pathlib.Path(f"{corrector.__class__.__name__}_{cam}_cam.json")
+                )
+        out[cam] = corrector
     return out
 
 
@@ -83,7 +93,7 @@ def convert_bayer(
     gray_image_topic,
     color_image_topic,
     save_all_topics=False,
-    correctors: Optional[Dict[str, pu.BadPixelCorrector]] = None,
+    correctors: Optional[Dict[str, Optional[pu.BadPixelCorrector]]] = None,
 ):
     bridge = CvBridge()
     topics = dict((bayer_image_topic.format(cam=cam), cam) for cam in list_cam)
@@ -101,7 +111,9 @@ def convert_bayer(
 
                 cam = topics[topic]
                 if correctors:
-                    bayer_image = correctors[cam](bayer_image)
+                    corrector = correctors[cam]
+                    if corrector is not None:
+                        bayer_image = corrector(bayer_image)
 
                 # Check if we should save greyscale image
                 if gray_image_topic != "":
@@ -230,14 +242,15 @@ def main():
 
     inbag_paths = args.inbag if args.inbag is not None else glob.glob("*.bag")
 
-    correctors = get_correctors(
-        inbag_paths=inbag_paths,
-        list_cam=args.list_cam,
-        bayer_image_topic=args.bayer_image_topic,
-        no_correct=args.no_correct,
-        load_corrector=args.load_corrector,
-        generate_corrector=args.generate_corrector,
-    )
+    if not args.do_nothing:
+        correctors = get_correctors(
+            inbag_paths=inbag_paths,
+            list_cam=args.list_cam,
+            bayer_image_topic=args.bayer_image_topic,
+            no_correct=args.no_correct,
+            load_corrector=args.load_corrector,
+            generate_corrector=args.generate_corrector,
+        )
 
     for inbag_path in inbag_paths:
         # Check if input bag exists
