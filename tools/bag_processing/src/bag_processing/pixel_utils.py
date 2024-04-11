@@ -471,7 +471,7 @@ class ImageStatsAccumulator(abc.ABC, Generic[ImageStatsT]):
         try:
             image0 = next(images_iterator)
         except StopIteration:
-            print(f"get_image_stats_parallel(): got no images, not generating stats")
+            print("get_image_stats_parallel(): got no images, not generating stats")
             return None
         images = itertools.chain([image0], images_iterator)
         shape = image0.shape

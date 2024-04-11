@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # Copyright (c) 2024, United States Government, as represented by the
 # Administrator of the National Aeronautics and Space Administration.
 #
@@ -17,8 +15,14 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import sys
+## ! DO NOT MANUALLY INVOKE THIS setup.py, USE CATKIN INSTEAD
 
-from camera import analyze_bad_pixels
+from distutils.core import setup
 
-analyze_bad_pixels.main(sys.argv)
+from catkin_pkg.python_setup import generate_distutils_setup
+
+setup_args = generate_distutils_setup(
+    packages=["bag_processing"], package_dir={"": "src"}
+)
+
+setup(**setup_args)

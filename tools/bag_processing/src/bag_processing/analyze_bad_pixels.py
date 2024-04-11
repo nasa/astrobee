@@ -57,12 +57,12 @@ import pathlib
 import subprocess
 import sys
 import time
-from typing import Iterable, List, Type, Union
+from typing import Iterable, List, Optional, Type, Union
 
 from matplotlib import pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 
-from camera import pixel_utils as pu
+from bag_processing import pixel_utils as pu
 
 DESIRED_SAMPLE_IMAGES = 5
 PAGE_DIMENSIONS = (11, 8.5)
@@ -216,8 +216,10 @@ class CustomFormatter(
     "Formatter with multiple mixins."
 
 
-def main(argv: List[str]) -> None:
+def main(argv: Optional[List[str]] = None) -> None:
     "Parse args and call analyze_bad_pixels()."
+    if argv is None:
+        argv = sys.argv
     parser = argparse.ArgumentParser(
         prog=pathlib.Path(argv[0]).name,
         description=__doc__,

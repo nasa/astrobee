@@ -31,7 +31,7 @@ from typing import Dict, List, Tuple
 import numpy as np
 from matplotlib import pyplot as plt
 
-from camera import pixel_utils as pu
+from bag_processing import pixel_utils as pu
 
 # Coordinates of hot pixels in test data
 HOT_Y = np.array([0, 0, 1, 5, 5])

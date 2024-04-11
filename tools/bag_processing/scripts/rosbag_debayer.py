@@ -31,7 +31,7 @@ import cv2
 import rosbag
 from cv_bridge import CvBridge, CvBridgeError
 
-from camera import pixel_utils as pu
+from bag_processing import pixel_utils as pu
 
 # pylint: disable=c-extension-no-member  # pylint can't find cv2 members
 # pylint: disable=line-too-long  # let black handle this
@@ -45,6 +45,7 @@ def get_correctors(
     load_corrector: Optional[str],
     generate_corrector: str,
 ) -> Dict[str, Optional[pu.BadPixelCorrector]]:
+    "Return loaded or generated correctors for cameras in `list_cam`."
     out: Dict[str, Optional[pu.BadPixelCorrector]] = {}
     if no_correct:
         return out

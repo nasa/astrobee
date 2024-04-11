@@ -36,6 +36,8 @@ find_package(Eigen3 REQUIRED)
 LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
 find_package(OpenCV331 REQUIRED)
 
+
+
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES camera
@@ -117,14 +119,3 @@ install(DIRECTORY include/${PROJECT_NAME}/
   FILES_MATCHING PATTERN "*.h"
   PATTERN ".svn" EXCLUDE
 )
-
-#############
-## Python  ##
-#############
-
-find_package(catkin REQUIRED COMPONENTS rospy)
-catkin_python_setup()
-
-if (CATKIN_ENABLE_TESTING)
-  catkin_add_nosetests(test/test_pixel_utils.py)
-endif()
