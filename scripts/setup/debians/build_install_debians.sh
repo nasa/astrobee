@@ -30,9 +30,6 @@ sudo apt-get install -y devscripts equivs libproj-dev
 rm -f *.deb *.debian.tar.xz *.orig.tar.gz *.dsc *.build *.buildinfo *.changes *.ddeb
 
 case $dist in
-  xenial)
-    echo "Ubuntu 16 detected"
-    ;;
   focal)
     echo "Ubuntu 20 detected"
     build_list+=( opencv )
@@ -45,7 +42,7 @@ case $dist in
 esac
 
 # Add public debians to build list
-build_list+=( alvar dlib dbow2 gtsam decomputil jps3d openmvg )
+build_list+=( ar_track_alvar dlib dbow2 gtsam decomputil jps3d openmvg )
 # If restricted rti-dev debian is present, add miro and soracore as well
 dpkg-query -W -f='${Status}\n' rti-dev 2>&1 | grep -q "install ok installed" &&
 echo "Package rti-dev exists. Including miro and soracore to build list..." &&

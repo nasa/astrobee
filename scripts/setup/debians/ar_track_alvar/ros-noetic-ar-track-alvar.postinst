@@ -1,0 +1,34 @@
+#!/bin/sh
+set -e
+
+# Define the location where the YAML file will be stored
+YAML_PATH="/etc/my_ros_packages/local-dep.yaml"
+# The path to the final rosdep source list
+ROSLIST="/etc/ros/rosdep/sources.list.d/50-local.list"
+
+# Action to take on configure
+if [ "$1" = "configure" ]; then
+    # Ensure the directory exists
+    mkdir -p /etc/my_ros_packages
+
+    # Write the YAML content to the file
+    echo "ar_track_alvar:" > "${YAML_PATH}"
+    echo "  ubuntu: [ros-noetic-ar-track-alvar]" >> "${YAML_PATH}"
+    echo "" >> "${YAML_PATH}"  # Add a blank line
+
+    # Check if the custom rosdep source list file does not exist, then create and update rosdep
+    if [ ! -f "/etc/ros/rosdep/sources.list.d/50-local.list" ]; then
+        echo "yaml file://${YAML_PATH}" > "${ROSLIST}"
+    else
+        # Ensure the file contains the required entry, add if not present
+        grep -qxF "yaml file://${YAML_PATH}" "${ROSLIST}" || {
+            echo "yaml file://${YAML_PATH}" >> "${ROSLIST}"
+        }
+    fi
+
+    chown $SUDO_USER:$SUDO_USER "${YAML_PATH}"
+    chown $SUDO_USER:$SUDO_USER "${ROSLIST}"
+    sudo -u $SUDO_USER rosdep update
+fi
+
+exit 0

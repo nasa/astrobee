@@ -1,0 +1,17 @@
+#!/bin/sh
+set -e
+
+# Name of the package and corresponding entry in the YAML file
+PACKAGE_NAME="ar_track_alvar_msgs:"
+YAML_PATH="/etc/my_ros_packages/local-dep.yaml"
+
+# Action to take on remove
+if [ "$1" = "remove" ]; then
+    # Remove the rosdep source entry
+    if [ -f "/etc/ros/rosdep/sources.list.d/50-local.list" ]; then
+        sed -i "/^${PACKAGE_NAME}/,/^$/d" "${YAML_PATH}"
+    fi
+    sudo -u $SUDO_USER rosdep update
+fi
+
+exit 0
