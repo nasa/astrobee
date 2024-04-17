@@ -30,7 +30,7 @@ void FeatureTrackImage(const vc::SpacedFeatureTracker& feature_tracker,
     const auto& feature_track = feature_track_pair.second;
     // Color using unique color for id
     const int id = feature_track.set().crbegin()->second.feature_track_id;
-     const cv::Scalar color = cv::Scalar((id*123) % 255, (id * 456) % 255, (id * 789) %  255);
+    const cv::Scalar color = cv::Scalar((id*123) % 255, (id * 456) % 255, (id * 789) %  255);
 
     // Draw track history
     if (feature_track.size() > 1) {
@@ -71,11 +71,11 @@ void MarkSmartFactorPoints(const std::vector<boost::shared_ptr<const factor_adde
       cv::circle(feature_track_image, distorted_point, 6 /* Radius*/, cv::Scalar(100, 100, 100), -1 /*Filled*/, 8);
     }
     // Draw reprojected triangulated point in blue, draw red line to latest measurement showing projection error
-  const auto triangulated_point = smart_factor->serialized_point(values);
-  const auto cameras = smart_factor->cameras(values);
+    const auto triangulated_point = smart_factor->serialized_point(values);
+    const auto cameras = smart_factor->cameras(values);
 
-  // Cameras are in same order as keys
-  const auto& measurements = smart_factor->measured();
+    // Cameras are in same order as keys
+    const auto& measurements = smart_factor->measured();
     if (triangulated_point) {
       // Latest camera is first camera
       const auto projected_point = cameras.front().project2(*triangulated_point);
@@ -83,7 +83,7 @@ void MarkSmartFactorPoints(const std::vector<boost::shared_ptr<const factor_adde
       cv::circle(feature_track_image, distorted_projected_point, 7 /* Radius*/, cv::Scalar(255, 0, 0), -1 /*Filled*/,
                  8);
       cv::line(feature_track_image, distorted_projected_point, distorted_point, cv::Scalar(0, 0, 255), 2, 8, 0);
-  }
+    }
   }
 }
 
