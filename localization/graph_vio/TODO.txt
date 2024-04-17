@@ -109,12 +109,25 @@
         - check optical flow params?
           - underestimating movement?
             - check feature tracks!!! (AAAAA)
-                - what do colors mean?
-                - why does smart factor measurement drift from track?
-                - add projected smart factor??
-                - compare w/ and w/o retriangulation -> what changes????? (BBBBB)
+                - switch feature track drawing to spaced feature tracks! (AAA) 
+                      - in offline replay and feature track adder
+                      - why isn't this always working??? (AAAAA)
+                - add puttext with feature point 3d norm distance from camera! (AABBBB)
+                    - does this change w/ and w/o retriangulation????
+            - plot acceleration values! (bias and unbias corrected!) (AAA)
+            better with these values!!:
+              world_accel_sigma = 0.0005
+              world_accel_bias_sigma = 0.0005
+    
+
 
           - add imu measurements and num values to plots!
+
+      - fix not responding to resets!!!
+          - pose extrapolator should respond???
+          - check graph vio?????
+          - test in sim??
+          - check callbacks??
 
       - update bag sweep scripts, evaluation! (BBB)
         - test on iss bags!

@@ -114,17 +114,6 @@ void OfflineReplay::Run() {
     const auto of_msg = live_measurement_simulator_->GetOFMessage(current_time);
     if (of_msg) {
       graph_vio_simulator_->BufferOpticalFlowMsg(*of_msg);
-      if (params_.save_optical_flow_images) {
-        const auto img_msg = live_measurement_simulator_->GetImageMessage(lc::TimeFromHeader(of_msg->header));
-        const auto& graph_vio = graph_vio_simulator_->graph_vio();
-        if (img_msg && graph_vio) {
-          const auto smart_factors = graph_vio->Factors<factor_adders::RobustSmartFactor>();
-          const auto feature_track_image_msg =
-            CreateFeatureTrackImage(*img_msg, graph_vio->feature_tracker(), *params_.nav_cam_params, smart_factors);
-          if (!feature_track_image_msg) return;
-          SaveMsg(**feature_track_image_msg, kFeatureTracksImageTopic_, results_bag_);
-        }
-      }
     }
     const auto vl_msg = live_measurement_simulator_->GetVLMessage(current_time);
     if (vl_msg) {
@@ -181,6 +170,21 @@ void OfflineReplay::Run() {
         // TODO(rsoussan): Pass this to live measurement simulator? allow for simulated delay?
         graph_localizer_simulator_->BufferGraphVIOStateMsg(*vio_msg);
         SaveMsg(*vio_msg, TOPIC_GRAPH_VIO_STATE, results_bag_);
+      if (params_.save_optical_flow_images) {
+        const auto& graph_vio = graph_vio_simulator_->graph_vio();
+        // Use spaced feature tracks so points only drawn when they are included in the localizer
+        const auto latest_time = graph_vio->feature_tracker().SpacedFeatureTracks().crbegin()->crbegin()->timestamp;
+        // const auto latest_time = graph_vio->feature_tracker().feature_tracks().crbegin()->second.Latest()->timestamp;
+        const auto img_msg = live_measurement_simulator_->GetImageMessage(latest_time);
+        if (img_msg && graph_vio) {
+          const auto smart_factors = graph_vio->Factors<factor_adders::RobustSmartFactor>();
+          const auto feature_track_image_msg =
+            CreateFeatureTrackImage(*img_msg, graph_vio->feature_tracker(), *params_.nav_cam_params, smart_factors,
+                                    ((const graph_vio::GraphVIO*)graph_vio.get())->gtsam_values());
+          if (!feature_track_image_msg) return;
+          SaveMsg(**feature_track_image_msg, kFeatureTracksImageTopic_, results_bag_);
+        }
+      }
       }
     }
     const bool updated_localizer_graph = graph_localizer_simulator_->AddMeasurementsAndUpdateIfReady(current_time);

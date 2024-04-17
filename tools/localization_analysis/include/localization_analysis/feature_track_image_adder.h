@@ -34,12 +34,14 @@ void FeatureTrackImage(const vision_common::SpacedFeatureTracker& feature_tracke
                        const camera::CameraParameters& camera_params, cv::Mat& feature_track_image);
 
 void MarkSmartFactorPoints(const std::vector<boost::shared_ptr<const factor_adders::RobustSmartFactor>> smart_factors,
-                           const camera::CameraParameters& camera_params, cv::Mat& feature_track_image);
+                           const camera::CameraParameters& camera_params, const gtsam::Values& values,
+                           cv::Mat& feature_track_image);
 
 boost::optional<sensor_msgs::ImagePtr> CreateFeatureTrackImage(
   const sensor_msgs::ImageConstPtr& image_msg, const vision_common::SpacedFeatureTracker& feature_tracker,
   const camera::CameraParameters& camera_params,
-  const std::vector<boost::shared_ptr<const factor_adders::RobustSmartFactor>>& smart_factors);
+  const std::vector<boost::shared_ptr<const factor_adders::RobustSmartFactor>>& smart_factors,
+  const gtsam::Values& values);
 
 cv::Point2f Distort(const Eigen::Vector2d& undistorted_point, const camera::CameraParameters& params);
 }  // namespace localization_analysis
