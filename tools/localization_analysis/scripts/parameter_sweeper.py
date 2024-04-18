@@ -121,6 +121,10 @@ def test_values(
         run_command += " -i " + image_topic
     os.system(run_command)
 
+    # Use stored sparse mapping poses from output bag if no groundtruth bag provided
+    if not groundtruth_bagfile:
+        groundtruth_bagfile = output_bag
+
     # Plot Loc results
     output_pdf_file = os.path.join(
         new_output_dir_prefix, str(job_id) + "_loc_output.pdf"
@@ -213,10 +217,10 @@ def make_value_ranges():
     steps = 1
 
     # tune num smart factors
-    # value_ranges.append(np.logspace(-1, -6, steps, endpoint=True))
-    # value_names.append('accel_bias_sigma')
-    value_ranges.append(np.linspace(60, 60, steps, endpoint=True))
-    value_names.append("gl_fa_loc_sm_projection_noise_scale")
+    value_ranges.append(np.logspace(-1, -9, steps, endpoint=False))
+    value_names.append("ii_accel_bias_sigma")
+    # value_ranges.append(np.logspace(0, -5, steps, endpoint=True))
+    # value_names.append("gv_fa_vo_retriangulation_threshold")
 
     # q_gyro
     # .001 -> 2 deg
@@ -305,9 +309,6 @@ if __name__ == "__main__":
         help="Full path to output directory where files will be saved. If not specified, timestamped directory will be created in current path.",
     )
     args = parser.parse_args()
-    # Default set groundtruth bagfile to normal bagfile
-    if not args.groundtruth_bagfile:
-        args.groundtruth_bagfile = args.bag_file
 
     make_values_and_parameter_sweep(
         args.directory,
