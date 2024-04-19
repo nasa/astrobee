@@ -121,7 +121,7 @@ void FreeFlyerModelPlugin::Load(physics::ModelPtr model, sdf::ElementPtr sdf) {
 
   // Read namespace
   std::string ns = model_->GetName();
-  if (ns == "bsharp")
+  if (ns == "astrobee")
     ns = "/";
 
   // Read plugin custom name if specified
@@ -201,7 +201,7 @@ void FreeFlyerSensorPlugin::Load(sensors::SensorPtr sensor, sdf::ElementPtr sdf)
 
   // Read namespace
   std::string ns = model_->GetName();
-  if (ns == "bsharp")
+  if (ns == "astrobee")
     ns = "/";
 
   // Read plugin custom name if specified

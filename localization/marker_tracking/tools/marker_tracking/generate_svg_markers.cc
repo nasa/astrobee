@@ -124,7 +124,7 @@ int MarkerToSvg(std::ofstream &out, const alvar::MarkerData &marker,
                 float pos_x, float pos_y) {
   int margin = static_cast<int>(marker.GetMargin());
   int resolution = marker.GetRes();
-  CvMat *mat = marker.GetContent();
+  cv::Mat mat = marker.GetContent();
 
   // Create a group for the marker
   // The group is also used to translate the marker to its desired location.
@@ -163,12 +163,11 @@ int MarkerToSvg(std::ofstream &out, const alvar::MarkerData &marker,
   for (int i = 0; i < resolution; i++) {
     for (int j = 0; j < resolution; j++) {
       if (kDebugMarker) {
-        std::cout << cvGet2D(mat, i, j).val[0] << " ";
+        std::cout << mat.at<uchar>(i, j) << " ";
       }
       // it seems that the Alvar library creates the marker column first !
-      out << RectBW(pos_x + mark_size * (j + margin),
-                    pos_y + mark_size * (i + margin), mark_size, mark_size,
-                    (cvGet2D(mat, i, j).val[0]) == 0);
+      out << RectBW(pos_x + mark_size * (j + margin), pos_y + mark_size * (i + margin), mark_size, mark_size,
+                    mat.at<uchar>(i, j) == 0);
     }
     if (kDebugMarker) {
       std::cout << std::endl;

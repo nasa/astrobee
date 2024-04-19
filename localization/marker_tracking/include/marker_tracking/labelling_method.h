@@ -32,8 +32,8 @@
 #include <camera/camera_params.h>
 
 #include <opencv2/core/core_c.h>
-#include <alvar/Alvar.h>
-#include <alvar/Util.h>
+#include <ar_track_alvar/Alvar.h>
+#include <ar_track_alvar/Util.h>
 
 #include <vector>
 
@@ -47,7 +47,7 @@ class ALVAR_EXPORT Labeling {
   /**
    * \brief Pointer to binary image that is then labeled.
    */
-  IplImage *bw_;
+  std::shared_ptr<cv::Mat> bw_;
 
   camera::CameraParameters cam_;
   int thresh_param1_, thresh_param2_;
@@ -69,9 +69,9 @@ class ALVAR_EXPORT Labeling {
   /**
    * \brief Labels image and filters blobs to obtain square-shaped objects from the scene.
    */
-  virtual void LabelSquares(IplImage* image) = 0;
+  virtual void LabelSquares(std::shared_ptr<cv::Mat> image) = 0;
 
-  bool CheckBorder(CvSeq* contour, int width, int height);
+  bool CheckBorder(std::vector<cv::Point> contour, int width, int height);
 
   void SetThreshParams(int param1, int param2);
 
@@ -87,13 +87,12 @@ class ALVAR_EXPORT LabelingCvSeq : public Labeling {
   int n_blobs_;
   int min_edge_;
   int min_area_;
-  CvMemStorage* storage_;
 
  public:
   explicit LabelingCvSeq(camera::CameraParameters const& cam);
   virtual ~LabelingCvSeq();
 
-  void LabelSquares(IplImage* image);
+  void LabelSquares(std::shared_ptr<cv::Mat> image);
 };
 
 }  // namespace marker_tracking
