@@ -30,7 +30,7 @@ sudo apt-get install -y devscripts equivs libproj-dev
 rm -f *.deb *.debian.tar.xz *.orig.tar.gz *.dsc *.build *.buildinfo *.changes *.ddeb
 
 # Add public debians to build list
-build_list+=( dlib dbow2 gtsam decomputil jps3d openmvg opencv) # alvar
+build_list+=( ar-track-alvar-msgs ar-track-alvar dlib dbow2 gtsam decomputil jps3d openmvg opencv)
 
 # If restricted rti-dev debian is present, add miro and soracore as well
 dpkg-query -W -f='${Status}\n' rti-dev 2>&1 | grep -q "install ok installed" &&

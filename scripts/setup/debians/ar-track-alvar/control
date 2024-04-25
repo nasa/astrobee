@@ -1,0 +1,12 @@
+Source: ros-noetic-ar-track-alvar
+Section: misc
+Priority: optional
+Maintainer: Scott Niekum <sniekum@cs.umass.edu>
+Build-Depends: debhelper (>= 9.0.0), libtinyxml-dev, ros-noetic-ar-track-alvar-msgs, ros-noetic-catkin, ros-noetic-cmake-modules, ros-noetic-cv-bridge, ros-noetic-dynamic-reconfigure, ros-noetic-geometry-msgs, ros-noetic-image-transport, ros-noetic-message-generation, ros-noetic-pcl-conversions, ros-noetic-pcl-ros, ros-noetic-resource-retriever, ros-noetic-rosbag <!nocheck>, ros-noetic-roscpp, ros-noetic-roslaunch <!nocheck>, ros-noetic-rostest <!nocheck>, ros-noetic-sensor-msgs, ros-noetic-std-msgs, ros-noetic-tf, ros-noetic-tf2, ros-noetic-visualization-msgs
+Homepage: http://ros.org/wiki/ar_track_alvar
+Standards-Version: 3.9.2
+
+Package: ros-noetic-ar-track-alvar
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libtinyxml-dev, ros-noetic-ar-track-alvar-msgs, ros-noetic-cv-bridge, ros-noetic-dynamic-reconfigure, ros-noetic-geometry-msgs, ros-noetic-image-transport, ros-noetic-message-runtime, ros-noetic-pcl-conversions, ros-noetic-pcl-ros, ros-noetic-resource-retriever, ros-noetic-roscpp, ros-noetic-rospy, ros-noetic-sensor-msgs, ros-noetic-std-msgs, ros-noetic-tf, ros-noetic-tf2, ros-noetic-visualization-msgs
+Description: This package is a ROS wrapper for Alvar, an open source AR tag tracking library.

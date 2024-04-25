@@ -16,15 +16,11 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-set -e
 
-PACKAGE_NAME=libalvar
-ORIG_TAR1=ros-noetic-ar-track-alvar-msgs_0.7.1.orig.tar.gz
-ORIG_TAR2=ros-noetic-ar-track-alvar_0.7.1.orig.tar.gz
-DEB_DIR1=ar_track_alvar_msgs
-DEB_DIR2=ar_track_alvar
+PACKAGE_NAME=libar_track_alvar_msgs
+ORIG_TAR=ros-noetic-ar-track-alvar-msgs_0.7.1.orig.tar.gz
+DEB_DIR=ar_track_alvar_msgs
 DIST=$(grep -oP "(?<=VERSION_CODENAME=).*" /etc/os-release)
-
 
 pip install -U bloom
 
@@ -32,24 +28,11 @@ if [ -d $PACKAGE_NAME ]; then
   rm -rf $PACKAGE_NAME
 fi
 git clone --quiet -b noetic-devel https://github.com/ros-perception/ar_track_alvar.git $PACKAGE_NAME 2>&1 || exit 1
-cd $PACKAGE_NAME/$DEB_DIR1
-git archive --prefix=$PACKAGE_NAME/ --output=../$ORIG_TAR1 --format tar.gz HEAD || exit 1
-
+cd $PACKAGE_NAME/$DEB_DIR
+git archive --prefix=$PACKAGE_NAME/ --output=../$ORIG_TAR --format tar.gz HEAD || exit 1
 bloom-generate rosdebian --os-name ubuntu --os-version $DIST --ros-distro noetic
-cp -r ../../$DEB_DIR1/* debian
-debuild -us -uc || exit 1
-
-
-# Need to install this for the next package
-cd ..
-sudo dpkg -i *alvar*.deb || exit 1
-
-
-cd $DEB_DIR2
-git archive --prefix=$PACKAGE_NAME/ --output=../$ORIG_TAR2 --format tar.gz HEAD || exit 1
-bloom-generate rosdebian --os-name ubuntu --os-version $DIST --ros-distro noetic
-cp -r ../../$DEB_DIR2/* debian
+cp -r ../../ar-track-alvar-msgs/* debian
 debuild -us -uc || exit 1
 cd ../..
 
-mv $PACKAGE_NAME/*alvar*{.deb,.debian.tar.xz,.orig.tar.gz,.dsc} .
+mv $PACKAGE_NAME/*ar-track-alvar*{.deb,.debian.tar.xz,.orig.tar.gz,.dsc} .
