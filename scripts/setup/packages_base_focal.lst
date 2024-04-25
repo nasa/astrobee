@@ -77,7 +77,7 @@ ros-noetic-xacro
 ros-noetic-octomap
 ros-noetic-catkin
 ros-noetic-pcl-conversions
-libalvar2
+ros-noetic-ar-track-alvar
 libdbow21
 libgtsam
 libopenmvg1
@@ -113,7 +113,6 @@ libsuitesparse-dev
 libatlas-base-dev
 libjson-c-dev
 libargtable2-dev
-libalvar-dev
 libdbow2-dev
 libgtsam-dev
 libopenmvg-dev
@@ -124,6 +123,4 @@ libsoracore-dev
 libmiro-dev
 libdecomputil-dev
 libjps3d-dev
-libopencv3.3.1
-libopencv-dev3.3.1
 python3-catkin-tools
