@@ -734,7 +734,7 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
     case ff_util::FreeFlyerActionState::SUCCESS:
       return fsm_.Update(SWITCH_SUCCESS);
     default:
-      err_msg_ = "Result code " + result->fsm_result;
+      err_msg_ = "Switch Code " + std::to_string(result->response) + ": (" + result->fsm_result + ")";
       return fsm_.Update(SWITCH_FAILED);
     }
   }
@@ -855,7 +855,7 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
     case ff_util::FreeFlyerActionState::SUCCESS:
       return fsm_.Update(MOTION_SUCCESS);
     default:
-      err_msg_ = "Result code " + result->fsm_result;
+      err_msg_ = "Move Code " + std::to_string(result->response) + ": (" + result->fsm_result + ")";
       return fsm_.Update(MOTION_FAILED);
     }
   }
