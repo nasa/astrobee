@@ -44,8 +44,11 @@
           - add reset to ros pose extrapolator!!!! (AAABBBB)
       - why does VIO graph go crazy after optical flow feature dropouts? (B)
 
-      - fix going crazy issue (AAA)
-        - print out graph duration and num states (AAAAA)
+      - add plotting num states to vio plotter! (AAA)
+      - change plot names to have bag name in them! (AB)
+      - why is integrated velocity y value inverted? But not integrated extrapolated y velocity?
+      - Run offline, view ar tag pose!!
+        - hwo to fix this??
 
       - fix drift issue! 
         - add imu bias extrapolated poses!
@@ -139,6 +142,30 @@
 
       - tune iss params? (CCC)
         - download recent bags and groundtruth (made for suyoung)
+            - trim bag (remove end, test again) (AAAA)
+            - tune with accel sigma and bias sigma?
+              - bias_sigma good values: .0006, .00215 
+              - simga values good: .0000129, .0000036
+              - gyro_bias_sigma good: < .0002
+              - compare to granite values....
+          - find more good bags with groundtruth!! (AAAAAAA)
+              - tune gyro sigma!
+              - tune gyro bias sigma!
+              - tune both together!
+              - tune other params!
+              - tune start bias sigma???
+                - use bag that starts with movement!!!! 
+                - retest on non movement start bag
+                - add heuristic to estimate this? (AAAAAA)
+                  - test old vio on bag?  (AA)
+                  - add imu initializer that fuses map estimates with vio graph??? (AB)
+            - download some bags, watch with replay (AA)
+                - make sure they look good!
+                  - try all suyoung bags.... (AA)
+                  - try isaac bags? cmxx bags? (AB)
+              - use several bag files?? try on different ones??
+              - use groundtruth or vl poses!
+              - add adding imu integrated poses in offline replay! (CC) 
 
      - finish loc plotting script! 
         - add num ml measurements! 
@@ -152,11 +179,6 @@
       - test with sim! (A)
             - update rmse test! (B)
               - is orientation calculation correct???
-          - upgrade scripts to python 3! test on beehive!
-            - upgrade vm to ubuntu 20! (AA)
-          - tune on granite table bags!
-            - what order to tune in????
-                - reset imu params to reasonable values? check gtsam? check original localization code?
 
                 - fix adding too many loc projection factors! (A)
                 - tune/lessen vio time! (AB)
