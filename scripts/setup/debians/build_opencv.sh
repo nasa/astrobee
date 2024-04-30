@@ -18,7 +18,7 @@
 # under the License.
 
 PACKAGE_NAME=libopencv
-ORIG_TAR=libopencv-local_4.2.0.orig.tar.gz
+ORIG_TAR=libopencv-xfeatures2d_4.2.0.orig.tar.gz
 DEB_DIR=opencv
 DIST=$(grep -oP "(?<=VERSION_CODENAME=).*" /etc/os-release)
 

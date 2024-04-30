@@ -7,14 +7,14 @@ BUILDDIR = obj-$(DEB_HOST_MULTIARCH)
 
 
 CMAKE_FLAGS = -DCMAKE_BUILD_TYPE=RELEASE \
-	-DCMAKE_INSTALL_PREFIX="/usr/local" \
-	-DINSTALL_C_EXAMPLES=ON \
-	-DINSTALL_PYTHON_EXAMPLES=ON \
-	-DOPENCV_GENERATE_PKGCONFIG=ON \
+	-DCMAKE_INSTALL_PREFIX="/usr" \
+	-DBUILD_EXAMPLES=OFF \
+	-DBUILD_DOCS=OFF \
+	-DBUILD_TESTS=OFF \
+	-DBUILD_PERF_TESTS=OFF \
+	-DOPENCV_ENABLE_NONFREE=ON \
 	-DOPENCV_EXTRA_MODULES_PATH="$(CURDIR)/../contrib/modules" \
-	-DBUILD_EXAMPLES=ON \
-	-DOPENCV_ENABLED_NONFREE=YES \
-	-DENABLE_PRECOMPILED_HEADERS=OFF
+	-DBUILD_LIST=xfeatures2d ..
 
 %:
 	dh $@ --with python3 --parallel
@@ -34,7 +34,6 @@ override_dh_auto_configure:
 	dh_auto_configure -B $(BUILDDIR) \
 		-- $(CMAKE_FLAGS) \
 		-DCMAKE_SHARED_LINKER_FLAGS_RELEASE="$(LDFLAGS)" \
-		-DBUILD_SHARED_LIBS=ON -DBUILD_DOCS=ON \
 		-DWITH_V4L=OFF \
 		-DWITH_LIBV4L=OFF \
 		-DWITH_CUDA=OFF
@@ -42,7 +41,7 @@ override_dh_auto_configure:
 
 override_dh_auto_build: 
 	dh_auto_build -B $(BUILDDIR)
-	dh_auto_build -B $(BUILDDIR) -- doxygen
+	dh_auto_build -B $(BUILDDIR)
 
 override_dh_auto_test:
 
