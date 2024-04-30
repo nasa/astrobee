@@ -266,7 +266,7 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
     fsm_.Add(STATE::PERCHING_MOVING_TO_APPROACH_POSE,
       MOTION_FAILED, [this](FSM::Event const& event) -> FSM::State {
         err_ = RESPONSE::MOTION_FAILED;
-        err_msg_ = "Failed while moving to approach pose";
+        err_msg_ = "Failed while moving to approach pose. " + err_msg_;
         Switch(LOCALIZATION_MAPPED_LANDMARKS);
         return STATE::RECOVERY_SWITCHING_TO_ML_LOC;
       });
@@ -274,7 +274,7 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
     fsm_.Add(STATE::PERCHING_DEPLOYING_ARM,
       ARM_FAILED, [this](FSM::Event const& event) -> FSM::State {
         err_ = RESPONSE::ARM_FAILED;
-        err_msg_ = "Failed while deploying the arm";
+        err_msg_ = "Failed while deploying the arm. " + err_msg_;
         Switch(LOCALIZATION_MAPPED_LANDMARKS);
         return STATE::RECOVERY_SWITCHING_TO_ML_LOC;
       });
@@ -282,7 +282,7 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
     fsm_.Add(STATE::PERCHING_OPENING_GRIPPER,
       ARM_FAILED, [this](FSM::Event const& event) -> FSM::State {
         err_ = RESPONSE::ARM_FAILED;
-        err_msg_ = "Failed while opening the gripper";
+        err_msg_ = "Failed while opening the gripper. " + err_msg_;
         Arm(ff_msgs::ArmGoal::ARM_STOW);
         return STATE::RECOVERY_STOWING_ARM;
       });
@@ -290,7 +290,7 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
     fsm_.Add(STATE::PERCHING_MOVING_TO_COMPLETE_POSE,
       MOTION_FAILED, [this](FSM::Event const& event) -> FSM::State {
         err_ = RESPONSE::MOTION_FAILED;
-        err_msg_ = "Failed while moving to complete pose";
+        err_msg_ = "Failed while moving to complete pose. " + err_msg_;
         Arm(ff_msgs::ArmGoal::GRIPPER_OPEN);
         return STATE::RECOVERY_OPENING_GRIPPER;
       });
@@ -298,7 +298,7 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
     fsm_.Add(STATE::PERCHING_CLOSING_GRIPPER,
       ARM_FAILED, [this](FSM::Event const& event) -> FSM::State {
         err_ = RESPONSE::ARM_FAILED;
-        err_msg_ = "Failed while closing the gripper";
+        err_msg_ = "Failed while closing the gripper. " + err_msg_;
         Arm(ff_msgs::ArmGoal::GRIPPER_OPEN);
         return STATE::RECOVERY_OPENING_GRIPPER;
       });
@@ -314,7 +314,7 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
     fsm_.Add(STATE::PERCHING_WAITING_FOR_SPIN_DOWN,
       MOTION_FAILED, [this](FSM::Event const& event) -> FSM::State {
         Result(RESPONSE::MOTION_FAILED,
-          "Spinning down propulsion failed");
+          "Spinning down propulsion failed. " + err_msg_);
         return STATE::PERCHED;
       });
     // [27]
@@ -337,21 +337,21 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
     fsm_.Add(STATE::UNPERCHING_WAITING_FOR_SPIN_UP,
       MOTION_FAILED, [this](FSM::Event const& event) -> FSM::State {
         Result(RESPONSE::MOTION_FAILED,
-          "Spinning up propulsion failed");
+          "Spinning up propulsion failed. " + err_msg_);
         return STATE::PERCHED;
       });
     // [30]
     fsm_.Add(STATE::UNPERCHING_OPENING_GRIPPER,
       ARM_FAILED, [this](FSM::Event const& event) -> FSM::State {
         Result(RESPONSE::ARM_FAILED,
-          "Gripper open failed");
+          "Gripper open failed. " + err_msg_);
         return STATE::PERCHED;
       });
     // [31]
     fsm_.Add(STATE::UNPERCHING_MOVING_TO_APPROACH_POSE,
       MOTION_FAILED, [this](FSM::Event const& event) -> FSM::State {
         err_ = RESPONSE::MOTION_FAILED;
-        err_msg_ = "Failed while moving to approach pose";
+        err_msg_ = "Failed while moving to approach pose. " + err_msg_;
         Move(RECOVERY_POSE, ff_msgs::MotionGoal::NOMINAL);
         return STATE::RECOVERY_MOVING_TO_RECOVERY_POSE;
       });
@@ -359,7 +359,7 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
     fsm_.Add(STATE::UNPERCHING_STOWING_ARM,
       ARM_FAILED, [this](FSM::Event const& event) -> FSM::State {
         err_ = RESPONSE::ARM_FAILED;
-        err_msg_ = "Failed while stowing the arm";
+        err_msg_ = "Failed while stowing the arm. " + err_msg_;
         Arm(ff_msgs::ArmGoal::ARM_STOW);
         return STATE::RECOVERY_STOWING_ARM;
       });
@@ -750,6 +750,7 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
     case ff_util::FreeFlyerActionState::SUCCESS:
       return fsm_.Update(ARM_SUCCESS);
     default:
+      err_msg_ = "Arm Code " + std::to_string(result->response) + ": (" + result->fsm_result + ")";
       return fsm_.Update(ARM_FAILED);
     }
   }
@@ -914,6 +915,7 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
     case ff_util::FreeFlyerActionState::SUCCESS:
       return fsm_.Update(MOTION_SUCCESS);
     default:
+      err_msg_ = "Move Code " + std::to_string(result->response) + ": (" + result->fsm_result + ")";
       return fsm_.Update(MOTION_FAILED);
     }
   }
