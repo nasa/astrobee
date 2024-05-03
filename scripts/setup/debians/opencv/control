@@ -51,7 +51,7 @@ Depends:
  pkg-config,
  ${misc:Depends},
  ${shlibs:Depends},
-Description: development files for opencv
+Description: development files for libopencv-xfeatures2d
  This is a metapackage providing development package necessary for
  development of OpenCV (Open Computer Vision).
  .
@@ -71,7 +71,7 @@ Architecture: any
 Multi-Arch: same
 Depends:
  ${misc:Depends},
-Description: development files for libopencv
+Description: computer vision x Feature Detection and Descriptor Extraction library
  The Open Computer Vision Library is a collection of algorithms and sample
  code for various computer vision problems. The library is compatible with
  IPL (Intel's Image Processing Library) and, if available, can use IPP
