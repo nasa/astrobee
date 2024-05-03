@@ -58,7 +58,7 @@ class GraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
 
   bool localizer_enabled() const;
 
-  bool ResetMap(ff_msgs::ResetMap::Request& req, ff_msgs::ResetMap::Response& res);
+  bool ResetMapLocalizer(ff_msgs::ResetMap::Request& req, ff_msgs::ResetMap::Response& res);
 
   bool ResetBiasesAndLocalizer(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
 
