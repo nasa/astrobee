@@ -17,6 +17,6 @@ Description: Multi-view geometry library.
 
 Package: libopenmvg1
 Architecture: any
-Depends: libceres-dev (>=1.12), ${shlibs:Depends}, ${misc:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: Multi-view geometry library.
  <insert long description, indented with spaces>
