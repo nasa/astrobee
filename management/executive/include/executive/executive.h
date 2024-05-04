@@ -51,8 +51,10 @@
 #include <ff_msgs/MotionAction.h>
 #include <ff_msgs/PerchAction.h>
 #include <ff_msgs/PlanStatusStamped.h>
+#include <ff_msgs/ResetMap.h>
 #include <ff_msgs/ResponseOnly.h>
 #include <ff_msgs/SetDataToDisk.h>
+#include <ff_msgs/SetExposure.h>
 #include <ff_msgs/SetFloat.h>
 #include <ff_msgs/SetInertia.h>
 #include <ff_msgs/SetRate.h>
@@ -232,9 +234,11 @@ class Executive : public ff_util::FreeFlyerNodelet {
   bool SetEnableAutoReturn(ff_msgs::CommandStampedPtr const& cmd);
   bool SetEnableImmediate(ff_msgs::CommandStampedPtr const& cmd);
   bool SetEnableReplan(ff_msgs::CommandStampedPtr const& cmd);
+  bool SetExposure(ff_msgs::CommandStampedPtr const& cmd);
   bool SetFlashlightBrightness(ff_msgs::CommandStampedPtr const& cmd);
   bool SetHolonomicMode(ff_msgs::CommandStampedPtr const& cmd);
   bool SetInertia(ff_msgs::CommandStampedPtr const& cmd);
+  bool SetMap(ff_msgs::CommandStampedPtr const& cmd);
   bool SetOperatingLimits(ff_msgs::CommandStampedPtr const& cmd);
   bool SetPlan(ff_msgs::CommandStampedPtr const& cmd);
   bool SetPlanner(ff_msgs::CommandStampedPtr const& cmd);
@@ -312,9 +316,11 @@ class Executive : public ff_util::FreeFlyerNodelet {
   ros::ServiceClient perch_cam_config_client_, perch_cam_enable_client_;
   ros::ServiceClient sci_cam_config_client_, sci_cam_enable_client_;
   ros::ServiceClient payload_power_client_, pmc_enable_client_;
+  ros::ServiceClient set_dock_cam_exposure_client_;
+  ros::ServiceClient set_nav_cam_exposure_client_;
   ros::ServiceClient set_inertia_client_, set_rate_client_;
   ros::ServiceClient set_data_client_, enable_recording_client_;
-  ros::ServiceClient eps_terminate_client_;
+  ros::ServiceClient reset_map_client_, eps_terminate_client_;
   ros::ServiceClient enable_astrobee_intercommunication_client_;
   ros::ServiceClient unload_load_nodelet_client_;
   ros::ServiceClient set_collision_distance_client_;
@@ -348,7 +354,6 @@ class Executive : public ff_util::FreeFlyerNodelet {
   int pub_queue_size_;
   int sub_queue_size_;
 
-  // TODO(Katie) Move to Agent state stamped
   bool allow_blind_flying_;
   bool live_led_on_;
   bool sys_monitor_heartbeat_fault_blocking_;
