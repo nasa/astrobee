@@ -135,7 +135,6 @@ bool GraphLocalizerNodelet::ResetBiasesAndLocalizer(std_srvs::Empty::Request& re
 }
 
 bool GraphLocalizerNodelet::ResetMapLocalizer(ff_msgs::ResetMap::Request& req, ff_msgs::ResetMap::Response& res) {
-  ROS_ERROR_STREAM("graph localizer reset map");
   // Reset localizer while loading previous biases when map is reset to prevent possible initial
   // map jump from affecting estimated IMU biases and velocity estimation.
   // Clear vl messages to prevent old localization results from being used by localizer after reset
