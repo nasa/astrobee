@@ -87,7 +87,8 @@ void GraphLocalizerNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
     private_nh_.advertiseService(SERVICE_GNC_EKF_INIT_BIAS, &GraphLocalizerNodelet::ResetBiasesAndLocalizer, this);
   bias_from_file_srv_ = private_nh_.advertiseService(
     SERVICE_GNC_EKF_INIT_BIAS_FROM_FILE, &GraphLocalizerNodelet::ResetBiasesFromFileAndResetLocalizer, this);
-  reset_map_srv_ = private_nh_.advertiseService(SERVICE_LOCALIZATION_RESET_MAP, &GraphLocalizerNodelet::ResetMap, this);
+  reset_map_srv_ =
+    private_nh_.advertiseService(SERVICE_LOCALIZATION_RESET_MAP_LOC, &GraphLocalizerNodelet::ResetMapLocalizer, this);
   reset_srv_ = private_nh_.advertiseService(SERVICE_GNC_EKF_RESET, &GraphLocalizerNodelet::ResetLocalizer, this);
   input_mode_srv_ = private_nh_.advertiseService(SERVICE_GNC_EKF_SET_INPUT, &GraphLocalizerNodelet::SetMode, this);
 }
@@ -133,7 +134,7 @@ bool GraphLocalizerNodelet::ResetBiasesAndLocalizer(std_srvs::Empty::Request& re
   return true;
 }
 
-bool GraphLocalizerNodelet::ResetMap(ff_msgs::ResetMap::Request& req, ff_msgs::ResetMap::Response& res) {
+bool GraphLocalizerNodelet::ResetMapLocalizer(ff_msgs::ResetMap::Request& req, ff_msgs::ResetMap::Response& res) {
   // Reset localizer while loading previous biases when map is reset to prevent possible initial
   // map jump from affecting estimated IMU biases and velocity estimation.
   // Clear vl messages to prevent old localization results from being used by localizer after reset

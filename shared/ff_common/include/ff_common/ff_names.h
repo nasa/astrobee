@@ -312,6 +312,7 @@
 #define SERVICE_LOCALIZATION_HR_ENABLE              "loc/hr/enable"
 #define SERVICE_LOCALIZATION_PL_ENABLE              "loc/pl/enable"
 #define SERVICE_LOCALIZATION_RESET_MAP              "loc/ml/reset_map"
+#define SERVICE_LOCALIZATION_RESET_MAP_LOC          "loc/ml/reset_map_loc"
 
 // Localization manager
 
