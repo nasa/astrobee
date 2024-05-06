@@ -24,6 +24,12 @@ GraphLocalizerSimulator::GraphLocalizerSimulator(const GraphLocalizerSimulatorPa
                                                  const std::string& graph_config_path_prefix)
     : RosGraphLocalizerWrapper(graph_config_path_prefix), params_(params) {}
 
+void GraphLocalizerSimulator::BufferImuMsg(const sensor_msgs::Imu& imu_msg) { imu_msg_buffer_.emplace_back(imu_msg); }
+
+void GraphLocalizerSimulator::BufferFlightModeMsg(const ff_msgs::FlightMode& flight_mode_msg) {
+  flight_mode_msg_buffer_.emplace_back(flight_mode_msg);
+}
+
 void GraphLocalizerSimulator::BufferGraphVIOStateMsg(const ff_msgs::GraphVIOState& graph_vio_state_msg) {
   vio_msg_buffer_.emplace_back(graph_vio_state_msg);
 }
@@ -45,6 +51,17 @@ bool GraphLocalizerSimulator::AddMeasurementsAndUpdateIfReady(const lc::Time& cu
   }
 
   // Add measurements
+  // Add Flight Mode msgs before IMU so imu filters can be set
+  for (const auto& flight_mode_msg : flight_mode_msg_buffer_) {
+    FlightModeCallback(flight_mode_msg);
+  }
+  flight_mode_msg_buffer_.clear();
+
+  for (const auto& imu_msg : imu_msg_buffer_) {
+    ImuCallback(imu_msg);
+  }
+  imu_msg_buffer_.clear();
+
   for (const auto& vio_msg : vio_msg_buffer_) {
     GraphVIOStateCallback(vio_msg);
   }

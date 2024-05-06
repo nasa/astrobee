@@ -22,6 +22,7 @@
 #include <ff_common/eigen_vectors.h>
 #include <localization_common/time.h>
 #include <localization_common/timestamped_set.h>
+#include <gtsam/base/Matrix.h>
 
 #include <Eigen/Geometry>
 
@@ -52,6 +53,8 @@ class TimestampedInterpolater : public TimestampedSet<T> {
   // Computes a relative object given objects a and b.
   // This needs to be specialized.
   T Relative(const T& a, const T& b) const;
+
+  mutable boost::optional<gtsam::Matrix> covariance_a_b;
 
  private:
   TimestampedSet<T> timestamped_objects_;

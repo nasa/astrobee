@@ -105,12 +105,13 @@ bool LiveMeasurementSimulator::ProcessMessage() {
   if (*view_it_ == view_->end()) return false;
   const auto& msg = **view_it_;
   current_time_ = lc::TimeFromRosTime(msg.getTime());
+/*// else if (string_ends_with(msg.getTopic(), TOPIC_MOBILITY_FLIGHT_MODE)) {
+  //    const ff_msgs::FlightModeConstPtr flight_mode = msg.instantiate<ff_msgs::FlightMode>();
+  //    flight_mode_buffer_.BufferMessage(*flight_mode);
+  //  }*/
   if (string_ends_with(msg.getTopic(), TOPIC_HARDWARE_IMU)) {
     sensor_msgs::ImuConstPtr imu_msg = msg.instantiate<sensor_msgs::Imu>();
     imu_buffer_.BufferMessage(*imu_msg);
-  } else if (string_ends_with(msg.getTopic(), TOPIC_MOBILITY_FLIGHT_MODE)) {
-    const ff_msgs::FlightModeConstPtr flight_mode = msg.instantiate<ff_msgs::FlightMode>();
-    flight_mode_buffer_.BufferMessage(*flight_mode);
   } else if (string_ends_with(msg.getTopic(), TOPIC_LOCALIZATION_DEPTH_ODOM)) {
     const ff_msgs::DepthOdometryConstPtr depth_odometry = msg.instantiate<ff_msgs::DepthOdometry>();
     depth_odometry_buffer_.BufferMessage(*depth_odometry);

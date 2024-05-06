@@ -36,6 +36,11 @@ class GraphLocalizerSimulator : public ros_graph_localizer::RosGraphLocalizerWra
  public:
   GraphLocalizerSimulator(const GraphLocalizerSimulatorParams& params, const std::string& graph_config_path_prefix);
 
+  void BufferImuMsg(const sensor_msgs::Imu& imu_msg);
+
+  void BufferFlightModeMsg(const ff_msgs::FlightMode& flight_mode_msg);
+
+
   void BufferGraphVIOStateMsg(const ff_msgs::GraphVIOState& graph_vio_state_msg);
 
   void BufferVLVisualLandmarksMsg(const ff_msgs::VisualLandmarks& visual_landmarks_msg);
@@ -45,6 +50,8 @@ class GraphLocalizerSimulator : public ros_graph_localizer::RosGraphLocalizerWra
   bool AddMeasurementsAndUpdateIfReady(const localization_common::Time& current_time);
 
  private:
+  std::vector<sensor_msgs::Imu> imu_msg_buffer_;
+  std::vector<ff_msgs::FlightMode> flight_mode_msg_buffer_;
   std::vector<ff_msgs::GraphVIOState> vio_msg_buffer_;
   std::vector<ff_msgs::VisualLandmarks> vl_msg_buffer_;
   std::vector<ff_msgs::VisualLandmarks> ar_msg_buffer_;

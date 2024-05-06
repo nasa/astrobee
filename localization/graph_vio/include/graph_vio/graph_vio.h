@@ -60,6 +60,7 @@ class GraphVIO : public sliding_window_graph_optimizer::SlidingWindowGraphOptimi
 
   // Const accesor to feature tracker used for smart factor creation
   const vision_common::SpacedFeatureTracker& feature_tracker() const;
+  std::shared_ptr<node_adders::CombinedNavStateNodeAdder> combined_nav_state_node_adder_;
 
  private:
   // Uses the latest feature track points to detect standstill.
@@ -88,7 +89,7 @@ class GraphVIO : public sliding_window_graph_optimizer::SlidingWindowGraphOptimi
     standstill_factor_adder_;
 
   // Node Adders
-  std::shared_ptr<node_adders::CombinedNavStateNodeAdder> combined_nav_state_node_adder_;
+//  std::shared_ptr<node_adders::CombinedNavStateNodeAdder> combined_nav_state_node_adder_;
 };
 }  // namespace graph_vio
 

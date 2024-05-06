@@ -94,8 +94,8 @@ class TimestampedNodeAdder : public SlidingWindowNodeAdder {
 
   const TimestampedNodesType& nodes() const { return *nodes_; }
 
- protected:
   NodeAdderModelType node_adder_model_;
+  std::shared_ptr<TimestampedNodesType> nodes_;
 
  private:
   void RemovePriors(const gtsam::KeyVector& old_keys, gtsam::NonlinearFactorGraph& factors);
@@ -112,7 +112,6 @@ class TimestampedNodeAdder : public SlidingWindowNodeAdder {
     ar& BOOST_SERIALIZATION_NVP(params_);
   }
 
-  std::shared_ptr<TimestampedNodesType> nodes_;
   TimestampedNodeAdderParams<NodeType> params_;
 };
 

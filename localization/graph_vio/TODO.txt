@@ -25,6 +25,137 @@
       - add unit tests for these!!!!
 
 
+    - update localizer!
+      - add proper covariances to graph loc!
+        - test!
+          - use proper covariance calculation!
+              - lookup correlation covariance calculation from last time! 
+                  - why are timestamps off???
+                    - print of timestamps, vl timestamps!!! 
+                        - are these different?????
+                          - yes! why???
+                            - what timestamp does vl use for msg? of? 
+                                vl:   vl->header.stamp = image_ptr->header.stamp;
+                                of: features->header.stamp = msg->header.stamp;
+                            - print image timestamps!! 
+                                - of dropping a lot of messages!!!!
+                        - find/use closest covariances??? 
+                        - tune on vl noise, ar noise! 
+          - does this fix some noise? ar bug?
+      - add some vo factors to loc graph! 
+        - test!
+          - does this make things more stable?
+            - tune noise values! (AAAA)
+              - why does adding 0 smart factors look different than the previous cov version???
+                  - change to not skipping measurements in vio??
+                    - compare old cov method w/ and w/o skipping measurements to new one! (AAA)
+                      - is new one actually better??
+                      - sweep on measurement skipping!!
+                        - new cov vio better with 2??? loc better with 0??
+                      - sweep on num measurements??
+                        - scale drift improves w/ more measurements (8 best)
+                        - need to retune vl noise though, loc is worse w/ more measurements?? (for new cov method) (AAA)
+                          - sweep w/ 2 spacing, 8 measurements....
+                            - need to test w/ pose noise scale!!! 
+                              - much smaller w/ new cov! use 1!
+                                - sweep on values below this! (0.001 -> 1, log scale)
+                                - resweep on num vl measurements! 
+                                  - didn't change much..
+                                - color gt colors by num landmarks?????
+                                - resweep on vl noise scale 
+                                  -unclear which is better..
+                                  - why is ar pose bad? too low?
+                          - sweep on num vo measurements w/ 0 spacing
+                            - compare w/ num vo measurements w/ 2 spacing...
+                          - test new cov version w/ inverse landmark num scaling (AAAAA)
+                              - sweep on vl proj noise!
+                                  - w/ and w/o inverse landmark dist scaling! 
+                                  - how much can you make it match loc features???
+                                      - sweep all scaling on num vl measurements per factor 
+                                              - use 8-11!!!! (start with 10)
+                                        - sweep on graph duration 
+                                          - longer is better (use 8?)
+                                        - sweep max num states 
+                                            - unclear...
+                                        - test adding marginals 
+                                          - no marginals is better
+                                        - test scaling linearly with num factors??? 
+                                          - why should this work though??? (doesn't work)
+                                        - sweep on num factors per measurement but don't add ar factors! 
+                                          - fixes ignoring jump, but overcorrects to second ml measurement!
+                                        - try adding smart factors again!!!
+                                          - why was this so jerky???
+                                          - tune on smart factor noise scale?? 
+                                            - need to increase vl noise when add smart factors??? 
+                                          - tune on measurement spacing? 
+                                            - 0 better?
+                                          - tune on num smart factors 
+                                            - doesn't really matter
+                                          - tune on num measurements 
+                                            - doesn't really matter
+                                          - decrease vio relatve pose cov when doing so? 
+                                            - how to do this???? -> add param to pose_node_adder_model!!! 
+                                                - sweep on this!!!
+                                      - decrease cam noise? (same as decreasing loc proj noise..)
+                                      - decrease all 
+                                      - need to also increase vio relative factor noise??
+                            - add imu values to extrapolation when estimating ar pose! 
+                                - subscribe to extrapolated pose! use this for dock estimate!!! 
+                                      - noisy!
+                                  - interpolate this! add to pose interpolater!!!
+                                      - still noisy!
+                                    - change to using vio with imu extrapolation!! (AAAAA)
+                                          - revert offline replay changes, update offline replay 
+                                              - add imu and flight mode callbacks to graph localizer!  
+                                                - copy graph vio stuff!
+                                          - add ros_graph_localizer_wrapper_params! 
+                                            - add imu integrator params!
+                                          - test! 
+                                              - retune? (not yet...)
+                                          - push! (AAA)
+                                            - remove feature points stuff from graph_loc, other bad stuff
+                          - combine old vio pose measurements in odom interpolater, avoid overflow errors! (GGG)
+                            - in pose extrapolator, graph localizer
+                            - avoids issue of potential overflow if haven't seen a loc measurement in a while
+                          - Add ability to pass flight mode to imu integrators!!! (BBBBBB)
+                            - uncomment flight mode stuff in offline replay, elsewhere
+                            - compare docking localization w/ and w/o this!
+                          - clean up ros pose extrapolator? (CCC)
+                            - compare old and new version!
+                              - change to performing pose extrapolation as done for ar dock mode!
+                          - Delay loc measurements? Add in batches??? (DDDD)
+                          - Make everything happen in one process!!! (FFFF)
+                            - call wrappers in succession (already done?)
+                            - combine nodelets
+                            - update launch files
+                              - test these...
+                          - Fix relative factor/covariance failures!!! (DDDD)
+                          - add ability to use loc map measurements when reset biases in graph vio! (EEE)
+                              - subscribe to map measurements in graph vio
+                              - only enable for x seconds, make a config variable for this
+                                - enable for x meters instead of seconds??? How to measure this? keep track of displacement norm?
+                          - test prev cov version, try to make it respond better to loc measurements! (AAAAA)
+                            - increase vio rel pose cov
+                            - decrease loc cov
+                              - pose and proj!
+                          - test adding smart factors, make vio rel poses in loc graph have super high noise!!!! 
+                            - add imu factors somehow???
+                              - copy imu preintegration factor, hardcode bias/velocity vals? 
+                                - will this fail to scale biases properly though?
+                              - remove vio rel pose?
+          - add standstill factors?
+      - use vio graph as loc graph? (AAABBB)
+        - copy it
+        - add loc factors
+          - don't remove other things just yet?
+            - maybe do since this would be same as old graph...
+          - publish loc msg somehow
+        - remove IMU factors?
+        - remove bias, velocity values?
+        - add relative pose factors with proper relative covariances?
+        - remove some smart factors?
+        - need to also add ar factors!!
+
     - test localizer!
       - w/o writing:
           cov time: 0.0275

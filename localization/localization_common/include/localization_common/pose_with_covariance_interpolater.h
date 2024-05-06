@@ -21,6 +21,7 @@
 
 #include <localization_common/pose_with_covariance.h>
 #include <localization_common/timestamped_interpolater.h>
+#include <gtsam/base/Matrix.h>
 
 namespace localization_common {
 using PoseWithCovarianceInterpolater = TimestampedInterpolater<PoseWithCovariance>;

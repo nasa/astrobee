@@ -75,7 +75,6 @@ OfflineReplay::OfflineReplay(const std::string& bag_name, const std::string& map
   GraphVIOSimulatorParams graph_vio_params;
   LoadGraphVIOSimulatorParams(config, graph_vio_params);
   graph_vio_simulator_.reset(new GraphVIOSimulator(graph_vio_params, graph_config_path_prefix));
-
   LoadOfflineReplayParams(config, params_);
 }
 
@@ -92,11 +91,13 @@ void OfflineReplay::Run() {
     const auto flight_mode_msg = live_measurement_simulator_->GetFlightModeMessage(current_time);
     if (flight_mode_msg) {
       graph_vio_simulator_->BufferFlightModeMsg(*flight_mode_msg);
+      graph_localizer_simulator_->BufferFlightModeMsg(*flight_mode_msg);
       pose_extrapolator_wrapper_.FlightModeCallback(*flight_mode_msg);
     }
     const auto imu_msg = live_measurement_simulator_->GetImuMessage(current_time);
     if (imu_msg) {
       graph_vio_simulator_->BufferImuMsg(*imu_msg);
+      graph_localizer_simulator_->BufferImuMsg(*imu_msg);
       pose_extrapolator_wrapper_.ImuCallback(*imu_msg);
 
       // Save extrapolated loc msg if available
@@ -113,10 +114,12 @@ void OfflineReplay::Run() {
     }*/
     const auto of_msg = live_measurement_simulator_->GetOFMessage(current_time);
     if (of_msg) {
+        const lc::Time timestamp = lc::TimeFromHeader(of_msg->header);
       graph_vio_simulator_->BufferOpticalFlowMsg(*of_msg);
     }
     const auto vl_msg = live_measurement_simulator_->GetVLMessage(current_time);
     if (vl_msg) {
+        const lc::Time timestamp = lc::TimeFromHeader(vl_msg->header);
       graph_localizer_simulator_->BufferVLVisualLandmarksMsg(*vl_msg);
       if (static_cast<int>(vl_msg->landmarks.size()) >= params_.sparse_mapping_min_num_landmarks) {
         const gtsam::Pose3 sparse_mapping_global_T_body =
@@ -132,36 +135,16 @@ void OfflineReplay::Run() {
       latest_ar_msg_ = ar_msg;
     }
 
-    /*const auto ar_msg = live_measurement_simulator_->GetARMessage(current_time);
-    if (ar_msg) {
-      static bool marked_world_T_dock_for_resetting_if_necessary = false;
-      // In lieu of doing this on a mode switch to AR_MODE, reset world_T_dock using loc if necessary when receive first
-      // ar msg
-      if (!marked_world_T_dock_for_resetting_if_necessary) {
-        graph_localizer_simulator_->MarkWorldTDockForResettingIfNecessary();
-        marked_world_T_dock_for_resetting_if_necessary = true;
-      }
-      graph_localizer_simulator_->BufferARVisualLandmarksMsg(*ar_msg);
-      if (gl::ValidVLMsg(*ar_msg, params_.ar_min_num_landmarks)) {
-        const auto ar_tag_pose_msg = graph_localizer_simulator_->LatestARTagPoseMsg();
-        if (!ar_tag_pose_msg) {
-          LogWarning("Run: Failed to get ar tag pose msg");
-        } else {
-          static lc::Time last_added_timestamp = 0;
-          const auto timestamp = lc::TimeFromHeader(ar_tag_pose_msg->header);
-          // Prevent adding the same pose twice, since the pose is buffered before adding to the graph localizer
-          // wrapper in the graph localizer simulator and LatestARTagPoseMsg returns
-          // the last pose that has already been added to the graph localizer wrapper.
-          if (last_added_timestamp != timestamp) {
-            SaveMsg(*ar_tag_pose_msg, TOPIC_AR_TAG_POSE, results_bag_);
-            last_added_timestamp = timestamp;
-          }
-        }
-      }
-    }*/
-
     const bool updated_vio_graph = graph_vio_simulator_->AddMeasurementsAndUpdateIfReady(current_time);
     if (updated_vio_graph) {
+  if (graph_vio_simulator_->Initialized() && graph_localizer_simulator_->Initialized()) {
+    graph_localizer_simulator_->graph_localizer_->pose_node_adder_->node_adder_model_.nodes_ =
+      graph_vio_simulator_->graph_vio()->combined_nav_state_node_adder_->nodes_.get();
+    if (graph_vio_simulator_->graph_vio()->marginals()) {
+      graph_localizer_simulator_->graph_localizer_->pose_node_adder_->node_adder_model_.marginals_ =
+        *(graph_vio_simulator_->graph_vio()->marginals());
+  }
+  }
       const auto vio_msg = graph_vio_simulator_->GraphVIOStateMsg();
       if (!vio_msg) {
         LogWarningEveryN(200, "Run: Failed to get vio msg.");

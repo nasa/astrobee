@@ -111,6 +111,11 @@ class TimestampedCombinedNodes {
   // Returns the closest node in time to the provided timestamp.
   boost::optional<NodeType> ClosestNode(const localization_common::Time timestamp) const;
 
+// Returns the closest node timestamp to the provided timestamp.
+  boost::optional<localization_common::Time> ClosestTimestamp(const localization_common::Time timestamp) const;
+
+
+
   // Returns the lower bounded or equal in time timestamped node to the provided timestamp.
   boost::optional<localization_common::TimestampedValue<NodeType>> LowerBoundOrEqual(
     const localization_common::Time timestamp) const;
@@ -352,6 +357,14 @@ boost::optional<NodeType> TimestampedCombinedNodes<NodeType>::ClosestNode(
   const auto closest = timestamp_keys_map_.Closest(timestamp);
   if (!closest) return boost::none;
   return Node(*closest);
+}
+
+template <typename NodeType>
+boost::optional<localization_common::Time> TimestampedCombinedNodes<NodeType>::ClosestTimestamp(
+  const localization_common::Time timestamp) const {
+  const auto closest = timestamp_keys_map_.Closest(timestamp);
+  if (!closest) return boost::none;
+  return closest->timestamp;
 }
 
 template <typename NodeType>

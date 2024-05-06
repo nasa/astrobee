@@ -25,11 +25,13 @@
 #include <msg_conversions/msg_conversions.h>
 #include <parameter_reader/graph_localizer.h>
 #include <ros_graph_localizer/ros_graph_localizer_wrapper.h>
+#include <ros_graph_localizer/parameter_reader.h>
 
 #include <Eigen/Core>
 
 namespace ros_graph_localizer {
 namespace gl = graph_localizer;
+namespace ii = imu_integration;
 namespace lc = localization_common;
 namespace lm = localization_measurements;
 namespace mc = msg_conversions;
@@ -37,12 +39,16 @@ namespace pr = parameter_reader;
 
 RosGraphLocalizerWrapper::RosGraphLocalizerWrapper(const std::string& graph_config_path_prefix) {
   LoadConfigs(graph_config_path_prefix);
+  imu_integrator_.reset(new ii::ImuIntegrator(wrapper_params_.imu_integrator));
 }
 
 void RosGraphLocalizerWrapper::LoadConfigs(const std::string& graph_config_path_prefix) {
   config_reader::ConfigReader config;
+  config.AddFile("localization/imu_filter.config");
+  config.AddFile("localization/imu_integrator.config");
   lc::LoadGraphLocalizerConfig(config, graph_config_path_prefix);
   pr::LoadGraphLocalizerParams(config, params_);
+  LoadRosGraphLocalizerWrapperParams(config, wrapper_params_);
 }
 
 void RosGraphLocalizerWrapper::SparseMapVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg) {
@@ -65,6 +71,7 @@ void RosGraphLocalizerWrapper::SparseMapVisualLandmarksCallback(const ff_msgs::V
     params_.pose_node_adder.starting_time = msg_time;
     LogInfo("SparseMapVisualLandmarksCallback: Initializing localizer with vl msg.");
     graph_localizer_.reset(new gl::GraphLocalizer(params_));
+    imu_integrator_.reset(new ii::ImuIntegrator(wrapper_params_.imu_integrator));
     // Only need the first vio measurement before the initial vl msg time
     // to ensure valid pose interpolation.
     vio_measurement_buffer_.RemoveBelowLowerBoundValues(msg_time);
@@ -97,9 +104,6 @@ void RosGraphLocalizerWrapper::ARVisualLandmarksCallback(const ff_msgs::VisualLa
       LogError("ARVisualLandmarksCallback: No odometry poses available for extrapolation.");
       return;
     }
-
-
-
     const auto dock_time = lc::TimeFromHeader(visual_landmarks_msg.header);
     const auto latest_odom_time = odom_interpolator_.Latest()->timestamp;
     if (std::abs(dock_time - latest_odom_time) > 0.5) {
@@ -108,16 +112,38 @@ void RosGraphLocalizerWrapper::ARVisualLandmarksCallback(const ff_msgs::VisualLa
     }
 
     // Extrapolate up to dock time if odometry messages exist that are more recent than this,
-    // otherwise extrapolate to latest odometry message
+    // otherwise extrapolate to latest odometry message and later add IMU data
     const auto extrapolation_time = dock_time > latest_odom_time ? latest_odom_time : dock_time;
-    const auto latest_graph_body_T_body = odom_interpolator_.Relative(*latest_graph_timestamp, extrapolation_time);
-    if (!latest_graph_body_T_body) {
-      LogError("ARVisualLandmarksCallback: Failed to get latest_graph_body_T_body for provided times.");
+    const auto latest_graph_body_T_odom_body = odom_interpolator_.Relative(*latest_graph_timestamp, extrapolation_time);
+    if (!latest_graph_body_T_odom_body) {
+      LogError("ARVisualLandmarksCallback: Failed to get latest_graph_body_T_odom_body for provided times.");
       return;
     }
-    const auto dock_T_body = lc::PoseFromMsgWithExtrinsics(
+    gtsam::Pose3 latest_graph_body_T_dock_body = lc::GtPose(*latest_graph_body_T_odom_body);
+    // If dock time is more recent than latest odometry estimate, also add latest IMU data since latest odom time.
+    if (dock_time > latest_odom_time) {
+      if (!latest_vio_state_) {
+        LogError("ARVisualLandmarksCallback: Latest VIO state not available.");
+        return;
+      }
+      if (imu_integrator_->empty()) {
+        LogError("ARVisualLandmarksCallback: No IMU data available.");
+        return;
+      }
+
+      const auto latest_imu_time = imu_integrator_->Latest()->timestamp;
+    const auto imu_extrapolation_time = dock_time > latest_imu_time ? latest_imu_time : dock_time;
+    const auto imu_extrapolated_latest_vio_state =
+      imu_integrator_->Extrapolate(*latest_vio_state_, imu_extrapolation_time);
+    const gtsam::Pose3& odom_T_imu_extrapolated_vio_state = imu_extrapolated_latest_vio_state->pose();
+    const gtsam::Pose3& odom_T_latest_vio_body = latest_vio_state_->pose();
+    const gtsam::Pose3 latest_vio_body_T_imu_extrapolated_body =
+      odom_T_latest_vio_body.inverse() * odom_T_imu_extrapolated_vio_state;
+    latest_graph_body_T_dock_body = latest_graph_body_T_dock_body * latest_vio_body_T_imu_extrapolated_body;
+    }
+      const auto world_T_body = *world_T_latest_graph_body *latest_graph_body_T_dock_body;
+  const auto dock_T_body = lc::PoseFromMsgWithExtrinsics(
       visual_landmarks_msg.pose, params_.ar_tag_loc_factor_adder.body_T_cam.inverse());
-    const auto world_T_body = *world_T_latest_graph_body * lc::GtPose(*latest_graph_body_T_body);
     world_T_dock_ = world_T_body * dock_T_body.inverse();
   }
   if (Initialized()) {
@@ -131,6 +157,8 @@ void RosGraphLocalizerWrapper::ARVisualLandmarksCallback(const ff_msgs::VisualLa
 
 bool RosGraphLocalizerWrapper::GraphVIOStateCallback(const ff_msgs::GraphVIOState& graph_vio_state_msg) {
   const auto timestamp = lc::TimeFromHeader(graph_vio_state_msg.header);
+  // Remove old IMU measurements no longer needed for dock extrapolation.
+  imu_integrator_->RemoveOldValues(timestamp);
   // Buffer measurements before initialization so they can be added once initialized.
   if (!Initialized()) {
     vio_measurement_buffer_.Add(timestamp, graph_vio_state_msg);
@@ -157,7 +185,16 @@ bool RosGraphLocalizerWrapper::GraphVIOStateCallback(const ff_msgs::GraphVIOStat
   graph_localizer_->AddPoseMeasurement(pose_measurement);
   last_vio_msg_time_ = timestamp;
   odom_interpolator_.Add(latest_combined_nav_state.timestamp(), lc::EigenPose(latest_combined_nav_state.pose()));
+  latest_vio_state_ = latest_combined_nav_state;
   return true;
+}
+
+void RosGraphLocalizerWrapper::ImuCallback(const sensor_msgs::Imu& imu_msg) {
+  imu_integrator_->AddImuMeasurement(lm::ImuMeasurement(imu_msg));
+}
+
+void RosGraphLocalizerWrapper::FlightModeCallback(const ff_msgs::FlightMode& flight_mode) {
+  imu_integrator_->SetFanSpeedMode(lm::ConvertFanSpeedMode(flight_mode.speed));
 }
 
 void RosGraphLocalizerWrapper::Update() {
@@ -173,8 +210,13 @@ void RosGraphLocalizerWrapper::ResetLocalizer() {
     return;
   }
   graph_localizer_.reset();
+  imu_integrator_.reset(new ii::ImuIntegrator(wrapper_params_.imu_integrator));
+  odom_interpolator_.Clear();
   vio_measurement_buffer_.Clear();
+  latest_vio_state_ = boost::none;
+  latest_msg_time_ = boost::none;
   last_vio_msg_time_ = boost::none;
+  world_T_dock_ = boost::none;
 }
 
 void RosGraphLocalizerWrapper::ResetWorldTDock() { world_T_dock_ = boost::none; }

@@ -23,11 +23,15 @@
 #include <localization_measurements/pose_with_covariance_measurement.h>
 #include <node_adders/between_factor_node_adder_model.h>
 #include <nodes/timestamped_nodes.h>
+#include <nodes/combined_nav_state_nodes.h>
 
 #include <gtsam/inference/Key.h>
 #include <gtsam/geometry/Pose3.h>
+#include <gtsam/nonlinear/Marginals.h>
 
 #include <utility>
+
+class GraphVIO;
 
 namespace node_adders {
 class PoseNodeAdderModel : public BetweenFactorMeasurementBasedTimestampedNodeAdderModel<
@@ -49,6 +53,8 @@ class PoseNodeAdderModel : public BetweenFactorMeasurementBasedTimestampedNodeAd
   // Keeps lower_bound measurement <= oldest_allowed_time to use for interpolation if needed.
   void RemoveMeasurements(const localization_common::Time oldest_allowed_time);
   bool CanAddNode(const localization_common::Time timestamp) const final;
+  gtsam::Marginals marginals_;
+  nodes::CombinedNavStateNodes const* nodes_;
 
  private:
   // Serialization function

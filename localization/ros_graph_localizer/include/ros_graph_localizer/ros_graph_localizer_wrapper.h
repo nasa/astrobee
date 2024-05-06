@@ -18,13 +18,22 @@
 #ifndef ROS_GRAPH_LOCALIZER_ROS_GRAPH_LOCALIZER_WRAPPER_H_
 #define ROS_GRAPH_LOCALIZER_ROS_GRAPH_LOCALIZER_WRAPPER_H_
 
+#include <ff_msgs/EkfState.h>
+#include <ff_msgs/Feature2dArray.h>
+#include <ff_msgs/FlightMode.h>
 #include <ff_msgs/GraphVIOState.h>
 #include <ff_msgs/GraphLocState.h>
 #include <ff_msgs/VisualLandmarks.h>
 // #include <ff_msgs/SerializedGraph.h>
 #include <graph_localizer/graph_localizer.h>
+#include <imu_integration/imu_integrator.h>
+#include <localization_measurements/fan_speed_mode.h>
+#include <localization_measurements/imu_measurement.h>
 #include <localization_common/pose_interpolater.h>
 #include <localization_common/timestamped_set.h>
+#include <ros_graph_localizer/ros_graph_localizer_wrapper_params.h>
+
+#include <sensor_msgs/Imu.h>
 
 #include <memory>
 #include <string>
@@ -39,6 +48,12 @@ class RosGraphLocalizerWrapper {
 
   // Load configs for graph_localizer
   void LoadConfigs(const std::string& graph_config_path_prefix);
+
+  // Store IMU msgs for world_T_dock estimation
+  void ImuCallback(const sensor_msgs::Imu& imu_msg);
+
+  // Add flight mode msg to IMU filter.
+  void FlightModeCallback(const ff_msgs::FlightMode& flight_mode);
 
   // Add sparse map visual landmarks msg to graph_localizer.
   void SparseMapVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg);
@@ -75,16 +90,20 @@ class RosGraphLocalizerWrapper {
   // Returns boost::none if no state is available or no changes have occured since last msg.
   boost::optional<ff_msgs::GraphLocState> GraphLocStateMsg();
 
+  std::unique_ptr<graph_localizer::GraphLocalizer> graph_localizer_;
+
  private:
   // Initialize the graph
   void Initialize();
 
-  std::unique_ptr<graph_localizer::GraphLocalizer> graph_localizer_;
+  std::unique_ptr<imu_integration::ImuIntegrator> imu_integrator_;
   localization_common::PoseInterpolater odom_interpolator_;
   graph_localizer::GraphLocalizerParams params_;
+  RosGraphLocalizerWrapperParams wrapper_params_;
   localization_common::TimestampedSet<ff_msgs::GraphVIOState> vio_measurement_buffer_;
-  boost::optional<localization_common::Time> last_vio_msg_time_;
+  boost::optional<localization_common::CombinedNavState> latest_vio_state_;
   boost::optional<localization_common::Time> latest_msg_time_;
+  boost::optional<localization_common::Time> last_vio_msg_time_;
   boost::optional<gtsam::Pose3> world_T_dock_;
 };
 }  // namespace ros_graph_localizer

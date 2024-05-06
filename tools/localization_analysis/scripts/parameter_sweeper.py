@@ -217,8 +217,10 @@ def make_value_ranges():
     steps = 1
 
     # tune num smart factors
-    value_ranges.append(np.logspace(-1, -9, steps, endpoint=False))
-    value_names.append("ii_accel_bias_sigma")
+    # value_ranges.append(np.logspace(-3, -5, steps, endpoint=True))
+    # value_names.append("ii_accel_bias_sigma")
+    value_ranges.append(np.linspace(1, 1, steps, endpoint=True))
+    value_names.append("gl_na_pose_model_scale")
     # value_ranges.append(np.logspace(0, -5, steps, endpoint=True))
     # value_names.append("gv_fa_vo_retriangulation_threshold")
 

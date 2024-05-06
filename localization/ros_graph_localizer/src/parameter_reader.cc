@@ -17,10 +17,17 @@
  */
 
 #include <msg_conversions/msg_conversions.h>
+#include <parameter_reader/imu_integration.h>
 #include <ros_graph_localizer/parameter_reader.h>
 
 namespace ros_graph_localizer {
 namespace mc = msg_conversions;
+namespace pr = parameter_reader;
+
+void LoadRosGraphLocalizerWrapperParams(config_reader::ConfigReader& config, RosGraphLocalizerWrapperParams& params,
+                                        const std::string& prefix) {
+  pr::LoadImuIntegratorParams(config, params.imu_integrator);
+}
 
 void LoadRosGraphLocalizerNodeletParams(config_reader::ConfigReader& config, RosGraphLocalizerNodeletParams& params,
                                         const std::string& prefix) {
