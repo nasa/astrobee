@@ -130,11 +130,24 @@
                                 - which one looks better????
                                   - how does extrapolated loc look??
                                 - update confluence page!!! (BBBB)
-                                - tune on ar noise, other ar params! (AAAA)
-                                - push! (CC)
-                                - do same tuning for other covariance model! (BBBBBB)
+                                - tune on ar noise, other ar params! 
+                                - do same tuning for other covariance model! 
+                                - how fast can you make proper rel covariance model?? (AAAAA)
+                                  - sweep on graph vio num factors, num measurements
+                                    - why are there some outlier optimization times??? (AAAAAA)
+                                      - limit iterations
+                                      - limit num measurements
+                                      - limit max num states!
+                                  - sweep on loc duration, loc max num states
+                                      - time using on robot replay!!!!!! (AAAAAAA)
+                                          - time vio with num measurements, num factors, max num states
+                                          - time loc with duration/max num states, num factors
+                                          - get combo down to .2 secs???
+                                - make temp new ros_graph_localizer_and_vio_nodelet, merge both in this!!! (BBBBB)
+                                  - add to launch files!
+                                    - make branch just with different launch files, and different rel pose covariance model!
 
-                          - Test slower, better map matching??? (BBBB)
+                          - Test slower, better map matching??? (CCC)
                             - sweep on those parameters!
                               - adapt parameter sweeper to work with this!!!!!!
 
