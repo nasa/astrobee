@@ -214,13 +214,13 @@ def parameter_sweep(
 def make_value_ranges():
     value_ranges = []
     value_names = []
-    steps = 1
+    steps = 10
 
     # tune num smart factors
     # value_ranges.append(np.logspace(-3, -5, steps, endpoint=True))
     # value_names.append("ii_accel_bias_sigma")
-    value_ranges.append(np.linspace(1, 1, steps, endpoint=True))
-    value_names.append("gl_na_pose_model_scale")
+    value_ranges.append(np.linspace(1, 50, steps, endpoint=True))
+    value_names.append("gl_fa_loc_ar_projection_noise_scale")
     # value_ranges.append(np.logspace(0, -5, steps, endpoint=True))
     # value_names.append("gv_fa_vo_retriangulation_threshold")
 

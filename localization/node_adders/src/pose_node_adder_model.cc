@@ -43,48 +43,24 @@ gtsam::KeyVector PoseNodeAdderModel::AddNode(const lc::Time timestamp, NodesType
 boost::optional<std::pair<gtsam::Pose3, gtsam::SharedNoiseModel>> PoseNodeAdderModel::RelativeNodeAndNoise(
   const lc::Time timestamp_a, const lc::Time timestamp_b) const {
     if (!nodes_) {
-      std::cout << "Not initialized nodes!" << std::endl;
+      LogError("RelativeNodeAndNoise: Nodes not available.");
       return boost::none;
     }
     const auto closest_t_a = nodes_->ClosestTimestamp(timestamp_a);
     const auto closest_t_b = nodes_->ClosestTimestamp(timestamp_b);
     if (!closest_t_a || !closest_t_b) {
-      std::cout << "Failed to get closest timestamp!!!" << std::endl;
+      LogError("RelativeNodeAndNoise: Failed to get closest timestamps.");
       return boost::none;
     }
-    constexpr double eps = 0.5;
-    if (std::abs(*closest_t_a - timestamp_a) > eps) {
-        std::cout << "timestamp a too far from closest t!" << std::endl;
-        return boost::none;
-    }
-    if (std::abs(*closest_t_b - timestamp_b) > eps) {
-        std::cout << "timestamp b too far from closest t!" << std::endl;
-        return boost::none;
+
+    // TODO(rsoussan): Add fallback covariance/relative covariance if gap too large
+    if (std::abs(*closest_t_a - timestamp_a) > 3.0 || std::abs(*closest_t_b - timestamp_b) > 3.0) {
+        LogWarning("RelativeNodeAndNoise: Timestamps far from closest timestamps available.");
     }
 
     const auto keys_a = nodes_->Keys(*closest_t_a);
-    if (keys_a.empty()) {
-      std::cout << "failed to get keys a!!" << std::endl;
-      std::cout << "keys a size: " << keys_a.size() << std::endl;
-      std::cout << "time a: " << std::setprecision(15) << timestamp_a << std::endl
-                << "latest time: " << *(nodes_->LatestTimestamp()) << std::endl;
-      const auto timestamps = nodes_->Timestamps();
-      for (const auto t : timestamps) {
-        std::cout << "t: " << std::setprecision(15) << t << std::endl;
-      }
-      return boost::none;
-    }
     const auto keys_b = nodes_->Keys(*closest_t_b);
-    if (keys_b.empty()) {
-      std::cout << "failed to get keys b!!" << std::endl;
-      std::cout << "time b: " << std::setprecision(15) << timestamp_b << std::endl
-                << "latest time: " << *(nodes_->LatestTimestamp()) << std::endl;
-      return boost::none;
-    }
-    const auto key_a = keys_a[0];
-    const auto key_b = keys_b[0];
-    // TODO(rsoussan): is this the right order?
-    const auto covariance_a_b = marginals_.jointMarginalCovariance({key_a, key_b}).fullMatrix();
+    const auto covariance_a_b = marginals_.jointMarginalCovariance({keys_a[0], keys_b[0]}).fullMatrix();
   pose_interpolater_.covariance_a_b = covariance_a_b;
   const auto relative_pose = pose_interpolater_.Relative(timestamp_a, timestamp_b);
   if (!relative_pose) {

@@ -120,31 +120,47 @@
                           - Add ability to pass flight mode to imu integrators!!! 
                             - uncomment flight mode stuff in offline replay, elsewhere
                             - compare docking localization w/ and w/o this!
-                          - clean up ros pose extrapolator? (CCC)
-                            - compare old and new version!
-                              - change to performing pose extrapolation as done for ar dock mode!
-                          - clang format!!!! (AAA)
-                          - Tune things! Make confluence page! (BBB)
-                            - show old loc
-                            - show new loc, bad covariances
-                            - show new loc, good covariances
-                            - show new loc, good covariances with smart factors (bad)
-                            - show new loc, good covariances, IMU extrapolation for ar tag (tuned?)
-                            - Add summary
-                              Improvements:
-                                - old loc subject to large jumps
-                                - new loc smoother
-                              Cons:
-                                - old loc smoother at integrating noisy loc measurements
-                              In Progress:
-                                Reset IMU bias while flying
-                          - Delay loc measurements? Add in batches??? (GGG)
-                          - Make everything happen in one process!!! (DDDD)
+
+
+
+                          - Fix relative factor/covariance failures!!! (AAAA)
+                            - tune each cov model on loc proj noise!!!! (AAAAAAAAAAAAA)
+                                - why does smaller pose noise start to become worse at some point??? 
+                                  - ignoring these factors for some reason???? -> check code! 
+                                - which one looks better????
+                                  - how does extrapolated loc look??
+                                - update confluence page!!! (BBBB)
+                                - tune on ar noise, other ar params! (AAAA)
+                                - push! (CC)
+                                - do same tuning for other covariance model! (BBBBBB)
+
+                          - Test slower, better map matching??? (BBBB)
+                            - sweep on those parameters!
+                              - adapt parameter sweeper to work with this!!!!!!
+
+
+
+                          - Why are there outlier VIO optimization times??????? (BBBBB)
+                              - check old localizer online optimization times from bag!!! (AAAA)
+                                - try to match that with VIO + Loc optimization times!
+                              - do you need to run them in the same process??? keep separate???
+                                - test both????
+
+                            - Test loc with large gap in ml factors!
+                              - switch to other covariance model if first one fails???? (DDD)
+                                - Test this!
+
+
+                          - clang format!!!! (HHH) 
+                            - (do after merge, avoid tutorial examples)
+                          - Add ISS examples to confluence page! (AAAAA)
+                            - use bags from bashrc file! (test_split_loc_...)
+                          - Make everything happen in one process!!! (BBBBB)
                             - call wrappers in succession (already done?)
                             - combine nodelets
                             - update launch files
                               - test these...
-                          - Fix relative factor/covariance failures!!! (CCCC)
+                          - Delay loc measurements? Add in batches??? (GGG)
                           - add ability to use loc map measurements when reset biases in graph vio! (EEE)
                               - subscribe to map measurements in graph vio
                               - only enable for x seconds, make a config variable for this
