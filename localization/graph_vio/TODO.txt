@@ -112,29 +112,44 @@
                                             - add imu integrator params!
                                           - test! 
                                               - retune? (not yet...)
-                                          - push! (AAA)
+                                          - push! 
                                             - remove feature points stuff from graph_loc, other bad stuff
-                          - combine old vio pose measurements in odom interpolater, avoid overflow errors! (GGG)
+                          - combine old vio pose measurements in odom interpolater, avoid overflow errors! (FFF)
                             - in pose extrapolator, graph localizer
                             - avoids issue of potential overflow if haven't seen a loc measurement in a while
-                          - Add ability to pass flight mode to imu integrators!!! (BBBBBB)
+                          - Add ability to pass flight mode to imu integrators!!! (AAAA)
                             - uncomment flight mode stuff in offline replay, elsewhere
                             - compare docking localization w/ and w/o this!
-                          - clean up ros pose extrapolator? (CCC)
+                          - clean up ros pose extrapolator? (BBBB)
                             - compare old and new version!
                               - change to performing pose extrapolation as done for ar dock mode!
-                          - Delay loc measurements? Add in batches??? (DDDD)
-                          - Make everything happen in one process!!! (FFFF)
+                          - clang format!!!! (CCCC)
+                          - Tune things! Make confluence page! (BBBB)
+                            - show old loc
+                            - show new loc, bad covariances
+                            - show new loc, good covariances
+                            - show new loc, good covariances with smart factors (bad)
+                            - show new loc, good covariances, IMU extrapolation for ar tag (tuned?)
+                            - Add summary
+                              Improvements:
+                                - old loc subject to large jumps
+                                - new loc smoother
+                              Cons:
+                                - old loc smoother at integrating noisy loc measurements
+                              In Progress:
+                                Reset IMU bias while flying
+                          - Delay loc measurements? Add in batches??? (GGG)
+                          - Make everything happen in one process!!! (DDDD)
                             - call wrappers in succession (already done?)
                             - combine nodelets
                             - update launch files
                               - test these...
-                          - Fix relative factor/covariance failures!!! (DDDD)
+                          - Fix relative factor/covariance failures!!! (CCCC)
                           - add ability to use loc map measurements when reset biases in graph vio! (EEE)
                               - subscribe to map measurements in graph vio
                               - only enable for x seconds, make a config variable for this
                                 - enable for x meters instead of seconds??? How to measure this? keep track of displacement norm?
-                          - test prev cov version, try to make it respond better to loc measurements! (AAAAA)
+                          - test prev cov version, try to make it respond better to loc measurements! 
                             - increase vio rel pose cov
                             - decrease loc cov
                               - pose and proj!

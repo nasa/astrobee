@@ -50,6 +50,11 @@ void GraphVIO::AddImuMeasurement(const lm::ImuMeasurement& imu_measurement) {
   combined_nav_state_node_adder_->AddMeasurement(imu_measurement);
 }
 
+void GraphVIO::SetFanSpeedMode(const localization_measurements::FanSpeedMode& fan_speed_mode) {
+  combined_nav_state_node_adder_->node_adder_model().SetFanSpeedMode(fan_speed_mode);
+}
+
+
 void GraphVIO::AddFeaturePointsMeasurement(const lm::FeaturePointsMeasurement& feature_points_measurement) {
   if (params_.vo_smart_projection_factor_adder.enabled)
     vo_smart_projection_factor_adder_->AddMeasurement(feature_points_measurement);

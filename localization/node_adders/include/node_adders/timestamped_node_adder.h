@@ -94,6 +94,8 @@ class TimestampedNodeAdder : public SlidingWindowNodeAdder {
 
   const TimestampedNodesType& nodes() const { return *nodes_; }
 
+  NodeAdderModelType& node_adder_model() { return node_adder_model_; }
+
   NodeAdderModelType node_adder_model_;
   std::shared_ptr<TimestampedNodesType> nodes_;
 

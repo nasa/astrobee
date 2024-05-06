@@ -22,6 +22,7 @@
 #include <factor_adders/standstill_factor_adder.h>
 #include <factor_adders/vo_smart_projection_factor_adder.h>
 #include <graph_vio/graph_vio_params.h>
+#include <localization_measurements/fan_speed_mode.h>
 #include <localization_measurements/feature_points_measurement.h>
 #include <localization_measurements/imu_measurement.h>
 #include <localization_measurements/standstill_measurement.h>
@@ -47,6 +48,9 @@ class GraphVIO : public sliding_window_graph_optimizer::SlidingWindowGraphOptimi
 
   // Adds imu measurement to combined nav state node adder.
   void AddImuMeasurement(const localization_measurements::ImuMeasurement& imu_measurement);
+
+  // Sets the fan speed mode in the combined nav state node model's IMU integrator
+  void SetFanSpeedMode(const localization_measurements::FanSpeedMode& fan_speed_mode);
 
   // Adds feature points measurement to vo smart projection factor adder.
   void AddFeaturePointsMeasurement(

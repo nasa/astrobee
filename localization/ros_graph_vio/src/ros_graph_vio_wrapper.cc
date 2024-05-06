@@ -70,8 +70,7 @@ void RosGraphVIOWrapper::ImuCallback(const sensor_msgs::Imu& imu_msg) {
 
 void RosGraphVIOWrapper::FlightModeCallback(const ff_msgs::FlightMode& flight_mode) {
   const auto fan_speed_mode = lm::ConvertFanSpeedMode(flight_mode.speed);
-  // TODO(rsoussan): Add support for fan speed mode in graph vio
-  // if (Initialized()) graph_vio_->SetFanSpeedMode(fan_speed_mode_);
+  if (Initialized()) graph_vio_->SetFanSpeedMode(fan_speed_mode);
   imu_bias_initializer_->AddFanSpeedModeMeasurement(fan_speed_mode);
 }
 
