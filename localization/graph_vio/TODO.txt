@@ -104,7 +104,7 @@
                                       - noisy!
                                   - interpolate this! add to pose interpolater!!!
                                       - still noisy!
-                                    - change to using vio with imu extrapolation!! (AAAAA)
+                                    - change to using vio with imu extrapolation!! 
                                           - revert offline replay changes, update offline replay 
                                               - add imu and flight mode callbacks to graph localizer!  
                                                 - copy graph vio stuff!
@@ -117,14 +117,14 @@
                           - combine old vio pose measurements in odom interpolater, avoid overflow errors! (FFF)
                             - in pose extrapolator, graph localizer
                             - avoids issue of potential overflow if haven't seen a loc measurement in a while
-                          - Add ability to pass flight mode to imu integrators!!! (AAAA)
+                          - Add ability to pass flight mode to imu integrators!!! 
                             - uncomment flight mode stuff in offline replay, elsewhere
                             - compare docking localization w/ and w/o this!
-                          - clean up ros pose extrapolator? (BBBB)
+                          - clean up ros pose extrapolator? (CCC)
                             - compare old and new version!
                               - change to performing pose extrapolation as done for ar dock mode!
-                          - clang format!!!! (CCCC)
-                          - Tune things! Make confluence page! (BBBB)
+                          - clang format!!!! (AAA)
+                          - Tune things! Make confluence page! (BBB)
                             - show old loc
                             - show new loc, bad covariances
                             - show new loc, good covariances
