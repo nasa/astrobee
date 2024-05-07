@@ -71,10 +71,7 @@
       <arg name="terminal" value="terminator -x"/>
     </include>
   </group>
-  <include file="$(find ros_graph_localizer)/launch/ros_graph_localizer.launch">
-    <arg name="terminal" value="terminator -x"/>
-  </include>
-  <include file="$(find ros_graph_vio)/launch/ros_graph_vio.launch">
+  <include file="$(find ros_graph_localizer)/launch/ros_graph_localizer_vio.launch">
     <arg name="terminal" value="terminator -x"/>
   </include>
   <group if="$(arg localization_manager)">

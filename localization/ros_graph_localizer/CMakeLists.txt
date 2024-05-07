@@ -34,6 +34,7 @@ find_package(catkin2 REQUIRED COMPONENTS
   msg_conversions
   nodelet
   parameter_reader
+  ros_graph_vio
 )
 
 catkin_package(
@@ -50,6 +51,7 @@ catkin_package(
     msg_conversions
     nodelet
     parameter_reader
+    ros_graph_vio
 )
 
 ###########

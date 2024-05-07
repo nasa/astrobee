@@ -178,8 +178,8 @@
 
 
 
-                          - Why are there outlier VIO optimization times??????? (BBBBB)
-                              - check old localizer online optimization times from bag!!! (AAAA)
+                          - Why are there outlier VIO optimization times??????? 
+                              - check old localizer online optimization times from bag!!! 
                                 - try to match that with VIO + Loc optimization times!
                               - do you need to run them in the same process??? keep separate???
                                 - test both????
@@ -193,11 +193,13 @@
                             - (do after merge, avoid tutorial examples)
                           - Add ISS examples to confluence page! (AAAAA)
                             - use bags from bashrc file! (test_split_loc_...)
-                          - Make everything happen in one process!!! (BBBBB)
-                            - call wrappers in succession (already done?)
-                            - combine nodelets
-                            - update launch files
+
+                          - Make everything happen in one process!!! (AAAAA)
+                            - pass graph vio msg directly to localizer?? (AA)
+                            - update launch files 
                               - test these...
+                                - test on robot! time things! (AAAA)
+
                           - Delay loc measurements? Add in batches??? (GGG)
                           - add ability to use loc map measurements when reset biases in graph vio! (EEE)
                               - subscribe to map measurements in graph vio
