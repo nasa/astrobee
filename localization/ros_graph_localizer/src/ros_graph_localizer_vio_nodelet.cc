@@ -67,10 +67,6 @@ void RosGraphLocalizerVIONodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
   flight_mode_sub_ =
     private_nh_.subscribe(TOPIC_MOBILITY_FLIGHT_MODE, 10, &RosGraphLocalizerVIONodelet::FlightModeCallback, this);
 
-  // graph_vio_sub_ =
-  //   private_nh_.subscribe(TOPIC_GRAPH_VIO_STATE, params_.max_graph_vio_state_buffer_size,
-  //                        &RosGraphLocalizerVIONodelet::GraphVIOStateCallback, this,
-  //                        ros::TransportHints().tcpNoDelay());
   sparse_map_vl_sub_ = private_nh_.subscribe(
     TOPIC_LOCALIZATION_ML_FEATURES, params_.max_vl_matched_projections_buffer_size,
     &RosGraphLocalizerVIONodelet::SparseMapVisualLandmarksCallback, this, ros::TransportHints().tcpNoDelay());
@@ -161,36 +157,9 @@ bool RosGraphLocalizerVIONodelet::ResetMap(ff_msgs::ResetMap::Request& req, ff_m
   return true;
 }
 
-void RosGraphLocalizerVIONodelet::PublishGraphVIOState() {
-  auto msg = ros_graph_vio_wrapper_.GraphVIOStateMsg();
-  if (!msg) {
-    LogDebugEveryN(100, "PublishVIOState: Failed to get vio states msg.");
-    return;
-  }
-  graph_vio_state_pub_.publish(*msg);
-}
-
 void RosGraphLocalizerVIONodelet::PublishGraphLocalizerState() {
   const auto msg = ros_graph_localizer_wrapper_.GraphLocStateMsg();
   if (msg) graph_loc_pub_.publish(*msg);
-}
-
-/*void RosGraphLocalizerVIONodelet::PublishLocalizerGraph() {
-  const auto latest_localizer_graph_msg = ros_graph_localizer_wrapper_.LatestGraphMsg();
-  if (!latest_localizer_graph_msg) {
-    LogDebugEveryN(100, "PublishLocalizerGraph: Failed to get latest localizer graph msg.");
-    return;
-  }
-  graph_pub_.publish(*latest_localizer_graph_msg);
-}*/
-
-void RosGraphLocalizerVIONodelet::PublishGraphVIOMessages() {
-  if (!localizer_enabled()) return;
-
-  // TODO(rsoussan): Only publish if things have changed?
-  PublishGraphVIOState();
-  // if (ros_graph_vio_wrapper_.publish_graph()) PublishVIOGraph();
-  // if (ros_graph_vio_wrapper_.save_graph_dot_file()) ros_graph_vio_wrapper_.SaveGraphDotFile();
 }
 
 void RosGraphLocalizerVIONodelet::FeaturePointsCallback(const ff_msgs::Feature2dArray::ConstPtr& feature_array_msg) {
@@ -227,8 +196,6 @@ void RosGraphLocalizerVIONodelet::PublishGraphLocalizerMessages() {
   // TODO(rsoussan): Only publish if things have changed?
   PublishGraphLocalizerState();
   PublishWorldTBodyTF();
-  // if (ros_graph_localizer_wrapper_.publish_graph()) PublishLocalizerGraph();
-  // if (ros_graph_localizer_wrapper_.save_graph_dot_file()) ros_graph_localizer_wrapper_.SaveGraphDotFile();
 }
 
 void RosGraphLocalizerVIONodelet::PublishWorldTBodyTF() {
@@ -239,8 +206,7 @@ void RosGraphLocalizerVIONodelet::PublishWorldTBodyTF() {
     return;
   }
 
-  const auto world_T_body_tf = lc::PoseToTF(*latest_pose, "world", "body",
-                                            *latest_timestamp, platform_name_);
+  const auto world_T_body_tf = lc::PoseToTF(*latest_pose, "world", "body", *latest_timestamp, platform_name_);
   if (world_T_body_tf.header.stamp == last_tf_body_time_) return;
   last_tf_body_time_ = world_T_body_tf.header.stamp;
   transform_pub_.sendTransform(world_T_body_tf);
@@ -270,11 +236,6 @@ void RosGraphLocalizerVIONodelet::SparseMapVisualLandmarksCallback(
   ros_graph_localizer_wrapper_.SparseMapVisualLandmarksCallback(*visual_landmarks_msg);
 }
 
-void RosGraphLocalizerVIONodelet::GraphVIOStateCallback(const ff_msgs::GraphVIOState::ConstPtr& graph_vio_state_msg) {
-  if (!localizer_enabled()) return;
-  ros_graph_localizer_wrapper_.GraphVIOStateCallback(*graph_vio_state_msg);
-}
-
 void RosGraphLocalizerVIONodelet::Run() {
   ros::Rate rate(100);
   // ResetAndEnableLocalizer();
@@ -285,24 +246,29 @@ void RosGraphLocalizerVIONodelet::Run() {
     private_queue_.callAvailable();
     if (localizer_enabled()) {
       ros_graph_vio_wrapper_.Update();
-      PublishGraphVIOMessages();
+      // Pass data and msgs from graph vio to graph localizer
       // TODO(rsoussan): clean this up
       if (ros_graph_vio_wrapper_.Initialized() && ros_graph_localizer_wrapper_.Initialized()) {
         ros_graph_localizer_wrapper_.graph_localizer_->pose_node_adder_->node_adder_model_.nodes_ =
-         ros_graph_vio_wrapper_.graph_vio()->combined_nav_state_node_adder_->nodes_.get();
+          ros_graph_vio_wrapper_.graph_vio()->combined_nav_state_node_adder_->nodes_.get();
         if (ros_graph_vio_wrapper_.graph_vio()->marginals()) {
           ros_graph_localizer_wrapper_.graph_localizer_->pose_node_adder_->node_adder_model_.marginals_ =
             *(ros_graph_vio_wrapper_.graph_vio()->marginals());
         }
-        // TODO(rsoussan): check for latest graph vio state msg! pass to localizer if it exists! (and not the same as
-        // the last one...)
+        const auto graph_vio_state_msg = ros_graph_vio_wrapper_.GraphVIOStateMsg();
+        if (!graph_vio_state_msg) {
+          LogDebugEveryN(100, "PublishVIOState: Failed to get vio states msg.");
+        } else {
+          ros_graph_localizer_wrapper_.GraphVIOStateCallback(*graph_vio_state_msg);
+          graph_vio_state_pub_.publish(*graph_vio_state_msg);
+        }
       }
-      ros_graph_localizer_wrapper_.Update();
-      PublishGraphLocalizerMessages();
     }
-    PublishHeartbeat();
-    rate.sleep();
+    ros_graph_localizer_wrapper_.Update();
+    PublishGraphLocalizerMessages();
   }
+  PublishHeartbeat();
+  rate.sleep();
 }
 }  // namespace ros_graph_localizer
 

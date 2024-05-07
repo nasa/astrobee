@@ -81,8 +81,6 @@ class RosGraphLocalizerVIONodelet : public ff_util::FreeFlyerNodelet {
   // so old measurements aren't used with a new map.
   bool ResetMap(ff_msgs::ResetMap::Request& req, ff_msgs::ResetMap::Response& res);
 
-  void PublishGraphVIOState();
-
   // Publish latest graph localizer state msg.
   void PublishGraphLocalizerState();
 
@@ -93,8 +91,6 @@ class RosGraphLocalizerVIONodelet : public ff_util::FreeFlyerNodelet {
 
   // Publishes Loc pose message and other graph messages if Localizer is enabled.
   void PublishGraphLocalizerMessages();
-
-  void PublishGraphVIOMessages();
 
   // Publishes heartbeat message.
   void PublishHeartbeat();
@@ -110,9 +106,6 @@ class RosGraphLocalizerVIONodelet : public ff_util::FreeFlyerNodelet {
 
   // Passes sparse map visual landmarks msg to ros_graph_localizer_wrapper if Localizer is enabled.
   void SparseMapVisualLandmarksCallback(const ff_msgs::VisualLandmarks::ConstPtr& visual_landmarks_msg);
-
-  // Passes graph vio state msg to ros_graph_localizer_wrapper if Localizer is enabled.
-  void GraphVIOStateCallback(const ff_msgs::GraphVIOState::ConstPtr& graph_vio_state_msg);
 
   // Passes feature points msg to ros_graph_vio_wrapper if VIO is enabled.
   void FeaturePointsCallback(const ff_msgs::Feature2dArray::ConstPtr& feature_array_msg);

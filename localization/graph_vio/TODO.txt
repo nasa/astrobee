@@ -121,15 +121,13 @@
                             - uncomment flight mode stuff in offline replay, elsewhere
                             - compare docking localization w/ and w/o this!
 
-
-
                           - Fix relative factor/covariance failures!!! (AAAA)
-                            - tune each cov model on loc proj noise!!!! (AAAAAAAAAAAAA)
+                            - tune each cov model on loc proj noise!!!! 
                                 - why does smaller pose noise start to become worse at some point??? 
                                   - ignoring these factors for some reason???? -> check code! 
                                 - which one looks better????
                                   - how does extrapolated loc look??
-                                - update confluence page!!! (BBBB)
+                                - update confluence page!!! 
                                 - tune on ar noise, other ar params! 
                                 - do same tuning for other covariance model! 
                                 - how fast can you make proper rel covariance model?? (AAAAA)
@@ -143,7 +141,7 @@
                                           - time vio with num measurements, num factors, max num states
                                           - time loc with duration/max num states, num factors
                                           - get combo down to .2 secs???
-                                - make temp new ros_graph_localizer_and_vio_nodelet, merge both in this!!! (AAA) 
+                                - make temp new ros_graph_localizer_and_vio_nodelet, merge both in this!!! 
                                   - add to launch files!
                                     - make branch just with different launch files, and different rel pose covariance model!
 
@@ -176,8 +174,6 @@
                             DEFINE_int32(early_break_landmarks, 100,
                                          "Break early when we have this many landmarks during localization.");
 
-
-
                           - Why are there outlier VIO optimization times??????? 
                               - check old localizer online optimization times from bag!!! 
                                 - try to match that with VIO + Loc optimization times!
@@ -188,20 +184,26 @@
                               - switch to other covariance model if first one fails???? (DDD)
                                 - Test this!
 
-
                           - clang format!!!! (HHH) 
                             - (do after merge, avoid tutorial examples)
-                          - Add ISS examples to confluence page! (AAAAA)
-                            - use bags from bashrc file! (test_split_loc_...)
 
                           - Make everything happen in one process!!! (AAAAA)
-                            - pass graph vio msg directly to localizer?? (AA)
                             - update launch files 
                               - test these...
-                                - test on robot! time things! (AAAA)
+                                - test with live replay! (AAA)
+                                  - update script for this??
+                                - test on robot! time things! (ABB)
+                            - rename ros_graph_localizer_vio_nodelet to ros_graph_localizer_nodelet, remove other one??
+                              - remove ros_graph_vio_nodelet?
+
+                          - Update surf map branch!
+                            - ping reuben
+                            - compile and test 
+                              - how to get surf map of granite table??
+                              - test with iss map??
 
                           - Delay loc measurements? Add in batches??? (GGG)
-                          - add ability to use loc map measurements when reset biases in graph vio! (EEE)
+                          - add ability to use loc map measurements when reset biases in graph vio! (BBB)
                               - subscribe to map measurements in graph vio
                               - only enable for x seconds, make a config variable for this
                                 - enable for x meters instead of seconds??? How to measure this? keep track of displacement norm?
@@ -214,18 +216,6 @@
                               - copy imu preintegration factor, hardcode bias/velocity vals? 
                                 - will this fail to scale biases properly though?
                               - remove vio rel pose?
-          - add standstill factors?
-      - use vio graph as loc graph? (AAABBB)
-        - copy it
-        - add loc factors
-          - don't remove other things just yet?
-            - maybe do since this would be same as old graph...
-          - publish loc msg somehow
-        - remove IMU factors?
-        - remove bias, velocity values?
-        - add relative pose factors with proper relative covariances?
-        - remove some smart factors?
-        - need to also add ar factors!!
 
     - test localizer!
       - w/o writing:
