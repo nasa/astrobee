@@ -143,13 +143,38 @@
                                           - time vio with num measurements, num factors, max num states
                                           - time loc with duration/max num states, num factors
                                           - get combo down to .2 secs???
-                                - make temp new ros_graph_localizer_and_vio_nodelet, merge both in this!!! (BBBBB)
+                                - make temp new ros_graph_localizer_and_vio_nodelet, merge both in this!!! (AAA) 
                                   - add to launch files!
                                     - make branch just with different launch files, and different rel pose covariance model!
 
-                          - Test slower, better map matching??? (CCC)
+                          - Test slower, better map matching??? 
                             - sweep on those parameters!
                               - adapt parameter sweeper to work with this!!!!!!
+                              - best is 500 iterations, 2 inliear threshold!!!!!! 
+                                 num_similar = 20
+                                  - image in database to query!
+                                    - decreasing not better....
+                                 ransac_inlier_tolerance = 5
+                                  - use smaller one??
+                                    - 2 best????
+                                    - smaller not always better!
+                                 ransac_iterations = 100
+                                      - why is ros pose extrapolator going crazy???
+                                      - more iterations not always better!!!
+                                 early_break_landmarks = 100
+                                      - increasing not really better..
+                                      - fewer not really better..
+                                - interest point hamming distance???
+                                      - decreasing not really better :/
+                            DEFINE_int32(num_similar, 20,
+                                         "Use in localization this many images which "
+                                         "are most similar to the image to localize.");
+                            DEFINE_int32(num_ransac_iterations, 1000,
+                                         "Use in localization this many ransac iterations.");
+                            DEFINE_int32(ransac_inlier_tolerance, 3,
+                                         "Use in localization this inlier tolerance.");
+                            DEFINE_int32(early_break_landmarks, 100,
+                                         "Break early when we have this many landmarks during localization.");
 
 
 
