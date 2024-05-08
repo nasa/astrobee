@@ -15,7 +15,7 @@
 <!-- implied. See the License for the specific language governing            -->
 <!-- permissions and limitations under the License.                          -->
 <launch>
-  <arg name="name" default="ros_graph_localizer" />
+  <arg name="name" default="ros_graph_localizer_vio" />
   <arg name="manager" default="" />
   <arg name="terminal" default="" />
   <include file="$(find ff_util)/launch/ff_nodelet.launch">

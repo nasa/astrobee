@@ -247,7 +247,7 @@ void RosGraphLocalizerVIONodelet::Run() {
     if (localizer_enabled()) {
       ros_graph_vio_wrapper_.Update();
       // Pass data and msgs from graph vio to graph localizer
-      // TODO(rsoussan): clean this up
+      // TODO(rsoussan): move this to a function....
       if (ros_graph_vio_wrapper_.Initialized() && ros_graph_localizer_wrapper_.Initialized()) {
         ros_graph_localizer_wrapper_.graph_localizer_->pose_node_adder_->node_adder_model_.nodes_ =
           ros_graph_vio_wrapper_.graph_vio()->combined_nav_state_node_adder_->nodes_.get();
@@ -255,20 +255,21 @@ void RosGraphLocalizerVIONodelet::Run() {
           ros_graph_localizer_wrapper_.graph_localizer_->pose_node_adder_->node_adder_model_.marginals_ =
             *(ros_graph_vio_wrapper_.graph_vio()->marginals());
         }
-        const auto graph_vio_state_msg = ros_graph_vio_wrapper_.GraphVIOStateMsg();
-        if (!graph_vio_state_msg) {
-          LogDebugEveryN(100, "PublishVIOState: Failed to get vio states msg.");
-        } else {
-          ros_graph_localizer_wrapper_.GraphVIOStateCallback(*graph_vio_state_msg);
-          graph_vio_state_pub_.publish(*graph_vio_state_msg);
-        }
       }
+
+      const auto graph_vio_state_msg = ros_graph_vio_wrapper_.GraphVIOStateMsg();
+      if (!graph_vio_state_msg) {
+        LogDebugEveryN(100, "PublishVIOState: Failed to get vio states msg.");
+      } else {
+        graph_vio_state_pub_.publish(*graph_vio_state_msg);
+        ros_graph_localizer_wrapper_.GraphVIOStateCallback(*graph_vio_state_msg);
+      }
+      ros_graph_localizer_wrapper_.Update();
+      PublishGraphLocalizerMessages();
     }
-    ros_graph_localizer_wrapper_.Update();
-    PublishGraphLocalizerMessages();
+    PublishHeartbeat();
+    rate.sleep();
   }
-  PublishHeartbeat();
-  rate.sleep();
 }
 }  // namespace ros_graph_localizer
 

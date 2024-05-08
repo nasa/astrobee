@@ -186,23 +186,31 @@
 
                           - clang format!!!! (HHH) 
                             - (do after merge, avoid tutorial examples)
+                           
+                          - Clean up branch!
+                            - clean up code
+                            - address brian's comments
+                            - others?
 
                           - Make everything happen in one process!!! (AAAAA)
                             - update launch files 
                               - test these...
                                 - test with live replay! (AAA)
                                   - update script for this??
+                                  - fix not initialized bug!
+                                    - print out vl msgs!
                                 - test on robot! time things! (ABB)
                             - rename ros_graph_localizer_vio_nodelet to ros_graph_localizer_nodelet, remove other one??
                               - remove ros_graph_vio_nodelet?
 
-                          - Update surf map branch!
+                          - Update surf map branch! (BBBB)
                             - ping reuben
                             - compile and test 
                               - how to get surf map of granite table??
                               - test with iss map??
 
                           - Delay loc measurements? Add in batches??? (GGG)
+
                           - add ability to use loc map measurements when reset biases in graph vio! (BBB)
                               - subscribe to map measurements in graph vio
                               - only enable for x seconds, make a config variable for this
