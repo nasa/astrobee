@@ -78,6 +78,12 @@ void RosGraphVIOWrapper::FlightModeCallback(const ff_msgs::FlightMode& flight_mo
 }
 
 void RosGraphVIOWrapper::SparseMapVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg) {
+  // Make sure enough landmarks are in the measurement for it to be valid
+  if (static_cast<int>(visual_landmarks_msg.landmarks.size()) <
+      params_.sparse_map_loc_factor_adder.min_num_matches_per_measurement) {
+    return;
+  }
+
   // Don't start counting feature points until graph_vio is initialized
   // to make sure exactly the right amount of points have passed
   if (!Initialized()) {
