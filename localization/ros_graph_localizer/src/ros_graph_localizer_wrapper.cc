@@ -52,8 +52,13 @@ void RosGraphLocalizerWrapper::LoadConfigs(const std::string& graph_config_path_
 }
 
 void RosGraphLocalizerWrapper::SparseMapVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg) {
-  const auto msg_time = lc::TimeFromHeader(visual_landmarks_msg.header);
+  // Make sure enough landmarks are in the measurement for it to be valid
+  if (static_cast<int>(visual_landmarks_msg.landmarks.size()) <
+      params_.sparse_map_loc_factor_adder.min_num_matches_per_measurement) {
+    return;
+  }
 
+  const auto msg_time = lc::TimeFromHeader(visual_landmarks_msg.header);
   // Initialize with pose estimate if not initialized yet.
   // Ensure vio data exists before msg time so no gaps occur between first
   // sparse map measurement and future interpolated vio measurements.
@@ -89,6 +94,11 @@ void RosGraphLocalizerWrapper::SparseMapVisualLandmarksCallback(const ff_msgs::V
 }
 
 void RosGraphLocalizerWrapper::ARVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg) {
+  if (static_cast<int>(visual_landmarks_msg.landmarks.size()) <
+      params_.ar_tag_loc_factor_adder.min_num_matches_per_measurement) {
+    return;
+  }
+
   // Set world_T_dock using the pose estimate from provided msg and the latest VIO extrapolated pose estimate
   // since the dock pose in the message is relative to the dock frame
   // and not the global frame
