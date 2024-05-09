@@ -233,6 +233,7 @@ void RosGraphLocalizerVIONodelet::ARVisualLandmarksCallback(
 void RosGraphLocalizerVIONodelet::SparseMapVisualLandmarksCallback(
   const ff_msgs::VisualLandmarks::ConstPtr& visual_landmarks_msg) {
   if (!localizer_enabled()) return;
+  ros_graph_vio_wrapper_.SparseMapVisualLandmarksCallback(*visual_landmarks_msg);
   ros_graph_localizer_wrapper_.SparseMapVisualLandmarksCallback(*visual_landmarks_msg);
 }
 

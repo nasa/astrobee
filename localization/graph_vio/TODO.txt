@@ -187,23 +187,31 @@
                           - clang format!!!! (HHH) 
                             - (do after merge, avoid tutorial examples)
                            
-                          - Clean up branch!
+                          - Make everything happen in one process!!! (AAAAA)
+                            - update launch files 
+                              - test these...
+                                - test with live replay! 
+                                - test on robot! time things! (AAA)
+                            - rename ros_graph_localizer_vio_nodelet to ros_graph_localizer_nodelet, remove other one?? (AB)
+                              - remove ros_graph_vio_nodelet?
+
+                          - Clean up branch! (BBB)
                             - clean up code
                             - address brian's comments
                             - others?
 
-                          - Make everything happen in one process!!! (AAAAA)
-                            - update launch files 
-                              - test these...
-                                - test with live replay! (AAA)
-                                  - update script for this??
-                                  - fix not initialized bug!
-                                    - print out vl msgs!
-                                - test on robot! time things! (ABB)
-                            - rename ros_graph_localizer_vio_nodelet to ros_graph_localizer_nodelet, remove other one??
-                              - remove ros_graph_vio_nodelet?
-
-                          - Update surf map branch! (BBBB)
+                          - add ability to use loc map measurements when reset biases in graph vio! (CCC)
+                              - add ros_graph_vio_wrapper_params! (AAA)
+                                - add graph loc config (loc factor adder params) to graph vio! (AAAA)
+                                  - add to params file
+                                  - add to config file
+                                  - update param reader
+                                - add to param reader
+                                - add to wrapper!
+                                - add to offline_replay!
+                              - test on ISS bag! (AC)
+ 
+                          - Update surf map branch! (DDD)
                             - ping reuben
                             - compile and test 
                               - how to get surf map of granite table??
@@ -211,11 +219,7 @@
 
                           - Delay loc measurements? Add in batches??? (GGG)
 
-                          - add ability to use loc map measurements when reset biases in graph vio! (BBB)
-                              - subscribe to map measurements in graph vio
-                              - only enable for x seconds, make a config variable for this
-                                - enable for x meters instead of seconds??? How to measure this? keep track of displacement norm?
-                          - test prev cov version, try to make it respond better to loc measurements! 
+                         - test prev cov version, try to make it respond better to loc measurements! 
                             - increase vio rel pose cov
                             - decrease loc cov
                               - pose and proj!

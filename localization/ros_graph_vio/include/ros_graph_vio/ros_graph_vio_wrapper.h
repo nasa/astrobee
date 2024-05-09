@@ -26,6 +26,7 @@
 #include <localization_measurements/fan_speed_mode.h>
 #include <localization_measurements/imu_measurement.h>
 #include <ros_graph_vio/imu_bias_initializer.h>
+#include <ros_graph_vio/ros_graph_vio_wrapper_params.h>
 
 #include <sensor_msgs/Imu.h>
 
@@ -53,6 +54,9 @@ class RosGraphVIOWrapper {
 
   // Add flight mode msg to graph_vio and IMU bias initializer.
   void FlightModeCallback(const ff_msgs::FlightMode& flight_mode);
+
+  // Add sparse map visual landmarks msg to graph_localizer.
+  void SparseMapVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg);
 
   // Updates the graph_vio if it has been initialized.
   void Update();
@@ -86,6 +90,8 @@ class RosGraphVIOWrapper {
   std::unique_ptr<ImuBiasInitializer> imu_bias_initializer_;
   graph_vio::GraphVIOParams params_;
   boost::optional<localization_common::Time> latest_msg_time_;
+  RosGraphVIOWrapperParams wrapper_params_;
+  int feature_point_count_;
 };
 }  // namespace ros_graph_vio
 

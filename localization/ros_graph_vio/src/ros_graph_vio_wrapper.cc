@@ -43,6 +43,7 @@ void RosGraphVIOWrapper::LoadConfigs(const std::string& graph_config_path_prefix
   config.AddFile("localization/imu_filter.config");
   lc::LoadGraphVIOConfig(config, graph_config_path_prefix);
   pr::LoadGraphVIOParams(config, params_);
+  LoadRosGraphVIOWrapperParams(config, wrapper_params_);
   ImuBiasInitializerParams imu_bias_initializer_params;
   LoadImuBiasInitializerParams(config, imu_bias_initializer_params);
   imu_bias_initializer_.reset(new ImuBiasInitializer(imu_bias_initializer_params));
@@ -50,6 +51,7 @@ void RosGraphVIOWrapper::LoadConfigs(const std::string& graph_config_path_prefix
 
 void RosGraphVIOWrapper::FeaturePointsCallback(const ff_msgs::Feature2dArray& feature_array_msg) {
   if (Initialized()) graph_vio_->AddFeaturePointsMeasurement(lm::MakeFeaturePointsMeasurement(feature_array_msg));
+  ++feature_point_count_;
 }
 
 void RosGraphVIOWrapper::ImuCallback(const sensor_msgs::Imu& imu_msg) {
@@ -72,6 +74,18 @@ void RosGraphVIOWrapper::FlightModeCallback(const ff_msgs::FlightMode& flight_mo
   const auto fan_speed_mode = lm::ConvertFanSpeedMode(flight_mode.speed);
   if (Initialized()) graph_vio_->SetFanSpeedMode(fan_speed_mode);
   imu_bias_initializer_->AddFanSpeedModeMeasurement(fan_speed_mode);
+}
+
+void RosGraphVIOWrapper::SparseMapVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg) {
+  // Don't start counting feature points until graph_vio is initialized
+  // to make sure exactly the right amount of points have passed
+  if (!Initialized()) {
+    feature_point_count_ = 0;
+  } else if (Initialized() && wrapper_params_.add_sparse_map_measurements_for_initialization &&
+             feature_point_count_ < wrapper_params_.feature_point_count_for_sm_initialization) {
+    graph_vio_->AddSparseMapMatchedProjectionsMeasurement(
+      lm::MakeMatchedProjectionsMeasurement(visual_landmarks_msg));
+  }
 }
 
 void RosGraphVIOWrapper::Update() {

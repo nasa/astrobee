@@ -36,4 +36,10 @@ void LoadRosGraphVIONodeletParams(config_reader::ConfigReader& config, RosGraphV
   LOAD_PARAM(params.max_imu_buffer_size, config, prefix + "rgv_");
   LOAD_PARAM(params.max_feature_point_buffer_size, config, prefix + "rgv_");
 }
+
+void LoadRosGraphVIOWrapperParams(config_reader::ConfigReader& config, RosGraphVIOWrapperParams& params,
+                                  const std::string& prefix) {
+  LOAD_PARAM(params.add_sparse_map_measurements_for_initialization, config, prefix + "rgv_");
+  LOAD_PARAM(params.feature_point_count_for_sm_initialization, config, prefix + "rgv_");
+}
 }  // namespace ros_graph_vio
