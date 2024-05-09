@@ -201,15 +201,14 @@
                             - others?
 
                           - add ability to use loc map measurements when reset biases in graph vio! (CCC)
-                              - add ros_graph_vio_wrapper_params! (AAA)
+                              - add ros_graph_vio_wrapper_params! 
                                 - add graph loc config (loc factor adder params) to graph vio! (AAAA)
-                                  - add to params file
-                                  - add to config file
-                                  - update param reader
-                                - add to param reader
-                                - add to wrapper!
-                                - add to offline_replay!
+                                    - how to fix massive offset???? different origin???
                               - test on ISS bag! (AC)
+                                - why isn't this working???
+                                  - why does loc fail so bad??? (AAAA)
+                                    - check loc initialization pose
+                                    - why isn't it reacting to loc pose factor?
  
                           - Update surf map branch! (DDD)
                             - ping reuben
