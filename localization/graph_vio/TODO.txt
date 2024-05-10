@@ -191,9 +191,19 @@
                             - update launch files 
                               - test these...
                                 - test with live replay! 
-                                - test on robot! time things! (AAA)
-                            - rename ros_graph_localizer_vio_nodelet to ros_graph_localizer_nodelet, remove other one?? (AB)
+                                - test on robot! time things! 
+                            - rename ros_graph_localizer_vio_nodelet to ros_graph_localizer_nodelet, remove other one?? (AA)
                               - remove ros_graph_vio_nodelet?
+
+  
+                          - change loc frame to ar tags? (AAAA) 
+                            - is this ok for planner? need to hack it?
+                                  - make branch for this
+                                  - reset loc frame to be identity
+                                  - publish world_T_dock as identity
+                                  - add ar measurements in dock frame
+                                  - don't add sparse map measurements
+                                  - test in sim!!!
 
                           - Clean up branch! (BBB)
                             - clean up code
@@ -209,6 +219,8 @@
                                   - why does loc fail so bad??? (AAAA)
                                     - check loc initialization pose
                                     - why isn't it reacting to loc pose factor?
+                                    - need to adjust start pose!! (AAAA)
+                                      - update all loc poses instead???? 
  
                           - Update surf map branch! (DDD)
                             - ping reuben
