@@ -429,7 +429,7 @@ class Visualizer(QMainWindow):
                         self.menuBar().hide()
             elif event.type() == QtCore.QEvent.Leave and source is self:
                 self.menuBar().hide()
-        return super(Visualizer, self).eventFilter(source, event)
+        return super().eventFilter(source, event)
 
     def delete_plot(self, col, row):
         del self.columns[col][row]
