@@ -18,6 +18,7 @@
 # under the License.
 
 import numpy as np
+from acceleration import Acceleration
 from accelerometer_bias import AccelerometerBias
 from extrapolated_loc_state import ExtrapolatedLocState
 from graph_loc_state import GraphLocState
@@ -111,6 +112,13 @@ def velocity_from_msg(velocity_msg):
     )
 
 
+# Create an acceleration from a acceleration msg.
+def acceleration_from_msg(acceleration_msg):
+    return Acceleration(
+        acceleration_msg.accel.x, acceleration_msg.accel.y, acceleration_msg.accel.z
+    )
+
+
 # Create a timestamped velocity from a velocity msg using relative bag time.
 def velocity_with_covariance_from_msg(velocity_msg, bag_start_time=0):
     return VelocityWithCovariance(
@@ -179,4 +187,5 @@ def extrapolated_loc_state_from_msg(msg, bag_start_time=0):
     )
     extrapolated_loc_state.pose = pose_from_msg(msg)
     extrapolated_loc_state.velocity = velocity_from_msg(msg)
+    extrapolated_loc_state.acceleration = acceleration_from_msg(msg)
     return extrapolated_loc_state

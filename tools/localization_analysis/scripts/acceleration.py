@@ -17,10 +17,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-# ExtrapolatedLocState object containing information from a Ekf Msg
-class ExtrapolatedLocState:
-    def __init__(self):
-        self.timestamp = None
-        self.pose = None
-        self.velocity = None
-        self.acceleration = None
+# Acceleration object
+class Acceleration(object):
+    def __init__(self, x, y, z):
+        self.x = x
+        self.y = y
+        self.z = z
