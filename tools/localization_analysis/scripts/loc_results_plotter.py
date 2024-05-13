@@ -53,6 +53,7 @@ def plot_loc_results(
     graph_loc_states,
     extrapolated_loc_states,
     ar_tag_poses,
+    imu_accelerations,
 ):
     poses_plotter = MultiPosePlotter(
         "Time (s)", "Position (m)", "Loc vs. Groundtruth Position", True
@@ -162,6 +163,16 @@ def plot_loc_results(
         extrapolated_accelerations_plotter.add(extrapolated_acceleration_plotter)
         extrapolated_accelerations_plotter.plot(pdf)
 
+    if imu_accelerations:
+        imu_accelerations_plotter = MultiVector3dPlotter(
+            "Time (s)", "Acceleration (m/s^2)", "Raw IMU Accelerations", True
+        )
+        imu_acceleration_plotter = plot_conversions.acceleration_plotter_from_imu_accelerations(
+            imu_accelerations
+        )
+        imu_accelerations_plotter.add(imu_acceleration_plotter)
+        imu_accelerations_plotter.plot(pdf)
+
     ml_num_pose_factors_plotter = plot_conversions.ml_pose_factor_count_plotter_from_graph_loc_states(
         graph_loc_states
     )
@@ -225,6 +236,12 @@ def load_data_and_create_loc_plots(
     # Load AR Tag poses
     ar_tag_poses = []
     message_reader.load_poses(ar_tag_poses, "/ar_tag/pose", bag, bag_start_time)
+
+    # Load IMU data
+    imu_accelerations = []
+    message_reader.load_imu_accelerations(
+        imu_accelerations, "/hw/imu", bag, bag_start_time
+    )
     bag.close()
 
     with PdfPages(output_pdf_file) as pdf:
@@ -235,6 +252,7 @@ def load_data_and_create_loc_plots(
             graph_loc_states,
             extrapolated_loc_states,
             ar_tag_poses,
+            imu_accelerations,
         )
 
 

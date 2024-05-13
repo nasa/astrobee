@@ -71,6 +71,15 @@ def xyz_acceleration_vectors_from_extrapolated_loc_states(extrapolated_loc_state
     return [xs, ys, zs]
 
 
+# Return list of 3 lists, one each for x, y, z values in accelerations
+def xyz_acceleration_vectors_from_imu_accelerations(imu_accelerations):
+    # TODO: Do this more efficiently
+    xs = [acceleration.x for acceleration in imu_accelerations]
+    ys = [acceleration.y for acceleration in imu_accelerations]
+    zs = [acceleration.z for acceleration in imu_accelerations]
+    return [xs, ys, zs]
+
+
 # Return list of 3 lists, one each for x, y, z values in IMU accelerometer bias
 def xyz_accel_bias_vectors_from_graph_vio_states(graph_vio_states):
     # TODO: Do this more efficiently
@@ -419,6 +428,12 @@ def acceleration_plotter_from_extrapolated_loc_states(extrapolated_loc_states):
     return Vector3dPlotter(
         "Extrapolated Loc Acceleration", times, xs, ys, zs, ["X", "Y", "Z"]
     )
+
+
+def acceleration_plotter_from_imu_accelerations(imu_accelerations):
+    xs, ys, zs = xyz_acceleration_vectors_from_imu_accelerations(imu_accelerations)
+    times = times_from_timestamped_objects(imu_accelerations)
+    return Vector3dPlotter("Raw IMU Acceleration", times, xs, ys, zs, ["X", "Y", "Z"])
 
 
 def accel_bias_plotter_from_graph_vio_states(graph_vio_states):

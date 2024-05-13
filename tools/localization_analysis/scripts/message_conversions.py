@@ -28,6 +28,7 @@ from imu_bias import ImuBias
 from pose import Pose
 from position import Position
 from pose_with_covariance import PoseWithCovariance
+from timestamped_acceleration import TimestampedAcceleration
 from timestamped_pose import TimestampedPose
 from timestamped_pose_with_covariance import TimestampedPoseWithCovariance
 from timestamped_velocity import TimestampedVelocity
@@ -112,10 +113,21 @@ def velocity_from_msg(velocity_msg):
     )
 
 
-# Create an acceleration from a acceleration msg.
+# Create an acceleration from an acceleration msg.
 def acceleration_from_msg(acceleration_msg):
     return Acceleration(
         acceleration_msg.accel.x, acceleration_msg.accel.y, acceleration_msg.accel.z
+    )
+
+
+# Create an acceleration from an imu msg.
+def timestamped_acceleration_from_imu_msg(imu_msg, bag_start_time=0):
+    timestamp = relative_timestamp(imu_msg.header.stamp, bag_start_time)
+    return TimestampedAcceleration(
+        imu_msg.linear_acceleration.x,
+        imu_msg.linear_acceleration.y,
+        imu_msg.linear_acceleration.z,
+        timestamp,
     )
 
 

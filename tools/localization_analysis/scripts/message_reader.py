@@ -29,32 +29,56 @@ import message_conversions
 def load_poses(timestamped_poses, topic, bag, bag_start_time):
     for msg_topic, msg, t in bag.read_messages(topic):
         if msg_topic == topic:
-            timestamped_poses.append(message_conversions.timestamped_pose_from_msg(msg, bag_start_time))
+            timestamped_poses.append(
+                message_conversions.timestamped_pose_from_msg(msg, bag_start_time)
+            )
+
 
 # Load graph vio states from a bag file for a given topic.
 # Start at the provided bag start time.
 def load_graph_vio_states(graph_vio_states, topic, bag, bag_start_time):
     for msg_topic, msg, t in bag.read_messages(topic):
         if msg_topic == topic:
-            graph_vio_states.append(message_conversions.graph_vio_state_from_msg(msg, bag_start_time))
+            graph_vio_states.append(
+                message_conversions.graph_vio_state_from_msg(msg, bag_start_time)
+            )
+
 
 # Load graph loc states from a bag file for a given topic.
 # Start at the provided bag start time.
 def load_graph_loc_states(graph_loc_states, topic, bag, bag_start_time):
     for msg_topic, msg, t in bag.read_messages(topic):
         if msg_topic == topic:
-            graph_loc_states.append(message_conversions.graph_loc_state_from_msg(msg, bag_start_time))
+            graph_loc_states.append(
+                message_conversions.graph_loc_state_from_msg(msg, bag_start_time)
+            )
+
 
 # Load extrapolated loc states from a bag file for a given topic.
 # Start at the provided bag start time.
 def load_extrapolated_loc_states(extrapolated_loc_states, topic, bag, bag_start_time):
     for msg_topic, msg, t in bag.read_messages(topic):
         if msg_topic == topic:
-            extrapolated_loc_states.append(message_conversions.extrapolated_loc_state_from_msg(msg, bag_start_time))
+            extrapolated_loc_states.append(
+                message_conversions.extrapolated_loc_state_from_msg(msg, bag_start_time)
+            )
+
+
+# Load IMU accelerations from a bag file for a given topic.
+# Start at the provided bag start time.
+def load_imu_accelerations(imu_accelerations, topic, bag, bag_start_time):
+    for msg_topic, msg, t in bag.read_messages(topic):
+        if msg_topic == topic:
+            imu_accelerations.append(
+                message_conversions.timestamped_acceleration_from_imu_msg(
+                    msg, bag_start_time
+                )
+            )
+
 
 # Load odometry poses from a bag file for a set of odometry poses with desired topics.
 # Start at the provided bag start time.
-#def load_odometry_msgs(vec_of_poses, bag, bag_start_time):
+# def load_odometry_msgs(vec_of_poses, bag, bag_start_time):
 #    topics = [poses.topic for poses in vec_of_poses]
 #    for topic, msg, t in bag.read_messages(topics):
 #        for poses in vec_of_poses:
@@ -68,7 +92,7 @@ def load_extrapolated_loc_states(extrapolated_loc_states, topic, bag, bag_start_
 
 # Loads covariances from a bag file given a set of covariance topics.
 # Start at the provided bag start time.
-#def load_pose_with_cov_msgs(vec_of_poses, bag, bag_start_time):
+# def load_pose_with_cov_msgs(vec_of_poses, bag, bag_start_time):
 #    topics = [poses.topic for poses in vec_of_poses]
 #    for topic, msg, t in bag.read_messages(topics):
 #        for poses in vec_of_poses:
@@ -80,7 +104,7 @@ def load_extrapolated_loc_states(extrapolated_loc_states, topic, bag, bag_start_
 #
 ## Loads localization states from a bag file given a set of localization topics.
 ## Start at the provided bag start time.
-#def load_loc_state_msgs(vec_of_loc_states, bag, bag_start_time):
+# def load_loc_state_msgs(vec_of_loc_states, bag, bag_start_time):
 #    topics = [loc_states.topic for loc_states in vec_of_loc_states]
 #    for topic, msg, t in bag.read_messages(topics):
 #        for loc_states in vec_of_loc_states:
@@ -90,7 +114,7 @@ def load_extrapolated_loc_states(extrapolated_loc_states, topic, bag, bag_start_
 #
 ## Loads velocities from a bag file given a set of velocity topics.
 ## Start at the provided bag start time.
-#def load_velocity_msgs(velocities, bag, bag_start_time):
+# def load_velocity_msgs(velocities, bag, bag_start_time):
 #    topics = [velocities.topic]
 #    for topic, msg, t in bag.read_messages(topics):
 #        velocities.add_msg(msg, msg.header.stamp, bag_start_time)
