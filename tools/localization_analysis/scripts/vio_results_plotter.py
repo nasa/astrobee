@@ -26,7 +26,7 @@ import argparse
 import os
 import sys
 
-import message_reader 
+import message_reader
 from multipose_plotter import MultiPosePlotter
 from multivector3d_plotter import MultiVector3dPlotter
 import plot_conversions
@@ -34,6 +34,7 @@ import results_savers
 from timestamped_pose import TimestampedPose
 
 import matplotlib
+
 matplotlib.use("pdf")
 import csv
 import math
@@ -43,6 +44,7 @@ import matplotlib.pyplot as plt
 import rosbag
 from matplotlib.backends.backend_pdf import PdfPages
 
+
 def plot_vio_results(
     pdf,
     results_csv_file,
@@ -50,9 +52,11 @@ def plot_vio_results(
     graph_vio_states,
     imu_bias_extrapolated_poses,
 ):
-    poses_plotter = MultiPosePlotter("Time (s)", "Position (m)", "Graph vs. Groundtruth Position", True)
+    poses_plotter = MultiPosePlotter(
+        "Time (s)", "Position (m)", "Graph vs. Groundtruth Position", True
+    )
     poses_plotter.add_poses(
-        "Groundtruth Poses", 
+        "Groundtruth Poses",
         groundtruth_poses,
         linestyle="None",
         marker="o",
@@ -60,41 +64,63 @@ def plot_vio_results(
         markersize=1.5,
     )
 
-    graph_vio_poses = plot_conversions.adjusted_graph_vio_poses_from_graph_vio_states(graph_vio_states, groundtruth_poses) 
-    poses_plotter.add_poses(
-        "Graph VIO Poses", 
-        graph_vio_poses,
-        linestyle="-",
+    graph_vio_poses = plot_conversions.adjusted_graph_vio_poses_from_graph_vio_states(
+        graph_vio_states, groundtruth_poses
     )
+    poses_plotter.add_poses("Graph VIO Poses", graph_vio_poses, linestyle="-")
     poses_plotter.plot(pdf)
-    results_savers.save_rmse(graph_vio_poses, groundtruth_poses, results_csv_file, pdf, "Graph VIO Poses") 
+    results_savers.save_rmse(
+        graph_vio_poses, groundtruth_poses, results_csv_file, pdf, "Graph VIO Poses"
+    )
 
-    velocities_plotter = MultiVector3dPlotter("Time (s)", "Velocity (m/s)", "Graph VIO Velocities", True)
-    graph_vio_velocity_plotter = plot_conversions.velocity_plotter_from_graph_vio_states(graph_vio_states) 
+    velocities_plotter = MultiVector3dPlotter(
+        "Time (s)", "Velocity (m/s)", "Graph VIO Velocities", True
+    )
+    graph_vio_velocity_plotter = plot_conversions.velocity_plotter_from_graph_vio_states(
+        graph_vio_states
+    )
     velocities_plotter.add(graph_vio_velocity_plotter)
     velocities_plotter.plot(pdf)
 
-    accel_bias_plotters = MultiVector3dPlotter("Time (s)", "Accelerometer Bias (m/s^2)", "Graph VIO Accel. Biases", True)
-    graph_vio_accel_bias_plotter = plot_conversions.accel_bias_plotter_from_graph_vio_states(graph_vio_states) 
+    accel_bias_plotters = MultiVector3dPlotter(
+        "Time (s)", "Accelerometer Bias (m/s^2)", "Graph VIO Accel. Biases", True
+    )
+    graph_vio_accel_bias_plotter = plot_conversions.accel_bias_plotter_from_graph_vio_states(
+        graph_vio_states
+    )
     accel_bias_plotters.add(graph_vio_accel_bias_plotter)
     accel_bias_plotters.plot(pdf)
 
-    gyro_bias_plotters = MultiVector3dPlotter("Time (s)", "Gyro Bias (rad/s^2)", "Graph VIO Gyro. Biases", True)
-    graph_vio_gyro_bias_plotter = plot_conversions.gyro_bias_plotter_from_graph_vio_states(graph_vio_states) 
+    gyro_bias_plotters = MultiVector3dPlotter(
+        "Time (s)", "Gyro Bias (rad/s^2)", "Graph VIO Gyro. Biases", True
+    )
+    graph_vio_gyro_bias_plotter = plot_conversions.gyro_bias_plotter_from_graph_vio_states(
+        graph_vio_states
+    )
     gyro_bias_plotters.add(graph_vio_gyro_bias_plotter)
     gyro_bias_plotters.plot(pdf)
 
-    of_count_plotter = plot_conversions.optical_flow_feature_count_plotter_from_graph_vio_states(graph_vio_states)
+    of_count_plotter = plot_conversions.optical_flow_feature_count_plotter_from_graph_vio_states(
+        graph_vio_states
+    )
     of_count_plotter.plot(pdf)
 
-    of_num_factors_plotter = plot_conversions.optical_flow_factor_count_plotter_from_graph_vio_states(graph_vio_states)
+    of_num_factors_plotter = plot_conversions.optical_flow_factor_count_plotter_from_graph_vio_states(
+        graph_vio_states
+    )
     of_num_factors_plotter.plot(pdf)
 
-
-    integrated_velocity_poses = plot_conversions.absolute_poses_from_integrated_graph_vio_state_velocities(graph_vio_states, groundtruth_poses)
-    integrated_velocity_poses_plotter = MultiPosePlotter("Time (s)", "Position (m)", "Integrated Velocities vs. Groundtruth Position", True)
+    integrated_velocity_poses = plot_conversions.absolute_poses_from_integrated_graph_vio_state_velocities(
+        graph_vio_states, groundtruth_poses
+    )
+    integrated_velocity_poses_plotter = MultiPosePlotter(
+        "Time (s)",
+        "Position (m)",
+        "Integrated Velocities vs. Groundtruth Position",
+        True,
+    )
     integrated_velocity_poses_plotter.add_poses(
-        "Groundtruth Poses", 
+        "Groundtruth Poses",
         groundtruth_poses,
         linestyle="None",
         marker="o",
@@ -102,19 +128,29 @@ def plot_vio_results(
         markersize=1.5,
     )
     integrated_velocity_poses_plotter.add_poses(
-        "Graph VIO Integrated Velocity Poses", 
-        integrated_velocity_poses,
-        linestyle="-",
+        "Graph VIO Integrated Velocity Poses", integrated_velocity_poses, linestyle="-"
     )
     integrated_velocity_poses_plotter.plot_positions(pdf)
-    results_savers.save_rmse(integrated_velocity_poses, groundtruth_poses, results_csv_file, pdf, "Graph VIO Integrated Velocity Poses") 
-
+    results_savers.save_rmse(
+        integrated_velocity_poses,
+        groundtruth_poses,
+        results_csv_file,
+        pdf,
+        "Graph VIO Integrated Velocity Poses",
+    )
 
     if len(imu_bias_extrapolated_poses) != 0:
-        absolute_imu_bias_extrapolated_poses = plot_conversions.absolute_poses_from_imu_bias_extrapolated_poses(imu_bias_extrapolated_poses, groundtruth_poses)
-        imu_bias_extrapolated_poses_plotter = MultiPosePlotter("Time (s)", "Position (m)", "IMU Bias Extrapolated vs. Groundtruth Position", True)
+        absolute_imu_bias_extrapolated_poses = plot_conversions.absolute_poses_from_imu_bias_extrapolated_poses(
+            imu_bias_extrapolated_poses, groundtruth_poses
+        )
+        imu_bias_extrapolated_poses_plotter = MultiPosePlotter(
+            "Time (s)",
+            "Position (m)",
+            "IMU Bias Extrapolated vs. Groundtruth Position",
+            True,
+        )
         imu_bias_extrapolated_poses_plotter.add_poses(
-            "Groundtruth Poses", 
+            "Groundtruth Poses",
             groundtruth_poses,
             linestyle="None",
             marker="o",
@@ -122,25 +158,38 @@ def plot_vio_results(
             markersize=1.5,
         )
         imu_bias_extrapolated_poses_plotter.add_poses(
-            "IMU Bias Extrapolated Poses", 
+            "IMU Bias Extrapolated Poses",
             absolute_imu_bias_extrapolated_poses,
             linestyle="-",
         )
         imu_bias_extrapolated_poses_plotter.plot(pdf)
-        results_savers.save_rmse(imu_bias_extrapolated_poses, groundtruth_poses, results_csv_file, pdf, "IMU Bias Extrapolated Poses") 
+        results_savers.save_rmse(
+            imu_bias_extrapolated_poses,
+            groundtruth_poses,
+            results_csv_file,
+            pdf,
+            "IMU Bias Extrapolated Poses",
+        )
 
+    standstill_plotter = plot_conversions.standstill_plotter_from_states(
+        graph_vio_states
+    )
+    standstill_plotter.plot(pdf)
 
-
-    optimization_time_plotter = plot_conversions.optimization_time_plotter_from_states(graph_vio_states)
+    optimization_time_plotter = plot_conversions.optimization_time_plotter_from_states(
+        graph_vio_states
+    )
     optimization_time_plotter.plot(pdf)
 
-    update_time_plotter = plot_conversions.update_time_plotter_from_states(graph_vio_states)
+    update_time_plotter = plot_conversions.update_time_plotter_from_states(
+        graph_vio_states
+    )
     update_time_plotter.plot(pdf)
 
 
 # Loads poses from the provided bagfile, generates plots, and saves results to a pdf and csv file.
 # The csv file contains results in (TODO: define format).
-# The RMSE rel start and end time define the time range for evaluating the RMSE, in case the bag starts or ends with little/uninteresting movement 
+# The RMSE rel start and end time define the time range for evaluating the RMSE, in case the bag starts or ends with little/uninteresting movement
 # that shouldn't be included in the RMSE calculation.
 # The groundtruth bag must have the same start time as other bagfile, otherwise RMSE calculations will be flawed
 def load_data_and_create_vio_plots(
@@ -159,25 +208,29 @@ def load_data_and_create_vio_plots(
     bag_start_time = bag.get_start_time()
 
     # Load groundtruth poses
-    # Use sparse mapping poses as groundtruth. 
+    # Use sparse mapping poses as groundtruth.
     groundtruth_poses = []
-    message_reader.load_poses(groundtruth_poses, "/sparse_mapping/pose", groundtruth_bag, bag_start_time)
+    message_reader.load_poses(
+        groundtruth_poses, "/sparse_mapping/pose", groundtruth_bag, bag_start_time
+    )
 
-    # Load graph VIO states 
+    # Load graph VIO states
     graph_vio_states = []
-    message_reader.load_graph_vio_states(graph_vio_states, "/graph_vio/state", bag, bag_start_time)
+    message_reader.load_graph_vio_states(
+        graph_vio_states, "/graph_vio/state", bag, bag_start_time
+    )
 
-    # Load IMU bias extrapolated poses 
+    # Load IMU bias extrapolated poses
     imu_bias_extrapolated_poses = []
-    message_reader.load_poses(imu_bias_extrapolated_poses, "/imu_bias_extrapolator/pose", bag, bag_start_time)
+    message_reader.load_poses(
+        imu_bias_extrapolated_poses, "/imu_bias_extrapolator/pose", bag, bag_start_time
+    )
     bag.close()
-
-
 
     with PdfPages(output_pdf_file) as pdf:
         plot_vio_results(
             pdf,
-            results_csv_file, 
+            results_csv_file,
             groundtruth_poses,
             graph_vio_states,
             imu_bias_extrapolated_poses,
@@ -189,7 +242,9 @@ if __name__ == "__main__":
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument("bagfile", help="Input bagfile.")
-    parser.add_argument("--output-file", default="vio_output.pdf", help="Output pdf file.")
+    parser.add_argument(
+        "--output-file", default="vio_output.pdf", help="Output pdf file."
+    )
     parser.add_argument(
         "--results-csv-file",
         default="vio_results.csv",
