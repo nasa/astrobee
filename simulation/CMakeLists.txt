@@ -19,8 +19,8 @@ cmake_minimum_required(VERSION 3.0)
 project(astrobee_gazebo)
 
 if (ENABLE_GAZEBO)
-## Compile as C++14, supported in ROS Kinetic and newer
-add_compile_options(-std=c++14)
+## Compile as C++17
+add_compile_options(-std=c++17)
 
 ## Find catkin macros and libraries
 find_package(catkin2 REQUIRED COMPONENTS
