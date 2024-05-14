@@ -26,14 +26,14 @@ import argparse
 import os
 import sys
 
+import matplotlib
+
 import message_reader
-from multipose_plotter import MultiPosePlotter
-from multivector3d_plotter import MultiVector3dPlotter
 import plot_conversions
 import results_savers
+from multipose_plotter import MultiPosePlotter
+from multivector3d_plotter import MultiVector3dPlotter
 from timestamped_pose import TimestampedPose
-
-import matplotlib
 
 matplotlib.use("pdf")
 import csv

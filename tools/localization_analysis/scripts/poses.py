@@ -18,12 +18,12 @@
 # under the License.
 
 import numpy as np
-import scipy.spatial.transform
-
 import orientations
-import pose
 import pose_covariances
+import scipy.spatial.transform
 import vector3ds
+
+import pose
 
 
 class Poses(object):

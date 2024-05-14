@@ -19,6 +19,7 @@
 
 import numpy as np
 
+
 # Position class that contains x, y, and z values.
 class Position(np.ndarray):
     def __new__(cls, position_vector):
@@ -26,4 +27,4 @@ class Position(np.ndarray):
         self.x = position_vector[0]
         self.y = position_vector[1]
         self.z = position_vector[2]
-        return(self)
+        return self

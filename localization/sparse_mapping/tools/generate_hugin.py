@@ -77,23 +77,12 @@ def list_images_in_map(mapfile):
 def parse_args():
 
     parser = argparse.ArgumentParser(description="Generates/updates hugin files.")
+    parser.add_argument("-map_name", type=str, required=True, help="Input surf map.")
     parser.add_argument(
-        "-map_name",
-        type=str,
-        required=True,
-        help="Input surf map.",
+        "-input_hugin", type=str, required=False, help="Input Hugin pto file."
     )
     parser.add_argument(
-        "-input_hugin",
-        type=str,
-        required=False,
-        help="Input Hugin pto file.",
-    )
-    parser.add_argument(
-        "-output_hugin",
-        type=str,
-        required=False,
-        help="Output Hugin pto file.",
+        "-output_hugin", type=str, required=False, help="Output Hugin pto file."
     )
     parser.add_argument(
         "-work_dir",
@@ -144,10 +133,8 @@ def main():
         srcImage.setFilename(img)
         p.addImage(srcImage)
 
-    # make a c++ std::ofstream to write to
-    ofs = ofstream(output_hugin)
     # write the modified panorama to that stream
-    p.writeData(ofs)
+    p.WritePTOFile(output_hugin)
     # done with it
     del ofs
 

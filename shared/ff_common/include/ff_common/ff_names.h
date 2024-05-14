@@ -315,6 +315,7 @@
 #define SERVICE_LOCALIZATION_HR_ENABLE              "loc/hr/enable"
 #define SERVICE_LOCALIZATION_PL_ENABLE              "loc/pl/enable"
 #define SERVICE_LOCALIZATION_RESET_MAP              "loc/ml/reset_map"
+#define SERVICE_LOCALIZATION_RESET_MAP_LOC          "loc/ml/reset_map_loc"
 
 // Localization manager
 
@@ -387,6 +388,7 @@
 #define TOPIC_HARDWARE_DOCK_CAM                     "hw/cam_dock"
 #define TOPIC_HARDWARE_CAM_SUFFIX_BAYER_RAW         "_bayer"
 #define TOPIC_HARDWARE_CAM_SUFFIX_BAYER_COLOR       "_color"
+#define TOPIC_HARDWARE_CAM_INFO                     "/camera_info"
 #define TOPIC_HARDWARE_SCI_CAM                      "hw/cam_sci"
 #define TOPIC_HARDWARE_LIGHT_FRONT                  "hw/light_front"
 #define TOPIC_HARDWARE_LIGHT_AFT                    "hw/light_aft"
@@ -452,5 +454,6 @@
 #define SERVICE_HARDWARE_PMC_TIMEOUT                "hw/pmc/set_timeout"
 
 #define SERVICE_STREAMING_LIGHTS                    "hw/signal_lights/streaming"
+#define SERVICE_SET_EXPOSURE                        "/set_exposure"
 
 #endif  // FF_COMMON_FF_NAMES_H_

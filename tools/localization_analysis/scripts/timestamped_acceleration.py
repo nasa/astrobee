@@ -19,6 +19,7 @@
 
 from acceleration import Acceleration
 
+
 # Class that contains a timestamped acceleration
 class TimestampedAcceleration(Acceleration):
     def __init__(self, x, y, z, timestamp):

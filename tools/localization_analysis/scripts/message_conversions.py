@@ -18,6 +18,8 @@
 # under the License.
 
 import numpy as np
+import scipy.spatial.transform
+
 from acceleration import Acceleration
 from accelerometer_bias import AccelerometerBias
 from extrapolated_loc_state import ExtrapolatedLocState
@@ -26,15 +28,15 @@ from graph_vio_state import GraphVIOState
 from gyroscope_bias import GyroscopeBias
 from imu_bias import ImuBias
 from pose import Pose
-from position import Position
 from pose_with_covariance import PoseWithCovariance
+from position import Position
 from timestamped_acceleration import TimestampedAcceleration
 from timestamped_pose import TimestampedPose
 from timestamped_pose_with_covariance import TimestampedPoseWithCovariance
 from timestamped_velocity import TimestampedVelocity
 from velocity import Velocity
 from velocity_with_covariance import VelocityWithCovariance
-import scipy.spatial.transform
+
 
 # Subtract the bag start time from the timestamp
 # to make start time relative to the bag start time

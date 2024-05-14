@@ -17,14 +17,17 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import sys
+
 import numpy as np
+import scipy.spatial.transform
+
 from position import Position
 from timestamped_pose import TimestampedPose
 from timestamped_velocity import TimestampedVelocity
 from value_plotter import ValuePlotter
 from vector3d_plotter import Vector3dPlotter
-import scipy.spatial.transform
-import sys
+
 
 # Return list of 3 lists, one each for x, y, z values in poses
 def xyz_vectors_from_poses(poses):

@@ -17,13 +17,15 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import numpy as np
+
 from vector3d_plotter import Vector3dPlotter
 
-import numpy as np
 
 # Clip rotation angles so they stay between 0 and 360
 def unwrap_in_degrees(angles):
     return np.rad2deg(np.unwrap(np.deg2rad(angles)))
+
 
 # Class for plotting YPR orientation values on the same and separate plots.
 class OrientationPlotter(Vector3dPlotter):
@@ -41,7 +43,8 @@ class OrientationPlotter(Vector3dPlotter):
         markeredgewidth=None,
         markersize=1,
     ):
-        super(OrientationPlotter, self).__init__(name,
+        super(OrientationPlotter, self).__init__(
+            name,
             times,
             unwrap_in_degrees(y_vals),
             unwrap_in_degrees(p_vals),
@@ -52,4 +55,5 @@ class OrientationPlotter(Vector3dPlotter):
             linewidth,
             marker,
             markeredgewidth,
-            markersize)
+            markersize,
+        )

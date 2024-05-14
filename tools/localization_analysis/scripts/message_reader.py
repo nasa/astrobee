@@ -24,6 +24,7 @@ import rosbag
 
 import message_conversions
 
+
 # Load poses from a bag file for a given topic.
 # Start at the provided bag start time.
 def load_poses(timestamped_poses, topic, bag, bag_start_time):

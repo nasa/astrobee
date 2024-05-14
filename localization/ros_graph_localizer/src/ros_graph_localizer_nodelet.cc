@@ -72,7 +72,7 @@ void RosGraphLocalizerNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
   bias_from_file_srv_ = private_nh_.advertiseService(
     SERVICE_GNC_EKF_INIT_BIAS_FROM_FILE, &RosGraphLocalizerNodelet::ResetBiasesFromFileAndResetLocalizer, this);
   reset_map_srv_ =
-    private_nh_.advertiseService(SERVICE_LOCALIZATION_RESET_MAP, &RosGraphLocalizerNodelet::ResetMap, this);
+    private_nh_.advertiseService(SERVICE_LOCALIZATION_RESET_MAP_LOC, &RosGraphLocalizerNodelet::ResetMap, this);
   // TODO(rsoussan): Reset biases from file here?
   reset_srv_ = private_nh_.advertiseService(
     SERVICE_GNC_EKF_RESET, &RosGraphLocalizerNodelet::ResetBiasesFromFileAndResetLocalizer, this);

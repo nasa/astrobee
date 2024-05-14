@@ -17,22 +17,29 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import csv
+
+import matplotlib.pyplot as plt
+
 import rmse_calculators
 
-import csv
-import matplotlib.pyplot as plt
 
 # Computes and saves rmse for poses compared to groundtruth poses.
 # Optionally pass the max allowed time difference between poses defined to be
-# at the same timestamp, along with the start and end time bounds for computing 
-# same timestamp poses (passing an end time of -1 is equivalent to having no upper bound time). 
-def save_rmse(poses, groundtruth_poses, csv_file, pdf, prefix='', max_allowed_time_diff=0.01, start_time=0, end_time=-1):
+# at the same timestamp, along with the start and end time bounds for computing
+# same timestamp poses (passing an end time of -1 is equivalent to having no upper bound time).
+def save_rmse(
+    poses,
+    groundtruth_poses,
+    csv_file,
+    pdf,
+    prefix="",
+    max_allowed_time_diff=0.01,
+    start_time=0,
+    end_time=-1,
+):
     rmse = rmse_calculators.pose_rmse(
-        poses,
-        groundtruth_poses,
-        max_allowed_time_diff,
-        start_time,
-        end_time,
+        poses, groundtruth_poses, max_allowed_time_diff, start_time, end_time
     )
 
     stats = (

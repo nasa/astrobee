@@ -18,9 +18,9 @@
 # under the License.
 
 import matplotlib
+import vector3ds
 
 import poses
-import vector3ds
 
 matplotlib.use("pdf")
 import matplotlib.pyplot as plt

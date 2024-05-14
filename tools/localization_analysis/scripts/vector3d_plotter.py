@@ -18,9 +18,11 @@
 # under the License.
 
 import matplotlib
+
 matplotlib.use("pdf")
 import matplotlib.pyplot as plt
 import numpy as np
+
 
 # Class for plotting 3d vector values on the same and separate plots.
 class Vector3dPlotter(object):

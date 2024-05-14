@@ -26,15 +26,15 @@ import argparse
 import os
 import sys
 
-import matplotlib
-
 import loc_states
+import matplotlib
+import velocities
+
 import plot_helpers
 import poses
 import rmse_utilities
 import utilities
 import vector3d_plotter
-import velocities
 
 matplotlib.use("pdf")
 import csv

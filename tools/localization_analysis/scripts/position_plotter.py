@@ -19,6 +19,7 @@
 
 from vector3d_plotter import Vector3dPlotter
 
+
 # Class for plotting XYZ position values on the same and separate plots.
 class PositionPlotter(Vector3dPlotter):
     def __init__(
@@ -35,7 +36,8 @@ class PositionPlotter(Vector3dPlotter):
         markeredgewidth=None,
         markersize=1,
     ):
-        super(PositionPlotter, self).__init__(name,
+        super(PositionPlotter, self).__init__(
+            name,
             times,
             x_vals,
             y_vals,
@@ -46,4 +48,5 @@ class PositionPlotter(Vector3dPlotter):
             linewidth,
             marker,
             markeredgewidth,
-            markersize)
+            markersize,
+        )

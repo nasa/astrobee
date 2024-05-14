@@ -30,8 +30,9 @@ import pandas as pd
 
 import bag_sweeper
 import localization_common.utilities as lu
-import parameter_sweeper
 import parameter_sweep_results_plotter
+import parameter_sweeper
+
 
 # Save parameter sweep value ranges used during parameter sweep to a csv file
 def save_ranges(param_range_directory, output_directory):
@@ -74,7 +75,9 @@ def average_parameter_sweep_results(combined_results_csv_files, directory, prefi
     # Save job id mean in order, so nth row coressponds to nth job id in final mean dataframe
     for job_id in range(jobs):
         mean_dataframe = add_job_id_mean_row(job_id, dataframes, mean_dataframe, names)
-    mean_dataframe_file = os.path.join(directory, prefix + "_bag_and_param_sweep_stats.csv")
+    mean_dataframe_file = os.path.join(
+        directory, prefix + "_bag_and_param_sweep_stats.csv"
+    )
     mean_dataframe.to_csv(mean_dataframe_file, index=False)
 
 
@@ -85,9 +88,9 @@ def bag_and_parameter_sweep(offline_replay_params_list, output_dir):
     param_range_directory = None
     for offline_replay_params in offline_replay_params_list:
         # Save parameter sweep output in different directory for each bagfile, name directory using bagfile
-        bag_name_prefix = os.path.splitext(os.path.basename(offline_replay_params.bagfile))[
-            0
-        ]
+        bag_name_prefix = os.path.splitext(
+            os.path.basename(offline_replay_params.bagfile)
+        )[0]
         bag_output_dir = os.path.join(output_dir, bag_name_prefix)
         param_range_directory_for_bag = parameter_sweeper.make_values_and_parameter_sweep(
             bag_output_dir,
@@ -102,20 +105,28 @@ def bag_and_parameter_sweep(offline_replay_params_list, output_dir):
         if not param_range_directory:
             param_range_directory = param_range_directory_for_bag
         loc_combined_results_csv_files.append(
-            os.path.join(bag_output_dir, "loc_param_sweep_combined_results.csv"))
+            os.path.join(bag_output_dir, "loc_param_sweep_combined_results.csv")
+        )
         vio_combined_results_csv_files.append(
-            os.path.join(bag_output_dir, "vio_param_sweep_combined_results.csv"))
+            os.path.join(bag_output_dir, "vio_param_sweep_combined_results.csv")
+        )
     average_parameter_sweep_results(loc_combined_results_csv_files, output_dir, "loc")
     average_parameter_sweep_results(vio_combined_results_csv_files, output_dir, "vio")
     save_ranges(param_range_directory, output_dir)
 
+
 def create_results_plots(output_dir, prefix):
-    combined_results_file = os.path.join(output_dir, prefix + "_bag_and_param_sweep_stats.csv")
+    combined_results_file = os.path.join(
+        output_dir, prefix + "_bag_and_param_sweep_stats.csv"
+    )
     value_combos_file = os.path.join(output_dir, "all_value_combos.csv")
-    results_pdf_file = os.path.join(output_dir, prefix + "_bag_and_param_sweep_results.pdf")
+    results_pdf_file = os.path.join(
+        output_dir, prefix + "_bag_and_param_sweep_results.pdf"
+    )
     parameter_sweep_results_plotter.create_plots(
         results_pdf_file, combined_results_file, value_combos_file
     )
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -125,7 +136,12 @@ if __name__ == "__main__":
         "config_file",
         help="Config file containing information for bag sweep.  See bag_sweep.py script for more details.",
     )
-    parser.add_argument("-o", "--output-dir", default=None, help="Full path to output directory where files will be saved. If not specified, timestamped directory will be created in current path.")
+    parser.add_argument(
+        "-o",
+        "--output-dir",
+        default=None,
+        help="Full path to output directory where files will be saved. If not specified, timestamped directory will be created in current path.",
+    )
     args = parser.parse_args()
     if not os.path.isfile(args.config_file):
         print(("Config file " + args.config_file + " does not exist."))
