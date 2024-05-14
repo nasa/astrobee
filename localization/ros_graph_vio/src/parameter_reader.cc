@@ -31,12 +31,6 @@ void LoadImuBiasInitializerParams(config_reader::ConfigReader& config, ImuBiasIn
   LOAD_PARAM(params.num_bias_estimation_measurements, config, prefix + "ibi_");
 }
 
-void LoadRosGraphVIONodeletParams(config_reader::ConfigReader& config, RosGraphVIONodeletParams& params,
-                                  const std::string& prefix) {
-  LOAD_PARAM(params.max_imu_buffer_size, config, prefix + "rgv_");
-  LOAD_PARAM(params.max_feature_point_buffer_size, config, prefix + "rgv_");
-}
-
 void LoadRosGraphVIOWrapperParams(config_reader::ConfigReader& config, RosGraphVIOWrapperParams& params,
                                   const std::string& prefix) {
   LOAD_PARAM(params.add_sparse_map_measurements_for_initialization, config, prefix + "rgv_");

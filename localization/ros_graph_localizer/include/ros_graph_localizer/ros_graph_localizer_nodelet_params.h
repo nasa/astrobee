@@ -22,6 +22,8 @@ namespace ros_graph_localizer {
 struct RosGraphLocalizerNodeletParams {
   int max_graph_vio_state_buffer_size;
   int max_vl_matched_projections_buffer_size;
+  int max_imu_buffer_size;
+  int max_feature_point_buffer_size;
 };
 }  // namespace ros_graph_localizer
 

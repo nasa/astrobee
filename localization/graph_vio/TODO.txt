@@ -210,6 +210,79 @@
                             - address brian's comments
                             - others?
 
+                          - change vio params!
+                              - less measurements, less states (check latest code)
+                          - check bags!
+                              - is faster vio actually faster?
+                                  - compare first bags with afternoon bags
+                              - how does loc do when robot drifted?
+                                  - look at first bag, look at integrated velocity!
+                                        - add to confluence page!
+                                        - add integrated imu bias!!!
+                                            - is this also bad?
+                                        - test new params on this bag!
+                                        - test spaced out measurements on this bag!
+                                          - 0 is best? still kind of messy?
+                                            - test with more measurements!
+                                                - not necessarily better...
+                                            - test with marginals!
+                                              - fails!
+                                            - test with not removing undetected tracks!
+                                              - fails! why???
+                                                - need to remove them eventually! when??
+                                        - don't remove undetected feature tracks??
+                                        - check imu params!
+                                            - make bias tighter??
+                                              - check integrated biases!
+                                                - add plotting integrated biases in plotter!
+                                                  - need imu vals!!!
+                                                  - also add bias corrected and uncorrected imu vals!! 
+                                                  - add plotting uncorrected accelerations!!! 
+                                                    - check for imu topic 
+                                                    - convert and plot
+                                                  - how are accelerations???
+                                                      compare vio plot and loc plot, look at vio drift and corresponding corrected and uncorrected accelerations 
+                                                            - why are accelerations absorbed into biases?????? 
+                                                              - sweep on bias sigma again
+                                                                  - doesnt help....
+                                                              - accel sigma
+                                                                  - need to be very large! 0.1?
+                                                                  - larger the better?
+                                                              - int sigma
+                                                                - shrink to 3.6*e^-6?
+                                                                - decreases overshoot as its smaller....
+                                                                - what does this do in gtsam???? (AAA)
+                                                                    - what do other terms do???
+                                                                    - test chaning int sigma and accel sigma! 
+                                                              - omega
+                                                                - kind of mixed, larger is better??
+
+                                                  - add plotting when standstill is detected!!!
+                                                      - shouldn't these correct imu biases?????
+                              - how is integrated velocity??? how does it do when drift occurs vs. when it doesn't occur?
+                                - which bag had no drift?
+                                  - check overshoot? some afternoon bags? (after cleaned table, with low gain)
+                                  - check afternoon bags w/o low gain that had no drift!
+                                  - try to fix integrated velocity on morning bag that had a lot of drift!
+                                    - space measurements more so you have a longer history?
+
+                          - test velocity scaling using map estimate derivatives?????
+                            - simple alg, get total velocity diff between several points, scale velocity accordingly?
+                                - separate x and y axis, compare velocity diff as sanity check?
+                            - orrr, integate velocities, get relative diffs, scale accordingly??
+                            
+
+                          - fix ros pose extrapolator bug (CCCC)
+                                - test in sim
+                                - triggered by loc reset?
+                                - get notes from marina?
+    
+                          - fix docking bug! (DDDD)
+                              - change dock frame!
+                              - test in sim
+
+
+
                           - add ability to use loc map measurements when reset biases in graph vio! (CCC)
                               - add ros_graph_vio_wrapper_params! 
                                 - add graph loc config (loc factor adder params) to graph vio! (AAAA)

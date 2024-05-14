@@ -20,7 +20,6 @@
 
 #include <config_reader/config_reader.h>
 #include <ros_graph_vio/imu_bias_initializer_params.h>
-#include <ros_graph_vio/ros_graph_vio_nodelet_params.h>
 #include <ros_graph_vio/ros_graph_vio_wrapper_params.h>
 
 #include <string>
@@ -30,9 +29,6 @@ void LoadImuBiasInitializerParams(config_reader::ConfigReader& config, ImuBiasIn
                                   const std::string& prefix = "");
 
 void LoadRosGraphVIOWrapperParams(config_reader::ConfigReader& config, RosGraphVIOWrapperParams& params,
-                                  const std::string& prefix = "");
-
-void LoadRosGraphVIONodeletParams(config_reader::ConfigReader& config, RosGraphVIONodeletParams& params,
                                   const std::string& prefix = "");
 }  // namespace ros_graph_vio
 

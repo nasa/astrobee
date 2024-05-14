@@ -28,6 +28,7 @@
 #include <localization_common/timer.h>
 #include <ros_graph_localizer/ros_graph_localizer_nodelet_params.h>
 #include <ros_graph_localizer/ros_graph_localizer_wrapper.h>
+#include <ros_graph_vio/ros_graph_vio_wrapper.h>
 
 #include <ros/node_handle.h>
 #include <ros/publisher.h>
@@ -63,6 +64,12 @@ class RosGraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
   // Whether Localizer is enabled.
   bool localizer_enabled() const;
 
+  bool ResetBiasesAndLocalizer(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
+
+  bool ResetBiasesFromFileAndResetLocalizer(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
+
+  bool ResetBiasesFromFileAndResetLocalizer();
+
   // Wrapper for ResetAndEnableLocalizer triggered by service call.
   bool ResetLocalizer(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
 
@@ -82,7 +89,7 @@ class RosGraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
   void PublishReset() const;
 
   // Publishes Loc pose message and other graph messages if Localizer is enabled.
-  void PublishGraphMessages();
+  void PublishGraphLocalizerMessages();
 
   // Publishes heartbeat message.
   void PublishHeartbeat();
@@ -99,8 +106,14 @@ class RosGraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
   // Passes sparse map visual landmarks msg to ros_graph_localizer_wrapper if Localizer is enabled.
   void SparseMapVisualLandmarksCallback(const ff_msgs::VisualLandmarks::ConstPtr& visual_landmarks_msg);
 
-  // Passes graph vio state msg to ros_graph_localizer_wrapper if Localizer is enabled.
-  void GraphVIOStateCallback(const ff_msgs::GraphVIOState::ConstPtr& graph_vio_state_msg);
+  // Passes feature points msg to ros_graph_vio_wrapper if VIO is enabled.
+  void FeaturePointsCallback(const ff_msgs::Feature2dArray::ConstPtr& feature_array_msg);
+
+  // Passes IMU msg to ros_graph_vio_wrapper if VIO is enabled.
+  void ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_msg);
+
+  // Passes flight mode msg to ros_graph_vio_wrapper if VIO is enabled.
+  void FlightModeCallback(ff_msgs::FlightMode::ConstPtr const& mode);
 
   // Adds messages to ros_graph_localizer_wrapper from callback queue, updates
   // the ros_graph_localizer_wrapper, and pubishes messages.
@@ -108,10 +121,11 @@ class RosGraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
   void Run();
 
   ros_graph_localizer::RosGraphLocalizerWrapper ros_graph_localizer_wrapper_;
+  ros_graph_vio::RosGraphVIOWrapper ros_graph_vio_wrapper_;
   ros::NodeHandle private_nh_;
   ros::CallbackQueue private_queue_;
   bool localizer_enabled_ = true;
-  ros::Subscriber graph_vio_sub_, sparse_map_vl_sub_;
+  ros::Subscriber sparse_map_vl_sub_;
   ros::Publisher graph_loc_pub_, reset_pub_, heartbeat_pub_;
   tf2_ros::TransformBroadcaster transform_pub_;
   ros::ServiceServer bias_srv_, bias_from_file_srv_, reset_map_srv_, reset_srv_, input_mode_srv_;
@@ -123,6 +137,10 @@ class RosGraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
   ros::Time last_heartbeat_time_;
   ros::Time last_tf_body_time_;
   ros::Time last_tf_dock_time_;
+
+  // VIO
+  ros::Publisher graph_vio_state_pub_, graph_vio_pub_;
+  ros::Subscriber imu_sub_, fp_sub_, flight_mode_sub_;
 };
 }  // namespace ros_graph_localizer
 
