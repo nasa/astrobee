@@ -18,8 +18,6 @@
 #ifndef LOCALIZATION_ANALYSIS_FEATURE_TRACK_IMAGE_ADDER_H_
 #define LOCALIZATION_ANALYSIS_FEATURE_TRACK_IMAGE_ADDER_H_
 
-
-
 #include <camera/camera_params.h>
 #include <factor_adders/vo_smart_projection_factor_adder.h>
 #include <vision_common/spaced_feature_tracker.h>

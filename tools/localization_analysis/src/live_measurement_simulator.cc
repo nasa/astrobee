@@ -106,8 +106,8 @@ bool LiveMeasurementSimulator::ProcessMessage() {
   const auto& msg = **view_it_;
   current_time_ = lc::TimeFromRosTime(msg.getTime());
   if (string_ends_with(msg.getTopic(), TOPIC_MOBILITY_FLIGHT_MODE)) {
-      const ff_msgs::FlightModeConstPtr flight_mode = msg.instantiate<ff_msgs::FlightMode>();
-      flight_mode_buffer_.BufferMessage(*flight_mode);
+    const ff_msgs::FlightModeConstPtr flight_mode = msg.instantiate<ff_msgs::FlightMode>();
+    flight_mode_buffer_.BufferMessage(*flight_mode);
   } else if (string_ends_with(msg.getTopic(), TOPIC_HARDWARE_IMU)) {
     sensor_msgs::ImuConstPtr imu_msg = msg.instantiate<sensor_msgs::Imu>();
     imu_buffer_.BufferMessage(*imu_msg);

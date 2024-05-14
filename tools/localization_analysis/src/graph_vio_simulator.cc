@@ -74,8 +74,6 @@ bool GraphVIOSimulator::AddMeasurementsAndUpdateIfReady(const lc::Time& current_
   }
   vl_msg_buffer_.clear();
 
-
-
   Update();
   last_update_time_ = current_time;
   return true;

@@ -274,6 +274,7 @@
 
                           - fix ros pose extrapolator bug (CCCC)
                                 - test in sim
+                                - fix repeat pose tf timestamp!
                                 - triggered by loc reset?
                                 - get notes from marina?
     

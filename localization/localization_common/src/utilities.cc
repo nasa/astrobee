@@ -294,9 +294,9 @@ PoseWithCovariance Interpolate(const PoseWithCovariance& lower_bound_pose, const
                                const double alpha) {
   const Eigen::Isometry3d interpolated_pose = Interpolate(lower_bound_pose.pose, upper_bound_pose.pose, alpha);
   // TODO(rsoussan): Implement this properly
-  const PoseCovariance&  interpolated_covariance =
+  const PoseCovariance& interpolated_covariance =
     alpha > 0.5 ? upper_bound_pose.covariance : lower_bound_pose.covariance;
-  const auto&  correlation_covariances =
+  const auto& correlation_covariances =
     alpha > 0.5 ? upper_bound_pose.correlation_covariances : lower_bound_pose.correlation_covariances;
 
   return PoseWithCovariance(interpolated_pose, interpolated_covariance, correlation_covariances);

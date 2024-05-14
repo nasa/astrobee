@@ -142,18 +142,18 @@ void RosGraphLocalizerWrapper::ARVisualLandmarksCallback(const ff_msgs::VisualLa
       }
 
       const auto latest_imu_time = imu_integrator_->Latest()->timestamp;
-    const auto imu_extrapolation_time = dock_time > latest_imu_time ? latest_imu_time : dock_time;
-    const auto imu_extrapolated_latest_vio_state =
-      imu_integrator_->Extrapolate(*latest_vio_state_, imu_extrapolation_time);
-    const gtsam::Pose3& odom_T_imu_extrapolated_vio_state = imu_extrapolated_latest_vio_state->pose();
-    const gtsam::Pose3& odom_T_latest_vio_body = latest_vio_state_->pose();
-    const gtsam::Pose3 latest_vio_body_T_imu_extrapolated_body =
-      odom_T_latest_vio_body.inverse() * odom_T_imu_extrapolated_vio_state;
-    latest_graph_body_T_dock_body = latest_graph_body_T_dock_body * latest_vio_body_T_imu_extrapolated_body;
+      const auto imu_extrapolation_time = dock_time > latest_imu_time ? latest_imu_time : dock_time;
+      const auto imu_extrapolated_latest_vio_state =
+        imu_integrator_->Extrapolate(*latest_vio_state_, imu_extrapolation_time);
+      const gtsam::Pose3& odom_T_imu_extrapolated_vio_state = imu_extrapolated_latest_vio_state->pose();
+      const gtsam::Pose3& odom_T_latest_vio_body = latest_vio_state_->pose();
+      const gtsam::Pose3 latest_vio_body_T_imu_extrapolated_body =
+        odom_T_latest_vio_body.inverse() * odom_T_imu_extrapolated_vio_state;
+      latest_graph_body_T_dock_body = latest_graph_body_T_dock_body * latest_vio_body_T_imu_extrapolated_body;
     }
-      const auto world_T_body = *world_T_latest_graph_body *latest_graph_body_T_dock_body;
-  const auto dock_T_body = lc::PoseFromMsgWithExtrinsics(
-      visual_landmarks_msg.pose, params_.ar_tag_loc_factor_adder.body_T_cam.inverse());
+    const auto world_T_body = *world_T_latest_graph_body * latest_graph_body_T_dock_body;
+    const auto dock_T_body =
+      lc::PoseFromMsgWithExtrinsics(visual_landmarks_msg.pose, params_.ar_tag_loc_factor_adder.body_T_cam.inverse());
     world_T_dock_ = world_T_body * dock_T_body.inverse();
   }
   if (Initialized()) {

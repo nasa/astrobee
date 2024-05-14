@@ -40,7 +40,6 @@ class GraphLocalizerSimulator : public ros_graph_localizer::RosGraphLocalizerWra
 
   void BufferFlightModeMsg(const ff_msgs::FlightMode& flight_mode_msg);
 
-
   void BufferGraphVIOStateMsg(const ff_msgs::GraphVIOState& graph_vio_state_msg);
 
   void BufferVLVisualLandmarksMsg(const ff_msgs::VisualLandmarks& visual_landmarks_msg);

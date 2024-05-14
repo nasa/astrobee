@@ -93,15 +93,14 @@ class GraphVIO : public sliding_window_graph_optimizer::SlidingWindowGraphOptimi
   bool standstill_;
 
   // Factor Adders
-  std::shared_ptr<factor_adders::LocFactorAdder<node_adders::CombinedNavStateNodeAdder>>
-    sparse_map_loc_factor_adder_;
+  std::shared_ptr<factor_adders::LocFactorAdder<node_adders::CombinedNavStateNodeAdder>> sparse_map_loc_factor_adder_;
   std::shared_ptr<factor_adders::VoSmartProjectionFactorAdder<node_adders::CombinedNavStateNodeAdder>>
     vo_smart_projection_factor_adder_;
   std::shared_ptr<factor_adders::StandstillFactorAdder<node_adders::CombinedNavStateNodeAdder>>
     standstill_factor_adder_;
 
   // Node Adders
-//  std::shared_ptr<node_adders::CombinedNavStateNodeAdder> combined_nav_state_node_adder_;
+  //  std::shared_ptr<node_adders::CombinedNavStateNodeAdder> combined_nav_state_node_adder_;
 };
 }  // namespace graph_vio
 

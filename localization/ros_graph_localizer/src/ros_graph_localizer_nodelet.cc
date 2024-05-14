@@ -58,26 +58,25 @@ void RosGraphLocalizerNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
   heartbeat_pub_ = nh->advertise<ff_msgs::Heartbeat>(TOPIC_HEARTBEAT, 5, true);
   imu_sub_ = private_nh_.subscribe(TOPIC_HARDWARE_IMU, params_.max_imu_buffer_size,
                                    &RosGraphLocalizerNodelet::ImuCallback, this, ros::TransportHints().tcpNoDelay());
-  fp_sub_ = private_nh_.subscribe(TOPIC_LOCALIZATION_OF_FEATURES, params_.max_feature_point_buffer_size,
-                                  &RosGraphLocalizerNodelet::FeaturePointsCallback, this,
-                                  ros::TransportHints().tcpNoDelay());
+  fp_sub_ =
+    private_nh_.subscribe(TOPIC_LOCALIZATION_OF_FEATURES, params_.max_feature_point_buffer_size,
+                          &RosGraphLocalizerNodelet::FeaturePointsCallback, this, ros::TransportHints().tcpNoDelay());
   flight_mode_sub_ =
     private_nh_.subscribe(TOPIC_MOBILITY_FLIGHT_MODE, 10, &RosGraphLocalizerNodelet::FlightModeCallback, this);
 
   sparse_map_vl_sub_ = private_nh_.subscribe(
     TOPIC_LOCALIZATION_ML_FEATURES, params_.max_vl_matched_projections_buffer_size,
     &RosGraphLocalizerNodelet::SparseMapVisualLandmarksCallback, this, ros::TransportHints().tcpNoDelay());
-  bias_srv_ = private_nh_.advertiseService(SERVICE_GNC_EKF_INIT_BIAS,
-                                           &RosGraphLocalizerNodelet::ResetBiasesAndLocalizer, this);
+  bias_srv_ =
+    private_nh_.advertiseService(SERVICE_GNC_EKF_INIT_BIAS, &RosGraphLocalizerNodelet::ResetBiasesAndLocalizer, this);
   bias_from_file_srv_ = private_nh_.advertiseService(
     SERVICE_GNC_EKF_INIT_BIAS_FROM_FILE, &RosGraphLocalizerNodelet::ResetBiasesFromFileAndResetLocalizer, this);
   reset_map_srv_ =
     private_nh_.advertiseService(SERVICE_LOCALIZATION_RESET_MAP_LOC, &RosGraphLocalizerNodelet::ResetMap, this);
   // TODO(rsoussan): Reset biases from file here?
-  reset_srv_ = private_nh_.advertiseService(
-    SERVICE_GNC_EKF_RESET, &RosGraphLocalizerNodelet::ResetBiasesFromFileAndResetLocalizer, this);
-  input_mode_srv_ =
-    private_nh_.advertiseService(SERVICE_GNC_EKF_SET_INPUT, &RosGraphLocalizerNodelet::SetMode, this);
+  reset_srv_ = private_nh_.advertiseService(SERVICE_GNC_EKF_RESET,
+                                            &RosGraphLocalizerNodelet::ResetBiasesFromFileAndResetLocalizer, this);
+  input_mode_srv_ = private_nh_.advertiseService(SERVICE_GNC_EKF_SET_INPUT, &RosGraphLocalizerNodelet::SetMode, this);
 }
 
 bool RosGraphLocalizerNodelet::SetMode(ff_msgs::SetEkfInput::Request& req, ff_msgs::SetEkfInput::Response& res) {
@@ -108,8 +107,7 @@ void RosGraphLocalizerNodelet::EnableLocalizer() { localizer_enabled_ = true; }
 
 bool RosGraphLocalizerNodelet::localizer_enabled() const { return localizer_enabled_; }
 
-bool RosGraphLocalizerNodelet::ResetBiasesAndLocalizer(std_srvs::Empty::Request& req,
-                                                             std_srvs::Empty::Response& res) {
+bool RosGraphLocalizerNodelet::ResetBiasesAndLocalizer(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res) {
   DisableLocalizer();
   ros_graph_vio_wrapper_.ResetBiasesAndVIO();
   ros_graph_localizer_wrapper_.ResetLocalizer();
@@ -119,7 +117,7 @@ bool RosGraphLocalizerNodelet::ResetBiasesAndLocalizer(std_srvs::Empty::Request&
 }
 
 bool RosGraphLocalizerNodelet::ResetBiasesFromFileAndResetLocalizer(std_srvs::Empty::Request& req,
-                                                                          std_srvs::Empty::Response& res) {
+                                                                    std_srvs::Empty::Response& res) {
   return ResetBiasesFromFileAndResetLocalizer();
 }
 

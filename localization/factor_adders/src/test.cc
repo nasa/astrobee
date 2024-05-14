@@ -16,6 +16,4 @@
  * under the License.
  */
 
-
-
 void testtt() { int a = 5; }

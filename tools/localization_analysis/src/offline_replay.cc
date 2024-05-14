@@ -114,12 +114,12 @@ void OfflineReplay::Run() {
     }*/
     const auto of_msg = live_measurement_simulator_->GetOFMessage(current_time);
     if (of_msg) {
-        const lc::Time timestamp = lc::TimeFromHeader(of_msg->header);
+      const lc::Time timestamp = lc::TimeFromHeader(of_msg->header);
       graph_vio_simulator_->BufferOpticalFlowMsg(*of_msg);
     }
     const auto vl_msg = live_measurement_simulator_->GetVLMessage(current_time);
     if (vl_msg) {
-        const lc::Time timestamp = lc::TimeFromHeader(vl_msg->header);
+      const lc::Time timestamp = lc::TimeFromHeader(vl_msg->header);
       graph_vio_simulator_->BufferVLVisualLandmarksMsg(*vl_msg);
       graph_localizer_simulator_->BufferVLVisualLandmarksMsg(*vl_msg);
       if (static_cast<int>(vl_msg->landmarks.size()) >= params_.sparse_mapping_min_num_landmarks) {
@@ -138,14 +138,14 @@ void OfflineReplay::Run() {
 
     const bool updated_vio_graph = graph_vio_simulator_->AddMeasurementsAndUpdateIfReady(current_time);
     if (updated_vio_graph) {
-  if (graph_vio_simulator_->Initialized() && graph_localizer_simulator_->Initialized()) {
-    graph_localizer_simulator_->graph_localizer_->pose_node_adder_->node_adder_model_.nodes_ =
-      graph_vio_simulator_->graph_vio()->combined_nav_state_node_adder_->nodes_.get();
-    if (graph_vio_simulator_->graph_vio()->marginals()) {
-      graph_localizer_simulator_->graph_localizer_->pose_node_adder_->node_adder_model_.marginals_ =
-        *(graph_vio_simulator_->graph_vio()->marginals());
-  }
-  }
+      if (graph_vio_simulator_->Initialized() && graph_localizer_simulator_->Initialized()) {
+        graph_localizer_simulator_->graph_localizer_->pose_node_adder_->node_adder_model_.nodes_ =
+          graph_vio_simulator_->graph_vio()->combined_nav_state_node_adder_->nodes_.get();
+        if (graph_vio_simulator_->graph_vio()->marginals()) {
+          graph_localizer_simulator_->graph_localizer_->pose_node_adder_->node_adder_model_.marginals_ =
+            *(graph_vio_simulator_->graph_vio()->marginals());
+        }
+      }
       const auto vio_msg = graph_vio_simulator_->GraphVIOStateMsg();
       if (!vio_msg) {
         LogWarningEveryN(200, "Run: Failed to get vio msg.");
@@ -154,21 +154,22 @@ void OfflineReplay::Run() {
         // TODO(rsoussan): Pass this to live measurement simulator? allow for simulated delay?
         graph_localizer_simulator_->BufferGraphVIOStateMsg(*vio_msg);
         SaveMsg(*vio_msg, TOPIC_GRAPH_VIO_STATE, results_bag_);
-      if (params_.save_optical_flow_images) {
-        const auto& graph_vio = graph_vio_simulator_->graph_vio();
-        // Use spaced feature tracks so points only drawn when they are included in the localizer
-        const auto latest_time = graph_vio->feature_tracker().SpacedFeatureTracks().crbegin()->crbegin()->timestamp;
-        // const auto latest_time = graph_vio->feature_tracker().feature_tracks().crbegin()->second.Latest()->timestamp;
-        const auto img_msg = live_measurement_simulator_->GetImageMessage(latest_time);
-        if (img_msg && graph_vio) {
-          const auto smart_factors = graph_vio->Factors<factor_adders::RobustSmartFactor>();
-          const auto feature_track_image_msg =
-            CreateFeatureTrackImage(*img_msg, graph_vio->feature_tracker(), *params_.nav_cam_params, smart_factors,
-                                    ((const graph_vio::GraphVIO*)graph_vio.get())->gtsam_values());
-          if (!feature_track_image_msg) return;
-          SaveMsg(**feature_track_image_msg, kFeatureTracksImageTopic_, results_bag_);
+        if (params_.save_optical_flow_images) {
+          const auto& graph_vio = graph_vio_simulator_->graph_vio();
+          // Use spaced feature tracks so points only drawn when they are included in the localizer
+          const auto latest_time = graph_vio->feature_tracker().SpacedFeatureTracks().crbegin()->crbegin()->timestamp;
+          // const auto latest_time =
+          // graph_vio->feature_tracker().feature_tracks().crbegin()->second.Latest()->timestamp;
+          const auto img_msg = live_measurement_simulator_->GetImageMessage(latest_time);
+          if (img_msg && graph_vio) {
+            const auto smart_factors = graph_vio->Factors<factor_adders::RobustSmartFactor>();
+            const auto feature_track_image_msg =
+              CreateFeatureTrackImage(*img_msg, graph_vio->feature_tracker(), *params_.nav_cam_params, smart_factors,
+                                      ((const graph_vio::GraphVIO*)graph_vio.get())->gtsam_values());
+            if (!feature_track_image_msg) return;
+            SaveMsg(**feature_track_image_msg, kFeatureTracksImageTopic_, results_bag_);
+          }
         }
-      }
       }
     }
     const bool updated_localizer_graph = graph_localizer_simulator_->AddMeasurementsAndUpdateIfReady(current_time);
@@ -179,13 +180,14 @@ void OfflineReplay::Run() {
       if (!localization_msg) {
         LogWarningEveryN(200, "Run: Failed to get localization msg.");
       } else {
-         pose_extrapolator_wrapper_.LocalizationStateCallback(*localization_msg);
+        pose_extrapolator_wrapper_.LocalizationStateCallback(*localization_msg);
         SaveMsg(*localization_msg, TOPIC_GRAPH_LOC_STATE, results_bag_);
-     }
+      }
       // Save ar tag pose after updating graph so latest world_T_dock is estimated.
       if (latest_ar_msg_) {
         if (static_cast<int>(ar_msg->landmarks.size()) >= params_.ar_min_num_landmarks) {
-          const gtsam::Pose3 world_T_body = (*graph_localizer_simulator_->WorldTDock())*
+          const gtsam::Pose3 world_T_body =
+            (*graph_localizer_simulator_->WorldTDock()) *
             lc::PoseFromMsgWithExtrinsics(ar_msg->pose, params_.body_T_dock_cam.inverse());
           const lc::Time timestamp = lc::TimeFromHeader(ar_msg->header);
           SaveMsg(PoseMsg(world_T_body, timestamp), TOPIC_AR_TAG_POSE, results_bag_);

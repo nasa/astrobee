@@ -85,7 +85,6 @@ boost::optional<gtsam::Matrix> GraphOptimizer::Covariance(const gtsam::Key& key_
   return optimizer_->Covariance(key_a, key_b);
 }
 
-
 const gtsam::NonlinearFactorGraph& GraphOptimizer::factors() const { return factors_; }
 
 gtsam::NonlinearFactorGraph& GraphOptimizer::factors() { return factors_; }

@@ -52,7 +52,7 @@ PoseWithCovariance PoseWithCovarianceInterpolater::Relative(const PoseWithCovari
   std::cout << "A covariance: " << std::endl << a.covariance.matrix() << std::endl;
   std::cout << "B covariance: " << std::endl << b.covariance.matrix() << std::endl;*/
   /*return PoseWithCovariance(relative_pose, relative_covariance); */
-// See https://gtsam.org/2021/02/23/uncertainties-part3.html
+  // See https://gtsam.org/2021/02/23/uncertainties-part3.html
   // Adjoints
   // Uses convention w_T_a and w_T_b for poses, s.t. adj_w_a is the adjoint for the
   // w_T_a pose.

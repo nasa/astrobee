@@ -90,8 +90,7 @@ void RosGraphVIOWrapper::SparseMapVisualLandmarksCallback(const ff_msgs::VisualL
     feature_point_count_ = 0;
   } else if (Initialized() && wrapper_params_.add_sparse_map_measurements_for_initialization &&
              feature_point_count_ < wrapper_params_.feature_point_count_for_sm_initialization) {
-    graph_vio_->AddSparseMapMatchedProjectionsMeasurement(
-      lm::MakeMatchedProjectionsMeasurement(visual_landmarks_msg));
+    graph_vio_->AddSparseMapMatchedProjectionsMeasurement(lm::MakeMatchedProjectionsMeasurement(visual_landmarks_msg));
   }
 }
 
@@ -139,7 +138,7 @@ boost::optional<ff_msgs::GraphVIOState> RosGraphVIOWrapper::GraphVIOStateMsg() {
 
   // Avoid sending repeat msgs
   if (times.empty() || (latest_msg_time_ && times.back() == *latest_msg_time_)) {
-        LogWarningEveryN(2000, "No new graph VIO times added.");
+    LogWarningEveryN(2000, "No new graph VIO times added.");
     return boost::none;
   }
   const lc::Time latest_time = times.back();
@@ -151,17 +150,17 @@ boost::optional<ff_msgs::GraphVIOState> RosGraphVIOWrapper::GraphVIOStateMsg() {
   if (!combined_nav_state || keys.empty() || keys.size() != 3) {
     LogError("CombinedNavStateArrayMsg: Failed to get combined nav state and keys.");
     return boost::none;
-    }
-    const auto pose_covariance = graph_vio_->Covariance(keys[0]);
-    const auto velocity_covariance = graph_vio_->Covariance(keys[1]);
-    const auto imu_bias_covariance = graph_vio_->Covariance(keys[2]);
-    if (!pose_covariance || !velocity_covariance || !imu_bias_covariance) {
-      LogError("CombinedNavStateArrayMsg: Failed to get combined nav state covariances.");
-      return boost::none;
-    }
+  }
+  const auto pose_covariance = graph_vio_->Covariance(keys[0]);
+  const auto velocity_covariance = graph_vio_->Covariance(keys[1]);
+  const auto imu_bias_covariance = graph_vio_->Covariance(keys[2]);
+  if (!pose_covariance || !velocity_covariance || !imu_bias_covariance) {
+    LogError("CombinedNavStateArrayMsg: Failed to get combined nav state covariances.");
+    return boost::none;
+  }
 
-    msg.combined_nav_states.combined_nav_states.push_back(lc::CombinedNavStateToMsg(
-      *combined_nav_state, *pose_covariance, *velocity_covariance, *imu_bias_covariance));
+  msg.combined_nav_states.combined_nav_states.push_back(
+    lc::CombinedNavStateToMsg(*combined_nav_state, *pose_covariance, *velocity_covariance, *imu_bias_covariance));
 
   lc::TimeToHeader(*(nodes.LatestTimestamp()), msg.header);
   msg.child_frame_id = "odom";
@@ -174,7 +173,5 @@ boost::optional<ff_msgs::GraphVIOState> RosGraphVIOWrapper::GraphVIOStateMsg() {
   return msg;
 }
 
-const std::unique_ptr<graph_vio::GraphVIO>& RosGraphVIOWrapper::graph_vio() {
-  return graph_vio_;
-}
+const std::unique_ptr<graph_vio::GraphVIO>& RosGraphVIOWrapper::graph_vio() { return graph_vio_; }
 }  // namespace ros_graph_vio

@@ -42,25 +42,25 @@ gtsam::KeyVector PoseNodeAdderModel::AddNode(const lc::Time timestamp, NodesType
 
 boost::optional<std::pair<gtsam::Pose3, gtsam::SharedNoiseModel>> PoseNodeAdderModel::RelativeNodeAndNoise(
   const lc::Time timestamp_a, const lc::Time timestamp_b) const {
-    if (!nodes_) {
-      LogError("RelativeNodeAndNoise: Nodes not available.");
-      return boost::none;
-    }
-    const auto closest_t_a = nodes_->ClosestTimestamp(timestamp_a);
-    const auto closest_t_b = nodes_->ClosestTimestamp(timestamp_b);
-    if (!closest_t_a || !closest_t_b) {
-      LogError("RelativeNodeAndNoise: Failed to get closest timestamps.");
-      return boost::none;
-    }
+  if (!nodes_) {
+    LogError("RelativeNodeAndNoise: Nodes not available.");
+    return boost::none;
+  }
+  const auto closest_t_a = nodes_->ClosestTimestamp(timestamp_a);
+  const auto closest_t_b = nodes_->ClosestTimestamp(timestamp_b);
+  if (!closest_t_a || !closest_t_b) {
+    LogError("RelativeNodeAndNoise: Failed to get closest timestamps.");
+    return boost::none;
+  }
 
-    // TODO(rsoussan): Add fallback covariance/relative covariance if gap too large
-    if (std::abs(*closest_t_a - timestamp_a) > 3.0 || std::abs(*closest_t_b - timestamp_b) > 3.0) {
-        LogWarning("RelativeNodeAndNoise: Timestamps far from closest timestamps available.");
-    }
+  // TODO(rsoussan): Add fallback covariance/relative covariance if gap too large
+  if (std::abs(*closest_t_a - timestamp_a) > 3.0 || std::abs(*closest_t_b - timestamp_b) > 3.0) {
+    LogWarning("RelativeNodeAndNoise: Timestamps far from closest timestamps available.");
+  }
 
-    const auto keys_a = nodes_->Keys(*closest_t_a);
-    const auto keys_b = nodes_->Keys(*closest_t_b);
-    const auto covariance_a_b = marginals_.jointMarginalCovariance({keys_a[0], keys_b[0]}).fullMatrix();
+  const auto keys_a = nodes_->Keys(*closest_t_a);
+  const auto keys_b = nodes_->Keys(*closest_t_b);
+  const auto covariance_a_b = marginals_.jointMarginalCovariance({keys_a[0], keys_b[0]}).fullMatrix();
   pose_interpolater_.covariance_a_b = covariance_a_b;
   const auto relative_pose = pose_interpolater_.Relative(timestamp_a, timestamp_b);
   if (!relative_pose) {

@@ -32,7 +32,7 @@ namespace localization_analysis {
 class ArTagPoseAdder {
  public:
   ArTagPoseAdder(const std::string& input_bag_name, const std::string& output_bag_name,
-                         const gtsam::Pose3& dock_cam_T_body);
+                 const gtsam::Pose3& dock_cam_T_body);
   void AddPoses();
 
  private:

@@ -23,14 +23,14 @@
 namespace localization_analysis {
 namespace vc = vision_common;
 
-void FeatureTrackImage(const vc::SpacedFeatureTracker& feature_tracker,
-                       const camera::CameraParameters& camera_params, cv::Mat& feature_track_image) {
+void FeatureTrackImage(const vc::SpacedFeatureTracker& feature_tracker, const camera::CameraParameters& camera_params,
+                       cv::Mat& feature_track_image) {
   const auto& feature_tracks = feature_tracker.feature_tracks();
   for (const auto& feature_track_pair : feature_tracks) {
     const auto& feature_track = feature_track_pair.second;
     // Color using unique color for id
     const int id = feature_track.set().crbegin()->second.feature_track_id;
-    const cv::Scalar color = cv::Scalar((id*123) % 255, (id * 456) % 255, (id * 789) %  255);
+    const cv::Scalar color = cv::Scalar((id * 123) % 255, (id * 456) % 255, (id * 789) % 255);
 
     // Draw track history
     if (feature_track.size() > 1) {
@@ -39,8 +39,7 @@ void FeatureTrackImage(const vc::SpacedFeatureTracker& feature_tracker,
         const auto& point2 = std::next(point_it)->second.image_point;
         const auto distorted_previous_point = Distort(point1, camera_params);
         const auto distorted_current_point = Distort(point2, camera_params);
-        cv::circle(feature_track_image, distorted_current_point, 2, cv::Scalar(0, 255, 255), -1,
-                   8);
+        cv::circle(feature_track_image, distorted_current_point, 2, cv::Scalar(0, 255, 255), -1, 8);
         cv::line(feature_track_image, distorted_current_point, distorted_previous_point, color, 2, 8, 0);
       }
     } else {
