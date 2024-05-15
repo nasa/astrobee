@@ -37,7 +37,7 @@ To turn the back flashlight off, run:
 
 The second way is to send a set flashlight brightness command to the executive. You can either do this by using the teleop command tab in GDS or publishing the command to the /command topic from the command line. To turn the front flashlight on, run:
 
-    rostopic pub --once /command ff_msgs/CommandStamped '{cmd_name: "setFlashlightBrightness", subsys_name: "Astrobee", args: [{data_type: 5, s: Front}, {data_type: 2, f: 100}]}'
+    rostopic pub --once /command ff_msgs/CommandStamped '{cmd_name: "setFlashlightBrightness", subsys_name: "Astrobee", args: [{data_type: 5, s: Front}, {data_type: 2, f: 1}]}'
 
 To turn the front flashlight off, run:
 
@@ -45,7 +45,7 @@ To turn the front flashlight off, run:
 
 To turn the back flashlight on, run:
 
-    rostopic pub --once /command ff_msgs/CommandStamped '{cmd_name: "setFlashlightBrightness", subsys_name: "Astrobee", args: [{data_type: 5, s: Back}, {data_type: 2, f: 100}]}'
+    rostopic pub --once /command ff_msgs/CommandStamped '{cmd_name: "setFlashlightBrightness", subsys_name: "Astrobee", args: [{data_type: 5, s: Back}, {data_type: 2, f: 1}]}'
 
 To turn the back flashlight off, run:
 
