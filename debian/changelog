@@ -1,3 +1,11 @@
+astrobee (0.17.3) testing; urgency=medium
+
+  * Comms bridge added rate feature
+  * Bug fixes
+  * User feedback improvements
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov> Thu, 09 May 2024 11:50:34 -0700
+
 astrobee (0.17.2) UNRELEASED; urgency=medium
 
   * Adding Generic comms bridge
