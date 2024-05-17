@@ -21,7 +21,8 @@ import time
 
 import numpy as np
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
+from PyQt5 import QtCore
+from PyQt5.QtWidgets import QGraphicsPathItem
 
 DISPLAY_TIME = 10
 
@@ -72,10 +73,10 @@ class GraphPlot(VisualizerPlot):
         self.setLimits(xMin=max(0, t - DISPLAY_TIME), xMax=t)
 
 
-class PathItem(pg.QtGui.QGraphicsPathItem):
+class PathItem(QGraphicsPathItem):
     def __init__(self, pen):
         self.path = pg.arrayToQPath(np.zeros(0), np.zeros(0), "all")
-        pg.QtGui.QGraphicsPathItem.__init__(self, self.path)
+        QGraphicsPathItem.__init__(self, self.path)
         self.setPen(pen)
         self.last_time = None
 

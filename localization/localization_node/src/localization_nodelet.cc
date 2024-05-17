@@ -120,6 +120,8 @@ void LocalizationNodelet::Initialize(ros::NodeHandle* nh) {
 
   enable_srv_ = nh->advertiseService(SERVICE_LOCALIZATION_ML_ENABLE, &LocalizationNodelet::EnableService, this);
   reset_map_srv_ = nh->advertiseService(SERVICE_LOCALIZATION_RESET_MAP, &LocalizationNodelet::ResetMapService, this);
+  reset_map_loc_client_ = nh->serviceClient<ff_msgs::ResetMap>(
+                                                SERVICE_LOCALIZATION_RESET_MAP_LOC);
 }
 
 void LocalizationNodelet::ReadParams(void) {
@@ -147,7 +149,14 @@ bool LocalizationNodelet::ResetMapService(ff_msgs::ResetMap::Request& req, ff_ms
     map_file = req.map_file;
   }
   LOG(INFO) << "Resetting map to " << map_file;
-  return ResetMap(map_file);
+
+  res.success = ResetMap(map_file);
+
+  ff_msgs::ResetMap map_srv;
+  if (!reset_map_loc_client_.call(map_srv)) {
+    res.success = false;
+  }
+  return true;
 }
 
 void LocalizationNodelet::ImageCallback(const sensor_msgs::ImageConstPtr& msg) {

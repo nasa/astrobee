@@ -61,6 +61,7 @@ class LocalizationNodelet : public ff_util::FreeFlyerNodelet {
   std::shared_ptr<image_transport::ImageTransport> it_;
   image_transport::Subscriber image_sub_;
   ros::ServiceServer enable_srv_, reset_map_srv_;
+  ros::ServiceClient reset_map_loc_client_;
   ros::Publisher registration_publisher_, landmark_publisher_,
     detected_features_publisher_, used_features_publisher_, all_features_publisher_;
   bool enabled_;

@@ -1,5 +1,11 @@
 # Releases
 
+# Release 0.17.3
+
+  * Comms bridge added rate feature
+  * Bug fixes
+  * User feedback improvements
+
 # Release 0.17.2
 
   * Adding Generic comms bridge

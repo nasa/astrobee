@@ -65,7 +65,7 @@ ArrayShape = Tuple[int, ...]  # nrows, ncols
 RgbImage = np.ndarray  # RGB image with array shape (H, W, 3), dtype=np.uint8.
 BayerImage = np.ndarray  # Raw Bayer image with array shape (H, W), dtype=np.uint8
 BayerImagePatch = BayerImage  # A really small BayerImage ;)
-ImageMask = np.ndarray  # An image with array shape (H, W), dtype=np.bool
+ImageMask = np.ndarray  # An image with array shape (H, W), dtype=bool
 Kernel = np.ndarray  # An NxN kernel with N odd
 MonoImage = np.ndarray  # Image with array shape (H, W), dtype=np.uint8
 FloatImage = np.ndarray  # Image with array shape (H, W), dtype=np.float64
@@ -197,12 +197,12 @@ def median_filter(
         assert out.dtype == np.uint8
 
     if compute_mask is None:
-        compute_mask = np.ones(im.shape, dtype=np.bool)
+        compute_mask = np.ones(im.shape, dtype=bool)
     else:
         assert compute_mask.shape == im.shape
 
     # edges - slower due to use of np.ma.median() to exclude out-of-bounds neighbors
-    edge_mask = np.zeros(im.shape, dtype=np.bool)
+    edge_mask = np.zeros(im.shape, dtype=bool)
     edge_mask[:2, :] = compute_mask[:2, :]
     edge_mask[-2:, :] = compute_mask[-2:, :]
     edge_mask[:, :2] = compute_mask[:, :2]
@@ -228,7 +228,7 @@ def median_filter(
         times.append(time.time())  # 6
 
     # middle - runs faster using np.median()
-    middle_mask = np.zeros(im.shape, dtype=np.bool)
+    middle_mask = np.zeros(im.shape, dtype=bool)
     middle_mask[2:-2, 2:-2] = compute_mask[2:-2, 2:-2]
     middle_y, middle_x = np.nonzero(middle_mask)
     y = y0[np.newaxis, middle_y, middle_x] + y_off[:, np.newaxis, np.newaxis]
@@ -801,7 +801,7 @@ class NeighborMeanCorrector(
 
     def _init_filter(self, bad_coords: CoordArray) -> None:
         "Initialize self.bad_pixels for interpolation."
-        bad_image = np.zeros(self.image_shape, dtype=np.bool)
+        bad_image = np.zeros(self.image_shape, dtype=bool)
         bad_image[tuple(bad_coords)] = True
         for y, x in zip(*bad_coords):
             kernel = get_bayer_neighbor_kernel(
