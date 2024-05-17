@@ -37,8 +37,7 @@ int main(int argc, char** argv) {
   desc.add_options()("help,h", "produce help message")(
     "bagfile", po::value<std::string>()->required(),
     "Input bagfile containing point cloud and image messages for a depth camera.")(
-    "config-path,c", po::value<std::string>()->required(), "Path to config directory.")(
-    "robot-config-file,r", po::value<std::string>(&robot_config_file)->default_value("config/robots/bumble.config"),
+    "robot-config-file,r", po::value<std::string>(&robot_config_file)->default_value("bumble.config"),
     "Robot config file")("world,w", po::value<std::string>(&world)->default_value("iss"), "World name")(
     "output-bagfile,o", po::value<std::string>(&output_bagfile)->default_value(""),
     "Output bagfile, defaults to input_bag + with_depth_odometry.bag")(
@@ -64,7 +63,6 @@ int main(int argc, char** argv) {
   }
 
   const std::string input_bag = vm["bagfile"].as<std::string>();
-  const std::string config_path = vm["config-path"].as<std::string>();
 
   // Only pass program name to free flyer so that boost command line options
   // are ignored when parsing gflags.
@@ -82,7 +80,7 @@ int main(int argc, char** argv) {
       boost::filesystem::path(input_bag_path.stem().string() + "_with_depth_odometry.bag");
     output_bagfile = output_bag_path.string();
   }
-  lc::SetEnvironmentConfigs(config_path, world, robot_config_file);
+  lc::SetEnvironmentConfigs(world, robot_config_file);
   config_reader::ConfigReader config;
   config.AddFile("geometry.config");
   if (!config.ReadFiles()) {

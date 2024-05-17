@@ -66,7 +66,7 @@ if (USE_ROS)
   # Declare C++ libraries
   add_library(${PROJECT_NAME}
     #src/bag_imu_filterer.cc
-    #src/depth_odometry_adder.cc
+    src/depth_odometry_adder.cc
     src/feature_track_image_adder.cc
     src/graph_localizer_simulator.cc
     src/graph_vio_simulator.cc
@@ -93,11 +93,11 @@ if (USE_ROS)
   #target_link_libraries(run_bag_imu_filterer
   #  ${PROJECT_NAME} gflags gtsam ${catkin_LIBRARIES})
 
-  ## Declare a C++ executable: run_bag_imu_filterer
-  #add_executable(run_depth_odometry_adder tools/run_depth_odometry_adder.cc)
-  #add_dependencies(run_depth_odometry_adder ${catkin_EXPORTED_TARGETS})
-  #target_link_libraries(run_depth_odometry_adder
-  #  ${PROJECT_NAME} ${catkin_LIBRARIES})
+  ## Declare a C++ executable: run_depth_odometry_adder
+  add_executable(run_depth_odometry_adder tools/run_depth_odometry_adder.cc)
+  add_dependencies(run_depth_odometry_adder ${catkin_EXPORTED_TARGETS})
+  target_link_libraries(run_depth_odometry_adder
+    ${PROJECT_NAME} ${catkin_LIBRARIES})
 
   ## Declare a C++ executable: run_offline_replay
   add_executable(run_offline_replay tools/run_offline_replay.cc)
