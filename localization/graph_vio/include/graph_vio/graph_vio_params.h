@@ -19,6 +19,7 @@
 #ifndef GRAPH_VIO_GRAPH_VIO_PARAMS_H_
 #define GRAPH_VIO_GRAPH_VIO_PARAMS_H_
 
+#include <factor_adders/relative_pose_factor_adder_params.h>
 #include <factor_adders/loc_factor_adder_params.h>
 #include <factor_adders/standstill_factor_adder_params.h>
 #include <factor_adders/vo_smart_projection_factor_adder_params.h>
@@ -33,6 +34,7 @@
 namespace graph_vio {
 struct GraphVIOParams {
   factor_adders::LocFactorAdderParams sparse_map_loc_factor_adder;
+  factor_adders::RelativePoseFactorAdderParams depth_odometry_relative_pose_factor_adder;
   factor_adders::StandstillFactorAdderParams standstill_factor_adder;
   factor_adders::VoSmartProjectionFactorAdderParams vo_smart_projection_factor_adder;
   node_adders::CombinedNavStateNodeAdder::Params combined_nav_state_node_adder;
@@ -45,6 +47,7 @@ struct GraphVIOParams {
   friend class boost::serialization::access;
   template <class Archive>
   void serialize(Archive& ar, const unsigned int file_version) {
+    ar& BOOST_SERIALIZATION_NVP(depth_odometry_relative_pose_factor_adder);
     ar& BOOST_SERIALIZATION_NVP(sparse_map_loc_factor_adder);
     ar& BOOST_SERIALIZATION_NVP(standstill_factor_adder);
     ar& BOOST_SERIALIZATION_NVP(vo_smart_projection_factor_adder);

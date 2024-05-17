@@ -56,6 +56,12 @@ void LoadLocFactorAdderParams(config_reader::ConfigReader& config, fa::LocFactor
     gtsam::noiseModel::Isotropic::Sigma(2, mc::LoadDouble(config, camera_name + "_cam_noise_stddev", prefix));
 }
 
+void LoadRelativePoseFactorAdderParams(config_reader::ConfigReader& config, fa::RelativePoseFactorAdderParams& params,
+                              const std::string& prefix) {
+  LoadFactorAdderParams(config, params, prefix);
+  LOAD_PARAM(params.covariance_scale, config, prefix);
+}
+
 void LoadStandstillFactorAdderParams(config_reader::ConfigReader& config, fa::StandstillFactorAdderParams& params,
                                      const std::string& prefix) {
   LoadFactorAdderParams(config, params, prefix);

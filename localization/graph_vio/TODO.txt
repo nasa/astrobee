@@ -274,11 +274,47 @@
 
                           - fix ros pose extrapolator bug (CCCC)
                                 - test in sim
-                                - fix repeat pose tf timestamp!
-                                - triggered by loc reset?
+                                  - why is simulator broken????
+                                    - need to fix imu biases! need to remove imu noise param!! 
+                                      - why is it still failing????
+                                        - save output, record, plot!! 
+                                          - look at loc, integrated velocity, integrated imu biases! 
+                                              - need to turn off imu filters!!! 
+                                                - test first with no standstill factors, does this help?? 
+                                                  - maybe helps a little but doesn't solve issue...
+                                                - change vio measureent spacing? add more factors? 
+                                                  - doesn't really help....
+                                                - test with no imu filters 
+                                                  - bug in imu correction??
+                                                    - why is imu integration off??? why are bias corrected imu measurements off???? 
+                                                      - (bias corrections come from centripital accel)
+                                                      - why is imu integration off????????? 
+                                                        - failure in in place rotation? turn smart factor fallback off? 
+                                                          - no difference
+                                                        - test on trajectory with no rotation?? 
+                                                          - caused by rotations :(
+                                                - test old vio only???? 
+                                        - test old loc in vio only mode? does this also fail? even with tightened bias params?
+                                          - same result...
+                                        - test longer graph with more spaced out measurements! (AAAAA)
+                                          - try to include acceleration regions, non rotation regions (~15 seconds duration?)
+                                        - add bias priors when doing in place rotation or constant velocity movement??? (ABBBB)
+                            - robot body frame might not be inertial body frame!!!!!! (AAAAA)
+                                  - ask Brian!
+                                  - is IMU location wrong (just position) or is body frame not actually the intertial frame???? (AAAAAAAAA)
+                                      - gazebo bug?
+                                      - imu bug somewhere? setting frame wrong?
+                                  - remove annoying error msgs... (BB)
+                                - triggered by loc reset? (CC)
+                                  - not triggering... :(
                                 - get notes from marina?
+
+                          - add depth odom! (AAA)
+                            - test in sim! (AAA)
+  
+                          - fix sim IMU bug! (AAAA)
     
-                          - fix docking bug! (DDDD)
+                          - fix docking bug! (BBB)
                               - change dock frame!
                               - test in sim
 

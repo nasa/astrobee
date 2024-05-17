@@ -58,6 +58,9 @@ void RosGraphLocalizerNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
   heartbeat_pub_ = nh->advertise<ff_msgs::Heartbeat>(TOPIC_HEARTBEAT, 5, true);
   imu_sub_ = private_nh_.subscribe(TOPIC_HARDWARE_IMU, params_.max_imu_buffer_size,
                                    &RosGraphLocalizerNodelet::ImuCallback, this, ros::TransportHints().tcpNoDelay());
+  depth_odom_sub_ =
+    private_nh_.subscribe(TOPIC_LOCALIZATION_DEPTH_ODOM, params_.max_depth_odom_buffer_size,
+                          &RosGraphLocalizerNodelet::DepthOdometryCallback, this, ros::TransportHints().tcpNoDelay());
   fp_sub_ =
     private_nh_.subscribe(TOPIC_LOCALIZATION_OF_FEATURES, params_.max_feature_point_buffer_size,
                           &RosGraphLocalizerNodelet::FeaturePointsCallback, this, ros::TransportHints().tcpNoDelay());
@@ -160,6 +163,11 @@ void RosGraphLocalizerNodelet::PublishGraphLocalizerState() {
 void RosGraphLocalizerNodelet::FeaturePointsCallback(const ff_msgs::Feature2dArray::ConstPtr& feature_array_msg) {
   if (!localizer_enabled()) return;
   ros_graph_vio_wrapper_.FeaturePointsCallback(*feature_array_msg);
+}
+
+void RosGraphLocalizerNodelet::DepthOdometryCallback(const ff_msgs::DepthOdometry::ConstPtr& depth_odom_msg) {
+  if (!localizer_enabled()) return;
+  ros_graph_vio_wrapper_.DepthOdometryCallback(*depth_odom_msg);
 }
 
 void RosGraphLocalizerNodelet::ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_msg) {

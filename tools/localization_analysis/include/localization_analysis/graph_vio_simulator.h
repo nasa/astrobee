@@ -45,7 +45,7 @@ class GraphVIOSimulator : public ros_graph_vio::RosGraphVIOWrapper {
 
   void BufferFlightModeMsg(const ff_msgs::FlightMode& flight_mode_msg);
 
-  // void BufferDepthOdometryMsg(const ff_msgs::DepthOdometry& depth_odometry_msg);
+  void BufferDepthOdometryMsg(const ff_msgs::DepthOdometry& depth_odometry_msg);
 
   void BufferVLVisualLandmarksMsg(const ff_msgs::VisualLandmarks& visual_landmarks_msg);
 
@@ -53,7 +53,7 @@ class GraphVIOSimulator : public ros_graph_vio::RosGraphVIOWrapper {
 
  private:
   std::vector<ff_msgs::Feature2dArray> of_msg_buffer_;
-  // std::vector<ff_msgs::DepthOdometry> depth_odometry_msg_buffer_;
+  std::vector<ff_msgs::DepthOdometry> depth_odometry_msg_buffer_;
   std::vector<sensor_msgs::Imu> imu_msg_buffer_;
   std::vector<ff_msgs::FlightMode> flight_mode_msg_buffer_;
   std::vector<ff_msgs::VisualLandmarks> vl_msg_buffer_;

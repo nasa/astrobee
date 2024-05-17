@@ -55,6 +55,10 @@ void RosGraphVIOWrapper::FeaturePointsCallback(const ff_msgs::Feature2dArray& fe
   ++feature_point_count_;
 }
 
+void RosGraphVIOWrapper::DepthOdometryCallback(const ff_msgs::DepthOdometry& depth_odometry_msg) {
+  if (Initialized()) graph_vio_->AddDepthOdometryMeasurement(lm::MakeDepthOdometryMeasurement(depth_odometry_msg));
+}
+
 void RosGraphVIOWrapper::ImuCallback(const sensor_msgs::Imu& imu_msg) {
   const auto imu_measurement = lm::ImuMeasurement(imu_msg);
   imu_bias_initializer_->AddImuMeasurement(imu_measurement);

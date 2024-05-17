@@ -21,6 +21,7 @@
 #include <config_reader/config_reader.h>
 #include <factor_adders/factor_adder_params.h>
 #include <factor_adders/loc_factor_adder_params.h>
+#include <factor_adders/relative_pose_factor_adder_params.h>
 #include <factor_adders/standstill_factor_adder_params.h>
 #include <factor_adders/vo_smart_projection_factor_adder_params.h>
 
@@ -34,6 +35,10 @@ void LoadFactorAdderParams(config_reader::ConfigReader& config, factor_adders::F
 
 void LoadLocFactorAdderParams(config_reader::ConfigReader& config, factor_adders::LocFactorAdderParams& params,
                               const std::string& prefix = "", const std::string& camera_name = "nav");
+
+void LoadRelativePoseFactorAdderParams(config_reader::ConfigReader& config,
+                                       factor_adders::RelativePoseFactorAdderParams& params,
+                                       const std::string& prefix = "");
 
 void LoadStandstillFactorAdderParams(config_reader::ConfigReader& config,
                                      factor_adders::StandstillFactorAdderParams& params,

@@ -15,17 +15,16 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef ROS_GRAPH_LOCALIZER_ROS_GRAPH_LOCALIZER_NODELET_PARAMS_H_
-#define ROS_GRAPH_LOCALIZER_ROS_GRAPH_LOCALIZER_NODELET_PARAMS_H_
 
-namespace ros_graph_localizer {
-struct RosGraphLocalizerNodeletParams {
-  int max_graph_vio_state_buffer_size;
-  int max_vl_matched_projections_buffer_size;
-  int max_imu_buffer_size;
-  int max_depth_odom_buffer_size;
-  int max_feature_point_buffer_size;
+#ifndef FACTOR_ADDERS_RELATIVE_POSE_FACTOR_ADDER_PARAMS_H_
+#define FACTOR_ADDERS_RELATIVE_POSE_FACTOR_ADDER_PARAMS_H_
+
+#include <factor_adders/factor_adder_params.h>
+
+namespace factor_adders {
+struct RelativePoseFactorAdderParams : public FactorAdderParams {
+  double covariance_scale;
 };
-}  // namespace ros_graph_localizer
+}  // namespace factor_adders
 
-#endif  // ROS_GRAPH_LOCALIZER_ROS_GRAPH_LOCALIZER_NODELET_PARAMS_H_
+#endif  // FACTOR_ADDERS_RELATIVE_POSE_FACTOR_ADDER_PARAMS_H_

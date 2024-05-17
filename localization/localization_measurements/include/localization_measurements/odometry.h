@@ -23,6 +23,7 @@
 #include <localization_common/time.h>
 #include <localization_measurements/measurement.h>
 #include <localization_measurements/odometry.h>
+#include <localization_measurements/relative_pose_with_covariance_measurement.h>
 
 namespace localization_measurements {
 struct Odometry {
@@ -30,6 +31,11 @@ struct Odometry {
   localization_common::Time target_time;
   localization_common::PoseWithCovariance sensor_F_source_T_target;
   localization_common::PoseWithCovariance body_F_source_T_target;
+
+  RelativePoseWithCovarianceMeasurement relative_pose_with_covariance_measurement() const {
+    return RelativePoseWithCovarianceMeasurement(localization_common::GtPose(body_F_source_T_target.pose),
+                                                 body_F_source_T_target.covariance, source_time, target_time);
+  }
 };
 }  // namespace localization_measurements
 

@@ -27,9 +27,9 @@ void GraphVIOSimulator::BufferOpticalFlowMsg(const ff_msgs::Feature2dArray& feat
   of_msg_buffer_.emplace_back(feature_array_msg);
 }
 
-/*void GraphVIOSimulator::BufferDepthOdometryMsg(const ff_msgs::DepthOdometry& depth_odometry_msg) {
+void GraphVIOSimulator::BufferDepthOdometryMsg(const ff_msgs::DepthOdometry& depth_odometry_msg) {
   depth_odometry_msg_buffer_.emplace_back(depth_odometry_msg);
-}*/
+}
 
 void GraphVIOSimulator::BufferImuMsg(const sensor_msgs::Imu& imu_msg) { imu_msg_buffer_.emplace_back(imu_msg); }
 
@@ -60,10 +60,12 @@ bool GraphVIOSimulator::AddMeasurementsAndUpdateIfReady(const lc::Time& current_
     ImuCallback(imu_msg);
   }
   imu_msg_buffer_.clear();
-  /*for (const auto& depth_odometry_msg : depth_odometry_msg_buffer_) {
+
+  for (const auto& depth_odometry_msg : depth_odometry_msg_buffer_) {
     DepthOdometryCallback(depth_odometry_msg);
   }
-  depth_odometry_msg_buffer_.clear();*/
+  depth_odometry_msg_buffer_.clear();
+
   for (const auto& of_msg : of_msg_buffer_) {
     FeaturePointsCallback(of_msg);
   }

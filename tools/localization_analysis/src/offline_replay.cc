@@ -99,6 +99,7 @@ void OfflineReplay::Run() {
       graph_vio_simulator_->BufferImuMsg(*imu_msg);
       graph_localizer_simulator_->BufferImuMsg(*imu_msg);
       pose_extrapolator_wrapper_.ImuCallback(*imu_msg);
+        SaveMsg(*imu_msg, "hw/imu", results_bag_);
 
       // Save extrapolated loc msg if available
       const auto extrapolated_loc_msg = pose_extrapolator_wrapper_.LatestExtrapolatedLocalizationMsg();
@@ -108,10 +109,10 @@ void OfflineReplay::Run() {
         SaveMsg(*extrapolated_loc_msg, TOPIC_GNC_EKF, results_bag_);
       }
     }
-    /*const auto depth_odometry_msg = live_measurement_simulator_->GetDepthOdometryMessage(current_time);
+    const auto depth_odometry_msg = live_measurement_simulator_->GetDepthOdometryMessage(current_time);
     if (depth_odometry_msg) {
       graph_vio_simulator_->BufferDepthOdometryMsg(*depth_odometry_msg);
-    }*/
+    }
     const auto of_msg = live_measurement_simulator_->GetOFMessage(current_time);
     if (of_msg) {
       const lc::Time timestamp = lc::TimeFromHeader(of_msg->header);

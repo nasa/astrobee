@@ -109,6 +109,9 @@ class RosGraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
   // Passes feature points msg to ros_graph_vio_wrapper if VIO is enabled.
   void FeaturePointsCallback(const ff_msgs::Feature2dArray::ConstPtr& feature_array_msg);
 
+  // Passes depth odometry msg to ros_graph_vio_wrapper if VIO is enabled.
+  void DepthOdometryCallback(const ff_msgs::DepthOdometry::ConstPtr& depth_odom_msg);
+
   // Passes IMU msg to ros_graph_vio_wrapper if VIO is enabled.
   void ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_msg);
 
@@ -140,7 +143,7 @@ class RosGraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
 
   // VIO
   ros::Publisher graph_vio_state_pub_, graph_vio_pub_;
-  ros::Subscriber imu_sub_, fp_sub_, flight_mode_sub_;
+  ros::Subscriber imu_sub_, depth_odom_sub_, fp_sub_, flight_mode_sub_;
 };
 }  // namespace ros_graph_localizer
 
