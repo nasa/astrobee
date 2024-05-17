@@ -67,7 +67,7 @@ void MakeARTarget(int id, cv::Mat_<unsigned char>* output) {
     exit(1);
   }
 
-  cv::Mat_<unsigned char> content_no_border = cv::cvarrToMat(marker.GetContent());
+  cv::Mat content_no_border = marker.GetContent();
   cv::copyMakeBorder(content_no_border, *output, margin, margin, margin, margin,
                      cv::BORDER_CONSTANT, 0);
 }

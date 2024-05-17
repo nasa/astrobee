@@ -31,8 +31,8 @@ find_package(catkin2 REQUIRED COMPONENTS
   ff_util
 )
 
-# Find OpenCV3
-find_package(OpenCV 3.3.1 REQUIRED)
+# Find OpenCV
+find_package(OpenCV 4.0 REQUIRED)
 
 catkin_package(
   LIBRARIES ${PROJECT_NAME}

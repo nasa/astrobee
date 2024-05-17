@@ -92,8 +92,8 @@ Customization: description/description/model_eps.urdf.xacro
 
 This simulates front and aft facing flashlights. Unfortunately, Gazebo doesn't support model-fixed flashlights. So, for each flashlight a free-floating spot light is created in Gazebo, and the model plugin dynamically positions this light to be rigidly attached to the Free Flyer. To set the brightness of each light you can use the following commands:
 
-    rosservice call /%ns%/hw/light_front/control "brightness: 0"
-    rosservice call /%ns%/hw/light_aft/control "brightness: 200"
+    rosservice call /%ns%/hw/flashlight_front/control "brightness: 0"
+    rosservice call /%ns%/hw/flashlight_aft/control "brightness: 200"
 
 Customization: description/description/model_flashlights.urdf.xacro
     rate:   doesn't do anything (should this be removed?)

@@ -6,7 +6,8 @@
 *.deb
 *.ddeb
 *.buildinfo
-libalvar
+libar_track_alvar_msgs
+libar_track_alvar
 libdeepdive
 libdbow2
 libgtsam

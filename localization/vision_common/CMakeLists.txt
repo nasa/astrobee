@@ -29,9 +29,9 @@ find_package(catkin2 REQUIRED COMPONENTS
 # Find GTSAM
 find_package(GTSAM REQUIRED)
 
-# Find OpenCV3
+# Find OpenCV
 LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
-find_package(OpenCV331 REQUIRED)
+find_package(OpenCV4 REQUIRED)
 
 find_package(Eigen3 REQUIRED)
 

@@ -35,7 +35,7 @@
 #include <Eigen/Core>
 
 #include <opencv2/core/core_c.h>  // I don't need all of OpenCV
-#include <alvar/Marker.h>
+#include <ar_track_alvar/Marker.h>
 
 #include <vector>
 
@@ -54,7 +54,7 @@ namespace marker_tracking {
     explicit MarkerCornerDetector(camera::CameraParameters const& camera);
     ~MarkerCornerDetector();
 
-    void Detect(IplImage *image,
+    void Detect(std::shared_ptr<cv::Mat> image,
                 float max_new_marker_error,
                 float max_track_error);
 

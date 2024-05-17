@@ -1,4 +1,4 @@
-#/bin/bash -e
+#!/bin/bash -e
 #
 # Copyright (c) 2017, United States Government, as represented by the
 # Administrator of the National Aeronautics and Space Administration.
@@ -57,8 +57,9 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
-# Build opencv if ubuntu 20
-[[ "$dist" =~ ^focal$ ]] && build_list+=( opencv )
+# Build opencv if ubuntu 18 or 20
+#[[ "$dist" =~ ^bionic|focal$ ]] && build_list+=( opencv )
+
 
 # Add public debians to build list
 build_list+=( alvar dlib dbow2 gtsam decomputil jps3d openmvg )
