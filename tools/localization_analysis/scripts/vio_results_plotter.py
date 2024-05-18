@@ -190,6 +190,7 @@ def plot_vio_results(
         depth_odom_relative_poses_plotter.add_poses(
             "Depth Odometry Poses", absolute_depth_odom_relative_poses, linestyle="-"
         )
+        depth_odom_relative_poses_plotter.plot(pdf)
 
     standstill_plotter = plot_conversions.standstill_plotter_from_states(
         graph_vio_states

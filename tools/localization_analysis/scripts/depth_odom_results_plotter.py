@@ -63,6 +63,7 @@ def plot_depth_odom_results(
     depth_odom_relative_poses_plotter.add_poses(
         "Depth Odometry Poses", absolute_depth_odom_relative_poses, linestyle="-"
     )
+    depth_odom_relative_poses_plotter.plot(pdf)
 
 
 # Loads poses from the provided bagfile, generates plots, and saves results to a pdf and csv file.
