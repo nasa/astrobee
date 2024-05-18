@@ -244,6 +244,53 @@ def absolute_poses_from_imu_bias_extrapolated_poses(
     return adjusted_imu_bias_poses
 
 
+# Return list of absolute poses.
+# Poses are adjusted to start at the corresponding groundtruth pose at the earliest corresponding timestamp
+# so they can be plotted against groundtruth poses. The earliest corresponding timestamp is the first timestamp
+# with a dt <= max_diff compared to a imu bias extrapolated pose.
+def absolute_poses_from_relative_poses(relative_poses, groundtruth_poses, max_diff=0.1):
+    relative_pose_times = np.array(
+        [relative_pose.timestamp for relative_pose in relative_poses]
+    )
+    world_T_odom = None
+    for groundtruth_pose in groundtruth_poses:
+        closest_matching_relative_pose_index = np.argmin(
+            np.abs(relative_pose_times - groundtruth_pose.timestamp)
+        )
+        timestamp_diff = np.abs(
+            relative_pose_times[closest_matching_relative_pose_index]
+            - groundtruth_pose.timestamp
+        )
+        if timestamp_diff <= max_diff:
+            closest_relative_pose = relative_poses[closest_matching_relative_pose_index]
+            world_T_odom = (
+                groundtruth_pose
+                * relative_poses[closest_matching_relative_pose_index].inverse()
+            )
+            break
+    if not world_T_odom:
+        print("Failed to find corresponding groundtruth pose to graph VIO poses")
+        sys.exit(0)
+    adjusted_relative_pose_poses = []
+    previous_relative_pose = None
+    for relative_pose in relative_poses:
+        pose = TimestampedPose(
+            relative_pose.orientation, relative_pose.position, relative_pose.timestamp
+        )
+        if previous_relative_pose:
+            pose = previous_relative_pose * pose
+        adjusted_pose = world_T_odom * pose
+        adjusted_relative_pose_poses.append(
+            TimestampedPose(
+                adjusted_pose.orientation,
+                adjusted_pose.position,
+                relative_pose.timestamp,
+            )
+        )
+        previous_relative_pose = pose
+    return adjusted_relative_pose_poses
+
+
 # Return list of poses from integrated velocities.
 # Poses are adjusted to start at the corresponding groundtruth pose at the earliest corresponding timestamp
 # so they can be plotted against groundtruth poses. The earliest corresponding timestamp is the first timestamp

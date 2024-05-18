@@ -46,7 +46,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 def plot_depth_odom_results(
     pdf, results_csv_file, groundtruth_poses, depth_odom_relative_poses
 ):
-    absolute_depth_odom_relative_poses = plot_conversions.absolute_poses_from_imu_bias_extrapolated_poses(
+    absolute_depth_odom_relative_poses = plot_conversions.absolute_poses_from_relative_poses(
         depth_odom_relative_poses, groundtruth_poses
     )
     depth_odom_relative_poses_plotter = MultiPosePlotter(

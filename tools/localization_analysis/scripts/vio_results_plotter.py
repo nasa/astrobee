@@ -173,7 +173,7 @@ def plot_vio_results(
         )
 
     if len(depth_odom_relative_poses) != 0:
-        absolute_depth_odom_relative_poses = plot_conversions.absolute_poses_from_imu_bias_extrapolated_poses(
+        absolute_depth_odom_relative_poses = plot_conversions.absolute_poses_from_relative_poses(
             depth_odom_relative_poses, groundtruth_poses
         )
         depth_odom_relative_poses_plotter = MultiPosePlotter(
