@@ -28,8 +28,7 @@ fi
 git clone --quiet -b noetic-devel https://github.com/ros-perception/ar_track_alvar.git $PACKAGE_NAME 2>&1 || exit 1
 cd $PACKAGE_NAME/$DEB_DIR
 git archive --prefix=$PACKAGE_NAME/ --output=../$ORIG_TAR --format tar.gz HEAD || exit 1
-bloom-generate rosdebian --os-name ubuntu --os-version $DIST --ros-distro noetic
-cp -r ../../ar-track-alvar/* debian
+cp -r ../../ar-track-alvar debian
 debuild -us -uc || exit 1
 cd ../..
 

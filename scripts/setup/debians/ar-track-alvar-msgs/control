@@ -1,7 +1,7 @@
 Source: ros-noetic-ar-track-alvar-msgs
 Section: misc
 Priority: optional
-Maintainer: Scott Niekum <sniekum@cs.umass.edu>
+Maintainer: Ruben Garcia <nospam@nospam.org>
 Build-Depends: debhelper (>= 9.0.0), ros-noetic-catkin, ros-noetic-geometry-msgs, ros-noetic-message-generation, ros-noetic-std-msgs
 Homepage: http://ros.org/wiki/ar_track_alvar
 Standards-Version: 3.9.2
