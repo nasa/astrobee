@@ -35,6 +35,17 @@ def load_poses(timestamped_poses, topic, bag, bag_start_time):
             )
 
 
+# Start at the provided bag start time.
+def load_depth_odometry_poses(timestamped_poses, topic, bag, bag_start_time):
+    for msg_topic, msg, t in bag.read_messages(topic):
+        if msg_topic == topic:
+            timestamped_poses.append(
+                message_conversions.timestamped_pose_from_odometry_msg(
+                    msg.odometry, bag_start_time
+                )
+            )
+
+
 # Load graph vio states from a bag file for a given topic.
 # Start at the provided bag start time.
 def load_graph_vio_states(graph_vio_states, topic, bag, bag_start_time):

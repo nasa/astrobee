@@ -51,6 +51,7 @@ def plot_vio_results(
     groundtruth_poses,
     graph_vio_states,
     imu_bias_extrapolated_poses,
+    depth_odom_relative_poses,
 ):
     poses_plotter = MultiPosePlotter(
         "Time (s)", "Position (m)", "Graph vs. Groundtruth Position", True
@@ -171,6 +172,25 @@ def plot_vio_results(
             "IMU Bias Extrapolated Poses",
         )
 
+    if len(depth_odom_relative_poses) != 0:
+        absolute_depth_odom_relative_poses = plot_conversions.absolute_poses_from_imu_bias_extrapolated_poses(
+            depth_odom_relative_poses, groundtruth_poses
+        )
+        depth_odom_relative_poses_plotter = MultiPosePlotter(
+            "Time (s)", "Position (m)", "Depth Odometry vs. Groundtruth Position", True
+        )
+        depth_odom_relative_poses_plotter.add_poses(
+            "Groundtruth Poses",
+            groundtruth_poses,
+            linestyle="None",
+            marker="o",
+            markeredgewidth=0.1,
+            markersize=1.5,
+        )
+        depth_odom_relative_poses_plotter.add_poses(
+            "Depth Odometry Poses", absolute_depth_odom_relative_poses, linestyle="-"
+        )
+
     standstill_plotter = plot_conversions.standstill_plotter_from_states(
         graph_vio_states
     )
@@ -225,6 +245,12 @@ def load_data_and_create_vio_plots(
     message_reader.load_poses(
         imu_bias_extrapolated_poses, "/imu_bias_extrapolator/pose", bag, bag_start_time
     )
+
+    # Load Depth Odometry poses
+    depth_odom_relative_poses = []
+    message_reader.load_depth_odometry_poses(
+        depth_odom_relative_poses, "/loc/depth/odom", bag, bag_start_time
+    )
     bag.close()
 
     with PdfPages(output_pdf_file) as pdf:
@@ -234,6 +260,7 @@ def load_data_and_create_vio_plots(
             groundtruth_poses,
             graph_vio_states,
             imu_bias_extrapolated_poses,
+            depth_odom_relative_poses,
         )
 
 

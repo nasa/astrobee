@@ -75,6 +75,15 @@ def timestamped_pose_from_msg(pose_msg, bag_start_time=0):
     return TimestampedPose(orientation, position, timestamp)
 
 
+# Create a timestamped pose with covariance from an odometry msg using relative bag time.
+def timestamped_pose_from_odometry_msg(odometry_msg, bag_start_time=0):
+    orientation, position = orientation_position_from_msg(
+        odometry_msg.body_F_source_T_target
+    )
+    timestamp = relative_timestamp(odometry_msg.source_time, bag_start_time)
+    return TimestampedPose(orientation, position, timestamp)
+
+
 # Create a pose from a pose msg
 def pose_from_msg(pose_msg):
     orientation, position = orientation_position_from_msg(pose_msg)
