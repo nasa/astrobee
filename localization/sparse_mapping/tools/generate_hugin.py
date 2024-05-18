@@ -146,8 +146,6 @@ def main():
 
     # write the modified panorama to that stream
     p.WritePTOFile(output_hugin)
-    # done with it
-    del ofs
 
 
 if __name__ == "__main__":
