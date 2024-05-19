@@ -94,12 +94,17 @@ bool RosGraphLocalizerNodelet::SetMode(ff_msgs::SetEkfInput::Request& req, ff_ms
     ResetAndEnableLocalizer();
   }
 
-  // Reset world_T_dock when switch back to ar mode
+  // Reset localizer when switch between ar mode
   if (input_mode == ff_msgs::SetEkfInputRequest::MODE_AR_TAGS &&
       last_mode_ != ff_msgs::SetEkfInputRequest::MODE_AR_TAGS) {
     LogInfo("SetMode: Switching to AR_TAG mode.");
-    ros_graph_localizer_wrapper_.ResetWorldTDock();
+    ResetAndEnableLocalizer();
+  } else if (input_mode != ff_msgs::SetEkfInputRequest::MODE_AR_TAGS &&
+             last_mode_ == ff_msgs::SetEkfInputRequest::MODE_AR_TAGS) {
+    LogInfo("SetMode: Switching out of AR_TAG mode.");
+    ResetAndEnableLocalizer();
   }
+
   last_mode_ = input_mode;
   return true;
 }
@@ -217,10 +222,8 @@ void RosGraphLocalizerNodelet::PublishWorldTBodyTF() {
 }
 
 void RosGraphLocalizerNodelet::PublishWorldTDockTF() {
-  const auto world_T_dock = ros_graph_localizer_wrapper_.WorldTDock();
-  if (!world_T_dock) return;
   const auto world_T_dock_tf =
-    lc::PoseToTF(*world_T_dock, "world", "dock/body", lc::TimeFromRosTime(ros::Time::now()), platform_name_);
+    lc::PoseToTF(gtsam::Pose3(), "world", "dock/body", lc::TimeFromRosTime(ros::Time::now()), platform_name_);
   // If the rate is higher than the sim time, prevent sending repeat tfs
   if (world_T_dock_tf.header.stamp == last_tf_dock_time_) return;
   last_tf_dock_time_ = world_T_dock_tf.header.stamp;
@@ -237,6 +240,8 @@ void RosGraphLocalizerNodelet::ARVisualLandmarksCallback(
 void RosGraphLocalizerNodelet::SparseMapVisualLandmarksCallback(
   const ff_msgs::VisualLandmarks::ConstPtr& visual_landmarks_msg) {
   if (!localizer_enabled()) return;
+  // Avoid adding sparse map measurements when in AR mode
+  if (last_mode_ == ff_msgs::SetEkfInputRequest::MODE_AR_TAGS) return;
   ros_graph_vio_wrapper_.SparseMapVisualLandmarksCallback(*visual_landmarks_msg);
   ros_graph_localizer_wrapper_.SparseMapVisualLandmarksCallback(*visual_landmarks_msg);
 }

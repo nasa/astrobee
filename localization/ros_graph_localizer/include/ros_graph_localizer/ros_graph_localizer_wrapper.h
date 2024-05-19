@@ -73,17 +73,11 @@ class RosGraphLocalizerWrapper {
   // Resets the graph.
   void ResetLocalizer();
 
-  // Resets the world_T_dock frame relative transform.
-  void ResetWorldTDock();
-
   // Returns the latest timestamp in the graph if it exists.
   boost::optional<localization_common::Time> LatestTimestamp() const;
 
   // Returns the latest pose in the graph if it exists.
   boost::optional<gtsam::Pose3> LatestPose() const;
-
-  // Returns latest world_T_dock if it exists.
-  boost::optional<gtsam::Pose3> WorldTDock() const;
 
   // Creates graph loc state msg using latest pose and graph information
   // in graph localizer.
@@ -104,7 +98,6 @@ class RosGraphLocalizerWrapper {
   boost::optional<localization_common::CombinedNavState> latest_vio_state_;
   boost::optional<localization_common::Time> latest_msg_time_;
   boost::optional<localization_common::Time> last_vio_msg_time_;
-  boost::optional<gtsam::Pose3> world_T_dock_;
 };
 }  // namespace ros_graph_localizer
 
