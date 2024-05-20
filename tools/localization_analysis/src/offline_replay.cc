@@ -99,7 +99,7 @@ void OfflineReplay::Run() {
       graph_vio_simulator_->BufferImuMsg(*imu_msg);
       graph_localizer_simulator_->BufferImuMsg(*imu_msg);
       pose_extrapolator_wrapper_.ImuCallback(*imu_msg);
-        SaveMsg(*imu_msg, "hw/imu", results_bag_);
+      SaveMsg(*imu_msg, "hw/imu", results_bag_);
 
       // Save extrapolated loc msg if available
       const auto extrapolated_loc_msg = pose_extrapolator_wrapper_.LatestExtrapolatedLocalizationMsg();
@@ -186,7 +186,8 @@ void OfflineReplay::Run() {
       }
       if (latest_ar_msg_) {
         if (static_cast<int>(ar_msg->landmarks.size()) >= params_.ar_min_num_landmarks) {
-          const gtsam::Pose3 world_T_body = lc::PoseFromMsgWithExtrinsics(ar_msg->pose, params_.body_T_dock_cam.inverse());
+          const gtsam::Pose3 world_T_body =
+            lc::PoseFromMsgWithExtrinsics(ar_msg->pose, params_.body_T_dock_cam.inverse());
           const lc::Time timestamp = lc::TimeFromHeader(ar_msg->header);
           SaveMsg(PoseMsg(world_T_body, timestamp), TOPIC_AR_TAG_POSE, results_bag_);
           latest_ar_msg_ = boost::none;

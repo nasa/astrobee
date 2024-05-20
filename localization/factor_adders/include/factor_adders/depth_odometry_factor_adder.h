@@ -37,13 +37,12 @@ class DepthOdometryFactorAdder
     : public SingleMeasurementBasedFactorAdder<localization_measurements::DepthOdometryMeasurement> {
  public:
   DepthOdometryFactorAdder(const DepthOdometryFactorAdderParams& params,
-                          const std::shared_ptr<PoseNodeAdderType> node_adder);
+                           const std::shared_ptr<PoseNodeAdderType> node_adder);
 
  private:
   // Creates a pose between factor or point to point between factors and pose nodes for the given measurement.
-  int AddFactorsForSingleMeasurement(
-    const localization_measurements::DepthOdometryMeasurement& measurement,
-    gtsam::NonlinearFactorGraph& factors) final;
+  int AddFactorsForSingleMeasurement(const localization_measurements::DepthOdometryMeasurement& measurement,
+                                     gtsam::NonlinearFactorGraph& factors) final;
 
   bool CanAddFactor(const localization_common::Time time) const final;
 
@@ -52,16 +51,15 @@ class DepthOdometryFactorAdder
 };
 
 template <class PoseNodeAdderType>
-DepthOdometryFactorAdder<PoseNodeAdderType>::DepthOdometryFactorAdder(const DepthOdometryFactorAdderParams& params,
-                                                                    const std::shared_ptr<PoseNodeAdderType> node_adder)
+DepthOdometryFactorAdder<PoseNodeAdderType>::DepthOdometryFactorAdder(
+  const DepthOdometryFactorAdderParams& params, const std::shared_ptr<PoseNodeAdderType> node_adder)
     : SingleMeasurementBasedFactorAdder<localization_measurements::DepthOdometryMeasurement>(params),
       params_(params),
       node_adder_(node_adder) {}
 
 template <class PoseNodeAdderType>
 int DepthOdometryFactorAdder<PoseNodeAdderType>::AddFactorsForSingleMeasurement(
-  const localization_measurements::DepthOdometryMeasurement& measurement,
-  gtsam::NonlinearFactorGraph& factors) {
+  const localization_measurements::DepthOdometryMeasurement& measurement, gtsam::NonlinearFactorGraph& factors) {
   node_adder_->AddNode(measurement.odometry.source_time, factors);
   const auto keys_a = node_adder_->Keys(measurement.odometry.source_time);
   // First key is pose key
@@ -79,23 +77,21 @@ int DepthOdometryFactorAdder<PoseNodeAdderType>::AddFactorsForSingleMeasurement(
       const Eigen::Vector3d& sensor_t_point_target = measurement.correspondences.target_3d_points[i];
 
       const Eigen::Vector3d estimate_error =
-        sensor_t_point_source -
-        measurement.odometry.sensor_F_source_T_target.pose * sensor_t_point_target;
+        sensor_t_point_source - measurement.odometry.sensor_F_source_T_target.pose * sensor_t_point_target;
       const double estimate_error_norm = estimate_error.norm();
       if (estimate_error_norm > params_.point_to_point_error_threshold) continue;
       const auto points_between_factor_noise = localization_common::Robust(
         gtsam::noiseModel::Diagonal::Sigmas(estimate_error * params_.point_noise_scale), params_.huber_k);
-      gtsam::PointToPointBetweenFactor::shared_ptr points_between_factor(new gtsam::PointToPointBetweenFactor(
-        sensor_t_point_source, sensor_t_point_target, params_.body_T_sensor, points_between_factor_noise,
-        pose_key_a, pose_key_b));
+      gtsam::PointToPointBetweenFactor::shared_ptr points_between_factor(
+        new gtsam::PointToPointBetweenFactor(sensor_t_point_source, sensor_t_point_target, params_.body_T_sensor,
+                                             points_between_factor_noise, pose_key_a, pose_key_b));
       factors.push_back(points_between_factor);
       ++num_between_factors;
     }
     LogDebug("AddFactors: Added " << num_between_factors << " points between factors.");
     return num_between_factors;
   } else {
-    const double translation_norm =
-      measurement.odometry.sensor_F_source_T_target.pose.translation().norm();
+    const double translation_norm = measurement.odometry.sensor_F_source_T_target.pose.translation().norm();
     if (translation_norm > params_.pose_translation_norm_threshold) {
       LogDebug("AddFactors: Ignoring pose with large translation norm. Norm: "
                << translation_norm << ", threshold: " << params_.pose_translation_norm_threshold);

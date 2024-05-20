@@ -108,8 +108,8 @@ void RosGraphLocalizerWrapper::ARVisualLandmarksCallback(const ff_msgs::VisualLa
         "initialize graph localizer.");
       return;
     }
-    const auto world_T_body = lc::PoseFromMsgWithExtrinsics(visual_landmarks_msg.pose,
-                                                            params_.ar_tag_loc_factor_adder.body_T_cam.inverse());
+    const auto world_T_body =
+      lc::PoseFromMsgWithExtrinsics(visual_landmarks_msg.pose, params_.ar_tag_loc_factor_adder.body_T_cam.inverse());
     params_.pose_node_adder.start_node = world_T_body;
     params_.pose_node_adder.starting_time = msg_time;
     LogInfo("ARVisualLandmarksCallback: Initializing localizer with vl msg.");
