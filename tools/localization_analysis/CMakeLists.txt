@@ -147,7 +147,7 @@ install(TARGETS ${PROJECT_NAME}
 
 # Install C++ executables
 #install(TARGETS run_bag_imu_filterer DESTINATION bin)
-#install(TARGETS run_depth_odometry_adder DESTINATION bin)
+install(TARGETS run_depth_odometry_adder DESTINATION bin)
 install(TARGETS run_offline_replay DESTINATION bin)
 install(TARGETS run_imu_bias_extrapolator DESTINATION bin)
 install(TARGETS run_map_matcher DESTINATION bin)
@@ -155,7 +155,7 @@ install(TARGETS run_sparse_mapping_pose_adder DESTINATION bin)
 install(CODE "execute_process(
   COMMAND ln -s ../../bin/convert_depth_msg share/${PROJECT_NAME}
   #COMMAND ln -s ../../bin/run_bag_imu_filterer share/${PROJECT_NAME}
-  #COMMAND ln -s ../../bin/run_depth_odometry_adder share/${PROJECT_NAME}
+  COMMAND ln -s ../../bin/run_depth_odometry_adder share/${PROJECT_NAME}
   COMMAND ln -s ../../bin/run_offline_replay share/${PROJECT_NAME}
   COMMAND ln -s ../../bin/run_imu_bias_extrapolator share/${PROJECT_NAME}
   COMMAND ln -s ../../bin/run_map_matcher share/${PROJECT_NAME}
