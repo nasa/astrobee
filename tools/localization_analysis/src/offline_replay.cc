@@ -184,12 +184,9 @@ void OfflineReplay::Run() {
         pose_extrapolator_wrapper_.LocalizationStateCallback(*localization_msg);
         SaveMsg(*localization_msg, TOPIC_GRAPH_LOC_STATE, results_bag_);
       }
-      // Save ar tag pose after updating graph so latest world_T_dock is estimated.
       if (latest_ar_msg_) {
         if (static_cast<int>(ar_msg->landmarks.size()) >= params_.ar_min_num_landmarks) {
-          const gtsam::Pose3 world_T_body =
-            (*graph_localizer_simulator_->WorldTDock()) *
-            lc::PoseFromMsgWithExtrinsics(ar_msg->pose, params_.body_T_dock_cam.inverse());
+          const gtsam::Pose3 world_T_body = lc::PoseFromMsgWithExtrinsics(ar_msg->pose, params_.body_T_dock_cam.inverse());
           const lc::Time timestamp = lc::TimeFromHeader(ar_msg->header);
           SaveMsg(PoseMsg(world_T_body, timestamp), TOPIC_AR_TAG_POSE, results_bag_);
           latest_ar_msg_ = boost::none;

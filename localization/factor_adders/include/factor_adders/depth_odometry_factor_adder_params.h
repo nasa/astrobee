@@ -16,21 +16,23 @@
  * under the License.
  */
 
-#ifndef LOCALIZATION_MEASUREMENTS_ODOMETRY_H_
-#define LOCALIZATION_MEASUREMENTS_ODOMETRY_H_
+#ifndef FACTOR_ADDERS_DEPTH_ODOMETRY_FACTOR_ADDER_PARAMS_H_
+#define FACTOR_ADDERS_DEPTH_ODOMETRY_FACTOR_ADDER_PARAMS_H_
 
-#include <localization_common/pose_with_covariance.h>
-#include <localization_common/time.h>
-#include <localization_measurements/measurement.h>
-#include <localization_measurements/odometry.h>
+#include <factor_adders/factor_adder_params.h>
 
-namespace localization_measurements {
-struct Odometry {
-  localization_common::Time source_time;
-  localization_common::Time target_time;
-  localization_common::PoseWithCovariance sensor_F_source_T_target;
-  localization_common::PoseWithCovariance body_F_source_T_target;
+#include <gtsam/geometry/Pose3.h>
+
+namespace factor_adders {
+struct DepthOdometryFactorAdderParams : public FactorAdderParams {
+  double pose_covariance_scale;
+  double point_noise_scale;
+  bool use_points_between_factor;
+  double point_to_point_error_threshold;
+  double pose_translation_norm_threshold;
+  int max_num_points_between_factors;
+  gtsam::Pose3 body_T_sensor;
 };
-}  // namespace localization_measurements
+}  // namespace factor_adders
 
-#endif  // LOCALIZATION_MEASUREMENTS_ODOMETRY_H_
+#endif  // FACTOR_ADDERS_DEPTH_ODOMETRY_FACTOR_ADDER_PARAMS_H_

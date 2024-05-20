@@ -44,10 +44,10 @@ GraphVIO::GraphVIO(const GraphVIOParams& params)
   standstill_factor_adder_ = std::make_shared<fa::StandstillFactorAdder<na::CombinedNavStateNodeAdder>>(
     params_.standstill_factor_adder, combined_nav_state_node_adder_);
   AddFactorAdder(standstill_factor_adder_);
-  depth_odometry_relative_pose_factor_adder_ =
-    std::make_shared<fa::RelativePoseFactorAdder<na::CombinedNavStateNodeAdder>>(
-      params_.depth_odometry_relative_pose_factor_adder, combined_nav_state_node_adder_);
-  AddFactorAdder(depth_odometry_relative_pose_factor_adder_);
+  depth_odometry_factor_adder_ =
+    std::make_shared<fa::DepthOdometryFactorAdder<na::CombinedNavStateNodeAdder>>(
+      params_.depth_odometry_factor_adder, combined_nav_state_node_adder_);
+  AddFactorAdder(depth_odometry_factor_adder_);
   sparse_map_loc_factor_adder_ = std::make_shared<fa::LocFactorAdder<na::CombinedNavStateNodeAdder>>(
     params_.sparse_map_loc_factor_adder, combined_nav_state_node_adder_);
   AddFactorAdder(sparse_map_loc_factor_adder_);
@@ -79,9 +79,9 @@ void GraphVIO::AddFeaturePointsMeasurement(const lm::FeaturePointsMeasurement& f
 
   void GraphVIO::AddDepthOdometryMeasurement(
     const localization_measurements::DepthOdometryMeasurement& depth_odometry_measurement) {
-  if (params_.depth_odometry_relative_pose_factor_adder.enabled)
-    depth_odometry_relative_pose_factor_adder_->AddMeasurement(
-      depth_odometry_measurement.odometry.relative_pose_with_covariance_measurement());
+  if (params_.depth_odometry_factor_adder.enabled)
+    depth_odometry_factor_adder_->AddMeasurement(
+      depth_odometry_measurement);
 }
 
 void GraphVIO::AddSparseMapMatchedProjectionsMeasurement(

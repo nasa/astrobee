@@ -19,8 +19,8 @@
 #ifndef GRAPH_VIO_GRAPH_VIO_H_
 #define GRAPH_VIO_GRAPH_VIO_H_
 
+#include <factor_adders/depth_odometry_factor_adder.h>
 #include <factor_adders/loc_factor_adder.h>
-#include <factor_adders/relative_pose_factor_adder.h>
 #include <factor_adders/standstill_factor_adder.h>
 #include <factor_adders/vo_smart_projection_factor_adder.h>
 #include <graph_vio/graph_vio_params.h>
@@ -92,7 +92,7 @@ class GraphVIO : public sliding_window_graph_optimizer::SlidingWindowGraphOptimi
     ar& BOOST_SERIALIZATION_NVP(sparse_map_loc_factor_adder_);
     ar& BOOST_SERIALIZATION_NVP(vo_smart_projection_factor_adder_);
     ar& BOOST_SERIALIZATION_NVP(standstill_factor_adder_);
-    ar& BOOST_SERIALIZATION_NVP(depth_odometry_relative_pose_factor_adder_);
+    ar& BOOST_SERIALIZATION_NVP(depth_odometry_factor_adder_);
     ar& BOOST_SERIALIZATION_NVP(combined_nav_state_node_adder_);
   }
 
@@ -101,8 +101,8 @@ class GraphVIO : public sliding_window_graph_optimizer::SlidingWindowGraphOptimi
 
   // Factor Adders
   std::shared_ptr<factor_adders::LocFactorAdder<node_adders::CombinedNavStateNodeAdder>> sparse_map_loc_factor_adder_;
-  std::shared_ptr<factor_adders::RelativePoseFactorAdder<node_adders::CombinedNavStateNodeAdder>>
-    depth_odometry_relative_pose_factor_adder_;
+  std::shared_ptr<factor_adders::DepthOdometryFactorAdder<node_adders::CombinedNavStateNodeAdder>>
+    depth_odometry_factor_adder_;
   std::shared_ptr<factor_adders::VoSmartProjectionFactorAdder<node_adders::CombinedNavStateNodeAdder>>
     vo_smart_projection_factor_adder_;
   std::shared_ptr<factor_adders::StandstillFactorAdder<node_adders::CombinedNavStateNodeAdder>>
