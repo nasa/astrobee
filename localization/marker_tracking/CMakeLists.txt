@@ -39,7 +39,7 @@ find_package(catkin2 REQUIRED COMPONENTS
 # System dependencies are found with CMake's conventions
 find_package(cmake_modules REQUIRED)
 find_package(Eigen3 REQUIRED)
-
+find_package(PCL REQUIRED COMPONENTS common)
 
 # Find OpenCV
 find_package(OpenCV 4.0 REQUIRED)
@@ -59,6 +59,7 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
+  ${PCL_INCLUDE_DIRS}
 )
 
 # Declare C++ libraries
