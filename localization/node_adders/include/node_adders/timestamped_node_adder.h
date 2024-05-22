@@ -306,7 +306,7 @@ template <typename NodeType, typename TimestampedNodesType, typename NodeAdderMo
 bool TimestampedNodeAdder<NodeType, TimestampedNodesType, NodeAdderModelType>::AddNode(
   const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) {
   if (nodes_->Contains(timestamp)) {
-    LogError(
+    LogDebug(
       "Adder: Node exists at "
       "timestamp, nothing to do.");
     return true;
