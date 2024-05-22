@@ -41,7 +41,8 @@ struct ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometryParams : public 
   // Other
   double min_x_distance_to_border;
   double min_y_distance_to_border;
-  int min_num_inliers;
+  int min_num_correspondences;
+  bool only_correspondences;
   bool refine_estimate;
   PointToPlaneICPDepthOdometryParams point_to_plane_icp;
 };

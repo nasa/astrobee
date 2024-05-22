@@ -18,6 +18,7 @@
 #ifndef ROS_GRAPH_LOCALIZER_ROS_GRAPH_LOCALIZER_NODELET_H_
 #define ROS_GRAPH_LOCALIZER_ROS_GRAPH_LOCALIZER_NODELET_H_
 
+#include <depth_odometry/depth_odometry_wrapper.h>
 #include <ff_msgs/GraphVIOState.h>
 #include <ff_msgs/VisualLandmarks.h>
 #include <ff_msgs/Heartbeat.h>
@@ -30,9 +31,11 @@
 #include <ros_graph_localizer/ros_graph_localizer_wrapper.h>
 #include <ros_graph_vio/ros_graph_vio_wrapper.h>
 
+#include <image_transport/image_transport.h>
 #include <ros/node_handle.h>
 #include <ros/publisher.h>
 #include <ros/subscriber.h>
+#include <sensor_msgs/PointCloud2.h>
 #include <std_srvs/Empty.h>
 #include <tf2_ros/transform_broadcaster.h>
 
@@ -112,6 +115,12 @@ class RosGraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
   // Passes depth odometry msg to ros_graph_vio_wrapper if VIO is enabled.
   void DepthOdometryCallback(const ff_msgs::DepthOdometry::ConstPtr& depth_odom_msg);
 
+  // Passes depth point cloud msg to depth_odometry_wrapper if VIO is enabled.
+  void DepthPointCloudCallback(const sensor_msgs::PointCloud2ConstPtr& point_cloud_msg);
+
+  // Passes depth image msg to depth_odometry_wrapper if VIO is enabled.
+  void DepthImageCallback(const sensor_msgs::ImageConstPtr& image_msg);
+
   // Passes IMU msg to ros_graph_vio_wrapper if VIO is enabled.
   void ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_msg);
 
@@ -125,6 +134,7 @@ class RosGraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
 
   ros_graph_localizer::RosGraphLocalizerWrapper ros_graph_localizer_wrapper_;
   ros_graph_vio::RosGraphVIOWrapper ros_graph_vio_wrapper_;
+  depth_odometry::DepthOdometryWrapper depth_odometry_wrapper_;
   ros::NodeHandle private_nh_;
   ros::CallbackQueue private_queue_;
   bool localizer_enabled_ = true;
@@ -143,7 +153,8 @@ class RosGraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
 
   // VIO
   ros::Publisher graph_vio_state_pub_, graph_vio_pub_;
-  ros::Subscriber imu_sub_, depth_odom_sub_, fp_sub_, flight_mode_sub_;
+  ros::Subscriber imu_sub_, depth_point_cloud_sub_, depth_odom_sub_, fp_sub_, flight_mode_sub_;
+  image_transport::Subscriber depth_image_sub_;
 };
 }  // namespace ros_graph_localizer
 

@@ -262,7 +262,12 @@ TimestampedNodeAdder<NodeType, TimestampedNodesType, NodeAdderModelType>::EndTim
 template <typename NodeType, typename TimestampedNodesType, typename NodeAdderModelType>
 bool TimestampedNodeAdder<NodeType, TimestampedNodesType, NodeAdderModelType>::CanAddNode(
   const localization_common::Time timestamp) const {
-  return node_adder_model_.CanAddNode(timestamp);
+  const auto end_time = EndTime();
+  if (!end_time) {
+    LogWarning("CanAddNode: Failed to get end time.");
+    return false;
+  }
+  return ((timestamp >= *end_time) && node_adder_model_.CanAddNode(timestamp));
 }
 
 template <typename NodeType, typename TimestampedNodesType, typename NodeAdderModelType>
@@ -301,7 +306,7 @@ template <typename NodeType, typename TimestampedNodesType, typename NodeAdderMo
 bool TimestampedNodeAdder<NodeType, TimestampedNodesType, NodeAdderModelType>::AddNode(
   const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) {
   if (nodes_->Contains(timestamp)) {
-    LogDebug(
+    LogError(
       "Adder: Node exists at "
       "timestamp, nothing to do.");
     return true;
@@ -312,12 +317,13 @@ bool TimestampedNodeAdder<NodeType, TimestampedNodesType, NodeAdderModelType>::A
     LogError("Adder: Failed to get end timestamp.");
     return false;
   }
-
+  LogError("node adders timestamp: " << std::setprecision(15) << timestamp);
+  LogError("end time: " << std::setprecision(15) << *end_time);
   if (timestamp > *end_time) {
-    LogDebug("Adder: Adding new nodes and relative factors.");
+    LogError("Adder: Adding new nodes and relative factors.");
     return AddNewNodesAndRelativeFactors(timestamp, factors);
   } else {
-    LogDebug("Adder: Splitting old relative factor.");
+    LogError("Adder: Splitting old relative factor.");
     return SplitOldRelativeFactor(timestamp, factors);
   }
 }
@@ -337,8 +343,12 @@ template <typename NodeType, typename TimestampedNodesType, typename NodeAdderMo
 bool TimestampedNodeAdder<NodeType, TimestampedNodesType, NodeAdderModelType>::SplitOldRelativeFactor(
   const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) {
   const auto timestamp_bounds = nodes_->LowerAndUpperBoundTimestamps(timestamp);
+  // TODO(rsoussan): print upper and lower bound! print timestamp!
   if (!timestamp_bounds.first || !timestamp_bounds.second) {
     LogError("SplitOldRelativeFactor: Failed to get upper and lower bound timestamp.");
+    LogError("oldest node: " << std::setprecision(15) << *(nodes_->OldestTimestamp()));
+    LogError("latest node: " << std::setprecision(15) << *(nodes_->LatestTimestamp()));
+    LogError("timestamp: " << std::setprecision(15) << timestamp);
     return false;
   }
 

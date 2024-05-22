@@ -27,6 +27,8 @@ struct LiveMeasurementSimulatorParams {
   MessageBufferParams imu;
   MessageBufferParams flight_mode;
   MessageBufferParams depth_odometry;
+  MessageBufferParams depth_image;
+  MessageBufferParams depth_cloud;
   MessageBufferParams of;
   MessageBufferParams vl;
   MessageBufferParams ar;

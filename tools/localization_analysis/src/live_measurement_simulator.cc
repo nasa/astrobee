@@ -69,6 +69,19 @@ LiveMeasurementSimulator::LiveMeasurementSimulator(const LiveMeasurementSimulato
   topics.push_back(std::string("/") + TOPIC_LOCALIZATION_DEPTH_ODOM);
   topics.push_back(TOPIC_LOCALIZATION_DEPTH_ODOM);
 
+  topic_localization_depth_image_ = static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_PREFIX) +
+                                    static_cast<std::string>(TOPIC_HARDWARE_NAME_HAZ_CAM) +
+                                    static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_SUFFIX_EXTENDED) +
+                                    static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_SUFFIX_AMPLITUDE_IMAGE);
+  topics.push_back(std::string("/") + topic_localization_depth_image_);
+  topics.push_back(topic_localization_depth_image_);
+
+  topic_localization_depth_cloud_ = static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_PREFIX) +
+                                    static_cast<std::string>(TOPIC_HARDWARE_NAME_HAZ_CAM) +
+                                    static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_SUFFIX);
+  topics.push_back(std::string("/") + topic_localization_depth_cloud_);
+  topics.push_back(topic_localization_depth_cloud_);
+
   topics.push_back(std::string("/") + TOPIC_MOBILITY_FLIGHT_MODE);
   topics.push_back(TOPIC_MOBILITY_FLIGHT_MODE);
 
@@ -105,15 +118,30 @@ bool LiveMeasurementSimulator::ProcessMessage() {
   if (*view_it_ == view_->end()) return false;
   const auto& msg = **view_it_;
   current_time_ = lc::TimeFromRosTime(msg.getTime());
-  if (string_ends_with(msg.getTopic(), TOPIC_MOBILITY_FLIGHT_MODE)) {
+  /*if (string_ends_with(msg.getTopic(), TOPIC_MOBILITY_FLIGHT_MODE)) {
     const ff_msgs::FlightModeConstPtr flight_mode = msg.instantiate<ff_msgs::FlightMode>();
     flight_mode_buffer_.BufferMessage(*flight_mode);
-  } else if (string_ends_with(msg.getTopic(), TOPIC_HARDWARE_IMU)) {
+  }*/
+  if (string_ends_with(msg.getTopic(), TOPIC_HARDWARE_IMU)) {
     sensor_msgs::ImuConstPtr imu_msg = msg.instantiate<sensor_msgs::Imu>();
     imu_buffer_.BufferMessage(*imu_msg);
   } else if (string_ends_with(msg.getTopic(), TOPIC_LOCALIZATION_DEPTH_ODOM)) {
     const ff_msgs::DepthOdometryConstPtr depth_odometry = msg.instantiate<ff_msgs::DepthOdometry>();
     depth_odometry_buffer_.BufferMessage(*depth_odometry);
+    /* else if (string_ends_with(msg.getTopic(), topic_localization_depth_image_)) {
+       const sensor_msgs::ImageConstPtr depth_image = msg.instantiate<sensor_msgs::Image>();
+       const auto depth_odometry_msgs = depth_odometry_wrapper_.ImageCallback(depth_image);
+       for (const auto& depth_odometry_msg : depth_odometry_msgs) {
+         depth_odometry_buffer_.BufferMessage(depth_odometry_msg);
+       }
+     } else if (string_ends_with(msg.getTopic(), topic_localization_depth_cloud_)) {
+       const sensor_msgs::PointCloud2ConstPtr depth_cloud = msg.instantiate<sensor_msgs::PointCloud2>();
+       const auto depth_odometry_msgs = depth_odometry_wrapper_.PointCloudCallback(depth_cloud);
+       for (const auto& depth_odometry_msg : depth_odometry_msgs) {
+         depth_odometry_buffer_.BufferMessage(depth_odometry_msg);
+       }
+     }
+   */
   } else if (string_ends_with(msg.getTopic(), TOPIC_LOCALIZATION_AR_FEATURES)) {
     // Always use ar features until have data with dock cam images
     const ff_msgs::VisualLandmarksConstPtr ar_features = msg.instantiate<ff_msgs::VisualLandmarks>();

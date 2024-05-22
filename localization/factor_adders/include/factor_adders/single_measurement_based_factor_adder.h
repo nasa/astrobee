@@ -45,8 +45,8 @@ class SingleMeasurementBasedFactorAdder : public MeasurementBasedFactorAdder<Mea
   virtual int AddFactorsForSingleMeasurement(const MeasurementType& measurement,
                                              gtsam::NonlinearFactorGraph& factors) = 0;
 
-  // Whether a factor can be added at the provided time.
-  virtual bool CanAddFactor(const localization_common::Time time) const = 0;
+  // Whether a factor can be added for the given measurement.
+  virtual bool CanAddFactor(const MeasurementType& measurement) const = 0;
 
   // Serialization function
   friend class boost::serialization::access;
@@ -69,7 +69,7 @@ int SingleMeasurementBasedFactorAdder<MeasurementType>::AddMeasurementBasedFacto
   this->ProcessMeasurements(
     oldest_allowed_time, newest_allowed_time,
     [this, &num_added_factors](const MeasurementType& measurement, gtsam::NonlinearFactorGraph& factors) {
-      if (!CanAddFactor(measurement.timestamp)) return false;
+      if (!CanAddFactor(measurement)) return false;
       num_added_factors += AddFactorsForSingleMeasurement(measurement, factors);
       return true;
     },

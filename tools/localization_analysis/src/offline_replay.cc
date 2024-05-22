@@ -112,6 +112,7 @@ void OfflineReplay::Run() {
     const auto depth_odometry_msg = live_measurement_simulator_->GetDepthOdometryMessage(current_time);
     if (depth_odometry_msg) {
       graph_vio_simulator_->BufferDepthOdometryMsg(*depth_odometry_msg);
+      SaveMsg(*depth_odometry_msg, TOPIC_LOCALIZATION_DEPTH_ODOM, results_bag_);
     }
     const auto of_msg = live_measurement_simulator_->GetOFMessage(current_time);
     if (of_msg) {

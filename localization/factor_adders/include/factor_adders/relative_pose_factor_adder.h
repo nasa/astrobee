@@ -42,7 +42,7 @@ class RelativePoseFactorAdder
     const localization_measurements::RelativePoseWithCovarianceMeasurement& measurement,
     gtsam::NonlinearFactorGraph& factors) final;
 
-  bool CanAddFactor(const localization_common::Time time) const final;
+  bool CanAddFactor(const localization_measurements::RelativePoseWithCovarianceMeasurement& measurement) const final;
 
   std::shared_ptr<PoseNodeAdderType> node_adder_;
   RelativePoseFactorAdderParams params_;
@@ -59,11 +59,15 @@ template <class PoseNodeAdderType>
 int RelativePoseFactorAdder<PoseNodeAdderType>::AddFactorsForSingleMeasurement(
   const localization_measurements::RelativePoseWithCovarianceMeasurement& measurement,
   gtsam::NonlinearFactorGraph& factors) {
-  node_adder_->AddNode(measurement.timestamp_a, factors);
+  if (!node_adder_->AddNode(measurement.timestamp_a, factors) ||
+      !node_adder_->AddNode(measurement.timestamp_b, factors)) {
+    LogError("AddFactorsForSingleMeasurement: Failed to add nodes at respective times.");
+    return 0;
+  }
+
   const auto keys_a = node_adder_->Keys(measurement.timestamp_a);
   // First key is pose key
   const auto& pose_key_a = keys_a[0];
-  node_adder_->AddNode(measurement.timestamp_b, factors);
   const auto keys_b = node_adder_->Keys(measurement.timestamp_b);
   const auto& pose_key_b = keys_b[0];
   const auto relative_pose_noise =
@@ -75,8 +79,9 @@ int RelativePoseFactorAdder<PoseNodeAdderType>::AddFactorsForSingleMeasurement(
 }
 
 template <class PoseNodeAdderType>
-bool RelativePoseFactorAdder<PoseNodeAdderType>::CanAddFactor(const localization_common::Time time) const {
-  return node_adder_->CanAddNode(time);
+bool RelativePoseFactorAdder<PoseNodeAdderType>::CanAddFactor(
+  const localization_measurements::RelativePoseWithCovarianceMeasurement& measurement) const {
+  return node_adder_->CanAddNode(measurement.time_a) && node_adder_->CanAddNode(measurement.time_b);
 }
 }  // namespace factor_adders
 

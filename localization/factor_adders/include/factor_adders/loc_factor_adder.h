@@ -53,7 +53,7 @@ class LocFactorAdder
     gtsam::NonlinearFactorGraph& factors) final;
 
   // Returns whether the node adder can add a node at the provided time.
-  bool CanAddFactor(const localization_common::Time time) const final;
+  bool CanAddFactor(const localization_measurements::MatchedProjectionsMeasurement& measurement) const final;
 
   // Adds a loc pose factor (pose prior)
   int AddLocPoseFactor(const localization_measurements::MatchedProjectionsMeasurement& matched_projections_measurement,
@@ -131,8 +131,9 @@ int LocFactorAdder<PoseNodeAdderType>::AddFactorsForSingleMeasurement(
 }
 
 template <typename PoseNodeAdderType>
-bool LocFactorAdder<PoseNodeAdderType>::CanAddFactor(const localization_common::Time time) const {
-  return node_adder_->CanAddNode(time);
+bool LocFactorAdder<PoseNodeAdderType>::CanAddFactor(
+  const localization_measurements::MatchedProjectionsMeasurement& measurement) const {
+  return node_adder_->CanAddNode(measurement.timestamp);
 }
 
 template <typename PoseNodeAdderType>

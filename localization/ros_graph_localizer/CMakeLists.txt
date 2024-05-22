@@ -26,6 +26,9 @@ find_package(Eigen3 REQUIRED)
 
 ## Find catkin macros and libraries
 find_package(catkin2 REQUIRED COMPONENTS
+  camera
+  config_reader
+  depth_odometry
   ff_util
   ff_msgs
   graph_localizer
@@ -43,6 +46,7 @@ catkin_package(
   CATKIN_DEPENDS
     camera
     config_reader
+    depth_odometry
     ff_util
     ff_msgs
     graph_localizer

@@ -83,7 +83,8 @@ void LoadImageFeaturesWithKnownCorrespondencesAlignerDepthOdometryParams(
   params.clahe_clip_limit = mc::LoadDouble(config, "clahe_clip_limit");
   params.min_x_distance_to_border = mc::LoadDouble(config, "min_x_distance_to_border");
   params.min_y_distance_to_border = mc::LoadDouble(config, "min_y_distance_to_border");
-  params.min_num_inliers = mc::LoadInt(config, "min_num_inliers");
+  params.min_num_correspondences = mc::LoadInt(config, "min_num_correspondences");
+  params.only_correspondences = mc::LoadBool(config, "only_correspondences");
   params.refine_estimate = mc::LoadBool(config, "refine_estimate");
   if (params.refine_estimate) LoadPointToPlaneICPDepthOdometryParams(config, params.point_to_plane_icp);
   LoadDepthOdometryParams(config, params);

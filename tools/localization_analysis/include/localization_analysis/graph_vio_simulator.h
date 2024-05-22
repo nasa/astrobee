@@ -26,7 +26,9 @@
 #include <localization_common/time.h>
 #include <ros_graph_vio/ros_graph_vio_wrapper.h>
 
+#include <sensor_msgs/Image.h>
 #include <sensor_msgs/Imu.h>
+#include <sensor_msgs/PointCloud2.h>
 
 #include <string>
 #include <vector>

@@ -61,6 +61,20 @@ void RosGraphLocalizerNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
   depth_odom_sub_ =
     private_nh_.subscribe(TOPIC_LOCALIZATION_DEPTH_ODOM, params_.max_depth_odom_buffer_size,
                           &RosGraphLocalizerNodelet::DepthOdometryCallback, this, ros::TransportHints().tcpNoDelay());
+  const std::string depth_point_cloud_topic = static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_PREFIX) +
+                                              static_cast<std::string>(TOPIC_HARDWARE_NAME_HAZ_CAM) +
+                                              static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_SUFFIX);
+  depth_point_cloud_sub_ = private_nh_.subscribe<sensor_msgs::PointCloud2>(
+    depth_point_cloud_topic, 1, &RosGraphLocalizerNodelet::DepthPointCloudCallback, this,
+    ros::TransportHints().tcpNoDelay());
+  image_transport::ImageTransport depth_image_transport(private_nh_);
+  const std::string depth_image_topic = static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_PREFIX) +
+                                        static_cast<std::string>(TOPIC_HARDWARE_NAME_HAZ_CAM) +
+                                        static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_SUFFIX_EXTENDED) +
+                                        static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_SUFFIX_AMPLITUDE_IMAGE);
+  depth_image_sub_ =
+    depth_image_transport.subscribe(depth_image_topic, 1, &RosGraphLocalizerNodelet::DepthImageCallback, this);
+
   fp_sub_ =
     private_nh_.subscribe(TOPIC_LOCALIZATION_OF_FEATURES, params_.max_feature_point_buffer_size,
                           &RosGraphLocalizerNodelet::FeaturePointsCallback, this, ros::TransportHints().tcpNoDelay());
@@ -170,9 +184,30 @@ void RosGraphLocalizerNodelet::FeaturePointsCallback(const ff_msgs::Feature2dArr
   ros_graph_vio_wrapper_.FeaturePointsCallback(*feature_array_msg);
 }
 
-void RosGraphLocalizerNodelet::DepthOdometryCallback(const ff_msgs::DepthOdometry::ConstPtr& depth_odom_msg) {
+void RosGraphLocalizerNodelet::DepthPointCloudCallback(const sensor_msgs::PointCloud2ConstPtr& point_cloud_msg) {
+  LogError("got depth cloud!!!");
   if (!localizer_enabled()) return;
-  ros_graph_vio_wrapper_.DepthOdometryCallback(*depth_odom_msg);
+  const auto depth_odometry_msgs = depth_odometry_wrapper_.PointCloudCallback(point_cloud_msg);
+  for (const auto& depth_odometry_msg : depth_odometry_msgs) {
+    LogError("added depth image to vio!!!");
+    ros_graph_vio_wrapper_.DepthOdometryCallback(depth_odometry_msg);
+  }
+}
+
+void RosGraphLocalizerNodelet::DepthImageCallback(const sensor_msgs::ImageConstPtr& image_msg) {
+  LogError("got depth image!!!");
+  if (!localizer_enabled()) return;
+  const auto depth_odometry_msgs = depth_odometry_wrapper_.ImageCallback(image_msg);
+  for (const auto& depth_odometry_msg : depth_odometry_msgs) {
+    LogError("added depth image to vio!!!");
+    ros_graph_vio_wrapper_.DepthOdometryCallback(depth_odometry_msg);
+  }
+}
+
+void RosGraphLocalizerNodelet::DepthOdometryCallback(const ff_msgs::DepthOdometry::ConstPtr& depth_odom_msg) {
+  LogError("got depth odom!!!");
+  if (!localizer_enabled()) return;
+  // ros_graph_vio_wrapper_.DepthOdometryCallback(*depth_odom_msg);
 }
 
 void RosGraphLocalizerNodelet::ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_msg) {
