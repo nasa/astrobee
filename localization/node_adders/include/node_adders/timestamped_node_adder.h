@@ -318,10 +318,10 @@ bool TimestampedNodeAdder<NodeType, TimestampedNodesType, NodeAdderModelType>::A
     return false;
   }
   if (timestamp > *end_time) {
-    LogError("Adder: Adding new nodes and relative factors.");
+    LogDebug("Adder: Adding new nodes and relative factors.");
     return AddNewNodesAndRelativeFactors(timestamp, factors);
   } else {
-    LogError("Adder: Splitting old relative factor.");
+    LogDebug("Adder: Splitting old relative factor.");
     return SplitOldRelativeFactor(timestamp, factors);
   }
 }
