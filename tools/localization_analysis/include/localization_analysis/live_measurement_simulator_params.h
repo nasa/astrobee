@@ -38,6 +38,7 @@ struct LiveMeasurementSimulatorParams {
   std::string map_file;
   std::string image_topic;
   bool use_bag_image_feature_msgs;
+  bool use_bag_depth_odom_msgs;
   bool save_optical_flow_images;
 };
 }  // namespace localization_analysis

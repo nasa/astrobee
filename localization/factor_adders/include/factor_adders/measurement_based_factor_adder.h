@@ -83,10 +83,7 @@ template <typename MeasurementType>
 int MeasurementBasedFactorAdder<MeasurementType>::AddFactors(const localization_common::Time oldest_allowed_time,
                                                              const localization_common::Time newest_allowed_time,
                                                              gtsam::NonlinearFactorGraph& factors) {
-  LogError("add measurement based factors! oldest allowed time: " << std::setprecision(15) << oldest_allowed_time);
-  LogError("add measurement based factors! newest allowed time: " << std::setprecision(15) << newest_allowed_time);
   const int num_added_factors = AddMeasurementBasedFactors(oldest_allowed_time, newest_allowed_time, factors);
-  LogError("removing old measurements!");
   RemoveOldMeasurements(oldest_allowed_time);
   return num_added_factors;
 }

@@ -125,23 +125,21 @@ bool LiveMeasurementSimulator::ProcessMessage() {
   if (string_ends_with(msg.getTopic(), TOPIC_HARDWARE_IMU)) {
     sensor_msgs::ImuConstPtr imu_msg = msg.instantiate<sensor_msgs::Imu>();
     imu_buffer_.BufferMessage(*imu_msg);
-  } else if (string_ends_with(msg.getTopic(), TOPIC_LOCALIZATION_DEPTH_ODOM)) {
+  } else if (params_.use_bag_depth_odom_msgs && string_ends_with(msg.getTopic(), TOPIC_LOCALIZATION_DEPTH_ODOM)) {
     const ff_msgs::DepthOdometryConstPtr depth_odometry = msg.instantiate<ff_msgs::DepthOdometry>();
     depth_odometry_buffer_.BufferMessage(*depth_odometry);
-    /* else if (string_ends_with(msg.getTopic(), topic_localization_depth_image_)) {
-       const sensor_msgs::ImageConstPtr depth_image = msg.instantiate<sensor_msgs::Image>();
-       const auto depth_odometry_msgs = depth_odometry_wrapper_.ImageCallback(depth_image);
-       for (const auto& depth_odometry_msg : depth_odometry_msgs) {
-         depth_odometry_buffer_.BufferMessage(depth_odometry_msg);
-       }
-     } else if (string_ends_with(msg.getTopic(), topic_localization_depth_cloud_)) {
-       const sensor_msgs::PointCloud2ConstPtr depth_cloud = msg.instantiate<sensor_msgs::PointCloud2>();
-       const auto depth_odometry_msgs = depth_odometry_wrapper_.PointCloudCallback(depth_cloud);
-       for (const auto& depth_odometry_msg : depth_odometry_msgs) {
-         depth_odometry_buffer_.BufferMessage(depth_odometry_msg);
-       }
-     }
-   */
+  } else if (!params_.use_bag_depth_odom_msgs && string_ends_with(msg.getTopic(), topic_localization_depth_image_)) {
+    const sensor_msgs::ImageConstPtr depth_image = msg.instantiate<sensor_msgs::Image>();
+    const auto depth_odometry_msgs = depth_odometry_wrapper_.ImageCallback(depth_image);
+    for (const auto& depth_odometry_msg : depth_odometry_msgs) {
+      depth_odometry_buffer_.BufferMessage(depth_odometry_msg);
+    }
+  } else if (!params_.use_bag_depth_odom_msgs && string_ends_with(msg.getTopic(), topic_localization_depth_cloud_)) {
+    const sensor_msgs::PointCloud2ConstPtr depth_cloud = msg.instantiate<sensor_msgs::PointCloud2>();
+    const auto depth_odometry_msgs = depth_odometry_wrapper_.PointCloudCallback(depth_cloud);
+    for (const auto& depth_odometry_msg : depth_odometry_msgs) {
+      depth_odometry_buffer_.BufferMessage(depth_odometry_msg);
+    }
   } else if (string_ends_with(msg.getTopic(), TOPIC_LOCALIZATION_AR_FEATURES)) {
     // Always use ar features until have data with dock cam images
     const ff_msgs::VisualLandmarksConstPtr ar_features = msg.instantiate<ff_msgs::VisualLandmarks>();

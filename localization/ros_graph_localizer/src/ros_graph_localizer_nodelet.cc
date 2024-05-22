@@ -185,27 +185,22 @@ void RosGraphLocalizerNodelet::FeaturePointsCallback(const ff_msgs::Feature2dArr
 }
 
 void RosGraphLocalizerNodelet::DepthPointCloudCallback(const sensor_msgs::PointCloud2ConstPtr& point_cloud_msg) {
-  LogError("got depth cloud!!!");
   if (!localizer_enabled()) return;
   const auto depth_odometry_msgs = depth_odometry_wrapper_.PointCloudCallback(point_cloud_msg);
   for (const auto& depth_odometry_msg : depth_odometry_msgs) {
-    LogError("added depth image to vio!!!");
     ros_graph_vio_wrapper_.DepthOdometryCallback(depth_odometry_msg);
   }
 }
 
 void RosGraphLocalizerNodelet::DepthImageCallback(const sensor_msgs::ImageConstPtr& image_msg) {
-  LogError("got depth image!!!");
   if (!localizer_enabled()) return;
   const auto depth_odometry_msgs = depth_odometry_wrapper_.ImageCallback(image_msg);
   for (const auto& depth_odometry_msg : depth_odometry_msgs) {
-    LogError("added depth image to vio!!!");
     ros_graph_vio_wrapper_.DepthOdometryCallback(depth_odometry_msg);
   }
 }
 
 void RosGraphLocalizerNodelet::DepthOdometryCallback(const ff_msgs::DepthOdometry::ConstPtr& depth_odom_msg) {
-  LogError("got depth odom!!!");
   if (!localizer_enabled()) return;
   // ros_graph_vio_wrapper_.DepthOdometryCallback(*depth_odom_msg);
 }

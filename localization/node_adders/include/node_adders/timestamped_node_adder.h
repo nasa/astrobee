@@ -317,8 +317,6 @@ bool TimestampedNodeAdder<NodeType, TimestampedNodesType, NodeAdderModelType>::A
     LogError("Adder: Failed to get end timestamp.");
     return false;
   }
-  LogError("node adders timestamp: " << std::setprecision(15) << timestamp);
-  LogError("end time: " << std::setprecision(15) << *end_time);
   if (timestamp > *end_time) {
     LogError("Adder: Adding new nodes and relative factors.");
     return AddNewNodesAndRelativeFactors(timestamp, factors);
@@ -346,9 +344,6 @@ bool TimestampedNodeAdder<NodeType, TimestampedNodesType, NodeAdderModelType>::S
   // TODO(rsoussan): print upper and lower bound! print timestamp!
   if (!timestamp_bounds.first || !timestamp_bounds.second) {
     LogError("SplitOldRelativeFactor: Failed to get upper and lower bound timestamp.");
-    LogError("oldest node: " << std::setprecision(15) << *(nodes_->OldestTimestamp()));
-    LogError("latest node: " << std::setprecision(15) << *(nodes_->LatestTimestamp()));
-    LogError("timestamp: " << std::setprecision(15) << timestamp);
     return false;
   }
 

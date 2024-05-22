@@ -72,10 +72,6 @@ int DepthOdometryFactorAdder<PoseNodeAdderType>::AddFactorsForSingleMeasurement(
   const auto& pose_key_b = keys_b[0];
 
   if (params_.use_points_between_factor) {
-    LogError("measurement time: " << std::setprecision(15) << measurement.timestamp);
-    LogError("source time: " << std::setprecision(15) << measurement.odometry.source_time);
-    LogError("target time: " << std::setprecision(15) << measurement.odometry.target_time);
-    LogError("Adding points between factor!");
     int num_between_factors = 0;
     for (int i = 0; i < measurement.correspondences.source_3d_points.size() &&
                     num_between_factors < params_.max_num_points_between_factors;
@@ -95,7 +91,7 @@ int DepthOdometryFactorAdder<PoseNodeAdderType>::AddFactorsForSingleMeasurement(
       factors.push_back(points_between_factor);
       ++num_between_factors;
     }
-    LogError("AddFactors: Added " << num_between_factors << " points between factors.");
+    LogDebug("AddFactors: Added " << num_between_factors << " points between factors.");
     return num_between_factors;
   } else {
     const double translation_norm = measurement.odometry.sensor_F_source_T_target.pose.translation().norm();
