@@ -1,8 +1,17 @@
-diff --git a/CMakeLists.txt b/ar_track_alvar/CMakeLists.txt
-index 94e94f2..33b3fc7 100644
---- a/CMakeLists.txt
-+++ b/ar_track_alvar/CMakeLists.txt
-@@ -22,6 +22,7 @@ find_package(catkin REQUIRED COMPONENTS
+Index: ar_track_alvar/CMakeLists.txt
+===================================================================
+--- ar_track_alvar.orig/CMakeLists.txt
++++ ar_track_alvar/CMakeLists.txt
+@@ -9,8 +9,6 @@ find_package(catkin REQUIRED COMPONENTS
+         geometry_msgs
+         image_transport
+         message_generation
+-        pcl_conversions
+-        pcl_ros
+         resource_retriever
+         roscpp
+         sensor_msgs
+@@ -22,6 +20,7 @@ find_package(catkin REQUIRED COMPONENTS
  find_package(Eigen3 REQUIRED)
  find_package(OpenCV REQUIRED)
  find_package(TinyXML REQUIRED)
@@ -10,7 +19,7 @@ index 94e94f2..33b3fc7 100644
  
  # dynamic reconfigure support
  generate_dynamic_reconfigure_options(cfg/Params.cfg)
-@@ -36,8 +37,6 @@ catkin_package(
+@@ -36,8 +35,6 @@ catkin_package(
          geometry_msgs
          image_transport
          message_runtime
@@ -19,15 +28,15 @@ index 94e94f2..33b3fc7 100644
          resource_retriever
          roscpp
          sensor_msgs
-@@ -51,6 +50,7 @@ include_directories(include
+@@ -51,6 +48,7 @@ include_directories(include
                      ${catkin_INCLUDE_DIRS}
                      ${OpenCV_INCLUDE_DIRS}
                      ${TinyXML_INCLUDE_DIRS}
-+                    ${PCL_INCLUDE_DIRS}
++		    ${PCL_INCLUDE_DIRS}
  
  )
  
-@@ -85,43 +85,10 @@ add_library(${PROJECT_NAME}
+@@ -85,43 +83,10 @@ add_library(${PROJECT_NAME}
      src/Threads_unix.cpp
      src/Util.cpp
  )
@@ -73,10 +82,10 @@ index 94e94f2..33b3fc7 100644
    ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
    LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
    RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-diff --git a/include/ar_track_alvar/filter/kinect_filtering.h b/ar_track_alvar/include/ar_track_alvar/filter/kinect_filtering.h
-index d0d8655..3f7f5c6 100644
---- a/include/ar_track_alvar/filter/kinect_filtering.h
-+++ b/ar_track_alvar/include/ar_track_alvar/filter/kinect_filtering.h
+Index: ar_track_alvar/include/ar_track_alvar/filter/kinect_filtering.h
+===================================================================
+--- ar_track_alvar.orig/include/ar_track_alvar/filter/kinect_filtering.h
++++ ar_track_alvar/include/ar_track_alvar/filter/kinect_filtering.h
 @@ -39,7 +39,6 @@
  #ifndef AR_TRACK_ALVAR_KINECT_FILTERING_H
  #define AR_TRACK_ALVAR_KINECT_FILTERING_H
@@ -85,23 +94,18 @@ index d0d8655..3f7f5c6 100644
  #include <pcl/point_types.h>
  #include <pcl/registration/icp.h>
  #include <pcl/registration/registration.h>
-@@ -47,11 +46,10 @@
- #include <geometry_msgs/PoseStamped.h>
- #include <ros/ros.h>
- #include <pcl/ModelCoefficients.h>
--#include <pcl/point_types.h>
+@@ -51,7 +50,6 @@
  #include <pcl/sample_consensus/method_types.h>
  #include <pcl/sample_consensus/model_types.h>
  #include <pcl/segmentation/sac_segmentation.h>
 -#include <pcl_ros/point_cloud.h>
-+// #include <pcl_ros/point_cloud.h>
  #include <pcl/filters/extract_indices.h>
  #include <boost/lexical_cast.hpp>
  #include <Eigen/StdVector>
-diff --git a/package.xml b/ar_track_alvar/package.xml
-index 727c817..80f317b 100644
---- a/package.xml
-+++ b/ar_track_alvar/package.xml
+Index: ar_track_alvar/package.xml
+===================================================================
+--- ar_track_alvar.orig/package.xml
++++ ar_track_alvar/package.xml
 @@ -22,8 +22,6 @@
   <depend>dynamic_reconfigure</depend>
   <depend>geometry_msgs</depend>
