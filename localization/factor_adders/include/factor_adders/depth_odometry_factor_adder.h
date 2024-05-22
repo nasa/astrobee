@@ -63,7 +63,7 @@ int DepthOdometryFactorAdder<PoseNodeAdderType>::AddFactorsForSingleMeasurement(
   if (!node_adder_->AddNode(measurement.odometry.source_time, factors) ||
       !node_adder_->AddNode(measurement.odometry.target_time, factors)) {
     LogError("AddFactorsForSingleMeasurement: Failed to add nodes at source and target time.");
-    // return 0;
+    return 0;
   }
   const auto keys_a = node_adder_->Keys(measurement.odometry.source_time);
   // First key is pose key
