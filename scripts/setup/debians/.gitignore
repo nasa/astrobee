@@ -18,4 +18,4 @@ libdecomputil
 libjps3d
 libmiro
 libsoracore
-libopencv
+libopencv-xfeatures2d
