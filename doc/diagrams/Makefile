@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 
 # Define the path to the plantuml library
 # currently just assume that it has been copied locally

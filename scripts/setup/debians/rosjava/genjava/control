@@ -1,0 +1,12 @@
+Source: ros-noetic-genjava
+Section: misc
+Priority: extra
+Maintainer: Ruben Garcia <nospam@nospam.org>
+Build-Depends: debhelper (>= 9.0.0), python3-catkin-pkg, python3-rospkg, ros-noetic-catkin, ros-noetic-genmsg, ros-noetic-rosjava-bootstrap, ros-noetic-rosjava-build-tools
+Homepage: http://www.ros.org/wiki/genjava
+Standards-Version: 3.9.2
+
+Package: ros-noetic-genjava
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, python3-catkin-pkg, python3-rospkg, ros-noetic-genmsg, ros-noetic-rosjava-bootstrap, ros-noetic-rosjava-build-tools
+Description: Java ROS message and service generators.

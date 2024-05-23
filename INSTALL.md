@@ -2,13 +2,13 @@
 
 ## System requirements
 
-Ubuntu 20.04 is the preferred host OS for most Astrobee developers to use.
+Ubuntu 20.04 is currently the only supported platform.
 
-Here are the available host OS options with development roadmap details (use 64-bit PC (AMD64) desktop image):
-- [Ubuntu 20.04](http://releases.ubuntu.com/20.04): This is the preferred host OS for most Astrobee developers to use. The Astrobee Facility team is currently preparing to upgrade the robots on ISS from Ubuntu 16.04 to Ubuntu 20.04, but we aren't yet ready to announce a deployment date for that upgrade.
-- [Ubuntu 16.04](http://releases.ubuntu.com/16.04): The Astrobee robot hardware on ISS currently runs Ubuntu 16.04. Only developers with NASA internal access can cross-compile software to run on the robot, and must use 16.04 for that. Most developers shouldn't need to work with 16.04, especially when just getting started. Support will eventually be discontinued after the robot hardware on ISS is upgraded to Ubuntu 20.04.
+Here are the currently available host OS options with development roadmap details (use 64-bit PC (AMD64) desktop image):
+- [Ubuntu 20.04](http://releases.ubuntu.com/20.04): This is currently the only supported platform. The Astrobee hardware on ISS has been running Ubuntu 20.04 since it was upgraded during the "Crew-Minimal S14" activity on December 19, 2023.
 
 Specifically not supported:
+- ~~[Ubuntu 16.04](http://releases.ubuntu.com/16.04)~~: No longer supported. The Astrobee robot hardware ran Ubuntu 16.04 from its launch in 2019 until it was upgraded to run Ubuntu 20.04. Ubuntu 16.04 support was discontinued in February 2024. Ending Ubuntu 16.04 support removed important limitations. For example, going forward, Astrobee's software will no longer need to be backward-compatible with Python 2 and OpenCV 3.
 - ~~[Ubuntu 18.04](http://releases.ubuntu.com/18.04)~~: Ubuntu 18.04 support as a software development platform was discontinued as of November 2023. (It was never supported on the robot hardware.)
 - ~~[Ubuntu 22.04](http://releases.ubuntu.com/22.04)~~: There is currently no plan for Ubuntu 22.04 support on the Astrobee roadmap. However, note that Astrobee ROS2 support, when it eventually becomes available, is currently expected to use the ROS2 Humble Hawksbill distribution that normally runs on 22.04, but backported to run on 20.04 (the last Ubuntu version supported by ROS1). This will facilitate migrating from ROS1 to ROS2 without requiring a simultaneous Ubuntu distribution upgrade.
 

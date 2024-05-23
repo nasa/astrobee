@@ -21,23 +21,23 @@ If running on P4C, please change the dev flag from /dev/i2c-1 to /dev/i2c-0
 
 There are two ways to set the flashlight brightness in the fsw. The fsw is set up such that setting brightness to 0 turns the flashlight off and setting the brightness anywhere from 1 to 200 turns the flashlight on. The first way is by calling the set flashlight service from the command line. To turn the front flashlight on, run:
 
-    rosservice call /hw/light_front/control 100
+    rosservice call /hw/flashlight_front/control 100
 
 To turn the front flashlight off, run:
 
-    rosservice call /hw/light_front/control 0
+    rosservice call /hw/flashlight_front/control 0
 
 To turn the back flashlight on, run:
 
-    rosservice call /hw/light_aft/control 100
+    rosservice call /hw/flashlight_aft/control 100
 
 To turn the back flashlight off, run:
 
-    rosservice call /hw/light_aft/control 0
+    rosservice call /hw/flashlight_aft/control 0
 
 The second way is to send a set flashlight brightness command to the executive. You can either do this by using the teleop command tab in GDS or publishing the command to the /command topic from the command line. To turn the front flashlight on, run:
 
-    rostopic pub --once /command ff_msgs/CommandStamped '{cmd_name: "setFlashlightBrightness", subsys_name: "Astrobee", args: [{data_type: 5, s: Front}, {data_type: 2, f: 100}]}'
+    rostopic pub --once /command ff_msgs/CommandStamped '{cmd_name: "setFlashlightBrightness", subsys_name: "Astrobee", args: [{data_type: 5, s: Front}, {data_type: 2, f: 1}]}'
 
 To turn the front flashlight off, run:
 
@@ -45,7 +45,7 @@ To turn the front flashlight off, run:
 
 To turn the back flashlight on, run:
 
-    rostopic pub --once /command ff_msgs/CommandStamped '{cmd_name: "setFlashlightBrightness", subsys_name: "Astrobee", args: [{data_type: 5, s: Back}, {data_type: 2, f: 100}]}'
+    rostopic pub --once /command ff_msgs/CommandStamped '{cmd_name: "setFlashlightBrightness", subsys_name: "Astrobee", args: [{data_type: 5, s: Back}, {data_type: 2, f: 1}]}'
 
 To turn the back flashlight off, run:
 
