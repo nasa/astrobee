@@ -91,7 +91,6 @@ class RosGraphLocalizerWrapper {
   void Initialize();
 
   std::unique_ptr<imu_integration::ImuIntegrator> imu_integrator_;
-  localization_common::PoseInterpolater odom_interpolator_;
   graph_localizer::GraphLocalizerParams params_;
   RosGraphLocalizerWrapperParams wrapper_params_;
   localization_common::TimestampedSet<ff_msgs::GraphVIOState> vio_measurement_buffer_;

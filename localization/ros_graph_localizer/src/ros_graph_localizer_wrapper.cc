@@ -158,7 +158,6 @@ bool RosGraphLocalizerWrapper::GraphVIOStateCallback(const ff_msgs::GraphVIOStat
     latest_correlation_covariances);
   graph_localizer_->AddPoseMeasurement(pose_measurement);
   last_vio_msg_time_ = timestamp;
-  odom_interpolator_.Add(latest_combined_nav_state.timestamp(), lc::EigenPose(latest_combined_nav_state.pose()));
   latest_vio_state_ = latest_combined_nav_state;
   return true;
 }
@@ -185,7 +184,6 @@ void RosGraphLocalizerWrapper::ResetLocalizer() {
   }
   graph_localizer_.reset();
   imu_integrator_.reset(new ii::ImuIntegrator(wrapper_params_.imu_integrator));
-  odom_interpolator_.Clear();
   vio_measurement_buffer_.Clear();
   latest_vio_state_ = boost::none;
   latest_msg_time_ = boost::none;
@@ -220,7 +218,6 @@ boost::optional<ff_msgs::GraphLocState> RosGraphLocalizerWrapper::GraphLocStateM
     return boost::none;
   }
   latest_msg_time_ = latest_timestamp;
-  odom_interpolator_.RemoveBelowLowerBoundValues(latest_timestamp);
   ff_msgs::GraphLocState msg;
   const auto latest_pose = *LatestPose();
   const auto latest_keys = graph_localizer_->pose_nodes().Keys(latest_timestamp);
