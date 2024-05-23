@@ -122,10 +122,8 @@ def main():
         output_hugin = args.output_hugin
 
     if args.input_hugin is not None:
-        # create a C++ std::ifstream
-        ifs = ifstream(args.input_hugin)
         # read the pto file into the Panorama object
-        p.readData(ifs)
+        p.ReadPTOFile(args.input_hugin)
         # don't need anymore
         del ifs
 
@@ -146,6 +144,8 @@ def main():
 
     # write the modified panorama to that stream
     p.WritePTOFile(output_hugin)
+    # done with it
+    del ofs
 
 
 if __name__ == "__main__":
