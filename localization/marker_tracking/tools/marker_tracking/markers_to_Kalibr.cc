@@ -168,7 +168,6 @@ int main(int argc, char* argv[]) {
     // Decode ID of each marker tag into its hexadecimal code.
     std::deque<bool> bs;
     marker.SetContent(alvar::MarkerData::MarkerContentType::MARKER_CONTENT_TYPE_NUMBER, marker_tag.id, 0);
-    // CAREFUL REVIEW: More efficient is to use pointers rather than iterators
     uchar* ip;
     for (int i = 0; i < marker.GetContent().rows; ++i) {
       ip = marker.GetContent().ptr<uchar>(i);
