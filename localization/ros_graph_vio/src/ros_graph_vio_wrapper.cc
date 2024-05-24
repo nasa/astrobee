@@ -170,6 +170,7 @@ boost::optional<ff_msgs::GraphVIOState> RosGraphVIOWrapper::GraphVIOStateMsg() {
   lc::TimeToHeader(*(nodes.LatestTimestamp()), msg.header);
   msg.child_frame_id = "odom";
   msg.standstill = graph_vio_->standstill();
+  msg.estimating_bias = !Initialized() && !imu_bias_initializer_->Bias();
   msg.num_detected_of_features = graph_vio_->feature_tracker().size();
   msg.num_of_factors = graph_vio_->NumFactors<factor_adders::RobustSmartFactor>();
   msg.num_depth_factors = graph_vio_->NumFactors<gtsam::PointToPointBetweenFactor>();
