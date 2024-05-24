@@ -55,9 +55,7 @@ bool ISAM2Optimizer::Optimize(const gtsam::NonlinearFactorGraph& factors, gtsam:
   return true;
 }
 
-int ISAM2Optimizer::iterations() const {
-  return 1;
-}
+int ISAM2Optimizer::iterations() const { return 1; }
 
 void ISAM2Optimizer::SetOptimizationParams() {
   // TODO(rsoussan): Add more params ISAM2OptimizerParams to custom set gtsam::ISAM2Params

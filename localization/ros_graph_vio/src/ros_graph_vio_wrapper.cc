@@ -177,7 +177,7 @@ boost::optional<ff_msgs::GraphVIOState> RosGraphVIOWrapper::GraphVIOStateMsg() {
   msg.optimization_time = graph_vio_->optimization_timer().last_value();
   msg.update_time = graph_vio_->update_timer().last_value();
   // Divide values by three since each state contains three values (pose, velocity, biases)
-  msg.num_states = graph_vio_->num_values()/3.0;
+  msg.num_states = graph_vio_->num_values() / 3.0;
   msg.duration = graph_vio_->Duration();
   latest_msg_time_ = latest_time;
   // TODO(rsoussan): Add more stats here! estimating bias!

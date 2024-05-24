@@ -84,7 +84,6 @@ ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometry::DepthImageCallback(
     return boost::none;
   }
 
-
   const auto& matches = feature_detector_and_matcher_->Match(previous_depth_image_features_and_points_->feature_image(),
                                                              latest_depth_image_features_and_points_->feature_image());
 

@@ -53,10 +53,9 @@ void RosGraphLocalizerWrapper::LoadConfigs(const std::string& graph_config_path_
 }
 
 void RosGraphLocalizerWrapper::SparseMapVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg) {
-latest_num_detected_ml_features_ = static_cast<int>(visual_landmarks_msg.landmarks.size());
+  latest_num_detected_ml_features_ = static_cast<int>(visual_landmarks_msg.landmarks.size());
   // Make sure enough landmarks are in the measurement for it to be valid
-  if (latest_num_detected_ml_features_ <
-      params_.sparse_map_loc_factor_adder.min_num_matches_per_measurement) {
+  if (latest_num_detected_ml_features_ < params_.sparse_map_loc_factor_adder.min_num_matches_per_measurement) {
     return;
   }
 
@@ -96,9 +95,8 @@ latest_num_detected_ml_features_ = static_cast<int>(visual_landmarks_msg.landmar
 }
 
 void RosGraphLocalizerWrapper::ARVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg) {
-latest_num_detected_ar_features_ = static_cast<int>(visual_landmarks_msg.landmarks.size());
-  if (latest_num_detected_ar_features_ <
-      params_.ar_tag_loc_factor_adder.min_num_matches_per_measurement) {
+  latest_num_detected_ar_features_ = static_cast<int>(visual_landmarks_msg.landmarks.size());
+  if (latest_num_detected_ar_features_ < params_.ar_tag_loc_factor_adder.min_num_matches_per_measurement) {
     return;
   }
 
@@ -239,8 +237,8 @@ boost::optional<ff_msgs::GraphLocState> RosGraphLocalizerWrapper::GraphLocStateM
   msg.update_time = graph_localizer_->update_timer().last_value();
   msg.duration = graph_localizer_->Duration();
   msg.num_states = graph_localizer_->num_values();
-latest_num_detected_ml_features_ = 0;
-latest_num_detected_ar_features_ = 0;
+  latest_num_detected_ml_features_ = 0;
+  latest_num_detected_ar_features_ = 0;
   return msg;
 }
 }  // namespace ros_graph_localizer

@@ -62,9 +62,7 @@ bool NonlinearOptimizer::Optimize(const gtsam::NonlinearFactorGraph& factors, gt
   return true;
 }
 
-int NonlinearOptimizer::iterations() const {
-  return iterations_;
-}
+int NonlinearOptimizer::iterations() const { return iterations_; }
 
 void NonlinearOptimizer::SetOptimizationParams() {
   // Initialize lm params
