@@ -388,6 +388,20 @@ def integrate_velocities(velocities, starting_pose):
     return integrated_poses
 
 
+# Return list of ml measurement counts from graph loc states
+def ml_feature_counts_from_graph_loc_states(graph_loc_states):
+    return [
+        graph_loc_state.num_detected_ml_features for graph_loc_state in graph_loc_states
+    ]
+
+
+# Return list of ar measurement counts from graph loc states
+def ar_feature_counts_from_graph_loc_states(graph_loc_states):
+    return [
+        graph_loc_state.num_detected_ar_features for graph_loc_state in graph_loc_states
+    ]
+
+
 # Return list of optical flow feature counts from graph vio states
 def optical_flow_feature_counts_from_graph_vio_states(graph_vio_states):
     return [
@@ -421,6 +435,11 @@ def ml_projection_factor_counts_from_graph_loc_states(graph_loc_states):
 # Return list of standstill occurances times from states
 def standstill_from_states(states):
     return [int(state.standstill) for state in states]
+
+
+# Return list of optimization iterations from states
+def optimization_iterations_from_states(states):
+    return [state.optimization_iterations for state in states]
 
 
 # Return list of num states from states
@@ -513,6 +532,22 @@ def gyro_bias_plotter_from_graph_vio_states(graph_vio_states):
     return Vector3dPlotter("Graph VIO Gyro Bias", times, xs, ys, zs, ["X", "Y", "Z"])
 
 
+def ml_feature_count_plotter_from_graph_loc_states(graph_loc_states):
+    counts = ml_feature_counts_from_graph_loc_states(graph_loc_states)
+    times = times_from_timestamped_objects(graph_loc_states)
+    return ValuePlotter(
+        "Graph Loc ML Feature Counts", times, counts, "Time (s)", "Num Features", "ML"
+    )
+
+
+def ar_feature_count_plotter_from_graph_loc_states(graph_loc_states):
+    counts = ar_feature_counts_from_graph_loc_states(graph_loc_states)
+    times = times_from_timestamped_objects(graph_loc_states)
+    return ValuePlotter(
+        "Graph Loc AR Feature Counts", times, counts, "Time (s)", "Num Features", "AR"
+    )
+
+
 def optical_flow_feature_count_plotter_from_graph_vio_states(graph_vio_states):
     counts = optical_flow_feature_counts_from_graph_vio_states(graph_vio_states)
     times = times_from_timestamped_objects(graph_vio_states)
@@ -568,6 +603,19 @@ def standstill_plotter_from_states(states):
         "Time (s)",
         "Standstill (True/False)",
         "Standstill",
+    )
+
+
+def optimization_iterations_plotter_from_states(states):
+    optimization_iterations = optimization_iterations_from_states(states)
+    times = times_from_timestamped_objects(states)
+    return ValuePlotter(
+        "Num Graph Optimization Iterations",
+        times,
+        optimization_iterations,
+        "Time (s)",
+        "Num Iterations",
+        "Num Optimization Iterations",
     )
 
 

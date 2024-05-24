@@ -174,6 +174,16 @@ def plot_loc_results(
         imu_accelerations_plotter.add(imu_acceleration_plotter)
         imu_accelerations_plotter.plot(pdf)
 
+    ml_count_plotter = plot_conversions.ml_feature_count_plotter_from_graph_loc_states(
+        graph_loc_states
+    )
+    ml_count_plotter.plot(pdf)
+
+    ar_count_plotter = plot_conversions.ar_feature_count_plotter_from_graph_loc_states(
+        graph_loc_states
+    )
+    ar_count_plotter.plot(pdf)
+
     ml_num_pose_factors_plotter = plot_conversions.ml_pose_factor_count_plotter_from_graph_loc_states(
         graph_loc_states
     )
@@ -184,6 +194,14 @@ def plot_loc_results(
     )
     ml_num_projection_factors_plotter.plot(pdf)
 
+    num_states_plotter = plot_conversions.num_states_plotter_from_states(
+        graph_loc_states
+    )
+    num_states_plotter.plot(pdf)
+
+    duration_plotter = plot_conversions.duration_plotter_from_states(graph_loc_states)
+    duration_plotter.plot(pdf)
+
     optimization_time_plotter = plot_conversions.optimization_time_plotter_from_states(
         graph_loc_states
     )
@@ -193,6 +211,11 @@ def plot_loc_results(
         graph_loc_states
     )
     update_time_plotter.plot(pdf)
+
+    optimization_iterations_plotter = plot_conversions.optimization_iterations_plotter_from_states(
+        graph_loc_states
+    )
+    optimization_iterations_plotter.plot(pdf)
 
 
 # Loads poses from the provided bagfile, generates plots, and saves results to a pdf and csv file.

@@ -220,6 +220,11 @@ def plot_vio_results(
     )
     update_time_plotter.plot(pdf)
 
+    optimization_iterations_plotter = plot_conversions.optimization_iterations_plotter_from_states(
+        graph_vio_states
+    )
+    optimization_iterations_plotter.plot(pdf)
+
 
 # Loads poses from the provided bagfile, generates plots, and saves results to a pdf and csv file.
 # The csv file contains results in (TODO: define format).

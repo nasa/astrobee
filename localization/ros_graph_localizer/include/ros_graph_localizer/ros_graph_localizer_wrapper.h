@@ -97,6 +97,8 @@ class RosGraphLocalizerWrapper {
   boost::optional<localization_common::CombinedNavState> latest_vio_state_;
   boost::optional<localization_common::Time> latest_msg_time_;
   boost::optional<localization_common::Time> last_vio_msg_time_;
+  int latest_num_detected_ml_features_;
+  int latest_num_detected_ar_features_;
 };
 }  // namespace ros_graph_localizer
 

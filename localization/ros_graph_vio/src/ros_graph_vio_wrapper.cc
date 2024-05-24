@@ -173,6 +173,7 @@ boost::optional<ff_msgs::GraphVIOState> RosGraphVIOWrapper::GraphVIOStateMsg() {
   msg.num_detected_of_features = graph_vio_->feature_tracker().size();
   msg.num_of_factors = graph_vio_->NumFactors<factor_adders::RobustSmartFactor>();
   msg.num_depth_factors = graph_vio_->NumFactors<gtsam::PointToPointBetweenFactor>();
+  msg.optimization_iterations = graph_vio_->optimization_iterations_averager().last_value();
   msg.optimization_time = graph_vio_->optimization_timer().last_value();
   msg.update_time = graph_vio_->update_timer().last_value();
   // Divide values by three since each state contains three values (pose, velocity, biases)

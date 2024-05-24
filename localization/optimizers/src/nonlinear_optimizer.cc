@@ -39,6 +39,7 @@ bool NonlinearOptimizer::Optimize(const gtsam::NonlinearFactorGraph& factors, gt
     // Calculate marginals after optimizing so covariances and marginal factors
     // can be generated if desired.
     CalculateMarginals(factors, values);
+    iterations_ = optimizer.iterations();
   } catch (gtsam::IndeterminantLinearSystemException) {
     LogError("Optimize: Graph optimization failed, indeterminant linear system.");
     return false;
@@ -59,6 +60,10 @@ bool NonlinearOptimizer::Optimize(const gtsam::NonlinearFactorGraph& factors, gt
     return false;
   }
   return true;
+}
+
+int NonlinearOptimizer::iterations() const {
+  return iterations_;
 }
 
 void NonlinearOptimizer::SetOptimizationParams() {

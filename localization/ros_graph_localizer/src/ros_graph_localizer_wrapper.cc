@@ -37,7 +37,8 @@ namespace lm = localization_measurements;
 namespace mc = msg_conversions;
 namespace pr = parameter_reader;
 
-RosGraphLocalizerWrapper::RosGraphLocalizerWrapper(const std::string& graph_config_path_prefix) {
+RosGraphLocalizerWrapper::RosGraphLocalizerWrapper(const std::string& graph_config_path_prefix)
+    : latest_num_detected_ml_features_(0), latest_num_detected_ar_features_(0) {
   LoadConfigs(graph_config_path_prefix);
   imu_integrator_.reset(new ii::ImuIntegrator(wrapper_params_.imu_integrator));
 }
@@ -52,8 +53,9 @@ void RosGraphLocalizerWrapper::LoadConfigs(const std::string& graph_config_path_
 }
 
 void RosGraphLocalizerWrapper::SparseMapVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg) {
+latest_num_detected_ml_features_ = static_cast<int>(visual_landmarks_msg.landmarks.size());
   // Make sure enough landmarks are in the measurement for it to be valid
-  if (static_cast<int>(visual_landmarks_msg.landmarks.size()) <
+  if (latest_num_detected_ml_features_ <
       params_.sparse_map_loc_factor_adder.min_num_matches_per_measurement) {
     return;
   }
@@ -94,7 +96,8 @@ void RosGraphLocalizerWrapper::SparseMapVisualLandmarksCallback(const ff_msgs::V
 }
 
 void RosGraphLocalizerWrapper::ARVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg) {
-  if (static_cast<int>(visual_landmarks_msg.landmarks.size()) <
+latest_num_detected_ar_features_ = static_cast<int>(visual_landmarks_msg.landmarks.size());
+  if (latest_num_detected_ar_features_ <
       params_.ar_tag_loc_factor_adder.min_num_matches_per_measurement) {
     return;
   }
@@ -227,11 +230,17 @@ boost::optional<ff_msgs::GraphLocState> RosGraphLocalizerWrapper::GraphLocStateM
   lc::TimeToHeader(latest_timestamp, msg.header);
   msg.header.frame_id = "world";
   msg.child_frame_id = "body";
+  msg.num_detected_ar_features = latest_num_detected_ar_features_;
+  msg.num_detected_ml_features = latest_num_detected_ml_features_;
   msg.num_ml_projection_factors = graph_localizer_->NumFactors<gtsam::LocProjectionFactor<>>();
   msg.num_ml_pose_factors = graph_localizer_->NumFactors<gtsam::LocPoseFactor>();
+  msg.optimization_iterations = graph_localizer_->optimization_iterations_averager().last_value();
   msg.optimization_time = graph_localizer_->optimization_timer().last_value();
   msg.update_time = graph_localizer_->update_timer().last_value();
-  // TODO(rsoussan): set other graph info!
+  msg.duration = graph_localizer_->Duration();
+  msg.num_states = graph_localizer_->num_values();
+latest_num_detected_ml_features_ = 0;
+latest_num_detected_ar_features_ = 0;
   return msg;
 }
 }  // namespace ros_graph_localizer

@@ -40,6 +40,8 @@ class NonlinearOptimizer : public Optimizer {
   // Performs Levenberg-Marquardt nonlinear optimization using GTSAM on the factor graph.
   bool Optimize(const gtsam::NonlinearFactorGraph& factors, gtsam::Values& values) final;
 
+  int iterations() const final;
+
  private:
   // Set optimization params based on provided NonlinearOptimizerParams.
   void SetOptimizationParams();
@@ -58,6 +60,7 @@ class NonlinearOptimizer : public Optimizer {
 
   NonlinearOptimizerParams params_;
   gtsam::LevenbergMarquardtParams levenberg_marquardt_params_;
+  int iterations_;
 };
 }  // namespace optimizers
 

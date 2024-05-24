@@ -50,6 +50,9 @@ class Optimizer {
   // Returns marginals if they have been calculated.
   boost::optional<const gtsam::Marginals&> marginals() const;
 
+  // Returns number of optimization iterations used for most recent optimize call.
+  virtual int iterations() const = 0;
+
  protected:
   // Calculates marginals.
   void CalculateMarginals(const gtsam::NonlinearFactorGraph& factors, const gtsam::Values& values);
