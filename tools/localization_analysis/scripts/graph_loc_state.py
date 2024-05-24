@@ -18,7 +18,7 @@
 # under the License.
 
 # GraphLocState object containing information from a GraphLocState Msg
-class GraphLocState():
+class GraphLocState:
     def __init__(self):
         self.timestamp = None
         self.pose_with_covariance = None
@@ -31,4 +31,4 @@ class GraphLocState():
         self.num_ml_projection_factors = None
         self.num_ml_pose_factors = None
         self.num_states = None
-        # TODO: change this using bag start time??
+        self.duration = None
