@@ -262,12 +262,7 @@ TimestampedNodeAdder<NodeType, TimestampedNodesType, NodeAdderModelType>::EndTim
 template <typename NodeType, typename TimestampedNodesType, typename NodeAdderModelType>
 bool TimestampedNodeAdder<NodeType, TimestampedNodesType, NodeAdderModelType>::CanAddNode(
   const localization_common::Time timestamp) const {
-  const auto end_time = EndTime();
-  if (!end_time) {
-    LogWarning("CanAddNode: Failed to get end time.");
-    return false;
-  }
-  return ((timestamp >= *end_time) && node_adder_model_.CanAddNode(timestamp));
+  return node_adder_model_.CanAddNode(timestamp);
 }
 
 template <typename NodeType, typename TimestampedNodesType, typename NodeAdderModelType>
