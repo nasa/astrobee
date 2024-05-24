@@ -28,8 +28,10 @@ struct DepthOdometryFactorAdderParams : public FactorAdderParams {
   double pose_covariance_scale;
   double point_noise_scale;
   bool use_points_between_factor;
-  double point_to_point_error_threshold;
+  bool reject_large_translation_norm;
   double pose_translation_norm_threshold;
+  bool reject_large_point_to_point_error;
+  double point_to_point_error_threshold;
   int max_num_points_between_factors;
   gtsam::Pose3 body_T_sensor;
 };

@@ -61,7 +61,7 @@ template <class PoseNodeAdderType>
 int DepthOdometryFactorAdder<PoseNodeAdderType>::AddFactorsForSingleMeasurement(
   const localization_measurements::DepthOdometryMeasurement& measurement, gtsam::NonlinearFactorGraph& factors) {
   const double translation_norm = measurement.odometry.sensor_F_source_T_target.pose.translation().norm();
-  if (translation_norm > params_.pose_translation_norm_threshold) {
+  if (params_.reject_large_translation_norm && translation_norm > params_.pose_translation_norm_threshold) {
     LogDebug("AddFactors: Ignoring pose with large translation norm. Norm: "
              << translation_norm << ", threshold: " << params_.pose_translation_norm_threshold);
     return 0;
@@ -89,7 +89,8 @@ int DepthOdometryFactorAdder<PoseNodeAdderType>::AddFactorsForSingleMeasurement(
       const Eigen::Vector3d estimate_error =
         sensor_t_point_source - measurement.odometry.sensor_F_source_T_target.pose * sensor_t_point_target;
       const double estimate_error_norm = estimate_error.norm();
-      if (estimate_error_norm > params_.point_to_point_error_threshold) continue;
+      if (params_.reject_large_point_to_point_error && estimate_error_norm > params_.point_to_point_error_threshold)
+        continue;
       const auto points_between_factor_noise = localization_common::Robust(
         gtsam::noiseModel::Diagonal::Sigmas(estimate_error * params_.point_noise_scale), params_.huber_k);
       gtsam::PointToPointBetweenFactor::shared_ptr points_between_factor(

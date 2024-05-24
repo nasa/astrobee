@@ -36,6 +36,7 @@ RosGraphLocalizerNodelet::RosGraphLocalizerNodelet() : ff_util::FreeFlyerNodelet
   heartbeat_.nodelet_manager = ros::this_node::getName();
 
   config_reader::ConfigReader config;
+  config.AddFile("localization/ros_graph_localizer.config");
   lc::LoadGraphLocalizerConfig(config);
   LoadRosGraphLocalizerNodeletParams(config, params_);
   last_heartbeat_time_ = ros::Time::now();
@@ -58,22 +59,28 @@ void RosGraphLocalizerNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
   heartbeat_pub_ = nh->advertise<ff_msgs::Heartbeat>(TOPIC_HEARTBEAT, 5, true);
   imu_sub_ = private_nh_.subscribe(TOPIC_HARDWARE_IMU, params_.max_imu_buffer_size,
                                    &RosGraphLocalizerNodelet::ImuCallback, this, ros::TransportHints().tcpNoDelay());
-  depth_odom_sub_ =
-    private_nh_.subscribe(TOPIC_LOCALIZATION_DEPTH_ODOM, params_.max_depth_odom_buffer_size,
-                          &RosGraphLocalizerNodelet::DepthOdometryCallback, this, ros::TransportHints().tcpNoDelay());
-  const std::string depth_point_cloud_topic = static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_PREFIX) +
-                                              static_cast<std::string>(TOPIC_HARDWARE_NAME_HAZ_CAM) +
-                                              static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_SUFFIX);
-  depth_point_cloud_sub_ = private_nh_.subscribe<sensor_msgs::PointCloud2>(
-    depth_point_cloud_topic, 1, &RosGraphLocalizerNodelet::DepthPointCloudCallback, this,
-    ros::TransportHints().tcpNoDelay());
-  image_transport::ImageTransport depth_image_transport(private_nh_);
-  const std::string depth_image_topic = static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_PREFIX) +
-                                        static_cast<std::string>(TOPIC_HARDWARE_NAME_HAZ_CAM) +
-                                        static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_SUFFIX_EXTENDED) +
-                                        static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_SUFFIX_AMPLITUDE_IMAGE);
-  depth_image_sub_ =
-    depth_image_transport.subscribe(depth_image_topic, 1, &RosGraphLocalizerNodelet::DepthImageCallback, this);
+
+  if (params_.subscribe_to_depth_odometry) {
+    depth_odom_sub_ =
+      private_nh_.subscribe(TOPIC_LOCALIZATION_DEPTH_ODOM, params_.max_depth_odom_buffer_size,
+                            &RosGraphLocalizerNodelet::DepthOdometryCallback, this, ros::TransportHints().tcpNoDelay());
+  }
+
+  if (params_.run_depth_odometry) {
+    const std::string depth_point_cloud_topic = static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_PREFIX) +
+                                                static_cast<std::string>(TOPIC_HARDWARE_NAME_HAZ_CAM) +
+                                                static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_SUFFIX);
+    depth_point_cloud_sub_ = private_nh_.subscribe<sensor_msgs::PointCloud2>(
+      depth_point_cloud_topic, 1, &RosGraphLocalizerNodelet::DepthPointCloudCallback, this,
+      ros::TransportHints().tcpNoDelay());
+    image_transport::ImageTransport depth_image_transport(private_nh_);
+    const std::string depth_image_topic = static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_PREFIX) +
+                                          static_cast<std::string>(TOPIC_HARDWARE_NAME_HAZ_CAM) +
+                                          static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_SUFFIX_EXTENDED) +
+                                          static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_SUFFIX_AMPLITUDE_IMAGE);
+    depth_image_sub_ =
+      depth_image_transport.subscribe(depth_image_topic, 1, &RosGraphLocalizerNodelet::DepthImageCallback, this);
+  }
 
   fp_sub_ =
     private_nh_.subscribe(TOPIC_LOCALIZATION_OF_FEATURES, params_.max_feature_point_buffer_size,
@@ -202,7 +209,7 @@ void RosGraphLocalizerNodelet::DepthImageCallback(const sensor_msgs::ImageConstP
 
 void RosGraphLocalizerNodelet::DepthOdometryCallback(const ff_msgs::DepthOdometry::ConstPtr& depth_odom_msg) {
   if (!localizer_enabled()) return;
-  // ros_graph_vio_wrapper_.DepthOdometryCallback(*depth_odom_msg);
+  ros_graph_vio_wrapper_.DepthOdometryCallback(*depth_odom_msg);
 }
 
 void RosGraphLocalizerNodelet::ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_msg) {

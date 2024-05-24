@@ -35,5 +35,8 @@ void LoadRosGraphLocalizerNodeletParams(config_reader::ConfigReader& config, Ros
   LOAD_PARAM(params.max_vl_matched_projections_buffer_size, config, "rgl_" + prefix);
   LOAD_PARAM(params.max_imu_buffer_size, config, prefix + "rgl_");
   LOAD_PARAM(params.max_feature_point_buffer_size, config, prefix + "rgl_");
+  LOAD_PARAM(params.run_depth_odometry, config, prefix + "rgl_");
+  LOAD_PARAM(params.publish_depth_odometry, config, prefix + "rgl_");
+  LOAD_PARAM(params.subscribe_to_depth_odometry, config, prefix + "rgl_");
 }
 }  // namespace ros_graph_localizer
