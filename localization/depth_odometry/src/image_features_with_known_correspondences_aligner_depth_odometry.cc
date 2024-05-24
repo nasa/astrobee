@@ -18,7 +18,6 @@
 
 #include <depth_odometry/image_features_with_known_correspondences_aligner_depth_odometry.h>
 #include <localization_common/logger.h>
-#include <localization_common/timer.h>
 #include <localization_common/utilities.h>
 #include <point_cloud_common/utilities.h>
 #include <vision_common/brisk_feature_detector_and_matcher.h>
@@ -60,11 +59,6 @@ ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometry::ImageFeaturesWithKnow
 boost::optional<PoseWithCovarianceAndCorrespondences>
 ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometry::DepthImageCallback(
   const lm::DepthImageMeasurement& depth_image_measurement) {
-  static lc::Timer timer_total("total");
-  timer_total.Start();
-  static lc::Timer timer_a("a");
-  timer_a.Start();
-
   if (!previous_depth_image_features_and_points_ && !latest_depth_image_features_and_points_) {
     latest_depth_image_features_and_points_.reset(new DepthImageFeaturesAndPoints(
       depth_image_measurement.depth_image, *(feature_detector_and_matcher_->detector()), clahe_, normals_required_));
@@ -90,16 +84,10 @@ ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometry::DepthImageCallback(
     return boost::none;
   }
 
-  timer_a.StopAndLog();
 
-  static lc::Timer timer("feature detect and match");
-  timer.Start();
   const auto& matches = feature_detector_and_matcher_->Match(previous_depth_image_features_and_points_->feature_image(),
                                                              latest_depth_image_features_and_points_->feature_image());
-  timer.StopAndLog();
 
-  static lc::Timer timer_points("get points and normals");
-  timer_points.Start();
   // Get 3d points and required normals for matches
   // Continue if any of these, including image points, are invalid
   std::vector<Eigen::Vector2d> source_image_points;
@@ -138,7 +126,6 @@ ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometry::DepthImageCallback(
     source_landmarks.emplace_back(source_landmark);
     target_landmarks.emplace_back(target_landmark);
   }
-  timer_points.StopAndLog();
 
   if (target_landmarks.size() < params_.min_num_correspondences) {
     LogError("DepthImageCallback: Too few points provided, need " << params_.min_num_correspondences << " but given "
@@ -153,10 +140,6 @@ ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometry::DepthImageCallback(
       previous_timestamp_, latest_timestamp_);
   }
 
-  LogError("00000!");
-  static lc::Timer timer_trafo("rel trafo");
-  timer_trafo.Start();
-
   // TODO(rsoussan): This isn't required with std:optional, remove when upgrade to c++17 and change normals
   // containers to be boost::optional types
   boost::optional<const std::vector<Eigen::Vector3d>&> source_normals_ref =
@@ -168,22 +151,14 @@ ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometry::DepthImageCallback(
 
   auto target_T_source =
     aligner_.ComputeRelativeTransform(source_landmarks, target_landmarks, source_normals_ref, target_normals_ref);
-  timer_trafo.StopAndLog();
-  LogError("aaaa!");
   if (!target_T_source) {
     LogError("DepthImageCallback: Failed to get relative transform.");
     return boost::none;
   }
-  LogError("bbbb!");
-  static lc::Timer timer_refine("refine");
 
   if (params_.refine_estimate) {
-    timer_refine.Start();
-    const auto r = point_to_plane_icp_depth_odometry_->DepthImageCallbackWithEstimate(depth_image_measurement,
-                                                                                      target_T_source->pose);
-
-    timer_refine.StopAndLog();
-    return r;
+    return point_to_plane_icp_depth_odometry_->DepthImageCallbackWithEstimate(depth_image_measurement,
+                                                                              target_T_source->pose);
   }
 
   const auto source_T_target = lc::InvertPoseWithCovariance(*target_T_source);
@@ -194,15 +169,10 @@ ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometry::DepthImageCallback(
     return boost::none;
   }
 
-  static lc::Timer pc_timer("pc time");
-  pc_timer.Start();
-  const auto pc = PoseWithCovarianceAndCorrespondences(
+  return PoseWithCovarianceAndCorrespondences(
     source_T_target,
     lm::DepthCorrespondences(source_image_points, target_image_points, source_landmarks, target_landmarks),
     previous_timestamp_, latest_timestamp_);
-  pc_timer.StopAndLog();
-  timer_total.StopAndLog();
-  return pc;
 }
 
 bool ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometry::ValidImagePoint(
