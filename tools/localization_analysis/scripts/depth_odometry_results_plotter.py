@@ -43,11 +43,10 @@ import rosbag
 from matplotlib.backends.backend_pdf import PdfPages
 
 
-def plot_depth_odom_results(
-    pdf, results_csv_file, groundtruth_poses, depth_odom_relative_poses
-):
+def plot_depth_odom_results(pdf, results_csv_file, groundtruth_poses, depth_odometries):
     absolute_depth_odom_relative_poses = plot_conversions.absolute_poses_from_relative_poses(
-        depth_odom_relative_poses, groundtruth_poses
+        plot_conversions.poses_from_depth_odometries(depth_odometries),
+        groundtruth_poses,
     )
     depth_odom_relative_poses_plotter = MultiPosePlotter(
         "Time (s)", "Position (m)", "Depth Odometry vs. Groundtruth Position", True
@@ -64,6 +63,16 @@ def plot_depth_odom_results(
         "Depth Odometry Poses", absolute_depth_odom_relative_poses, linestyle="-"
     )
     depth_odom_relative_poses_plotter.plot(pdf)
+
+    num_features_plotter = plot_conversions.num_features_plotter_from_depth_odometries(
+        depth_odometries
+    )
+    num_features_plotter.plot(pdf)
+
+    runtime_plotter = plot_conversions.runtime_plotter_from_depth_odometries(
+        depth_odometries
+    )
+    runtime_plotter.plot(pdf)
 
 
 # Loads poses from the provided bagfile, generates plots, and saves results to a pdf and csv file.
@@ -93,16 +102,16 @@ def load_data_and_create_depth_odom_plots(
         groundtruth_poses, "/sparse_mapping/pose", groundtruth_bag, bag_start_time
     )
 
-    # Load Depth Odometry poses
-    depth_odom_relative_poses = []
-    message_reader.load_depth_odometry_poses(
-        depth_odom_relative_poses, "/loc/depth/odom", bag, bag_start_time
+    # Load Depth Odometries
+    depth_odometries = []
+    message_reader.load_depth_odometries(
+        depth_odometries, "/loc/depth/odom", bag, bag_start_time
     )
     bag.close()
 
     with PdfPages(output_pdf_file) as pdf:
         plot_depth_odom_results(
-            pdf, results_csv_file, groundtruth_poses, depth_odom_relative_poses
+            pdf, results_csv_file, groundtruth_poses, depth_odometries
         )
 
 

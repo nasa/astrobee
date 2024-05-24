@@ -462,6 +462,28 @@ def update_times_from_states(states):
     return [state.update_time for state in states]
 
 
+# Return list of num features from depth odometries
+def num_features_from_depth_odometries(depth_odometries):
+    return [depth_odometry.num_features for depth_odometry in depth_odometries]
+
+
+# Return list of runtimes from depth odometries
+def runtimes_from_depth_odometries(depth_odometries):
+    return [depth_odometry.runtime for depth_odometry in depth_odometries]
+
+
+# Return list of timestamped poses from depth odometries
+def poses_from_depth_odometries(depth_odometries):
+    return [
+        TimestampedPose(
+            depth_odometry.pose_with_covariance.orientation,
+            depth_odometry.pose_with_covariance.position,
+            depth_odometry.timestamp,
+        )
+        for depth_odometry in depth_odometries
+    ]
+
+
 # Return list of timestamped poses from graph loc states
 def poses_from_graph_loc_states(graph_loc_states):
     return [
@@ -658,4 +680,30 @@ def update_time_plotter_from_states(states):
         "Time (s)",
         "Update Time (s)",
         "Update Time",
+    )
+
+
+def runtime_plotter_from_depth_odometries(depth_odometries):
+    runtimes = runtimes_from_depth_odometries(depth_odometries)
+    times = times_from_timestamped_objects(depth_odometries)
+    return ValuePlotter(
+        "Depth Odometry Runtime",
+        times,
+        runtimes,
+        "Time (s)",
+        "Runtimes (s)",
+        "Depth Odometry Runtimes",
+    )
+
+
+def num_features_plotter_from_depth_odometries(depth_odometries):
+    num_features = num_features_from_depth_odometries(depth_odometries)
+    times = times_from_timestamped_objects(depth_odometries)
+    return ValuePlotter(
+        "Depth Odometry Num Features",
+        times,
+        num_features,
+        "Time (s)",
+        "Num Features",
+        "Depth Odometry Num Features",
     )

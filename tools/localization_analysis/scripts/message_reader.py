@@ -36,13 +36,11 @@ def load_poses(timestamped_poses, topic, bag, bag_start_time):
 
 
 # Start at the provided bag start time.
-def load_depth_odometry_poses(timestamped_poses, topic, bag, bag_start_time):
+def load_depth_odometries(depth_odometries, topic, bag, bag_start_time):
     for msg_topic, msg, t in bag.read_messages(topic):
         if msg_topic == topic:
-            timestamped_poses.append(
-                message_conversions.timestamped_pose_from_odometry_msg(
-                    msg.odometry, bag_start_time
-                )
+            depth_odometries.append(
+                message_conversions.depth_odometry_from_msg(msg, bag_start_time)
             )
 
 

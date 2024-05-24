@@ -22,6 +22,7 @@ import scipy.spatial.transform
 
 from acceleration import Acceleration
 from accelerometer_bias import AccelerometerBias
+from depth_odometry import DepthOdometry
 from extrapolated_loc_state import ExtrapolatedLocState
 from graph_loc_state import GraphLocState
 from graph_vio_state import GraphVIOState
@@ -150,6 +151,18 @@ def velocity_with_covariance_from_msg(velocity_msg, bag_start_time=0):
         velocity_msg.velocity.z,
         velocity_msg.covariance,
     )
+
+
+# Create a depth odometry object from a msg using relative bag time.
+def depth_odometry_from_msg(msg, bag_start_time=0):
+    depth_odometry = DepthOdometry()
+    depth_odometry.timestamp = relative_timestamp(msg.header.stamp, bag_start_time)
+    depth_odometry.pose_with_covariance = pose_with_covariance_from_msg(
+        msg.odometry.body_F_source_T_target
+    )
+    depth_odometry.num_features = len(msg.correspondences)
+    depth_odometry.runtime = msg.runtime
+    return depth_odometry
 
 
 # Create a graph vio state from a msg using relative bag time.
