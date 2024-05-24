@@ -152,7 +152,7 @@ class RosGraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
   ros::Time last_tf_dock_time_;
 
   // VIO
-  ros::Publisher graph_vio_state_pub_, graph_vio_pub_;
+  ros::Publisher graph_vio_state_pub_, graph_vio_pub_, depth_odom_pub_;
   ros::Subscriber imu_sub_, depth_point_cloud_sub_, depth_odom_sub_, fp_sub_, flight_mode_sub_;
   image_transport::Subscriber depth_image_sub_;
 };

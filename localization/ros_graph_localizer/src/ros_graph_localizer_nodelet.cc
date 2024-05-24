@@ -57,6 +57,9 @@ void RosGraphLocalizerNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
   graph_loc_pub_ = nh->advertise<ff_msgs::GraphLocState>(TOPIC_GRAPH_LOC_STATE, 10);
   reset_pub_ = nh->advertise<std_msgs::Empty>(TOPIC_GNC_EKF_RESET, 10);
   heartbeat_pub_ = nh->advertise<ff_msgs::Heartbeat>(TOPIC_HEARTBEAT, 5, true);
+  if (params_.publish_depth_odometry) {
+    depth_odom_pub_ = nh->advertise<ff_msgs::DepthOdometry>(TOPIC_LOCALIZATION_DEPTH_ODOM, 10);
+  }
   imu_sub_ = private_nh_.subscribe(TOPIC_HARDWARE_IMU, params_.max_imu_buffer_size,
                                    &RosGraphLocalizerNodelet::ImuCallback, this, ros::TransportHints().tcpNoDelay());
 
@@ -196,6 +199,9 @@ void RosGraphLocalizerNodelet::DepthPointCloudCallback(const sensor_msgs::PointC
   const auto depth_odometry_msgs = depth_odometry_wrapper_.PointCloudCallback(point_cloud_msg);
   for (const auto& depth_odometry_msg : depth_odometry_msgs) {
     ros_graph_vio_wrapper_.DepthOdometryCallback(depth_odometry_msg);
+    if (params_.publish_depth_odometry) {
+      depth_odom_pub_.publish(depth_odometry_msg);
+    }
   }
 }
 
@@ -204,6 +210,9 @@ void RosGraphLocalizerNodelet::DepthImageCallback(const sensor_msgs::ImageConstP
   const auto depth_odometry_msgs = depth_odometry_wrapper_.ImageCallback(image_msg);
   for (const auto& depth_odometry_msg : depth_odometry_msgs) {
     ros_graph_vio_wrapper_.DepthOdometryCallback(depth_odometry_msg);
+    if (params_.publish_depth_odometry) {
+      depth_odom_pub_.publish(depth_odometry_msg);
+    }
   }
 }
 
