@@ -36,12 +36,14 @@ def load_poses(timestamped_poses, topic, bag, bag_start_time):
 
 
 # Start at the provided bag start time.
-def load_depth_odometries(depth_odometries, topic, bag, bag_start_time):
+def load_depth_odometries(topic, bag, bag_start_time):
+    depth_odometries = []
     for msg_topic, msg, t in bag.read_messages(topic):
         if msg_topic == topic:
             depth_odometries.append(
                 message_conversions.depth_odometry_from_msg(msg, bag_start_time)
             )
+    return depth_odometries
 
 
 # Load graph vio states from a bag file for a given topic.

@@ -102,10 +102,8 @@ def load_data_and_create_depth_odom_plots(
         groundtruth_poses, "/sparse_mapping/pose", groundtruth_bag, bag_start_time
     )
 
-    # Load Depth Odometries
-    depth_odometries = []
-    message_reader.load_depth_odometries(
-        depth_odometries, "/loc/depth/odom", bag, bag_start_time
+    depth_odometries = message_reader.load_depth_odometries(
+        "/loc/depth/odom", bag, bag_start_time
     )
     bag.close()
 
