@@ -111,6 +111,11 @@ def plot_vio_results(
     )
     of_num_factors_plotter.plot(pdf)
 
+    depth_num_factors_plotter = plot_conversions.depth_factor_count_plotter_from_graph_vio_states(
+        graph_vio_states
+    )
+    depth_num_factors_plotter.plot(pdf)
+
     integrated_velocity_poses = plot_conversions.absolute_poses_from_integrated_graph_vio_state_velocities(
         graph_vio_states, groundtruth_poses
     )
@@ -196,6 +201,14 @@ def plot_vio_results(
         graph_vio_states
     )
     standstill_plotter.plot(pdf)
+
+    num_states_plotter = plot_conversions.num_states_plotter_from_states(
+        graph_vio_states
+    )
+    num_states_plotter.plot(pdf)
+
+    duration_plotter = plot_conversions.duration_plotter_from_states(graph_vio_states)
+    duration_plotter.plot(pdf)
 
     optimization_time_plotter = plot_conversions.optimization_time_plotter_from_states(
         graph_vio_states

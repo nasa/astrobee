@@ -400,6 +400,11 @@ def optical_flow_factor_counts_from_graph_vio_states(graph_vio_states):
     return [graph_vio_state.num_of_factors for graph_vio_state in graph_vio_states]
 
 
+# Return list of depth factor counts from graph vio states
+def depth_factor_counts_from_graph_vio_states(graph_vio_states):
+    return [graph_vio_state.num_depth_factors for graph_vio_state in graph_vio_states]
+
+
 # Return list of ml pose factor counts from graph loc states
 def ml_pose_factor_counts_from_graph_loc_states(graph_loc_states):
     return [graph_loc_state.num_ml_pose_factors for graph_loc_state in graph_loc_states]
@@ -416,6 +421,16 @@ def ml_projection_factor_counts_from_graph_loc_states(graph_loc_states):
 # Return list of standstill occurances times from states
 def standstill_from_states(states):
     return [int(state.standstill) for state in states]
+
+
+# Return list of num states from states
+def num_states_from_states(states):
+    return [state.num_states for state in states]
+
+
+# Return list of duration times from states
+def durations_from_states(states):
+    return [state.duration for state in states]
 
 
 # Return list of optimization times from states
@@ -514,6 +529,14 @@ def optical_flow_factor_count_plotter_from_graph_vio_states(graph_vio_states):
     )
 
 
+def depth_factor_count_plotter_from_graph_vio_states(graph_vio_states):
+    counts = depth_factor_counts_from_graph_vio_states(graph_vio_states)
+    times = times_from_timestamped_objects(graph_vio_states)
+    return ValuePlotter(
+        "Graph VIO Depth Factors", times, counts, "Time (s)", "Num Factors", "Depth"
+    )
+
+
 def ml_pose_factor_count_plotter_from_graph_loc_states(graph_loc_states):
     counts = ml_pose_factor_counts_from_graph_loc_states(graph_loc_states)
     times = times_from_timestamped_objects(graph_loc_states)
@@ -545,6 +568,22 @@ def standstill_plotter_from_states(states):
         "Time (s)",
         "Standstill (True/False)",
         "Standstill",
+    )
+
+
+def num_states_plotter_from_states(states):
+    num_states = num_states_from_states(states)
+    times = times_from_timestamped_objects(states)
+    return ValuePlotter(
+        "Num Graph States", times, num_states, "Time (s)", "Num States", "Num States"
+    )
+
+
+def duration_plotter_from_states(states):
+    durations = durations_from_states(states)
+    times = times_from_timestamped_objects(states)
+    return ValuePlotter(
+        "Duration", times, durations, "Time (s)", "Duration (s)", "Duration"
     )
 
 

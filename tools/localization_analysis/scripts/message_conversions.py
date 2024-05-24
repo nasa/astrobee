@@ -179,9 +179,12 @@ def graph_vio_state_from_msg(msg, bag_start_time=0):
     graph_vio_state.imu_bias_with_covariance = ImuBias(accelerometer_bias, gyro_bias)
     graph_vio_state.num_detected_of_features = msg.num_detected_of_features
     graph_vio_state.num_of_factors = msg.num_of_factors
+    graph_vio_state.num_depth_factors = msg.num_depth_factors
+    graph_vio_state.num_states = msg.num_states
     graph_vio_state.standstill = int(msg.standstill)
     graph_vio_state.optimization_time = msg.optimization_time
     graph_vio_state.update_time = msg.update_time
+    graph_vio_state.duration = msg.duration
     return graph_vio_state
 
 

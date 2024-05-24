@@ -21,12 +21,15 @@ string child_frame_id # frame ID
 CombinedNavStateArray combined_nav_states 
 # Stats
 uint32 num_detected_of_features  
-uint32 optimization_iterations # Optimization iterations
+uint32 optimization_iterations 
 float32 optimization_time
 float32 update_time # Include optimization_time and other operations to add data to graph
+float32 duration 
 uint32 num_factors
 uint32 num_of_factors
+uint32 num_depth_factors
+uint32 num_states 
 # Status
 bool standstill
+# TODO(rsoussan): Fill this in! Estimating bias expected for gnc ekf message!
 bool estimating_bias # Are we busy estimating the bias?
-uint8 fan_speed_mode # Used for imu filtering
