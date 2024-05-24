@@ -234,9 +234,8 @@ Eigen::Isometry3d FrameChangeRelativePose(const Eigen::Isometry3d& a_F_relative_
 
 Eigen::Matrix<double, 6, 6> FrameChangeRelativeCovariance(
   const Eigen::Matrix<double, 6, 6>& a_F_relative_pose_covariance, const Eigen::Isometry3d& b_T_a) {
-  // TODO(rsoussan): This might be right for translation component (frame change is equivalent to single rotation),
-  // but might be wrong for rotation component
-  return gtsam::TransformCovariance<gtsam::Pose3>(GtPose(b_T_a))(a_F_relative_pose_covariance);
+  const gtsam::Pose3 b_R_a(gtsam::Rot3(b_T_a.linear()), Eigen::Vector3d::Zero());
+  return gtsam::TransformCovariance<gtsam::Pose3>(b_R_a)(a_F_relative_pose_covariance);
 }
 
 PoseWithCovariance FrameChangeRelativePoseWithCovariance(const PoseWithCovariance& a_F_relative_pose_with_covariance,
