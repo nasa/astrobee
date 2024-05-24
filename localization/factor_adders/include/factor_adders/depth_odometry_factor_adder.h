@@ -60,6 +60,13 @@ DepthOdometryFactorAdder<PoseNodeAdderType>::DepthOdometryFactorAdder(
 template <class PoseNodeAdderType>
 int DepthOdometryFactorAdder<PoseNodeAdderType>::AddFactorsForSingleMeasurement(
   const localization_measurements::DepthOdometryMeasurement& measurement, gtsam::NonlinearFactorGraph& factors) {
+    const double translation_norm = measurement.odometry.sensor_F_source_T_target.pose.translation().norm();
+    if (translation_norm > params_.pose_translation_norm_threshold) {
+      LogDebug("AddFactors: Ignoring pose with large translation norm. Norm: "
+               << translation_norm << ", threshold: " << params_.pose_translation_norm_threshold);
+      return 0;
+    }
+
   if (!node_adder_->AddNode(measurement.odometry.source_time, factors) ||
       !node_adder_->AddNode(measurement.odometry.target_time, factors)) {
     LogError("AddFactorsForSingleMeasurement: Failed to add nodes at source and target time.");
@@ -94,12 +101,6 @@ int DepthOdometryFactorAdder<PoseNodeAdderType>::AddFactorsForSingleMeasurement(
     LogDebug("AddFactors: Added " << num_between_factors << " points between factors.");
     return num_between_factors;
   } else {
-    const double translation_norm = measurement.odometry.sensor_F_source_T_target.pose.translation().norm();
-    if (translation_norm > params_.pose_translation_norm_threshold) {
-      LogDebug("AddFactors: Ignoring pose with large translation norm. Norm: "
-               << translation_norm << ", threshold: " << params_.pose_translation_norm_threshold);
-      return 0;
-    }
     const auto relative_pose_noise = localization_common::Robust(
       gtsam::noiseModel::Gaussian::Covariance(params_.pose_covariance_scale *
                                               measurement.odometry.body_F_source_T_target.covariance),
