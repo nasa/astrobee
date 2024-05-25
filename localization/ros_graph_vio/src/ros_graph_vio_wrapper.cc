@@ -70,7 +70,7 @@ void RosGraphVIOWrapper::ImuCallback(const sensor_msgs::Imu& imu_msg) {
     params_.combined_nav_state_node_adder.start_node = initial_state;
     params_.combined_nav_state_node_adder.starting_time = initial_state.timestamp();
     graph_vio_.reset(new graph_vio::GraphVIO(params_));
-    LogInfo("ImuCallback: Initialized Graph.");
+    LogInfo("ImuCallback: Initialized VIO.");
   }
   if (Initialized()) graph_vio_->AddImuMeasurement(imu_measurement);
 }

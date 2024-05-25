@@ -75,9 +75,9 @@ void RosGraphLocalizerWrapper::SparseMapVisualLandmarksCallback(const ff_msgs::V
                                                             params_.sparse_map_loc_factor_adder.body_T_cam.inverse());
     params_.pose_node_adder.start_node = world_T_body;
     params_.pose_node_adder.starting_time = msg_time;
-    LogInfo("SparseMapVisualLandmarksCallback: Initializing localizer with vl msg.");
     graph_localizer_.reset(new gl::GraphLocalizer(params_));
     imu_integrator_.reset(new ii::ImuIntegrator(wrapper_params_.imu_integrator));
+    LogInfo("SparseMapVisualLandmarksCallback: Initialized Localizer.");
     // Only need the first vio measurement before the initial vl msg time
     // to ensure valid pose interpolation.
     vio_measurement_buffer_.RemoveBelowLowerBoundValues(msg_time);
