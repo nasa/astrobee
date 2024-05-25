@@ -109,7 +109,7 @@ boost::optional<gtsam::PreintegratedCombinedMeasurements> ImuIntegrator::Integra
   auto pim = Pim(bias, pim_params_);
   const auto last_integrated_measurement_time = IntegrateImuMeasurements(start_time, end_time, pim);
   if (!last_integrated_measurement_time) {
-    LogDebug("IntegratedPim: Failed to integrate imu measurments.");
+    LogError("IntegratedPim: Failed to integrate imu measurments.");
     return boost::none;
   }
   return pim;
@@ -135,7 +135,7 @@ localization_common::CombinedNavState ImuIntegrator::ExtrapolateLatest(
   }
 
   const auto extrapolated_combined_nav_state = Extrapolate(combined_nav_state, latest->timestamp);
-  if (!latest) {
+  if (!extrapolated_combined_nav_state) {
     LogError("ExtrapolateLatest: Failed to extrapolate combined nav state.");
     return combined_nav_state;
   }
