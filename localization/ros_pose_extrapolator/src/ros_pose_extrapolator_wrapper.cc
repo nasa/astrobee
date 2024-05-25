@@ -123,12 +123,14 @@ RosPoseExtrapolatorWrapper::LatestExtrapolatedStateAndCovariances() {
 
   // Extrapolate VIO data with latest IMU measurements.
   // Don't add IMU data if at standstill to avoid adding noisy IMU measurements to
-  // extrapolated state.
-  if (!standstill())
-    latest_extrapolated_vio_state_ = imu_integrator_->ExtrapolateLatest(*latest_extrapolated_vio_state_);
-  if (!latest_extrapolated_vio_state_) {
-    LogError("LatestExtrapolatedCombinedNavStateAndCovariances: Failed to extrapolate latest vio state.");
-    return boost::none;
+  // extrapolated state. Avoid adding IMU data if too few measurements ( < 2) are in imu integrator.
+  if (!standstill() && static_cast<int>(imu_integrator_->size()) > 1) {
+    const auto latest_extrapolated_state = imu_integrator_->ExtrapolateLatest(*latest_extrapolated_vio_state_);
+    if (!latest_extrapolated_state) {
+      LogError("LatestExtrapolatedCombinedNavStateAndCovariances: Failed to extrapolate latest vio state.");
+      return boost::none;
+    }
+    latest_extrapolated_state_ = *latest_extrapolated_state;
   }
 
   // Convert from odom frame to world frame
@@ -136,11 +138,12 @@ RosPoseExtrapolatorWrapper::LatestExtrapolatedStateAndCovariances() {
   // Rotate body velocity from odom frame to world frame.
   const gtsam::Vector3 extrapolated_world_F_body_velocity =
     world_T_odom_->rotation() * latest_extrapolated_vio_state_->velocity();
-  // Use latest bias estimate and use latest IMU time as extrapolated timestamp.
+  // Use latest bias estimate and use latest IMU time as extrapolated timestamp if available.
   // Even if at standstill, the timestamp should be the latest one available.
+  const auto timestamp =
+    imu_integrator_->Latest() ? imu_integrator_->Latest()->timestamp : latest_extrapolated_vio_state_->timestamp();
   const lc::CombinedNavState extrapolated_state(extrapolated_world_T_body, extrapolated_world_F_body_velocity,
-                                                latest_extrapolated_vio_state_->bias(),
-                                                imu_integrator_->Latest()->timestamp);
+                                                latest_extrapolated_vio_state_->bias(), timestamp);
 
   // TODO(rsoussan): propogate uncertainties from imu integrator and odom_interpolator
   // TODO(rsoussan): how to get covariances???? Use odom ones for now???

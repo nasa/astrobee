@@ -126,18 +126,18 @@ boost::optional<lc::CombinedNavState> ImuIntegrator::Extrapolate(const lc::Combi
   return PimPredict(combined_nav_state, *pim);
 }
 
-localization_common::CombinedNavState ImuIntegrator::ExtrapolateLatest(
+boost::optional<localization_common::CombinedNavState> ImuIntegrator::ExtrapolateLatest(
   const localization_common::CombinedNavState& combined_nav_state) const {
   const auto latest = Latest();
   if (!latest) {
     LogError("ExtrapolateLatest: Failed to get latest measurement.");
-    return combined_nav_state;
+    return boost::none;
   }
 
   const auto extrapolated_combined_nav_state = Extrapolate(combined_nav_state, latest->timestamp);
   if (!extrapolated_combined_nav_state) {
     LogError("ExtrapolateLatest: Failed to extrapolate combined nav state.");
-    return combined_nav_state;
+    return boost::none;
   }
 
   return *extrapolated_combined_nav_state;
