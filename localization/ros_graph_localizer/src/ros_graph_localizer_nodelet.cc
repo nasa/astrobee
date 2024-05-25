@@ -110,12 +110,13 @@ bool RosGraphLocalizerNodelet::SetMode(ff_msgs::SetEkfInput::Request& req, ff_ms
   const auto input_mode = req.mode;
   if (input_mode == ff_msgs::SetEkfInputRequest::MODE_NONE) {
     LogInfo("Received Mode None request, turning off Localizer.");
-    DisableLocalizer();
+    DisableLocalizerAndVIO();
   } else if (last_mode_ == ff_msgs::SetEkfInputRequest::MODE_NONE) {
     LogInfo(
       "Received Mode request that is not None and current mode is "
       "None, resetting Localizer.");
     ResetAndEnableLocalizer();
+    // TODO(rsoussan): also reset vio??
   }
 
   // Reset localizer when switch between ar mode
@@ -133,18 +134,18 @@ bool RosGraphLocalizerNodelet::SetMode(ff_msgs::SetEkfInput::Request& req, ff_ms
   return true;
 }
 
-void RosGraphLocalizerNodelet::DisableLocalizer() { localizer_enabled_ = false; }
+void RosGraphLocalizerNodelet::DisableLocalizerAndVIO() { localizer_and_vio_enabled_ = false; }
 
-void RosGraphLocalizerNodelet::EnableLocalizer() { localizer_enabled_ = true; }
+void RosGraphLocalizerNodelet::EnableLocalizerAndVIO() { localizer_and_vio_enabled_ = true; }
 
-bool RosGraphLocalizerNodelet::localizer_enabled() const { return localizer_enabled_; }
+bool RosGraphLocalizerNodelet::localizer_and_vio_enabled() const { return localizer_and_vio_enabled_; }
 
 bool RosGraphLocalizerNodelet::ResetBiasesAndLocalizer(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res) {
-  DisableLocalizer();
+  DisableLocalizerAndVIO();
   ros_graph_vio_wrapper_.ResetBiasesAndVIO();
   ros_graph_localizer_wrapper_.ResetLocalizer();
   PublishReset();
-  EnableLocalizer();
+  EnableLocalizerAndVIO();
   return true;
 }
 
@@ -154,29 +155,23 @@ bool RosGraphLocalizerNodelet::ResetBiasesFromFileAndResetLocalizer(std_srvs::Em
 }
 
 bool RosGraphLocalizerNodelet::ResetBiasesFromFileAndResetLocalizer() {
-  DisableLocalizer();
+  DisableLocalizerAndVIO();
   ros_graph_vio_wrapper_.ResetBiasesFromFileAndResetVIO();
   ros_graph_localizer_wrapper_.ResetLocalizer();
   PublishReset();
-  EnableLocalizer();
-  return true;
-}
-
-bool RosGraphLocalizerNodelet::ResetLocalizer(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res) {
-  ResetAndEnableLocalizer();
+  EnableLocalizerAndVIO();
   return true;
 }
 
 void RosGraphLocalizerNodelet::ResetAndEnableLocalizer() {
-  // TODO(rsoussan): avoid resetting vio?
-  DisableLocalizer();
+  DisableLocalizerAndVIO();
   ros_graph_localizer_wrapper_.ResetLocalizer();
   PublishReset();
-  EnableLocalizer();
+  EnableLocalizerAndVIO();
 }
 
 bool RosGraphLocalizerNodelet::ResetMap(ff_msgs::ResetMap::Request& req, ff_msgs::ResetMap::Response& res) {
-  // TODO(rsoussan): Better way to clear buffer?
+  // Clear sparse map measurement buffer
   sparse_map_vl_sub_ = private_nh_.subscribe(
     TOPIC_LOCALIZATION_ML_FEATURES, params_.max_vl_matched_projections_buffer_size,
     &RosGraphLocalizerNodelet::SparseMapVisualLandmarksCallback, this, ros::TransportHints().tcpNoDelay());
@@ -190,12 +185,12 @@ void RosGraphLocalizerNodelet::PublishGraphLocalizerState() {
 }
 
 void RosGraphLocalizerNodelet::FeaturePointsCallback(const ff_msgs::Feature2dArray::ConstPtr& feature_array_msg) {
-  if (!localizer_enabled()) return;
+  if (!localizer_and_vio_enabled()) return;
   ros_graph_vio_wrapper_.FeaturePointsCallback(*feature_array_msg);
 }
 
 void RosGraphLocalizerNodelet::DepthPointCloudCallback(const sensor_msgs::PointCloud2ConstPtr& point_cloud_msg) {
-  if (!localizer_enabled()) return;
+  if (!localizer_and_vio_enabled()) return;
   const auto depth_odometry_msgs = depth_odometry_wrapper_.PointCloudCallback(point_cloud_msg);
   for (const auto& depth_odometry_msg : depth_odometry_msgs) {
     ros_graph_vio_wrapper_.DepthOdometryCallback(depth_odometry_msg);
@@ -206,7 +201,7 @@ void RosGraphLocalizerNodelet::DepthPointCloudCallback(const sensor_msgs::PointC
 }
 
 void RosGraphLocalizerNodelet::DepthImageCallback(const sensor_msgs::ImageConstPtr& image_msg) {
-  if (!localizer_enabled()) return;
+  if (!localizer_and_vio_enabled()) return;
   const auto depth_odometry_msgs = depth_odometry_wrapper_.ImageCallback(image_msg);
   for (const auto& depth_odometry_msg : depth_odometry_msgs) {
     ros_graph_vio_wrapper_.DepthOdometryCallback(depth_odometry_msg);
@@ -217,12 +212,12 @@ void RosGraphLocalizerNodelet::DepthImageCallback(const sensor_msgs::ImageConstP
 }
 
 void RosGraphLocalizerNodelet::DepthOdometryCallback(const ff_msgs::DepthOdometry::ConstPtr& depth_odom_msg) {
-  if (!localizer_enabled()) return;
+  if (!localizer_and_vio_enabled()) return;
   ros_graph_vio_wrapper_.DepthOdometryCallback(*depth_odom_msg);
 }
 
 void RosGraphLocalizerNodelet::ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_msg) {
-  if (!localizer_enabled()) return;
+  if (!localizer_and_vio_enabled()) return;
   ros_graph_vio_wrapper_.ImuCallback(*imu_msg);
   ros_graph_localizer_wrapper_.ImuCallback(*imu_msg);
 }
@@ -245,7 +240,7 @@ void RosGraphLocalizerNodelet::PublishHeartbeat() {
 }
 
 void RosGraphLocalizerNodelet::PublishGraphLocalizerMessages() {
-  if (!localizer_enabled()) return;
+  if (!localizer_and_vio_enabled()) return;
 
   // TODO(rsoussan): Only publish if things have changed?
   PublishGraphLocalizerState();
@@ -278,14 +273,14 @@ void RosGraphLocalizerNodelet::PublishWorldTDockTF() {
 
 void RosGraphLocalizerNodelet::ARVisualLandmarksCallback(
   const ff_msgs::VisualLandmarks::ConstPtr& visual_landmarks_msg) {
-  if (!localizer_enabled()) return;
+  if (!localizer_and_vio_enabled()) return;
   ros_graph_localizer_wrapper_.ARVisualLandmarksCallback(*visual_landmarks_msg);
   PublishWorldTDockTF();
 }
 
 void RosGraphLocalizerNodelet::SparseMapVisualLandmarksCallback(
   const ff_msgs::VisualLandmarks::ConstPtr& visual_landmarks_msg) {
-  if (!localizer_enabled()) return;
+  if (!localizer_and_vio_enabled()) return;
   // Avoid adding sparse map measurements when in AR mode
   if (last_mode_ == ff_msgs::SetEkfInputRequest::MODE_AR_TAGS) return;
   ros_graph_vio_wrapper_.SparseMapVisualLandmarksCallback(*visual_landmarks_msg);
@@ -294,16 +289,14 @@ void RosGraphLocalizerNodelet::SparseMapVisualLandmarksCallback(
 
 void RosGraphLocalizerNodelet::Run() {
   ros::Rate rate(100);
-  // ResetAndEnableLocalizer();
   // Load Biases from file by default
   // Biases reestimated if a intialize bias service call is received
   ResetBiasesFromFileAndResetLocalizer();
   while (ros::ok()) {
     private_queue_.callAvailable();
-    if (localizer_enabled()) {
+    if (localizer_and_vio_enabled()) {
       ros_graph_vio_wrapper_.Update();
       // Pass data and msgs from graph vio to graph localizer
-      // TODO(rsoussan): move this to a function....
       if (ros_graph_vio_wrapper_.Initialized() && ros_graph_localizer_wrapper_.Initialized()) {
         ros_graph_localizer_wrapper_.graph_localizer_->pose_node_adder_->node_adder_model_.nodes_ =
           ros_graph_vio_wrapper_.graph_vio()->combined_nav_state_node_adder_->nodes_.get();
@@ -315,7 +308,7 @@ void RosGraphLocalizerNodelet::Run() {
 
       const auto graph_vio_state_msg = ros_graph_vio_wrapper_.GraphVIOStateMsg();
       if (!graph_vio_state_msg) {
-        LogDebugEveryN(100, "PublishVIOState: Failed to get vio states msg.");
+        LogDebugEveryN(100, "PublishVIOState: Failed to get vio state msg.");
       } else {
         graph_vio_state_pub_.publish(*graph_vio_state_msg);
         ros_graph_localizer_wrapper_.GraphVIOStateCallback(*graph_vio_state_msg);

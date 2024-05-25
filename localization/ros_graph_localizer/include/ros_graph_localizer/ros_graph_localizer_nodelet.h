@@ -57,26 +57,26 @@ class RosGraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
   // Set mode for Localizer. Disables if mode is none, resets and enables if swtiched from none.
   bool SetMode(ff_msgs::SetEkfInput::Request& req, ff_msgs::SetEkfInput::Response& res);
 
-  // Disabled Localizer. Prevents any messages from being added to Localizer, halts publishing
-  // messages from Localizer, and halts updating Localizer.
-  void DisableLocalizer();
+  // Disabled Localizer and VIO. Prevents any messages from being added, halts publishing
+  // messages, and halts updating Localizer and VIO.
+  void DisableLocalizerAndVIO();
 
-  // Enables Localizer.
-  void EnableLocalizer();
+  // Enables Localizer and VIO.
+  void EnableLocalizerAndVIO();
 
-  // Whether Localizer is enabled.
-  bool localizer_enabled() const;
+  // Whether Localizer and VIO are enabled.
+  bool localizer_and_vio_enabled() const;
 
+  // Resets VIO using re-estimation of biases and resets the localizer.
   bool ResetBiasesAndLocalizer(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
 
+  // Resets VIO using biases in file (if available) and resets the localizer.
   bool ResetBiasesFromFileAndResetLocalizer(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
 
+  // Resets VIO using biases in file (if available) and resets the localizer.
   bool ResetBiasesFromFileAndResetLocalizer();
 
-  // Wrapper for ResetAndEnableLocalizer triggered by service call.
-  bool ResetLocalizer(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
-
-  // Resets the graph.
+  // Resets the localizer.
   void ResetAndEnableLocalizer();
 
   // Resets the localizer and clears the sparse map matched projections buffer
@@ -85,8 +85,6 @@ class RosGraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
 
   // Publish latest graph localizer state msg.
   void PublishGraphLocalizerState();
-
-  // void PublishLocalizerGraph();
 
   // Publishes empty reset message.
   void PublishReset() const;
@@ -137,7 +135,7 @@ class RosGraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
   depth_odometry::DepthOdometryWrapper depth_odometry_wrapper_;
   ros::NodeHandle private_nh_;
   ros::CallbackQueue private_queue_;
-  bool localizer_enabled_ = true;
+  bool localizer_and_vio_enabled_ = true;
   ros::Subscriber sparse_map_vl_sub_;
   ros::Publisher graph_loc_pub_, reset_pub_, heartbeat_pub_;
   tf2_ros::TransformBroadcaster transform_pub_;
