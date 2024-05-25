@@ -130,7 +130,7 @@ RosPoseExtrapolatorWrapper::LatestExtrapolatedStateAndCovariances() {
       LogError("LatestExtrapolatedCombinedNavStateAndCovariances: Failed to extrapolate latest vio state.");
       return boost::none;
     }
-    latest_extrapolated_state_ = *latest_extrapolated_state;
+    latest_extrapolated_vio_state_ = *latest_extrapolated_state;
   }
 
   // Convert from odom frame to world frame
