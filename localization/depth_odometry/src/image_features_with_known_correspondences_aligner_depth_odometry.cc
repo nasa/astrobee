@@ -127,7 +127,7 @@ ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometry::DepthImageCallback(
   }
 
   if (target_landmarks.size() < params_.min_num_correspondences) {
-    LogError("DepthImageCallback: Too few points provided, need " << params_.min_num_correspondences << " but given "
+    LogDebug("DepthImageCallback: Too few points provided, need " << params_.min_num_correspondences << " but given "
                                                                   << target_landmarks.size() << ".");
     return boost::none;
   }
