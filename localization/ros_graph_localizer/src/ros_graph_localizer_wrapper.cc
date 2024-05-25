@@ -215,7 +215,7 @@ boost::optional<ff_msgs::GraphLocState> RosGraphLocalizerWrapper::GraphLocStateM
   const auto latest_timestamp = *LatestTimestamp();
   // Avoid sending repeat msgs.
   if (latest_msg_time_ && *latest_msg_time_ == latest_timestamp) {
-    LogWarningEveryN(2000, "GraphLocStateMsg: No new states added.");
+    LogWarningEveryN(2000, "GraphLocStateMsg: No new localization states.");
     return boost::none;
   }
   latest_msg_time_ = latest_timestamp;
