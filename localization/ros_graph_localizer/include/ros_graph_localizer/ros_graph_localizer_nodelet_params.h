@@ -23,8 +23,10 @@ struct RosGraphLocalizerNodeletParams {
   int max_graph_vio_state_buffer_size;
   int max_vl_matched_projections_buffer_size;
   int max_imu_buffer_size;
-  int max_depth_odom_buffer_size;
   int max_feature_point_buffer_size;
+  int max_depth_odom_buffer_size;
+  int max_depth_image_buffer_size;
+  int max_depth_cloud_buffer_size;
   // Run depth odometry in nodelet
   bool run_depth_odometry;
   // Receive depth odometry messages from external nodelet

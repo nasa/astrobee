@@ -74,15 +74,15 @@ void RosGraphLocalizerNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
                                                 static_cast<std::string>(TOPIC_HARDWARE_NAME_HAZ_CAM) +
                                                 static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_SUFFIX);
     depth_point_cloud_sub_ = private_nh_.subscribe<sensor_msgs::PointCloud2>(
-      depth_point_cloud_topic, 1, &RosGraphLocalizerNodelet::DepthPointCloudCallback, this,
-      ros::TransportHints().tcpNoDelay());
+      depth_point_cloud_topic, params_.max_depth_cloud_buffer_size, &RosGraphLocalizerNodelet::DepthPointCloudCallback,
+      this, ros::TransportHints().tcpNoDelay());
     image_transport::ImageTransport depth_image_transport(private_nh_);
     const std::string depth_image_topic = static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_PREFIX) +
                                           static_cast<std::string>(TOPIC_HARDWARE_NAME_HAZ_CAM) +
                                           static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_SUFFIX_EXTENDED) +
                                           static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_SUFFIX_AMPLITUDE_IMAGE);
-    depth_image_sub_ =
-      depth_image_transport.subscribe(depth_image_topic, 1, &RosGraphLocalizerNodelet::DepthImageCallback, this);
+    depth_image_sub_ = depth_image_transport.subscribe(depth_image_topic, params_.max_depth_image_buffer_size,
+                                                       &RosGraphLocalizerNodelet::DepthImageCallback, this);
   }
 
   fp_sub_ =
