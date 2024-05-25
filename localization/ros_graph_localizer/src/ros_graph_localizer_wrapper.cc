@@ -66,7 +66,7 @@ void RosGraphLocalizerWrapper::SparseMapVisualLandmarksCallback(const ff_msgs::V
   if (!Initialized() && !vio_measurement_buffer_.empty()) {
     const auto oldest_vio_measurement_time = vio_measurement_buffer_.Oldest()->timestamp;
     if (msg_time < oldest_vio_measurement_time) {
-      LogError(
+      LogDebug(
         "SparseMapVisualLandmarksCallback: Initial vl msg time older than oldest buffered vio time, failed to "
         "initialize graph localizer.");
       return;
@@ -180,7 +180,7 @@ bool RosGraphLocalizerWrapper::Initialized() const { return graph_localizer_ != 
 void RosGraphLocalizerWrapper::ResetLocalizer() {
   LogInfo("ResetLocalizer: Resetting localizer.");
   if (!Initialized()) {
-    LogError("ResetLocalizer: Localizer not initialized, nothing to do.");
+    LogDebug("ResetLocalizer: Localizer not initialized, nothing to do.");
     return;
   }
   graph_localizer_.reset();
