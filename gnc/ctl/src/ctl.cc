@@ -190,7 +190,8 @@ void Control::FindBodyForceCmd(const ControlState & state, ControlOutput* out) {
   Eigen::Vector3f v = Eigen::Vector3f::Zero() - state.est_V_B_ISS_ISS;
   if (out->ctl_status > 1) {
     // find desired velocity from position error
-    v += target_vel + (Kp_lin.array() * out->pos_err.array()).matrix() + out->pos_err_int;
+    v = tun_vel_gain * (target_vel - state.est_V_B_ISS_ISS) + (Kp_lin.array() * out->pos_err.array()).matrix() +
+        out->pos_err_int;
   }
   Eigen::Vector3f a = RotateVectorAtoB(v, state.est_quat_ISS2B);
   a = (a.array() * state.vel_kd.array()).matrix();
@@ -350,6 +351,8 @@ void Control::Initialize(void) {
 }
 
 void Control::ReadParams(config_reader::ConfigReader* config) {
+  if (!config->GetReal("tun_vel_gain", &tun_vel_gain))
+    ROS_FATAL("Unspecified tun_vel_gain.");
   Eigen::Vector3d temp;
   if (!msg_conversions::config_read_vector(config, "tun_accel_gain", &temp))
     ROS_FATAL("Unspecified tun_accel_gain.");

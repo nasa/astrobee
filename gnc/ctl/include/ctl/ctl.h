@@ -132,6 +132,7 @@ class Control {
 
   Eigen::Matrix<float, 4, 4> OmegaMatrix(Eigen::Vector3f input);
 
+  float tun_vel_gain;
   Eigen::Vector3f tun_accel_gain;
   Eigen::Vector3f tun_alpha_gain;
   float tun_ctl_stopping_omega_thresh;
