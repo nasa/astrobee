@@ -25,6 +25,7 @@
 namespace ros_graph_localizer {
 struct RosGraphLocalizerWrapperParams {
   imu_integration::ImuIntegratorParams imu_integrator;
+  bool extrapolate_dock_pose_with_imu;
 
  private:
   // Serialization function
@@ -32,6 +33,7 @@ struct RosGraphLocalizerWrapperParams {
   template <class ARCHIVE>
   void serialize(ARCHIVE& ar, const unsigned int /*version*/) {
     ar& BOOST_SERIALIZATION_NVP(imu_integrator);
+    ar& BOOST_SERIALIZATION_NVP(extrapolate_dock_pose_with_imu);
   }
 };
 

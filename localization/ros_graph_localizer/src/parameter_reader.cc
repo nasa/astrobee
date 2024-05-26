@@ -27,6 +27,7 @@ namespace pr = parameter_reader;
 void LoadRosGraphLocalizerWrapperParams(config_reader::ConfigReader& config, RosGraphLocalizerWrapperParams& params,
                                         const std::string& prefix) {
   pr::LoadImuIntegratorParams(config, params.imu_integrator);
+  LOAD_PARAM(params.extrapolate_dock_pose_with_imu, config, "rgl_" + prefix);
 }
 
 void LoadRosGraphLocalizerNodeletParams(config_reader::ConfigReader& config, RosGraphLocalizerNodeletParams& params,

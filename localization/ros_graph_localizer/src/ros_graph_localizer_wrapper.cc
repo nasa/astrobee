@@ -47,6 +47,7 @@ void RosGraphLocalizerWrapper::LoadConfigs(const std::string& graph_config_path_
   config_reader::ConfigReader config;
   config.AddFile("localization/imu_filter.config");
   config.AddFile("localization/imu_integrator.config");
+  config.AddFile("localization/ros_graph_localizer.config");
   lc::LoadGraphLocalizerConfig(config, graph_config_path_prefix);
   pr::LoadGraphLocalizerParams(config, params_);
   LoadRosGraphLocalizerWrapperParams(config, wrapper_params_);
@@ -132,7 +133,7 @@ void RosGraphLocalizerWrapper::ARVisualLandmarksCallback(const ff_msgs::VisualLa
     }
     gtsam::Pose3 latest_graph_body_T_dock_body = lc::GtPose(*latest_graph_body_T_odom_body);
     // If dock time is more recent than latest odometry estimate, also add latest IMU data since latest odom time.
-    if (dock_time > latest_odom_time) {
+    if (wrapper_params_.extrapolate_dock_pose_with_imu && dock_time > latest_odom_time) {
       if (!latest_vio_state_) {
         LogError("ARVisualLandmarksCallback: Latest VIO state not available.");
         return;
