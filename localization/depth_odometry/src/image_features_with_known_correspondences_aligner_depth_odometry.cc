@@ -63,7 +63,8 @@ ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometry::DepthImageCallback(
     latest_depth_image_features_and_points_.reset(new DepthImageFeaturesAndPoints(
       depth_image_measurement.depth_image, *(feature_detector_and_matcher_->detector()), clahe_, normals_required_));
     latest_timestamp_ = depth_image_measurement.timestamp;
-    if (params_.refine_estimate) point_to_plane_icp_depth_odometry_->DepthImageCallback(depth_image_measurement);
+    if (!params_.only_correspondences && params_.refine_estimate)
+      point_to_plane_icp_depth_odometry_->DepthImageCallback(depth_image_measurement);
     return boost::none;
   }
   const lc::Time timestamp = depth_image_measurement.timestamp;

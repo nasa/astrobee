@@ -56,7 +56,7 @@ boost::optional<lc::Time> ImuIntegrator::IntegrateImuMeasurements(const lc::Time
     return boost::none;
   }
   if (end_time < Oldest()->timestamp) {
-    LogDebug("IntegrateImuMeasurements: End time occurs before first measurement.");
+    LogError("IntegrateImuMeasurements: End time occurs before first measurement.");
     return boost::none;
   }
   if (end_time > Latest()->timestamp) {
