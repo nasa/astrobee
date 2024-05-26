@@ -104,16 +104,17 @@ void RosGraphLocalizerWrapper::ARVisualLandmarksCallback(const ff_msgs::VisualLa
   if (!Initialized() && !vio_measurement_buffer_.empty()) {
     const auto oldest_vio_measurement_time = vio_measurement_buffer_.Oldest()->timestamp;
     if (msg_time < oldest_vio_measurement_time) {
-      LogError(
+      LogDebug(
         "ARVisualLandmarksCallback: Initial vl msg time older than oldest buffered vio time, failed to "
         "initialize graph localizer.");
       return;
     }
+    // Initialize localizer to AR frame when in AR mode instead of sparse map world frame
     const auto world_T_body =
       lc::PoseFromMsgWithExtrinsics(visual_landmarks_msg.pose, params_.ar_tag_loc_factor_adder.body_T_cam.inverse());
     params_.pose_node_adder.start_node = world_T_body;
     params_.pose_node_adder.starting_time = msg_time;
-    LogInfo("ARVisualLandmarksCallback: Initializing localizer with vl msg.");
+    LogInfo("ARVisualLandmarksCallback: Initialized localizer.");
     graph_localizer_.reset(new gl::GraphLocalizer(params_));
     imu_integrator_.reset(new ii::ImuIntegrator(wrapper_params_.imu_integrator));
     // Only need the first vio measurement before the initial vl msg time

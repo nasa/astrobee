@@ -136,7 +136,7 @@ class RosGraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
   ros::NodeHandle private_nh_;
   ros::CallbackQueue private_queue_;
   bool localizer_and_vio_enabled_ = true;
-  ros::Subscriber sparse_map_vl_sub_;
+  ros::Subscriber sparse_map_vl_sub_, ar_tag_vl_sub_;
   ros::Publisher graph_loc_pub_, reset_pub_, heartbeat_pub_;
   tf2_ros::TransformBroadcaster transform_pub_;
   ros::ServiceServer bias_srv_, bias_from_file_srv_, reset_map_srv_, reset_srv_, input_mode_srv_;

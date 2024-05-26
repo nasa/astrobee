@@ -90,7 +90,9 @@ void RosGraphLocalizerNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
                           &RosGraphLocalizerNodelet::FeaturePointsCallback, this, ros::TransportHints().tcpNoDelay());
   flight_mode_sub_ =
     private_nh_.subscribe(TOPIC_MOBILITY_FLIGHT_MODE, 10, &RosGraphLocalizerNodelet::FlightModeCallback, this);
-
+  ar_tag_vl_sub_ =
+    private_nh_.subscribe(TOPIC_LOCALIZATION_AR_FEATURES, params_.max_ar_buffer_size,
+                          &GraphLocalizerNodelet::ARVisualLandmarksCallback, this, ros::TransportHints().tcpNoDelay());
   sparse_map_vl_sub_ = private_nh_.subscribe(
     TOPIC_LOCALIZATION_ML_FEATURES, params_.max_vl_matched_projections_buffer_size,
     &RosGraphLocalizerNodelet::SparseMapVisualLandmarksCallback, this, ros::TransportHints().tcpNoDelay());
@@ -123,10 +125,18 @@ bool RosGraphLocalizerNodelet::SetMode(ff_msgs::SetEkfInput::Request& req, ff_ms
   if (input_mode == ff_msgs::SetEkfInputRequest::MODE_AR_TAGS &&
       last_mode_ != ff_msgs::SetEkfInputRequest::MODE_AR_TAGS) {
     LogInfo("SetMode: Switching to AR_TAG mode.");
+    // Clear sparse map measurement buffer
+    sparse_map_vl_sub_ = private_nh_.subscribe(
+      TOPIC_LOCALIZATION_ML_FEATURES, params_.max_vl_matched_projections_buffer_size,
+      &RosGraphLocalizerNodelet::SparseMapVisualLandmarksCallback, this, ros::TransportHints().tcpNoDelay());
     ResetAndEnableLocalizer();
   } else if (input_mode != ff_msgs::SetEkfInputRequest::MODE_AR_TAGS &&
              last_mode_ == ff_msgs::SetEkfInputRequest::MODE_AR_TAGS) {
     LogInfo("SetMode: Switching out of AR_TAG mode.");
+    // Clear ar tag measurement buffer
+    ar_tag_vl_sub_ = private_nh_.subscribe(TOPIC_LOCALIZATION_AR_FEATURES, params_.max_ar_buffer_size,
+                                           &GraphLocalizerNodelet::ARVisualLandmarksCallback, this,
+                                           ros::TransportHints().tcpNoDelay());
     ResetAndEnableLocalizer();
   }
 
