@@ -117,7 +117,8 @@ void RosPoseExtrapolatorWrapper::FlightModeCallback(const ff_msgs::FlightMode& f
 boost::optional<std::pair<lc::CombinedNavState, lc::CombinedNavStateCovariances>>
 RosPoseExtrapolatorWrapper::LatestExtrapolatedStateAndCovariances() {
   if (!world_T_odom_ || !latest_extrapolated_vio_state_) {
-    LogError("LatestExtrapolatedStateAndCovariances: Not enough information available to create desired data.");
+    LogWarningEveryN(200,
+                     "LatestExtrapolatedStateAndCovariances: Not enough information available to create desired data.");
     return boost::none;
   }
 
@@ -153,13 +154,14 @@ RosPoseExtrapolatorWrapper::LatestExtrapolatedStateAndCovariances() {
 
 boost::optional<ff_msgs::EkfState> RosPoseExtrapolatorWrapper::LatestExtrapolatedLocalizationMsg() {
   if (!latest_loc_msg_ || !latest_vio_msg_) {
-    LogDebugEveryN(50, "LatestExtrapolatedLocalizationMsg: No latest loc msg available.");
+    LogDebugEveryN(200, "LatestExtrapolatedLocalizationMsg: No latest loc msg available.");
     return boost::none;
   }
 
   const auto latest_extrapolated_state_and_covariances = LatestExtrapolatedStateAndCovariances();
   if (!latest_extrapolated_state_and_covariances) {
-    LogError("LatestExtrapolatedLocalizationMsg: Failed to get latest imu augmented nav state and covariances.");
+    LogWarningEveryN(
+      200, "LatestExtrapolatedLocalizationMsg: Failed to get latest imu augmented nav state and covariances.");
     return boost::none;
   }
 
