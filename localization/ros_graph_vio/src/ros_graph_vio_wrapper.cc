@@ -129,7 +129,7 @@ void RosGraphVIOWrapper::ResetBiasesFromFileAndResetVIO() {
 
 boost::optional<ff_msgs::GraphVIOState> RosGraphVIOWrapper::GraphVIOStateMsg() {
   if (!Initialized()) {
-    LogWarningEveryN(200, "Graph VIO not yet initialized.");
+    LogDebugEveryN(200, "Graph VIO not yet initialized.");
     return boost::none;
   }
   const auto& nodes = graph_vio_->combined_nav_state_nodes();
@@ -142,7 +142,7 @@ boost::optional<ff_msgs::GraphVIOState> RosGraphVIOWrapper::GraphVIOStateMsg() {
 
   // Avoid sending repeat msgs
   if (times.empty() || (latest_msg_time_ && times.back() == *latest_msg_time_)) {
-    LogWarningEveryN(2000, "No new VIO states.");
+    LogDebugEveryN(2000, "No new VIO states.");
     return boost::none;
   }
   const lc::Time latest_time = times.back();
