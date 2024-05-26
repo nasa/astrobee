@@ -108,7 +108,7 @@ void RosGraphLocalizerWrapper::ARVisualLandmarksCallback(const ff_msgs::VisualLa
     const auto world_T_latest_graph_body = LatestPose();
     const auto latest_graph_timestamp = LatestTimestamp();
     if (!world_T_latest_graph_body || !latest_graph_timestamp) {
-      LogError("ARVisualLandmarksCallback: Failed to get latest pose and timestamp.");
+      LogDebug("ARVisualLandmarksCallback: Failed to get latest pose and timestamp.");
       return;
     }
 
@@ -138,8 +138,8 @@ void RosGraphLocalizerWrapper::ARVisualLandmarksCallback(const ff_msgs::VisualLa
         LogError("ARVisualLandmarksCallback: Latest VIO state not available.");
         return;
       }
-      if (imu_integrator_->empty()) {
-        LogError("ARVisualLandmarksCallback: No IMU data available.");
+      if (imu_integrator_->size() < 2 || !imu_integrator_->Latest()) {
+        LogError("ARVisualLandmarksCallback: Not enough IMU data available for extrapolation.");
         return;
       }
 
@@ -157,6 +157,7 @@ void RosGraphLocalizerWrapper::ARVisualLandmarksCallback(const ff_msgs::VisualLa
     const auto dock_T_body =
       lc::PoseFromMsgWithExtrinsics(visual_landmarks_msg.pose, params_.ar_tag_loc_factor_adder.body_T_cam.inverse());
     world_T_dock_ = world_T_body * dock_T_body.inverse();
+    LogInfo("ARVisualLandmarksCallback: Initialized world_T_dock.");
   }
   if (Initialized()) {
     // Frame change the ar tag measurement from the dock to world frame before
