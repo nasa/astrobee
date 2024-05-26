@@ -193,7 +193,7 @@ void RosGraphLocalizerWrapper::ResetLocalizer() {
 
 boost::optional<lc::Time> RosGraphLocalizerWrapper::LatestTimestamp() const {
   if (!Initialized()) {
-    LogDebug("LatestTimestamp: Localizer not yet initialized");
+    LogDebugEveryN(200, "LatestTimestamp: Localizer not yet initialized");
     return boost::none;
   }
   return graph_localizer_->pose_nodes().LatestTimestamp();
@@ -201,7 +201,7 @@ boost::optional<lc::Time> RosGraphLocalizerWrapper::LatestTimestamp() const {
 
 boost::optional<gtsam::Pose3> RosGraphLocalizerWrapper::LatestPose() const {
   if (!Initialized()) {
-    LogDebug("LatestPose: Localizer not yet initialized");
+    LogDebugEveryN(200, "LatestPose: Localizer not yet initialized");
     return boost::none;
   }
   return graph_localizer_->pose_nodes().LatestNode();
@@ -209,7 +209,7 @@ boost::optional<gtsam::Pose3> RosGraphLocalizerWrapper::LatestPose() const {
 
 boost::optional<ff_msgs::GraphLocState> RosGraphLocalizerWrapper::GraphLocStateMsg() {
   if (!Initialized()) {
-    LogDebug("GraphLocStateMsg: Localizer not yet initialized");
+    LogDebugEveryN(200, "GraphLocStateMsg: Localizer not yet initialized");
     return boost::none;
   }
   const auto latest_timestamp = *LatestTimestamp();
