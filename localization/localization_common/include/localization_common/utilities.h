@@ -52,6 +52,9 @@ gtsam::Pose3 LoadTransform(config_reader::ConfigReader& config, const std::strin
 gtsam::Vector3 LoadVector3(config_reader::ConfigReader& config, const std::string& config_name,
                            const std::string& prefix = "");
 
+Eigen::Matrix3d LoadCameraIntrinsicsMatrix(config_reader::ConfigReader& config,
+                                           const std::string& intrinsics_config_name, const std::string& prefix = "");
+
 gtsam::Cal3_S2 LoadCameraIntrinsics(config_reader::ConfigReader& config, const std::string& intrinsics_config_name,
                                     const std::string& prefix = "");
 

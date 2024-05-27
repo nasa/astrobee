@@ -44,10 +44,15 @@ gtsam::Vector3 LoadVector3(config_reader::ConfigReader& config, const std::strin
   return vec;
 }
 
+Eigen::Matrix3d LoadCameraIntrinsicsMatrix(config_reader::ConfigReader& config,
+                                           const std::string& intrinsics_config_name, const std::string& prefix) {
+  const camera::CameraParameters cam_params(&config, (prefix + intrinsics_config_name).c_str());
+  return cam_params.GetIntrinsicMatrix<camera::UNDISTORTED_C>();
+}
+
 gtsam::Cal3_S2 LoadCameraIntrinsics(config_reader::ConfigReader& config, const std::string& intrinsics_config_name,
                                     const std::string& prefix) {
-  const camera::CameraParameters cam_params(&config, (prefix + intrinsics_config_name).c_str());
-  const auto intrinsics = cam_params.GetIntrinsicMatrix<camera::UNDISTORTED_C>();
+  const auto intrinsics = LoadCameraIntrinsicsMatrix(config, intrinsics_config_name, prefix);
   // Assumes zero skew
   return gtsam::Cal3_S2(intrinsics(0, 0), intrinsics(1, 1), 0, intrinsics(0, 2), intrinsics(1, 2));
 }

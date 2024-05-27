@@ -24,6 +24,9 @@
 #include <vision_common/lk_optical_flow_feature_detector_and_matcher.h>
 #include <vision_common/surf_feature_detector_and_matcher.h>
 
+#include <opencv2/calib3d.hpp>
+#include <opencv2/core/eigen.hpp>
+
 namespace depth_odometry {
 namespace lc = localization_common;
 namespace lm = localization_measurements;
@@ -131,6 +134,49 @@ ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometry::DepthImageCallback(
     LogDebug("DepthImageCallback: Too few points provided, need " << params_.min_num_correspondences << " but given "
                                                                   << target_landmarks.size() << ".");
     return boost::none;
+  }
+
+  if (params_.filter_outliers) {
+    std::vector<unsigned char> inliers;
+    std::vector<cv::Point2d> source_points, target_points;
+    // Undistort and store image points as CV points
+    for (int i = 0; i < source_image_points.size(); ++i) {
+      Eigen::Vector2d undistorted_source, undistorted_target;
+      params_.cam_params->Convert<camera::DISTORTED, camera::UNDISTORTED_C>(source_image_points[i],
+                                                                            &undistorted_source);
+      params_.cam_params->Convert<camera::DISTORTED, camera::UNDISTORTED_C>(target_image_points[i],
+                                                                            &undistorted_target);
+      source_points.emplace_back(cv::Point2d(undistorted_source.x(), undistorted_source.y()));
+      target_points.emplace_back(cv::Point2d(undistorted_target.x(), undistorted_target.y()));
+    }
+    cv::Mat intrinsics;
+    cv::eigen2cv(params_.cam_intrinsics, intrinsics);
+    // TODO(rsoussan): Pass iterations limit if OpenCV version upgraded
+    cv::findEssentialMat(source_points, target_points, intrinsics, params_.filter_method, params_.inlier_probability,
+                         params_.inlier_threshold, inliers);
+    // Filter inliers in source and target point sets
+    source_image_points.erase(std::remove_if(source_image_points.begin(), source_image_points.end(),
+                                             [&source_image_points, &inliers](const Eigen::Vector2d& p) {
+                                               return static_cast<int>(inliers[(&p - &*source_image_points.begin())]) ==
+                                                      0;
+                                             }),
+                              source_image_points.end());
+    target_image_points.erase(std::remove_if(target_image_points.begin(), target_image_points.end(),
+                                             [&target_image_points, &inliers](const Eigen::Vector2d& p) {
+                                               return static_cast<int>(inliers[(&p - &*target_image_points.begin())]) ==
+                                                      0;
+                                             }),
+                              target_image_points.end());
+    source_landmarks.erase(std::remove_if(source_landmarks.begin(), source_landmarks.end(),
+                                          [&source_landmarks, &inliers](const Eigen::Vector3d& p) {
+                                            return static_cast<int>(inliers[(&p - &*source_landmarks.begin())]) == 0;
+                                          }),
+                           source_landmarks.end());
+    target_landmarks.erase(std::remove_if(target_landmarks.begin(), target_landmarks.end(),
+                                          [&target_landmarks, &inliers](const Eigen::Vector3d& p) {
+                                            return static_cast<int>(inliers[(&p - &*target_landmarks.begin())]) == 0;
+                                          }),
+                           target_landmarks.end());
   }
 
   if (params_.only_correspondences) {

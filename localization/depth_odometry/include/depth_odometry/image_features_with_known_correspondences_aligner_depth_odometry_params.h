@@ -18,6 +18,7 @@
 #ifndef DEPTH_ODOMETRY_IMAGE_FEATURES_WITH_KNOWN_CORRESPONDENCES_ALIGNER_DEPTH_ODOMETRY_PARAMS_H_
 #define DEPTH_ODOMETRY_IMAGE_FEATURES_WITH_KNOWN_CORRESPONDENCES_ALIGNER_DEPTH_ODOMETRY_PARAMS_H_
 
+#include <camera/camera_params.h>
 #include <depth_odometry/depth_odometry_params.h>
 #include <depth_odometry/point_to_plane_icp_depth_odometry_params.h>
 #include <point_cloud_common/point_cloud_with_known_correspondences_aligner_params.h>
@@ -45,6 +46,12 @@ struct ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometryParams : public 
   bool only_correspondences;
   bool refine_estimate;
   PointToPlaneICPDepthOdometryParams point_to_plane_icp;
+  Eigen::Matrix3d cam_intrinsics;
+  std::shared_ptr<camera::CameraParameters> cam_params;
+  bool filter_outliers;
+  int filter_method;
+  double inlier_threshold;
+  double inlier_probability;
 };
 }  // namespace depth_odometry
 
