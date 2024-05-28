@@ -66,7 +66,7 @@ Depends: ${misc:Depends}
   ros-${ros-distro}-rosnode, ros-${ros-distro}-rosout, ros-${ros-distro}-rosparam,
   ros-${ros-distro}-rosservice, ros-${ros-distro}-rostopic, ros-${ros-distro}-roswtf,
   ros-${ros-distro}-std-srvs, ros-${ros-distro}-topic-tools, ros-${ros-distro}-xmlrpcpp,
-  ros-kinetic-opencv3 | libopencv3.3.1,
+  libopencv-core, libopencv-calib3d, libopencv-highgui, libopencv-imgcodecs, libopencv-imgproc, libopencv-features2d, libopencv-xfeatures2d,
   libjsoncpp1, libprotoc9v5 | libprotoc17, libgoogle-glog0v5,
   libtinyxml2.6.2v5, libyaml-cpp0.5v5 | libyaml-cpp0.6
 Description: Astrobee flight software.

@@ -46,8 +46,7 @@ find_package(catkin2 REQUIRED COMPONENTS
 find_package(Eigen3 REQUIRED)
 
 # Find OpenCV
-LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../../cmake")
-find_package(OpenCV331 REQUIRED)
+find_package(OpenCV 4.0 REQUIRED)
 
 catkin_package(
   INCLUDE_DIRS include

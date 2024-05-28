@@ -20,9 +20,9 @@
 #include <marker_tracking/arxmlio.h>
 
 // ALVAR stuff
-#include <alvar/Marker.h>
-#include <alvar/Camera.h>
-#include <alvar/ConnectedComponents.h>
+#include <ar_track_alvar/Marker.h>
+#include <ar_track_alvar/Camera.h>
+#include <ar_track_alvar/ConnectedComponents.h>
 #include <glog/logging.h>
 
 #include <vector>
@@ -44,10 +44,10 @@ MarkerCornerDetector::~MarkerCornerDetector() {
   if (alvar_cam_) delete alvar_cam_;
 }
 
-void MarkerCornerDetector::Detect(IplImage *image,
+void MarkerCornerDetector::Detect(std::shared_ptr<cv::Mat> image,
                                   float max_new_marker_error,
                                   float max_track_error) {
-  assert(image->origin == 0);
+  // assert(image->origin == 0);// assume default order of top-left (0) for cv::Mat
   std::swap(markers_, markers_old_);
   markers_->clear();
 
@@ -97,7 +97,7 @@ void MarkerCornerDetector::Detect(IplImage *image,
     if (blob_corners[i].empty()) continue;
 
     alvar::MarkerData marker(1 /*edge length*/, 5 /*resolution*/, 2 /*margin*/);
-    if (marker.UpdateContent(blob_corners[i], image, alvar_cam_) &&
+    if (marker.UpdateContent(blob_corners[i], *image, alvar_cam_) &&
         marker.DecodeContent(&orientation) &&
         (marker.GetError(alvar::Marker::MARGIN_ERROR |
                          alvar::Marker::DECODE_ERROR) <= max_new_marker_error)) {

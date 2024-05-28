@@ -1,0 +1,117 @@
+Index: ar_track_alvar/CMakeLists.txt
+===================================================================
+--- ar_track_alvar.orig/CMakeLists.txt
++++ ar_track_alvar/CMakeLists.txt
+@@ -9,8 +9,6 @@ find_package(catkin REQUIRED COMPONENTS
+         geometry_msgs
+         image_transport
+         message_generation
+-        pcl_conversions
+-        pcl_ros
+         resource_retriever
+         roscpp
+         sensor_msgs
+@@ -22,6 +20,7 @@ find_package(catkin REQUIRED COMPONENTS
+ find_package(Eigen3 REQUIRED)
+ find_package(OpenCV REQUIRED)
+ find_package(TinyXML REQUIRED)
++find_package(PCL REQUIRED COMPONENTS common)
+ 
+ # dynamic reconfigure support
+ generate_dynamic_reconfigure_options(cfg/Params.cfg)
+@@ -36,8 +35,6 @@ catkin_package(
+         geometry_msgs
+         image_transport
+         message_runtime
+-        pcl_conversions
+-        pcl_ros
+         resource_retriever
+         roscpp
+         sensor_msgs
+@@ -51,6 +48,7 @@ include_directories(include
+                     ${catkin_INCLUDE_DIRS}
+                     ${OpenCV_INCLUDE_DIRS}
+                     ${TinyXML_INCLUDE_DIRS}
++		    ${PCL_INCLUDE_DIRS}
+ 
+ )
+ 
+@@ -85,43 +83,10 @@ add_library(${PROJECT_NAME}
+     src/Threads_unix.cpp
+     src/Util.cpp
+ )
+-target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS} ${TinyXML_LIBRARIES} ${catkin_LIBRARIES})
++target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS} ${TinyXML_LIBRARIES} ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+ add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+ 
+-# Kinect filtering code
+-add_library(kinect_filtering src/kinect_filtering.cpp)
+-target_link_libraries(kinect_filtering ${catkin_LIBRARIES})
+-add_dependencies(kinect_filtering ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+-
+-add_library(medianFilter src/medianFilter.cpp)
+-target_link_libraries(medianFilter ${PROJECT_NAME} ${catkin_LIBRARIES})
+-add_dependencies(medianFilter ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+-
+-add_executable(individualMarkers nodes/IndividualMarkers.cpp)
+-target_link_libraries(individualMarkers ${PROJECT_NAME} kinect_filtering ${catkin_LIBRARIES})
+-add_dependencies(individualMarkers ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+-
+-add_executable(individualMarkersNoKinect nodes/IndividualMarkersNoKinect.cpp)
+-target_link_libraries(individualMarkersNoKinect ${PROJECT_NAME} ${catkin_LIBRARIES})
+-add_dependencies(individualMarkersNoKinect ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+-
+-add_executable(trainMarkerBundle nodes/TrainMarkerBundle.cpp)
+-target_link_libraries(trainMarkerBundle ${PROJECT_NAME} ${catkin_LIBRARIES})
+-add_dependencies(trainMarkerBundle ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+-
+-add_executable(findMarkerBundles nodes/FindMarkerBundles.cpp)
+-target_link_libraries(findMarkerBundles ${PROJECT_NAME} kinect_filtering medianFilter ${catkin_LIBRARIES})
+-add_dependencies(findMarkerBundles ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+-
+-add_executable(findMarkerBundlesNoKinect nodes/FindMarkerBundlesNoKinect.cpp)
+-target_link_libraries(findMarkerBundlesNoKinect ${PROJECT_NAME} ${catkin_LIBRARIES})
+-add_dependencies(findMarkerBundlesNoKinect ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+-
+-add_executable(createMarker src/SampleMarkerCreator.cpp)
+-target_link_libraries(createMarker ${PROJECT_NAME} ${catkin_LIBRARIES})
+-add_dependencies(createMarker ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+-
+-install(TARGETS ${PROJECT_NAME} createMarker findMarkerBundles findMarkerBundlesNoKinect individualMarkers individualMarkersNoKinect kinect_filtering medianFilter trainMarkerBundle
++install(TARGETS ${PROJECT_NAME}
+   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+Index: ar_track_alvar/include/ar_track_alvar/filter/kinect_filtering.h
+===================================================================
+--- ar_track_alvar.orig/include/ar_track_alvar/filter/kinect_filtering.h
++++ ar_track_alvar/include/ar_track_alvar/filter/kinect_filtering.h
+@@ -39,7 +39,6 @@
+ #ifndef AR_TRACK_ALVAR_KINECT_FILTERING_H
+ #define AR_TRACK_ALVAR_KINECT_FILTERING_H
+ 
+-#include <pcl_conversions/pcl_conversions.h>
+ #include <pcl/point_types.h>
+ #include <pcl/registration/icp.h>
+ #include <pcl/registration/registration.h>
+@@ -51,7 +50,6 @@
+ #include <pcl/sample_consensus/method_types.h>
+ #include <pcl/sample_consensus/model_types.h>
+ #include <pcl/segmentation/sac_segmentation.h>
+-#include <pcl_ros/point_cloud.h>
+ #include <pcl/filters/extract_indices.h>
+ #include <boost/lexical_cast.hpp>
+ #include <Eigen/StdVector>
+Index: ar_track_alvar/package.xml
+===================================================================
+--- ar_track_alvar.orig/package.xml
++++ ar_track_alvar/package.xml
+@@ -22,8 +22,6 @@
+  <depend>dynamic_reconfigure</depend>
+  <depend>geometry_msgs</depend>
+  <depend>image_transport</depend>
+- <depend>pcl_ros</depend>
+- <depend>pcl_conversions</depend>
+  <depend>resource_retriever</depend>
+  <depend>roscpp</depend>
+  <depend>sensor_msgs</depend>

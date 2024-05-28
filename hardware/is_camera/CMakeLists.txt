@@ -41,8 +41,7 @@ find_package_handle_standard_args(V4L2 DEFAULT_MSG
 
 
 # Find OpenCV
-LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
-find_package(OpenCV331 REQUIRED)
+find_package(OpenCV 4.0 REQUIRED)
 
 catkin_package(
   LIBRARIES is_camera

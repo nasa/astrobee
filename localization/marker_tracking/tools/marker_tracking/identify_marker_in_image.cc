@@ -21,7 +21,7 @@
 #include <marker_tracking/marker_detector.h>
 
 #include <glog/logging.h>
-#include <alvar/Camera.h>
+#include <ar_track_alvar/Camera.h>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 
@@ -43,31 +43,26 @@ int main(int argc, char** argv) {
   colors[2] = cv::Scalar(0);
   colors[3] = cv::Scalar(255);
 
-  cv::Mat image;
-  IplImage ipl_image;
+  std::shared_ptr<cv::Mat> image;
+
   for (int i = 1; i < argc; i++) {
     std::string image_filename(argv[i]);
+    image = std::make_shared<cv::Mat>(cv::imread(image_filename, cv::IMREAD_GRAYSCALE));
 
-    #if (CV_VERSION_MAJOR >= 4)
-        image = cv::imread(image_filename, cv::IMREAD_GRAYSCALE);
-    #else
-        image = cv::imread(image_filename, CV_LOAD_IMAGE_GRAYSCALE);
-    #endif
-    ipl_image = image;
-    detector.Detect(&ipl_image, 0.08, 0.2);
+    detector.Detect(image, 0.08, 0.2);
     LOG(INFO) << image_filename << " : Detected " << detector.NumMarkers() << " markers.";
 
     for (size_t m_id = 0; m_id < detector.NumMarkers(); m_id++) {
       alvar::MarkerData& marker = detector.GetMarker(m_id);
       LOG(INFO) << "\tI see #" << marker.GetId();
       for (size_t c = 0; c < 4; c++) {
-        cv::circle(image,
+        cv::circle(*image,
             cv::Point2f(marker.marker_corners_img[c].x,
               marker.marker_corners_img[c].y),
             3, colors[c]);
       }
     }
-    cv::imwrite(image_filename.substr(0, image_filename.size() - 4) + "_plot.jpg", image);
+    cv::imwrite(image_filename.substr(0, image_filename.size() - 4) + "_plot.jpg", *image);
   }
 
   return 0;
