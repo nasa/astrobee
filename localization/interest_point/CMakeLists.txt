@@ -32,7 +32,8 @@ find_package(Eigen3 REQUIRED)
 find_package(OpenMVG QUIET REQUIRED)
 
 # Find OpenCV
-find_package(OpenCV 4.0 REQUIRED)
+LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
+find_package(OpenCV4WithXFeatures REQUIRED)
 
 catkin_package(
   INCLUDE_DIRS include
