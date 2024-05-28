@@ -28,6 +28,8 @@ struct DepthOdometryFactorAdderParams : public FactorAdderParams {
   double pose_covariance_scale;
   double point_noise_scale;
   bool use_points_between_factor;
+  bool scale_point_between_factors_with_inverse_distance;
+  bool scale_point_between_factors_with_estimate_error;
   bool reject_large_translation_norm;
   double pose_translation_norm_threshold;
   bool reject_large_point_to_point_error;

@@ -62,6 +62,8 @@ void LoadDepthOdometryFactorAdderParams(config_reader::ConfigReader& config, fa:
   LOAD_PARAM(params.pose_covariance_scale, config, prefix);
   LOAD_PARAM(params.point_noise_scale, config, prefix);
   LOAD_PARAM(params.use_points_between_factor, config, prefix);
+  LOAD_PARAM(params.scale_point_between_factors_with_inverse_distance, config, prefix);
+  LOAD_PARAM(params.scale_point_between_factors_with_estimate_error, config, prefix);
   LOAD_PARAM(params.reject_large_point_to_point_error, config, prefix);
   LOAD_PARAM(params.point_to_point_error_threshold, config, prefix);
   LOAD_PARAM(params.reject_large_translation_norm, config, prefix);

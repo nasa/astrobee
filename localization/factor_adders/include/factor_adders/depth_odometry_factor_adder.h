@@ -86,13 +86,24 @@ int DepthOdometryFactorAdder<PoseNodeAdderType>::AddFactorsForSingleMeasurement(
       const Eigen::Vector3d& sensor_t_point_source = measurement.correspondences.source_3d_points[i];
       const Eigen::Vector3d& sensor_t_point_target = measurement.correspondences.target_3d_points[i];
 
-      const Eigen::Vector3d estimate_error =
-        sensor_t_point_source - measurement.odometry.sensor_F_source_T_target.pose * sensor_t_point_target;
-      const double estimate_error_norm = estimate_error.norm();
-      if (params_.reject_large_point_to_point_error && estimate_error_norm > params_.point_to_point_error_threshold)
-        continue;
+      double noise_sigma = 1.0;
+      if (params_.scale_point_between_factors_with_inverse_distance) {
+        noise_sigma = sensor_t_point_source.norm();
+      } else if (params_.scale_point_between_factors_with_estimate_error) {
+        const Eigen::Vector3d estimate_error =
+          sensor_t_point_source - measurement.odometry.sensor_F_source_T_target.pose * sensor_t_point_target;
+        noise_sigma = estimate_error.norm();
+      }
+      if (params_.reject_large_point_to_point_error) {
+        const Eigen::Vector3d estimate_error =
+          sensor_t_point_source - measurement.odometry.sensor_F_source_T_target.pose * sensor_t_point_target;
+        if (estimate_error.norm() > params_.point_to_point_error_threshold) {
+          continue;
+        }
+      }
+
       const auto points_between_factor_noise = localization_common::Robust(
-        gtsam::noiseModel::Diagonal::Sigmas(estimate_error * params_.point_noise_scale), params_.huber_k);
+        gtsam::noiseModel::Isotropic::Sigma(3, noise_sigma * params_.point_noise_scale), params_.huber_k);
       gtsam::PointToPointBetweenFactor::shared_ptr points_between_factor(
         new gtsam::PointToPointBetweenFactor(sensor_t_point_source, sensor_t_point_target, params_.body_T_sensor,
                                              points_between_factor_noise, pose_key_a, pose_key_b));
