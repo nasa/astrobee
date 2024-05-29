@@ -40,8 +40,8 @@ find_package(catkin2 REQUIRED COMPONENTS
 )
 
 # Find OpenCV
-SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
-find_package(OpenCV4 REQUIRED)
+LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
+find_package(OpenCV4WithXFeatures REQUIRED)
 
 catkin_package(
   LIBRARIES ${PROJECT_NAME} ${GLOG_LIBRARIES} ${GTSAM_LIBRARIES} 
