@@ -67,8 +67,8 @@ void RosGraphLocalizerWrapper::SparseMapVisualLandmarksCallback(const ff_msgs::V
   // Ensure vio data exists before msg time so no gaps occur between first
   // sparse map measurement and future interpolated vio measurements.
   if (!Initialized() && !vio_measurement_buffer_.empty()) {
-    const auto oldest_vio_measurement_time = vio_measurement_buffer_.Oldest()->timestamp;
-    if (msg_time < oldest_vio_measurement_time) {
+    const auto oldest_vio_measurement_time = vio_measurement_buffer_.OldestTimestamp();
+    if (msg_time < *oldest_vio_measurement_time) {
       LogDebug(
         "SparseMapVisualLandmarksCallback: Initial vl msg time older than oldest buffered vio time, failed to "
         "initialize graph localizer.");
@@ -192,6 +192,13 @@ bool RosGraphLocalizerWrapper::GraphVIOStateCallback(const ff_msgs::GraphVIOStat
     LogError("GraphVIOStateCallback: VIO msg gap exceeded, resetting localizer. Msg time: "
              << std::setprecision(15) << timestamp << ", last msg time: " << *last_vio_msg_time_
              << ", max gap: " << params_.max_vio_measurement_gap);
+    ResetLocalizer();
+    return false;
+  }
+
+  // check if gap since last vl msg is too large, reset localizer if so
+  if (latest_msg_time_ && (timestamp - *latest_msg_time_ > params_.max_duration_between_vl_msgs)) {
+    LogWarning("GraphVIOStateCallback: Long time elapsed since last vl measurement, resetting localizer.");
     ResetLocalizer();
     return false;
   }

@@ -27,6 +27,7 @@ struct RosGraphLocalizerWrapperParams {
   imu_integration::ImuIntegratorParams imu_integrator;
   bool extrapolate_dock_pose_with_imu;
   int max_relative_vio_buffer_size;
+  double max_duration_between_vl_msgs;
 
  private:
   // Serialization function
@@ -36,6 +37,7 @@ struct RosGraphLocalizerWrapperParams {
     ar& BOOST_SERIALIZATION_NVP(imu_integrator);
     ar& BOOST_SERIALIZATION_NVP(extrapolate_dock_pose_with_imu);
     ar& BOOST_SERIALIZATION_NVP(max_relative_vio_buffer_size);
+    ar& BOOST_SERIALIZATION_NVP(max_duration_between_vl_msgs);
   }
 };
 }  // namespace ros_graph_localizer

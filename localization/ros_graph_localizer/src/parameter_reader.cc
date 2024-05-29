@@ -29,6 +29,7 @@ void LoadRosGraphLocalizerWrapperParams(config_reader::ConfigReader& config, Ros
   pr::LoadImuIntegratorParams(config, params.imu_integrator);
   LOAD_PARAM(params.extrapolate_dock_pose_with_imu, config, "rgl_" + prefix);
   LOAD_PARAM(params.max_relative_vio_buffer_size, config, "rgl_" + prefix);
+  LOAD_PARAM(params.max_duration_between_vl_msgs, config, "rgl_" + prefix);
 }
 
 void LoadRosGraphLocalizerNodeletParams(config_reader::ConfigReader& config, RosGraphLocalizerNodeletParams& params,
