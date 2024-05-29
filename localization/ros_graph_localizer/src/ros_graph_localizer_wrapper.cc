@@ -196,7 +196,7 @@ bool RosGraphLocalizerWrapper::GraphVIOStateCallback(const ff_msgs::GraphVIOStat
     return false;
   }
 
-  // check if gap since last vl msg is too large, reset localizer if so
+  // Check if gap since last vl msg is too large, reset localizer if so.
   if (latest_msg_time_ && (timestamp - *latest_msg_time_ > wrapper_params_.max_duration_between_vl_msgs)) {
     LogWarning("GraphVIOStateCallback: Long time elapsed since last vl measurement, resetting localizer.");
     ResetLocalizer();

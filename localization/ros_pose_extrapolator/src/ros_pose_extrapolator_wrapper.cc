@@ -76,12 +76,6 @@ void RosPoseExtrapolatorWrapper::GraphVIOStateCallback(const ff_msgs::GraphVIOSt
 }
 
 void RosPoseExtrapolatorWrapper::LocalizationStateCallback(const ff_msgs::GraphLocState& loc_msg) {
-  loc_state_timer_.RecordAndVlogEveryN(10, 2);
-  const auto loc_state_elapsed_time = loc_state_timer_.LastValue();
-  if (loc_state_elapsed_time && *loc_state_elapsed_time >= 10) {
-    LogWarning("LocalizationStateCallback: More than 10 seconds elapsed between loc state msgs.");
-  }
-
   latest_loc_msg_ = loc_msg;
   const auto world_T_body = lc::PoseFromMsg(loc_msg.pose.pose);
   // TODO(rsoussan): Store and use loc covariances
