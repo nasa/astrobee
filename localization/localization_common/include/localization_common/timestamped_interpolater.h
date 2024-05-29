@@ -35,8 +35,9 @@ namespace localization_common {
 template <typename T>
 class TimestampedInterpolater : public TimestampedSet<T> {
  public:
-  TimestampedInterpolater() = default;
-  TimestampedInterpolater(const std::vector<Time>& timestamps, const std::vector<T>& objects);
+  explicit TimestampedInterpolater(const boost::optional<int> max_size = boost::none);
+  TimestampedInterpolater(const std::vector<Time>& timestamps, const std::vector<T>& objects,
+                          const boost::optional<int> max_size = boost::none);
 
   // Returns the interpolated object (or exact object if timestamps match) at the provided timestamp.
   boost::optional<T> Interpolate(const Time timestamp) const;
@@ -62,8 +63,13 @@ class TimestampedInterpolater : public TimestampedSet<T> {
 
 // Implementation
 template <typename T>
-TimestampedInterpolater<T>::TimestampedInterpolater(const std::vector<Time>& timestamps, const std::vector<T>& objects)
-    : TimestampedSet<T>(timestamps, objects) {}
+TimestampedInterpolater<T>::TimestampedInterpolater(const boost::optional<int> max_size)
+    : TimestampedSet<T>(max_size) {}
+
+template <typename T>
+TimestampedInterpolater<T>::TimestampedInterpolater(const std::vector<Time>& timestamps, const std::vector<T>& objects,
+                                                    const boost::optional<int> max_size)
+    : TimestampedSet<T>(timestamps, objects, max_size) {}
 
 template <typename T>
 boost::optional<T> TimestampedInterpolater<T>::Interpolate(const Time timestamp) const {

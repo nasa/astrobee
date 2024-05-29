@@ -44,14 +44,16 @@ struct TimestampedValue {
 
 // Stores a set of timesetamped values and provides many functions to
 // access and interact with the values using timestamps.
+// Optionally enforce a size limit, which when exceeded will remove the first half of the elements in the set.
 template <typename T>
 class TimestampedSet {
  public:
-  TimestampedSet();
+  explicit TimestampedSet(const boost::optional<int> max_size = boost::none);
   ~TimestampedSet() = default;
 
   // Assumes values have corresponding timestamps at the same index and each timestamp is unique.
-  TimestampedSet(const std::vector<Time>& timestamps, const std::vector<T>& values);
+  TimestampedSet(const std::vector<Time>& timestamps, const std::vector<T>& values,
+                 const boost::optional<int> max_size = boost::none);
 
   // Adds a value at the corresponding timestamp.
   // Returns whether the value was successfully added.
@@ -78,9 +80,17 @@ class TimestampedSet {
   // Returns boost::none if the set is empty.
   boost::optional<TimestampedValue<T>> Oldest() const;
 
+  // Returns the oldest timestamp in the set.
+  // Returns boost::none if the set is empty.
+  boost::optional<Time> OldestTimestamp() const;
+
   // Returns the latest timestamped value in the set.
   // Returns boost::none if the set is empty.
   boost::optional<TimestampedValue<T>> Latest() const;
+
+  // Returns the latest timestamp in the set.
+  // Returns boost::none if the set is empty.
+  boost::optional<Time> LatestTimestamp() const;
 
   // Returns whether oldest_timestamp <= timestamp <= latest timestamp for the set.
   bool WithinBounds(const Time timestamp) const;
@@ -155,14 +165,17 @@ class TimestampedSet {
   void serialize(ARCHIVE& ar, const unsigned int /*version*/);
 
   std::map<Time, T> timestamp_value_map_;
+  boost::optional<int> max_size_;
 };
 
 // Implementation
 template <typename T>
-TimestampedSet<T>::TimestampedSet() {}
+TimestampedSet<T>::TimestampedSet(const boost::optional<int> max_size) : max_size_(max_size) {}
 
 template <typename T>
-TimestampedSet<T>::TimestampedSet(const std::vector<Time>& timestamps, const std::vector<T>& values) {
+TimestampedSet<T>::TimestampedSet(const std::vector<Time>& timestamps, const std::vector<T>& values,
+                                  const boost::optional<int> max_size)
+    : max_size_(max_size) {
   for (int i = 0; i < values.size(); ++i) {
     Add(timestamps[i], values[i]);
   }
@@ -172,6 +185,12 @@ template <typename T>
 bool TimestampedSet<T>::Add(const Time timestamp, const T& value) {
   if (Contains(timestamp)) return false;
   timestamp_value_map_.emplace(timestamp, value);
+  // Optionally shrink elements to half of max size if max size exceeded. Removes first half of set.
+  if (max_size_ && size() > *max_size_) {
+    auto end_it = timestamp_value_map_.begin();
+    std::advance(end_it, *max_size_ / 2);
+    timestamp_value_map_.erase(timestamp_value_map_.begin(), end_it);
+  }
   return true;
 }
 
@@ -213,12 +232,30 @@ boost::optional<TimestampedValue<T>> TimestampedSet<T>::Oldest() const {
 }
 
 template <typename T>
+boost::optional<Time> TimestampedSet<T>::OldestTimestamp() const {
+  if (empty()) {
+    LogDebug("OldestTimestamp: No timestamps available.");
+    return boost::none;
+  }
+  return timestamp_value_map_.cbegin()->first;
+}
+
+template <typename T>
 boost::optional<TimestampedValue<T>> TimestampedSet<T>::Latest() const {
   if (empty()) {
     LogDebug("Latest: No values available.");
     return boost::none;
   }
   return TimestampedValue<T>(*timestamp_value_map_.crbegin());
+}
+
+template <typename T>
+boost::optional<Time> TimestampedSet<T>::LatestTimestamp() const {
+  if (empty()) {
+    LogDebug("LatestTimestamp: No values available.");
+    return boost::none;
+  }
+  return timestamp_value_map_.crbegin()->first;
 }
 
 template <typename T>
@@ -404,6 +441,7 @@ template <typename T>
 template <class ARCHIVE>
 void TimestampedSet<T>::serialize(ARCHIVE& ar, const unsigned int /*version*/) {
   ar& BOOST_SERIALIZATION_NVP(timestamp_value_map_);
+  ar& BOOST_SERIALIZATION_NVP(max_size_);
 }
 }  // namespace localization_common
 

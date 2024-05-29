@@ -24,6 +24,7 @@ namespace ros_pose_extrapolator {
 struct RosPoseExtrapolatorParams {
   imu_integration::ImuIntegratorParams imu_integrator;
   bool standstill_enabled;
+  int max_relative_vio_buffer_size;
 };
 }  // namespace ros_pose_extrapolator
 

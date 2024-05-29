@@ -28,5 +28,6 @@ void LoadRosPoseExtrapolatorParams(config_reader::ConfigReader& config, RosPoseE
                                    const std::string& prefix) {
   pr::LoadImuIntegratorParams(config, params.imu_integrator);
   LOAD_PARAM(params.standstill_enabled, config, prefix + "rpe_");
+  LOAD_PARAM(params.max_relative_vio_buffer_size, config, prefix + "rpe_");
 }
 }  // namespace ros_pose_extrapolator

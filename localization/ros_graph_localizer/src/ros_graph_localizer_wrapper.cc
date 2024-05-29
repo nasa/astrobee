@@ -41,6 +41,8 @@ RosGraphLocalizerWrapper::RosGraphLocalizerWrapper(const std::string& graph_conf
     : latest_num_detected_ml_features_(0), latest_num_detected_ar_features_(0) {
   LoadConfigs(graph_config_path_prefix);
   imu_integrator_.reset(new ii::ImuIntegrator(wrapper_params_.imu_integrator));
+  vio_measurement_buffer_ = lc::TimestampedSet<ff_msgs::GraphVIOState>(wrapper_params_.max_relative_vio_buffer_size);
+  odom_interpolator_ = lc::PoseInterpolater(wrapper_params_.max_relative_vio_buffer_size);
 }
 
 void RosGraphLocalizerWrapper::LoadConfigs(const std::string& graph_config_path_prefix) {

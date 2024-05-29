@@ -51,6 +51,7 @@ RosPoseExtrapolatorWrapper::RosPoseExtrapolatorWrapper(const RosPoseExtrapolator
 void RosPoseExtrapolatorWrapper::Initialize(const RosPoseExtrapolatorParams& params) {
   params_ = params;
   imu_integrator_.reset(new ii::ImuIntegrator(params_.imu_integrator));
+  odom_interpolator_ = lc::PoseInterpolater(params_.max_relative_vio_buffer_size);
 
   // Preintegration_helper_ is only being used to frame change and remove centrifugal acceleration, so body_T_imu is the
   // only parameter needed.
