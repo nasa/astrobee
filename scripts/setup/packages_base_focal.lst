@@ -88,6 +88,13 @@ libmiro0
 libsoracore1
 libdecomputil0
 libjps3d0
+libopencv-core4.2
+libopencv-calib3d4.2
+libopencv-highgui4.2
+libopencv-imgcodecs4.2
+libopencv-imgproc4.2
+libopencv-features2d4.2
+libopencv-xfeatures2d
 build-essential
 cmake
 libgoogle-glog-dev

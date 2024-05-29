@@ -17,9 +17,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-PACKAGE_NAME=libopencv
+PACKAGE_NAME=libopencv-xfeatures2d
 ORIG_TAR=libopencv-xfeatures2d_4.2.0.orig.tar.gz
-DEB_DIR=opencv
+DEB_DIR=opencv-xfeatures2d
 DIST=$(grep -oP "(?<=VERSION_CODENAME=).*" /etc/os-release)
 
 if [ -d $PACKAGE_NAME ]; then

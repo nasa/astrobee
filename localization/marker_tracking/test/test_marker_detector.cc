@@ -72,5 +72,7 @@ TEST(MarkerDetector, TestDetection) {
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
+  // Initialize ROS
+  ros::init(argc, argv, "test_marker_detector", ros::init_options::AnonymousName);
   return RUN_ALL_TESTS();
 }

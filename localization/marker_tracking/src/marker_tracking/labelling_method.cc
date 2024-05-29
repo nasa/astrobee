@@ -130,7 +130,7 @@ void marker_tracking::LabelingCvSeq::LabelSquares(std::shared_ptr<cv::Mat> image
       }
 
       // Fit edge and put to vector of edges
-      cv::Vec4f params;  // CAREFUL REVIEW: init with zeros?
+      cv::Vec4f params;
       cv::fitLine(line_data, params, cv::DIST_L2, 0, 0.01, 0.01);
       fitted_lines[j] = alvar::Line(params);
     }
