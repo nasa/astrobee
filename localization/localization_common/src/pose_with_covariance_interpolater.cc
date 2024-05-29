@@ -67,7 +67,7 @@ PoseWithCovariance PoseWithCovarianceInterpolater::Relative(const PoseWithCovari
   gtsam::Matrix6 relative_covariance = h * a.covariance * h_t + b.covariance;
   // Add correlation terms if they exist
   // Assumes correlation_covariances stores covariances a_b rather than b_a
-  // const auto covariance_a_b = b.correlation_covariances.Get(a.correlation_covariances.Latest()->timestamp);
+  // const auto covariance_a_b = b.correlation_covariances.Get(*(a.correlation_covariances.LatestTimestamp()));
   if (covariance_a_b) {
     relative_covariance = relative_covariance - h * (*covariance_a_b) - (*covariance_a_b).transpose() * h_t;
   }

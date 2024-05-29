@@ -55,11 +55,11 @@ boost::optional<lc::Time> ImuIntegrator::IntegrateImuMeasurements(const lc::Time
     LogError("IntegrateImuMeasurements: Less than 2 measurements available.");
     return boost::none;
   }
-  if (end_time < Oldest()->timestamp) {
+  if (end_time < *OldestTimestamp()) {
     LogError("IntegrateImuMeasurements: End time occurs before first measurement.");
     return boost::none;
   }
-  if (end_time > Latest()->timestamp) {
+  if (end_time > *LatestTimestamp()) {
     LogError("IntegrateImuMeasurements: End time occurs after last measurement.");
     return boost::none;
   }

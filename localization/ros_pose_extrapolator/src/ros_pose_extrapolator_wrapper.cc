@@ -142,8 +142,8 @@ RosPoseExtrapolatorWrapper::LatestExtrapolatedStateAndCovariances() {
     world_T_odom_->rotation() * latest_extrapolated_vio_state_->velocity();
   // Use latest bias estimate and use latest IMU time as extrapolated timestamp if available.
   // Even if at standstill, the timestamp should be the latest one available.
-  const auto timestamp =
-    imu_integrator_->Latest() ? imu_integrator_->Latest()->timestamp : latest_extrapolated_vio_state_->timestamp();
+  const auto timestamp = imu_integrator_->LatestTimestamp() ? *(imu_integrator_->LatestTimestamp())
+                                                            : latest_extrapolated_vio_state_->timestamp();
   const lc::CombinedNavState extrapolated_state(extrapolated_world_T_body, extrapolated_world_F_body_velocity,
                                                 latest_extrapolated_vio_state_->bias(), timestamp);
 

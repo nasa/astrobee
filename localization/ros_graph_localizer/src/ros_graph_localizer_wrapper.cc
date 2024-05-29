@@ -119,7 +119,7 @@ void RosGraphLocalizerWrapper::ARVisualLandmarksCallback(const ff_msgs::VisualLa
       return;
     }
     const auto dock_time = lc::TimeFromHeader(visual_landmarks_msg.header);
-    const auto latest_odom_time = odom_interpolator_.Latest()->timestamp;
+    const auto latest_odom_time = *(odom_interpolator_.LatestTimestamp());
     if (std::abs(dock_time - latest_odom_time) > 0.5) {
       LogWarning("ARVisualLandmarksCallback: Latest odometry time vs. dock time "
                  << std::abs(dock_time - latest_odom_time) << " larger than 0.5 seconds.");
@@ -146,7 +146,7 @@ void RosGraphLocalizerWrapper::ARVisualLandmarksCallback(const ff_msgs::VisualLa
         return;
       }
 
-      const auto latest_imu_time = imu_integrator_->Latest()->timestamp;
+      const auto latest_imu_time = *(imu_integrator_->LatestTimestamp());
       const auto imu_extrapolation_time = dock_time > latest_imu_time ? latest_imu_time : dock_time;
       const auto imu_extrapolated_latest_vio_state =
         imu_integrator_->Extrapolate(*latest_vio_state_, imu_extrapolation_time);
@@ -197,7 +197,7 @@ bool RosGraphLocalizerWrapper::GraphVIOStateCallback(const ff_msgs::GraphVIOStat
   }
 
   // check if gap since last vl msg is too large, reset localizer if so
-  if (latest_msg_time_ && (timestamp - *latest_msg_time_ > params_.max_duration_between_vl_msgs)) {
+  if (latest_msg_time_ && (timestamp - *latest_msg_time_ > wrapper_params_.max_duration_between_vl_msgs)) {
     LogWarning("GraphVIOStateCallback: Long time elapsed since last vl measurement, resetting localizer.");
     ResetLocalizer();
     return false;

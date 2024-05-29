@@ -104,7 +104,7 @@ void OfflineReplay::Run() {
       // Save extrapolated loc msg if available
       const auto extrapolated_loc_msg = pose_extrapolator_wrapper_.LatestExtrapolatedLocalizationMsg();
       if (!extrapolated_loc_msg) {
-        LogWarningEveryN(50, "Run: Failed to get latest extrapolated loc msg.");
+        LogWarningEveryN(500, "Run: Failed to get latest extrapolated loc msg.");
       } else {
         SaveMsg(*extrapolated_loc_msg, TOPIC_GNC_EKF, results_bag_);
       }
@@ -161,7 +161,7 @@ void OfflineReplay::Run() {
           // Use spaced feature tracks so points only drawn when they are included in the localizer
           const auto latest_time = graph_vio->feature_tracker().SpacedFeatureTracks().crbegin()->crbegin()->timestamp;
           // const auto latest_time =
-          // graph_vio->feature_tracker().feature_tracks().crbegin()->second.Latest()->timestamp;
+          // *(graph_vio->feature_tracker().feature_tracks().crbegin()->second.LatestTimestamp());
           const auto img_msg = live_measurement_simulator_->GetImageMessage(latest_time);
           if (img_msg && graph_vio) {
             const auto smart_factors = graph_vio->Factors<factor_adders::RobustSmartFactor>();
@@ -180,7 +180,7 @@ void OfflineReplay::Run() {
       // Pass latest loc state to imu augmentor if it is available.
       const auto localization_msg = graph_localizer_simulator_->GraphLocStateMsg();
       if (!localization_msg) {
-        LogWarningEveryN(200, "Run: Failed to get localization msg.");
+        LogWarningEveryN(1000, "Run: Failed to get localization msg.");
       } else {
         pose_extrapolator_wrapper_.LocalizationStateCallback(*localization_msg);
         SaveMsg(*localization_msg, TOPIC_GRAPH_LOC_STATE, results_bag_);

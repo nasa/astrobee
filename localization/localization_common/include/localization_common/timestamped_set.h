@@ -323,7 +323,7 @@ std::vector<Time> TimestampedSet<T>::Timestamps() const {
 template <typename T>
 double TimestampedSet<T>::Duration() const {
   if (empty()) return 0;
-  return (Latest()->timestamp - Oldest()->timestamp);
+  return (*LatestTimestamp() - *OldestTimestamp());
 }
 
 template <typename T>
