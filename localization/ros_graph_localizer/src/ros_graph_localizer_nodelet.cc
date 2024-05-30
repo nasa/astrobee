@@ -266,7 +266,6 @@ void RosGraphLocalizerNodelet::SparseMapVisualLandmarksCallback(
   if (!localizer_and_vio_enabled()) return;
   // Avoid adding sparse map measurements when in AR mode
   if (last_mode_ == ff_msgs::SetEkfInputRequest::MODE_AR_TAGS) return;
-  ros_graph_vio_wrapper_.SparseMapVisualLandmarksCallback(*visual_landmarks_msg);
   ros_graph_localizer_wrapper_.SparseMapVisualLandmarksCallback(*visual_landmarks_msg);
 }
 

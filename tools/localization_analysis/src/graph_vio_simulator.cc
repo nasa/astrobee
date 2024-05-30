@@ -37,10 +37,6 @@ void GraphVIOSimulator::BufferFlightModeMsg(const ff_msgs::FlightMode& flight_mo
   flight_mode_msg_buffer_.emplace_back(flight_mode_msg);
 }
 
-void GraphVIOSimulator::BufferVLVisualLandmarksMsg(const ff_msgs::VisualLandmarks& visual_landmarks_msg) {
-  vl_msg_buffer_.emplace_back(visual_landmarks_msg);
-}
-
 bool GraphVIOSimulator::AddMeasurementsAndUpdateIfReady(const lc::Time& current_time) {
   // If not initialized, add measurements as these are required for initialization.
   // Otherwise add measurements if enough time has passed since last optimization, simulating
@@ -70,11 +66,6 @@ bool GraphVIOSimulator::AddMeasurementsAndUpdateIfReady(const lc::Time& current_
     FeaturePointsCallback(of_msg);
   }
   of_msg_buffer_.clear();
-
-  for (const auto& vl_msg : vl_msg_buffer_) {
-    SparseMapVisualLandmarksCallback(vl_msg);
-  }
-  vl_msg_buffer_.clear();
 
   Update();
   last_update_time_ = current_time;

@@ -47,9 +47,6 @@ GraphVIO::GraphVIO(const GraphVIOParams& params)
   depth_odometry_factor_adder_ = std::make_shared<fa::DepthOdometryFactorAdder<na::CombinedNavStateNodeAdder>>(
     params_.depth_odometry_factor_adder, combined_nav_state_node_adder_);
   AddFactorAdder(depth_odometry_factor_adder_);
-  sparse_map_loc_factor_adder_ = std::make_shared<fa::LocFactorAdder<na::CombinedNavStateNodeAdder>>(
-    params_.sparse_map_loc_factor_adder, combined_nav_state_node_adder_);
-  AddFactorAdder(sparse_map_loc_factor_adder_);
 }
 
 void GraphVIO::AddImuMeasurement(const lm::ImuMeasurement& imu_measurement) {
@@ -80,12 +77,6 @@ void GraphVIO::AddDepthOdometryMeasurement(
   const localization_measurements::DepthOdometryMeasurement& depth_odometry_measurement) {
   if (params_.depth_odometry_factor_adder.enabled)
     depth_odometry_factor_adder_->AddMeasurement(depth_odometry_measurement);
-}
-
-void GraphVIO::AddSparseMapMatchedProjectionsMeasurement(
-  const lm::MatchedProjectionsMeasurement& matched_projections_measurement) {
-  if (params_.sparse_map_loc_factor_adder.enabled)
-    sparse_map_loc_factor_adder_->AddMeasurement(matched_projections_measurement);
 }
 
 const no::CombinedNavStateNodes& GraphVIO::combined_nav_state_nodes() const {

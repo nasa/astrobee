@@ -49,8 +49,6 @@ class GraphVIOSimulator : public ros_graph_vio::RosGraphVIOWrapper {
 
   void BufferDepthOdometryMsg(const ff_msgs::DepthOdometry& depth_odometry_msg);
 
-  void BufferVLVisualLandmarksMsg(const ff_msgs::VisualLandmarks& visual_landmarks_msg);
-
   bool AddMeasurementsAndUpdateIfReady(const localization_common::Time& current_time);
 
  private:
@@ -58,7 +56,6 @@ class GraphVIOSimulator : public ros_graph_vio::RosGraphVIOWrapper {
   std::vector<ff_msgs::DepthOdometry> depth_odometry_msg_buffer_;
   std::vector<sensor_msgs::Imu> imu_msg_buffer_;
   std::vector<ff_msgs::FlightMode> flight_mode_msg_buffer_;
-  std::vector<ff_msgs::VisualLandmarks> vl_msg_buffer_;
   boost::optional<localization_common::Time> last_update_time_;
   GraphVIOSimulatorParams params_;
 };

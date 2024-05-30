@@ -122,7 +122,6 @@ void OfflineReplay::Run() {
     const auto vl_msg = live_measurement_simulator_->GetVLMessage(current_time);
     if (vl_msg) {
       const lc::Time timestamp = lc::TimeFromHeader(vl_msg->header);
-      graph_vio_simulator_->BufferVLVisualLandmarksMsg(*vl_msg);
       graph_localizer_simulator_->BufferVLVisualLandmarksMsg(*vl_msg);
       if (static_cast<int>(vl_msg->landmarks.size()) >= params_.sparse_mapping_min_num_landmarks) {
         const gtsam::Pose3 sparse_mapping_global_T_body =

@@ -59,9 +59,6 @@ class RosGraphVIOWrapper {
   // Add flight mode msg to graph_vio and IMU bias initializer.
   void FlightModeCallback(const ff_msgs::FlightMode& flight_mode);
 
-  // Add sparse map visual landmarks msg to graph_localizer.
-  void SparseMapVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg);
-
   // Updates the graph_vio if it has been initialized.
   void Update();
 
