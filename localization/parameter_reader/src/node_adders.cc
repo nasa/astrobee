@@ -36,31 +36,6 @@ void LoadCombinedNavStateNodeAdderParams(config_reader::ConfigReader& config,
   // Note that starting measurement, timestamp, and nodes come from measurements.
   // Starting noise models should be loaded from params.
   LoadBaseTimestampedNodeAdderParams<lc::CombinedNavState>(config, params, prefix);
-  const double starting_pose_translation_stddev = mc::LoadDouble(config, "starting_pose_translation_stddev", prefix);
-  const double starting_pose_quaternion_stddev = mc::LoadDouble(config, "starting_pose_quaternion_stddev", prefix);
-  const double starting_velocity_stddev = mc::LoadDouble(config, "starting_velocity_stddev", prefix);
-  const double starting_accel_bias_stddev = mc::LoadDouble(config, "starting_accel_bias_stddev", prefix);
-  const double starting_gyro_bias_stddev = mc::LoadDouble(config, "starting_gyro_bias_stddev", prefix);
-  const gtsam::Vector6 pose_noise_sigmas((gtsam::Vector(6) << starting_pose_translation_stddev,
-                                          starting_pose_translation_stddev, starting_pose_translation_stddev,
-                                          starting_pose_quaternion_stddev, starting_pose_quaternion_stddev,
-                                          starting_pose_quaternion_stddev)
-                                           .finished());
-  const gtsam::Vector3 velocity_noise_sigmas(
-    (gtsam::Vector(3) << starting_velocity_stddev, starting_velocity_stddev, starting_velocity_stddev).finished());
-  const gtsam::Vector6 bias_noise_sigmas((gtsam::Vector(6) << starting_accel_bias_stddev, starting_accel_bias_stddev,
-                                          starting_accel_bias_stddev, starting_gyro_bias_stddev,
-                                          starting_gyro_bias_stddev, starting_gyro_bias_stddev)
-                                           .finished());
-  const auto pose_noise = lc::Robust(
-    gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(pose_noise_sigmas)), params.huber_k);
-  const auto velocity_noise = lc::Robust(
-    gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(velocity_noise_sigmas)), params.huber_k);
-  const auto bias_noise = lc::Robust(
-    gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(bias_noise_sigmas)), params.huber_k);
-  params.start_noise_models.emplace_back(pose_noise);
-  params.start_noise_models.emplace_back(velocity_noise);
-  params.start_noise_models.emplace_back(bias_noise);
 }
 
 void LoadCombinedNavStateNodeAdderModelParams(config_reader::ConfigReader& config,

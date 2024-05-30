@@ -22,6 +22,11 @@ namespace ros_graph_vio {
 struct RosGraphVIOWrapperParams {
   bool add_sparse_map_measurements_for_initialization;
   int feature_point_count_for_sm_initialization;
+  double starting_pose_translation_stddev;
+  double starting_pose_quaternion_stddev;
+  double starting_velocity_stddev_scale;
+  double starting_accel_bias_stddev_scale;
+  double starting_gyro_bias_stddev_scale;
 };
 }  // namespace ros_graph_vio
 

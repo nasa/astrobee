@@ -29,6 +29,15 @@
 #include <vector>
 
 namespace ros_graph_vio {
+struct ImuBiasWithStddev {
+  ImuBiasWithStddev(const gtsam::imuBias::ConstantBias& bias, const Eigen::Vector3d& accelerometer_bias_stddev,
+                    const Eigen::Vector3d& gyro_bias_stddev)
+      : bias(bias), accelerometer_bias_stddev(accelerometer_bias_stddev), gyro_bias_stddev(gyro_bias_stddev) {}
+  gtsam::imuBias::ConstantBias bias;
+  Eigen::Vector3d accelerometer_bias_stddev;
+  Eigen::Vector3d gyro_bias_stddev;
+};
+
 // Buffers IMU measurements (and flight speed mode if available to help filter speed specific vibration noise) and
 // estimates IMU biases. Assumes standstill behavior so the estimated bias is simply the average of the buffered
 // measurements. Saves biases to a file and optionally loads from a file as well.
@@ -47,10 +56,10 @@ class ImuBiasInitializer {
   void AddImuMeasurement(const localization_measurements::ImuMeasurement& imu_measurement);
 
   // Returns bias if it is available.
-  boost::optional<gtsam::imuBias::ConstantBias> Bias() const;
+  boost::optional<ImuBiasWithStddev> Bias() const;
 
   // Manually sets the bias and saves it to file.
-  void UpdateBias(const gtsam::imuBias::ConstantBias& bias);
+  void UpdateBias(const ImuBiasWithStddev& bias);
 
   // Clears measurement buffer, filter, and estimated bias.
   void Reset();
@@ -62,7 +71,7 @@ class ImuBiasInitializer {
   bool SaveToFile() const;
 
  private:
-  boost::optional<gtsam::imuBias::ConstantBias> imu_bias_;
+  boost::optional<ImuBiasWithStddev> imu_bias_;
   std::unique_ptr<imu_integration::DynamicImuFilter> imu_bias_filter_;
   std::vector<localization_measurements::ImuMeasurement> imu_bias_measurements_;
   ImuBiasInitializerParams params_;

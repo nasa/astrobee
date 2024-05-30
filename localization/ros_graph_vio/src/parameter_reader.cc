@@ -35,5 +35,10 @@ void LoadRosGraphVIOWrapperParams(config_reader::ConfigReader& config, RosGraphV
                                   const std::string& prefix) {
   LOAD_PARAM(params.add_sparse_map_measurements_for_initialization, config, prefix + "rgv_");
   LOAD_PARAM(params.feature_point_count_for_sm_initialization, config, prefix + "rgv_");
+  LOAD_PARAM(params.starting_pose_translation_stddev, config, prefix + "rgv_");
+  LOAD_PARAM(params.starting_pose_quaternion_stddev, config, prefix + "rgv_");
+  LOAD_PARAM(params.starting_velocity_stddev_scale, config, prefix + "rgv_");
+  LOAD_PARAM(params.starting_accel_bias_stddev_scale, config, prefix + "rgv_");
+  LOAD_PARAM(params.starting_gyro_bias_stddev_scale, config, prefix + "rgv_");
 }
 }  // namespace ros_graph_vio

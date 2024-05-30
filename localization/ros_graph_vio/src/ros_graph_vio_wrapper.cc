@@ -62,13 +62,45 @@ void RosGraphVIOWrapper::DepthOdometryCallback(const ff_msgs::DepthOdometry& dep
 void RosGraphVIOWrapper::ImuCallback(const sensor_msgs::Imu& imu_msg) {
   const auto imu_measurement = lm::ImuMeasurement(imu_msg);
   imu_bias_initializer_->AddImuMeasurement(imu_measurement);
-  if (!Initialized() && imu_bias_initializer_->Bias()) {
+  if (!Initialized() && imu_bias_initializer_->Bias() &&
+      !wrapper_params_.add_sparse_map_measurements_for_initialization) {
     // Set initial nav state. Use bias from initializer and
     // assume zero initial velocity. Set initial pose to identity.
     const lc::CombinedNavState initial_state(gtsam::Pose3::identity(), gtsam::Velocity3::Zero(),
-                                             *(imu_bias_initializer_->Bias()), imu_measurement.timestamp);
+                                             imu_bias_initializer_->Bias()->bias, imu_measurement.timestamp);
     params_.combined_nav_state_node_adder.start_node = initial_state;
     params_.combined_nav_state_node_adder.starting_time = initial_state.timestamp();
+    // Set starting state noise using params
+    const gtsam::Vector6 pose_noise_sigmas(
+      (gtsam::Vector(6) << wrapper_params_.starting_pose_translation_stddev,
+       wrapper_params_.starting_pose_translation_stddev, wrapper_params_.starting_pose_translation_stddev,
+       wrapper_params_.starting_pose_quaternion_stddev, wrapper_params_.starting_pose_quaternion_stddev,
+       wrapper_params_.starting_pose_quaternion_stddev)
+        .finished());
+    const auto pose_noise =
+      lc::Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(pose_noise_sigmas)),
+                 params_.combined_nav_state_node_adder.huber_k);
+    params_.combined_nav_state_node_adder.start_noise_models.emplace_back(pose_noise);
+    // Set starting velocity noise using accel bias stddev - assumes stddev in accel measurements correlate
+    // to uncertainty in initial velocity
+    const auto& accel_bias_stddev = imu_bias_initializer_->Bias()->accelerometer_bias_stddev;
+    const auto& gyro_bias_stddev = imu_bias_initializer_->Bias()->gyro_bias_stddev;
+    const gtsam::Vector3 velocity_stddev = accel_bias_stddev * wrapper_params_.starting_velocity_stddev_scale;
+    const gtsam::Vector3 velocity_noise_sigmas(
+      (gtsam::Vector(3) << velocity_stddev, velocity_stddev, velocity_stddev).finished());
+    const auto velocity_noise =
+      lc::Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(velocity_noise_sigmas)),
+                 params_.combined_nav_state_node_adder.huber_k);
+    params_.combined_nav_state_node_adder.start_noise_models.emplace_back(velocity_noise);
+    // Set starting bias noise using scaled calculated bias stddevs
+    const gtsam::Vector6 bias_noise_sigmas(
+      (gtsam::Vector(6) << accel_bias_stddev * wrapper_params_.starting_accel_bias_stddev_scale,
+       gyro_bias_stddev * wrapper_params_.starting_gyro_bias_stddev_scale)
+        .finished());
+    const auto bias_noise =
+      lc::Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(bias_noise_sigmas)),
+                 params_.combined_nav_state_node_adder.huber_k);
+    params_.combined_nav_state_node_adder.start_noise_models.emplace_back(bias_noise);
     graph_vio_.reset(new graph_vio::GraphVIO(params_));
     LogInfo("ImuCallback: Initialized VIO.");
   }
@@ -82,20 +114,35 @@ void RosGraphVIOWrapper::FlightModeCallback(const ff_msgs::FlightMode& flight_mo
 }
 
 void RosGraphVIOWrapper::SparseMapVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg) {
+  return;
+  /*if (!wrapper_params_.add_sparse_map_measurements_for_initialization) return;
   // Make sure enough landmarks are in the measurement for it to be valid
   if (static_cast<int>(visual_landmarks_msg.landmarks.size()) <
       params_.sparse_map_loc_factor_adder.min_num_matches_per_measurement) {
     return;
   }
 
+  if (!Initialized() && imu_bias_initializer_->Bias()) {
+    // Set initial nav state. Use bias from initializer and
+    // assume zero initial velocity. Set initial pose to vl measurement.
+    const auto world_T_body = lc::PoseFromMsgWithExtrinsics(visual_landmarks_msg.pose,
+                                                            params_.sparse_map_loc_factor_adder.body_T_cam.inverse());
+    const lc::CombinedNavState initial_state(world_T_body, gtsam::Velocity3::Zero(),
+                                             *(imu_bias_initializer_->Bias()),
+  lc::TimeFromHeader(visual_landmarks_msg.header)); params_.combined_nav_state_node_adder.start_node = initial_state;
+    params_.combined_nav_state_node_adder.starting_time = initial_state.timestamp();
+    graph_vio_.reset(new graph_vio::GraphVIO(params_));
+    LogInfo("SparseMapVisualLandmarksCallback: Initialized VIO.");
+  }
+
   // Don't start counting feature points until graph_vio is initialized
   // to make sure exactly the right amount of points have passed
   if (!Initialized()) {
     feature_point_count_ = 0;
-  } else if (Initialized() && wrapper_params_.add_sparse_map_measurements_for_initialization &&
+  } else if (wrapper_params_.add_sparse_map_measurements_for_initialization &&
              feature_point_count_ < wrapper_params_.feature_point_count_for_sm_initialization) {
     graph_vio_->AddSparseMapMatchedProjectionsMeasurement(lm::MakeMatchedProjectionsMeasurement(visual_landmarks_msg));
-  }
+  } */
 }
 
 void RosGraphVIOWrapper::Update() {
@@ -111,7 +158,29 @@ void RosGraphVIOWrapper::ResetVIO() {
     return;
   }
   const auto latest_combined_nav_state = graph_vio_->combined_nav_state_nodes().LatestNode();
-  imu_bias_initializer_->UpdateBias(latest_combined_nav_state->bias());
+  if (!latest_combined_nav_state) {
+    LogError("ResetVIO: Failed to get latest combined nav state.");
+    return;
+  }
+  const auto keys = graph_vio_->combined_nav_state_nodes().Keys(latest_combined_nav_state->timestamp());
+  if (keys.empty() || keys.size() != 3) {
+    LogError("ResetVIO: Failed to get latest keys.");
+    return;
+  }
+
+  const auto imu_bias_covariance = graph_vio_->Covariance(keys[2]);
+  if (!imu_bias_covariance) {
+    LogError("ResetVIO: Failed to get latest combined nav state and IMU bias covariance.");
+    return;
+  }
+  const Eigen::Vector3d accelerometer_bias_stddev(std::sqrt((*imu_bias_covariance)(0, 0)),
+                                                  std::sqrt((*imu_bias_covariance)(1, 1)),
+                                                  std::sqrt((*imu_bias_covariance)(2, 2)));
+  const Eigen::Vector3d gyro_bias_stddev(std::sqrt((*imu_bias_covariance)(3, 3)),
+                                         std::sqrt((*imu_bias_covariance)(4, 4)),
+                                         std::sqrt((*imu_bias_covariance)(5, 5)));
+  imu_bias_initializer_->UpdateBias(
+    ImuBiasWithStddev(latest_combined_nav_state->bias(), accelerometer_bias_stddev, gyro_bias_stddev));
   graph_vio_.reset();
 }
 
