@@ -33,8 +33,8 @@ int main(int argc, char** argv) {
   po::options_description desc(
     "Adds imu bias extrapolated predictions to a new bag file using recorded vio states and imu msgs");
   desc.add_options()("help,h", "produce help message")("bagfile", po::value<std::string>()->required(),
-                                                       "Input bagfile")
-    ("robot-config-file,r", po::value<std::string>(&robot_config_file)->default_value("bumble.config"),
+                                                       "Input bagfile")(
+    "robot-config-file,r", po::value<std::string>(&robot_config_file)->default_value("bumble.config"),
     "Robot config file")("world,w", po::value<std::string>(&world)->default_value("iss"), "World name");
   po::positional_options_description p;
   p.add("bagfile", 1);

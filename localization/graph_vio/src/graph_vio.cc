@@ -44,10 +44,17 @@ GraphVIO::GraphVIO(const GraphVIOParams& params)
   standstill_factor_adder_ = std::make_shared<fa::StandstillFactorAdder<na::CombinedNavStateNodeAdder>>(
     params_.standstill_factor_adder, combined_nav_state_node_adder_);
   AddFactorAdder(standstill_factor_adder_);
+  depth_odometry_factor_adder_ = std::make_shared<fa::DepthOdometryFactorAdder<na::CombinedNavStateNodeAdder>>(
+    params_.depth_odometry_factor_adder, combined_nav_state_node_adder_);
+  AddFactorAdder(depth_odometry_factor_adder_);
 }
 
 void GraphVIO::AddImuMeasurement(const lm::ImuMeasurement& imu_measurement) {
   combined_nav_state_node_adder_->AddMeasurement(imu_measurement);
+}
+
+void GraphVIO::SetFanSpeedMode(const localization_measurements::FanSpeedMode& fan_speed_mode) {
+  combined_nav_state_node_adder_->node_adder_model().SetFanSpeedMode(fan_speed_mode);
 }
 
 void GraphVIO::AddFeaturePointsMeasurement(const lm::FeaturePointsMeasurement& feature_points_measurement) {
@@ -64,6 +71,12 @@ void GraphVIO::AddFeaturePointsMeasurement(const lm::FeaturePointsMeasurement& f
       standstill_factor_adder_->AddMeasurement(lm::StandstillMeasurement(latest_timestamp, *previous_timestamp));
     }
   }
+}
+
+void GraphVIO::AddDepthOdometryMeasurement(
+  const localization_measurements::DepthOdometryMeasurement& depth_odometry_measurement) {
+  if (params_.depth_odometry_factor_adder.enabled)
+    depth_odometry_factor_adder_->AddMeasurement(depth_odometry_measurement);
 }
 
 const no::CombinedNavStateNodes& GraphVIO::combined_nav_state_nodes() const {

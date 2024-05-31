@@ -94,8 +94,10 @@ class TimestampedNodeAdder : public SlidingWindowNodeAdder {
 
   const TimestampedNodesType& nodes() const { return *nodes_; }
 
- protected:
+  NodeAdderModelType& node_adder_model() { return node_adder_model_; }
+
   NodeAdderModelType node_adder_model_;
+  std::shared_ptr<TimestampedNodesType> nodes_;
 
  private:
   void RemovePriors(const gtsam::KeyVector& old_keys, gtsam::NonlinearFactorGraph& factors);
@@ -112,7 +114,6 @@ class TimestampedNodeAdder : public SlidingWindowNodeAdder {
     ar& BOOST_SERIALIZATION_NVP(params_);
   }
 
-  std::shared_ptr<TimestampedNodesType> nodes_;
   TimestampedNodeAdderParams<NodeType> params_;
 };
 
@@ -311,7 +312,6 @@ bool TimestampedNodeAdder<NodeType, TimestampedNodesType, NodeAdderModelType>::A
     LogError("Adder: Failed to get end timestamp.");
     return false;
   }
-
   if (timestamp > *end_time) {
     LogDebug("Adder: Adding new nodes and relative factors.");
     return AddNewNodesAndRelativeFactors(timestamp, factors);
@@ -336,6 +336,7 @@ template <typename NodeType, typename TimestampedNodesType, typename NodeAdderMo
 bool TimestampedNodeAdder<NodeType, TimestampedNodesType, NodeAdderModelType>::SplitOldRelativeFactor(
   const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) {
   const auto timestamp_bounds = nodes_->LowerAndUpperBoundTimestamps(timestamp);
+  // TODO(rsoussan): print upper and lower bound! print timestamp!
   if (!timestamp_bounds.first || !timestamp_bounds.second) {
     LogError("SplitOldRelativeFactor: Failed to get upper and lower bound timestamp.");
     return false;

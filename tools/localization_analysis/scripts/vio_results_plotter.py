@@ -51,6 +51,7 @@ def plot_vio_results(
     groundtruth_poses,
     graph_vio_states,
     imu_bias_extrapolated_poses,
+    depth_odometries,
 ):
     poses_plotter = MultiPosePlotter(
         "Time (s)", "Position (m)", "Graph vs. Groundtruth Position", True
@@ -109,6 +110,11 @@ def plot_vio_results(
         graph_vio_states
     )
     of_num_factors_plotter.plot(pdf)
+
+    depth_num_factors_plotter = plot_conversions.depth_factor_count_plotter_from_graph_vio_states(
+        graph_vio_states
+    )
+    depth_num_factors_plotter.plot(pdf)
 
     integrated_velocity_poses = plot_conversions.absolute_poses_from_integrated_graph_vio_state_velocities(
         graph_vio_states, groundtruth_poses
@@ -171,6 +177,50 @@ def plot_vio_results(
             "IMU Bias Extrapolated Poses",
         )
 
+    if len(depth_odometries) != 0:
+        absolute_depth_odom_relative_poses = plot_conversions.absolute_poses_from_relative_poses(
+            plot_conversions.poses_from_depth_odometries(depth_odometries),
+            groundtruth_poses,
+        )
+        depth_odom_relative_poses_plotter = MultiPosePlotter(
+            "Time (s)", "Position (m)", "Depth Odometry vs. Groundtruth Position", True
+        )
+        depth_odom_relative_poses_plotter.add_poses(
+            "Groundtruth Poses",
+            groundtruth_poses,
+            linestyle="None",
+            marker="o",
+            markeredgewidth=0.1,
+            markersize=1.5,
+        )
+        depth_odom_relative_poses_plotter.add_poses(
+            "Depth Odometry Poses", absolute_depth_odom_relative_poses, linestyle="-"
+        )
+        depth_odom_relative_poses_plotter.plot(pdf)
+
+        num_features_plotter = plot_conversions.num_features_plotter_from_depth_odometries(
+            depth_odometries
+        )
+        num_features_plotter.plot(pdf)
+
+        runtime_plotter = plot_conversions.runtime_plotter_from_depth_odometries(
+            depth_odometries
+        )
+        runtime_plotter.plot(pdf)
+
+    standstill_plotter = plot_conversions.standstill_plotter_from_states(
+        graph_vio_states
+    )
+    standstill_plotter.plot(pdf)
+
+    num_states_plotter = plot_conversions.num_states_plotter_from_states(
+        graph_vio_states
+    )
+    num_states_plotter.plot(pdf)
+
+    duration_plotter = plot_conversions.duration_plotter_from_states(graph_vio_states)
+    duration_plotter.plot(pdf)
+
     optimization_time_plotter = plot_conversions.optimization_time_plotter_from_states(
         graph_vio_states
     )
@@ -180,6 +230,11 @@ def plot_vio_results(
         graph_vio_states
     )
     update_time_plotter.plot(pdf)
+
+    optimization_iterations_plotter = plot_conversions.optimization_iterations_plotter_from_states(
+        graph_vio_states
+    )
+    optimization_iterations_plotter.plot(pdf)
 
 
 # Loads poses from the provided bagfile, generates plots, and saves results to a pdf and csv file.
@@ -220,6 +275,11 @@ def load_data_and_create_vio_plots(
     message_reader.load_poses(
         imu_bias_extrapolated_poses, "/imu_bias_extrapolator/pose", bag, bag_start_time
     )
+
+    # Load Depth Odometries
+    depth_odometries = message_reader.load_depth_odometries(
+        "/loc/depth/odom", bag, bag_start_time
+    )
     bag.close()
 
     with PdfPages(output_pdf_file) as pdf:
@@ -229,6 +289,7 @@ def load_data_and_create_vio_plots(
             groundtruth_poses,
             graph_vio_states,
             imu_bias_extrapolated_poses,
+            depth_odometries,
         )
 
 

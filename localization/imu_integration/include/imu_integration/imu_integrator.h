@@ -56,7 +56,7 @@ class ImuIntegrator : public localization_common::TimestampedSet<localization_me
     const localization_common::CombinedNavState& combined_nav_state, const localization_common::Time end_time) const;
 
   // Extrapolates using all IMU measurements more recent than the combined nav state
-  localization_common::CombinedNavState ExtrapolateLatest(
+  boost::optional<localization_common::CombinedNavState> ExtrapolateLatest(
     const localization_common::CombinedNavState& combined_nav_state) const;
 
   void SetFanSpeedMode(const localization_measurements::FanSpeedMode fan_speed_mode);

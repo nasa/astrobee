@@ -31,9 +31,12 @@ void LoadImuBiasInitializerParams(config_reader::ConfigReader& config, ImuBiasIn
   LOAD_PARAM(params.num_bias_estimation_measurements, config, prefix + "ibi_");
 }
 
-void LoadRosGraphVIONodeletParams(config_reader::ConfigReader& config, RosGraphVIONodeletParams& params,
+void LoadRosGraphVIOWrapperParams(config_reader::ConfigReader& config, RosGraphVIOWrapperParams& params,
                                   const std::string& prefix) {
-  LOAD_PARAM(params.max_imu_buffer_size, config, prefix + "rgv_");
-  LOAD_PARAM(params.max_feature_point_buffer_size, config, prefix + "rgv_");
+  LOAD_PARAM(params.starting_pose_translation_stddev, config, prefix + "rgv_");
+  LOAD_PARAM(params.starting_pose_quaternion_stddev, config, prefix + "rgv_");
+  LOAD_PARAM(params.starting_velocity_stddev_scale, config, prefix + "rgv_");
+  LOAD_PARAM(params.starting_accel_bias_stddev_scale, config, prefix + "rgv_");
+  LOAD_PARAM(params.starting_gyro_bias_stddev_scale, config, prefix + "rgv_");
 }
 }  // namespace ros_graph_vio

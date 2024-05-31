@@ -65,6 +65,27 @@ def xyz_velocity_vectors_from_extrapolated_loc_states(extrapolated_loc_states):
     return [xs, ys, zs]
 
 
+# Return list of 3 lists, one each for x, y, z values in accelerations
+def xyz_acceleration_vectors_from_extrapolated_loc_states(extrapolated_loc_states):
+    # TODO: Do this more efficiently
+    xs = [state.acceleration.x for state in extrapolated_loc_states]
+    ys = [state.acceleration.y for state in extrapolated_loc_states]
+    zs = [state.acceleration.z for state in extrapolated_loc_states]
+    return [xs, ys, zs]
+
+
+# Return list of 3 lists, one each for x, y, z values in accelerations
+def xyz_acceleration_vectors_from_imu_accelerations(imu_accelerations):
+    # TODO: Do this more efficiently
+    xs = [acceleration.x for acceleration in imu_accelerations]
+    ys = [acceleration.y for acceleration in imu_accelerations]
+    zs = [acceleration.z for acceleration in imu_accelerations]
+    return [xs, ys, zs]
+
+
+    return [xs, ys, zs]
+
+
 # Return list of 3 lists, one each for x, y, z values in IMU accelerometer bias
 def xyz_accel_bias_vectors_from_graph_vio_states(graph_vio_states):
     # TODO: Do this more efficiently
@@ -226,6 +247,53 @@ def absolute_poses_from_imu_bias_extrapolated_poses(
     return adjusted_imu_bias_poses
 
 
+# Return list of absolute poses.
+# Poses are adjusted to start at the corresponding groundtruth pose at the earliest corresponding timestamp
+# so they can be plotted against groundtruth poses. The earliest corresponding timestamp is the first timestamp
+# with a dt <= max_diff compared to a imu bias extrapolated pose.
+def absolute_poses_from_relative_poses(relative_poses, groundtruth_poses, max_diff=0.1):
+    relative_pose_times = np.array(
+        [relative_pose.timestamp for relative_pose in relative_poses]
+    )
+    world_T_odom = None
+    for groundtruth_pose in groundtruth_poses:
+        closest_matching_relative_pose_index = np.argmin(
+            np.abs(relative_pose_times - groundtruth_pose.timestamp)
+        )
+        timestamp_diff = np.abs(
+            relative_pose_times[closest_matching_relative_pose_index]
+            - groundtruth_pose.timestamp
+        )
+        if timestamp_diff <= max_diff:
+            closest_relative_pose = relative_poses[closest_matching_relative_pose_index]
+            world_T_odom = (
+                groundtruth_pose
+                * relative_poses[closest_matching_relative_pose_index].inverse()
+            )
+            break
+    if not world_T_odom:
+        print("Failed to find corresponding groundtruth pose to graph VIO poses")
+        sys.exit(0)
+    adjusted_relative_pose_poses = []
+    previous_relative_pose = None
+    for relative_pose in relative_poses:
+        pose = TimestampedPose(
+            relative_pose.orientation, relative_pose.position, relative_pose.timestamp
+        )
+        if previous_relative_pose:
+            pose = previous_relative_pose * pose
+        adjusted_pose = world_T_odom * pose
+        adjusted_relative_pose_poses.append(
+            TimestampedPose(
+                adjusted_pose.orientation,
+                adjusted_pose.position,
+                relative_pose.timestamp,
+            )
+        )
+        previous_relative_pose = pose
+    return adjusted_relative_pose_poses
+
+
 # Return list of poses from integrated velocities.
 # Poses are adjusted to start at the corresponding groundtruth pose at the earliest corresponding timestamp
 # so they can be plotted against groundtruth poses. The earliest corresponding timestamp is the first timestamp
@@ -323,6 +391,20 @@ def integrate_velocities(velocities, starting_pose):
     return integrated_poses
 
 
+# Return list of ml measurement counts from graph loc states
+def ml_feature_counts_from_graph_loc_states(graph_loc_states):
+    return [
+        graph_loc_state.num_detected_ml_features for graph_loc_state in graph_loc_states
+    ]
+
+
+# Return list of ar measurement counts from graph loc states
+def ar_feature_counts_from_graph_loc_states(graph_loc_states):
+    return [
+        graph_loc_state.num_detected_ar_features for graph_loc_state in graph_loc_states
+    ]
+
+
 # Return list of optical flow feature counts from graph vio states
 def optical_flow_feature_counts_from_graph_vio_states(graph_vio_states):
     return [
@@ -333,6 +415,11 @@ def optical_flow_feature_counts_from_graph_vio_states(graph_vio_states):
 # Return list of optical flow factor counts from graph vio states
 def optical_flow_factor_counts_from_graph_vio_states(graph_vio_states):
     return [graph_vio_state.num_of_factors for graph_vio_state in graph_vio_states]
+
+
+# Return list of depth factor counts from graph vio states
+def depth_factor_counts_from_graph_vio_states(graph_vio_states):
+    return [graph_vio_state.num_depth_factors for graph_vio_state in graph_vio_states]
 
 
 # Return list of ml pose factor counts from graph loc states
@@ -348,6 +435,26 @@ def ml_projection_factor_counts_from_graph_loc_states(graph_loc_states):
     ]
 
 
+# Return list of standstill occurances times from states
+def standstill_from_states(states):
+    return [int(state.standstill) for state in states]
+
+
+# Return list of optimization iterations from states
+def optimization_iterations_from_states(states):
+    return [state.optimization_iterations for state in states]
+
+
+# Return list of num states from states
+def num_states_from_states(states):
+    return [state.num_states for state in states]
+
+
+# Return list of duration times from states
+def durations_from_states(states):
+    return [state.duration for state in states]
+
+
 # Return list of optimization times from states
 def optimization_times_from_states(states):
     return [state.optimization_time for state in states]
@@ -356,6 +463,28 @@ def optimization_times_from_states(states):
 # Return list of update times from states
 def update_times_from_states(states):
     return [state.update_time for state in states]
+
+
+# Return list of num features from depth odometries
+def num_features_from_depth_odometries(depth_odometries):
+    return [depth_odometry.num_features for depth_odometry in depth_odometries]
+
+
+# Return list of runtimes from depth odometries
+def runtimes_from_depth_odometries(depth_odometries):
+    return [depth_odometry.runtime for depth_odometry in depth_odometries]
+
+
+# Return list of timestamped poses from depth odometries
+def poses_from_depth_odometries(depth_odometries):
+    return [
+        TimestampedPose(
+            depth_odometry.pose_with_covariance.orientation,
+            depth_odometry.pose_with_covariance.position,
+            depth_odometry.timestamp,
+        )
+        for depth_odometry in depth_odometries
+    ]
 
 
 # Return list of timestamped poses from graph loc states
@@ -400,6 +529,22 @@ def velocity_plotter_from_extrapolated_loc_states(extrapolated_loc_states):
     )
 
 
+def acceleration_plotter_from_extrapolated_loc_states(extrapolated_loc_states):
+    xs, ys, zs = xyz_acceleration_vectors_from_extrapolated_loc_states(
+        extrapolated_loc_states
+    )
+    times = times_from_timestamped_objects(extrapolated_loc_states)
+    return Vector3dPlotter(
+        "Extrapolated Loc Acceleration", times, xs, ys, zs, ["X", "Y", "Z"]
+    )
+
+
+def acceleration_plotter_from_imu_accelerations(imu_accelerations):
+    xs, ys, zs = xyz_acceleration_vectors_from_imu_accelerations(imu_accelerations)
+    times = times_from_timestamped_objects(imu_accelerations)
+    return Vector3dPlotter("Raw IMU Acceleration", times, xs, ys, zs, ["X", "Y", "Z"])
+
+
 def accel_bias_plotter_from_graph_vio_states(graph_vio_states):
     xs, ys, zs = xyz_accel_bias_vectors_from_graph_vio_states(graph_vio_states)
     times = times_from_timestamped_objects(graph_vio_states)
@@ -410,6 +555,22 @@ def gyro_bias_plotter_from_graph_vio_states(graph_vio_states):
     xs, ys, zs = xyz_gyro_bias_vectors_from_graph_vio_states(graph_vio_states)
     times = times_from_timestamped_objects(graph_vio_states)
     return Vector3dPlotter("Graph VIO Gyro Bias", times, xs, ys, zs, ["X", "Y", "Z"])
+
+
+def ml_feature_count_plotter_from_graph_loc_states(graph_loc_states):
+    counts = ml_feature_counts_from_graph_loc_states(graph_loc_states)
+    times = times_from_timestamped_objects(graph_loc_states)
+    return ValuePlotter(
+        "Graph Loc ML Feature Counts", times, counts, "Time (s)", "Num Features", "ML"
+    )
+
+
+def ar_feature_count_plotter_from_graph_loc_states(graph_loc_states):
+    counts = ar_feature_counts_from_graph_loc_states(graph_loc_states)
+    times = times_from_timestamped_objects(graph_loc_states)
+    return ValuePlotter(
+        "Graph Loc AR Feature Counts", times, counts, "Time (s)", "Num Features", "AR"
+    )
 
 
 def optical_flow_feature_count_plotter_from_graph_vio_states(graph_vio_states):
@@ -425,6 +586,14 @@ def optical_flow_factor_count_plotter_from_graph_vio_states(graph_vio_states):
     times = times_from_timestamped_objects(graph_vio_states)
     return ValuePlotter(
         "Graph VIO OF Factors", times, counts, "Time (s)", "Num Factors", "OF"
+    )
+
+
+def depth_factor_count_plotter_from_graph_vio_states(graph_vio_states):
+    counts = depth_factor_counts_from_graph_vio_states(graph_vio_states)
+    times = times_from_timestamped_objects(graph_vio_states)
+    return ValuePlotter(
+        "Graph VIO Depth Factors", times, counts, "Time (s)", "Num Factors", "Depth"
     )
 
 
@@ -446,6 +615,48 @@ def ml_projection_factor_count_plotter_from_graph_loc_states(graph_loc_states):
         "Time (s)",
         "Num Factors",
         "ML",
+    )
+
+
+def standstill_plotter_from_states(states):
+    standstill = standstill_from_states(states)
+    times = times_from_timestamped_objects(states)
+    return ValuePlotter(
+        "Standstill Occurances",
+        times,
+        standstill,
+        "Time (s)",
+        "Standstill (True/False)",
+        "Standstill",
+    )
+
+
+def optimization_iterations_plotter_from_states(states):
+    optimization_iterations = optimization_iterations_from_states(states)
+    times = times_from_timestamped_objects(states)
+    return ValuePlotter(
+        "Num Graph Optimization Iterations",
+        times,
+        optimization_iterations,
+        "Time (s)",
+        "Num Iterations",
+        "Num Optimization Iterations",
+    )
+
+
+def num_states_plotter_from_states(states):
+    num_states = num_states_from_states(states)
+    times = times_from_timestamped_objects(states)
+    return ValuePlotter(
+        "Num Graph States", times, num_states, "Time (s)", "Num States", "Num States"
+    )
+
+
+def duration_plotter_from_states(states):
+    durations = durations_from_states(states)
+    times = times_from_timestamped_objects(states)
+    return ValuePlotter(
+        "Duration", times, durations, "Time (s)", "Duration (s)", "Duration"
     )
 
 
@@ -472,4 +683,30 @@ def update_time_plotter_from_states(states):
         "Time (s)",
         "Update Time (s)",
         "Update Time",
+    )
+
+
+def runtime_plotter_from_depth_odometries(depth_odometries):
+    runtimes = runtimes_from_depth_odometries(depth_odometries)
+    times = times_from_timestamped_objects(depth_odometries)
+    return ValuePlotter(
+        "Depth Odometry Runtime",
+        times,
+        runtimes,
+        "Time (s)",
+        "Runtimes (s)",
+        "Depth Odometry Runtimes",
+    )
+
+
+def num_features_plotter_from_depth_odometries(depth_odometries):
+    num_features = num_features_from_depth_odometries(depth_odometries)
+    times = times_from_timestamped_objects(depth_odometries)
+    return ValuePlotter(
+        "Depth Odometry Num Features",
+        times,
+        num_features,
+        "Time (s)",
+        "Num Features",
+        "Depth Odometry Num Features",
     )

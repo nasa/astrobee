@@ -62,6 +62,10 @@ class SlidingWindowGraphOptimizer : public graph_optimizer::GraphOptimizer {
   // Returns const reference to update timer
   const localization_common::Timer& update_timer() const;
 
+  // Duration of the graph, calculated using the earliest start time
+  // and latest end time using all node adders in the graph.
+  double Duration() const;
+
  private:
   // Removes nodes older than calculated new start time (see NewStartTime() for how this is calculated).
   // Removes any factors depending on a removed node and optionally adds marginalized

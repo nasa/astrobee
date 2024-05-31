@@ -22,9 +22,10 @@ geometry_msgs/PoseWithCovariance pose # world_T_body
 # Stats
 uint32 num_detected_ar_features 
 uint32 num_detected_ml_features 
-uint32 optimization_iterations # Optimization iterations
+uint32 optimization_iterations 
 float32 optimization_time
 float32 update_time # Include optimization_time and other operations to add data to graph
+float32 duration 
 uint32 num_factors
 uint32 num_ml_projection_factors
 uint32 num_ml_pose_factors

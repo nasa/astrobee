@@ -34,8 +34,6 @@
     <node pkg="nodelet" type="nodelet" args="manager"
           name="mlp_graph_localization" output="$(arg output)"/>
     <node pkg="nodelet" type="nodelet" args="manager"
-          name="mlp_graph_vio" output="$(arg output)"/>
-    <node pkg="nodelet" type="nodelet" args="manager"
           name="mlp_vision" output="$(arg output)"/>
     <node pkg="nodelet" type="nodelet" args="manager"
           name="mlp_depth_cam" output="$(arg output)"/>
@@ -105,16 +103,6 @@
       <arg name="class" value="ros_graph_localizer/RosGraphLocalizerNodelet" />
       <arg name="name" value="graph_loc" />
       <arg name="manager" value="mlp_graph_localization" />
-      <arg name="spurn" value="$(arg spurn)" />
-      <arg name="nodes" value="$(arg nodes)" />
-      <arg name="extra" value="$(arg extra)" />
-      <arg name="debug" value="$(arg debug)" />
-      <arg name="default" value="true" />
-    </include>
-    <include file="$(find ff_util)/launch/ff_nodelet.launch">
-      <arg name="class" value="ros_graph_vio/RosGraphVIONodelet" />
-      <arg name="name" value="graph_vio" />
-      <arg name="manager" value="mlp_graph_vio" />
       <arg name="spurn" value="$(arg spurn)" />
       <arg name="nodes" value="$(arg nodes)" />
       <arg name="extra" value="$(arg extra)" />

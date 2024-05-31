@@ -35,6 +35,17 @@ def load_poses(timestamped_poses, topic, bag, bag_start_time):
             )
 
 
+# Start at the provided bag start time.
+def load_depth_odometries(topic, bag, bag_start_time):
+    depth_odometries = []
+    for msg_topic, msg, t in bag.read_messages(topic):
+        if msg_topic == topic:
+            depth_odometries.append(
+                message_conversions.depth_odometry_from_msg(msg, bag_start_time)
+            )
+    return depth_odometries
+
+
 # Load graph vio states from a bag file for a given topic.
 # Start at the provided bag start time.
 def load_graph_vio_states(graph_vio_states, topic, bag, bag_start_time):
@@ -62,6 +73,18 @@ def load_extrapolated_loc_states(extrapolated_loc_states, topic, bag, bag_start_
         if msg_topic == topic:
             extrapolated_loc_states.append(
                 message_conversions.extrapolated_loc_state_from_msg(msg, bag_start_time)
+            )
+
+
+# Load IMU accelerations from a bag file for a given topic.
+# Start at the provided bag start time.
+def load_imu_accelerations(imu_accelerations, topic, bag, bag_start_time):
+    for msg_topic, msg, t in bag.read_messages(topic):
+        if msg_topic == topic:
+            imu_accelerations.append(
+                message_conversions.timestamped_acceleration_from_imu_msg(
+                    msg, bag_start_time
+                )
             )
 
 

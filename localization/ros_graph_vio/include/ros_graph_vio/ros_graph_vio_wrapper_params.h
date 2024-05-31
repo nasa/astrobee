@@ -15,14 +15,17 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef ROS_GRAPH_VIO_ROS_GRAPH_VIO_NODELET_PARAMS_H_
-#define ROS_GRAPH_VIO_ROS_GRAPH_VIO_NODELET_PARAMS_H_
+#ifndef ROS_GRAPH_VIO_ROS_GRAPH_VIO_WRAPPER_PARAMS_H_
+#define ROS_GRAPH_VIO_ROS_GRAPH_VIO_WRAPPER_PARAMS_H_
 
 namespace ros_graph_vio {
-struct RosGraphVIONodeletParams {
-  int max_imu_buffer_size;
-  int max_feature_point_buffer_size;
+struct RosGraphVIOWrapperParams {
+  double starting_pose_translation_stddev;
+  double starting_pose_quaternion_stddev;
+  double starting_velocity_stddev_scale;
+  double starting_accel_bias_stddev_scale;
+  double starting_gyro_bias_stddev_scale;
 };
 }  // namespace ros_graph_vio
 
-#endif  // ROS_GRAPH_VIO_ROS_GRAPH_VIO_NODELET_PARAMS_H_
+#endif  // ROS_GRAPH_VIO_ROS_GRAPH_VIO_WRAPPER_PARAMS_H_

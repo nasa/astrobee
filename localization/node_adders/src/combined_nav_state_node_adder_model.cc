@@ -148,4 +148,8 @@ bool CombinedNavStateNodeAdderModel::RemoveRelativeFactors(const localization_co
                                                            gtsam::NonlinearFactorGraph& factors) const {
   return RemoveRelativeFactor<gtsam::CombinedImuFactor, NodesType>(timestamp_a, timestamp_b, nodes, factors);
 }
+
+void CombinedNavStateNodeAdderModel::SetFanSpeedMode(const localization_measurements::FanSpeedMode& fan_speed_mode) {
+  imu_integrator_.SetFanSpeedMode(fan_speed_mode);
+}
 }  // namespace node_adders

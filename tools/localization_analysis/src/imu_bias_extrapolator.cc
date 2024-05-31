@@ -31,8 +31,7 @@ namespace mc = msg_conversions;
 namespace pr = parameter_reader;
 
 namespace localization_analysis {
-void SaveExtrapolatedStates(const std::vector<lc::CombinedNavState>& extrapolated_states,
-                                      rosbag::Bag& bag) {
+void SaveExtrapolatedStates(const std::vector<lc::CombinedNavState>& extrapolated_states, rosbag::Bag& bag) {
   for (const auto& state : extrapolated_states) {
     geometry_msgs::PoseStamped pose_msg;
     lc::PoseToMsg(state.pose(), pose_msg.pose);
@@ -78,7 +77,7 @@ std::vector<lc::CombinedNavState> ImuBiasExtrapolator::VIOStateCallback(
   combined_nav_states_.Add(combined_nav_state.timestamp(), combined_nav_state);
   if (imu_integrator_->empty()) return {};
   // Remove old combined nav states
-  const auto oldest_imu_time = imu_integrator_->Oldest()->timestamp;
+  const auto oldest_imu_time = *(imu_integrator_->OldestTimestamp());
   combined_nav_states_.RemoveBelowLowerBoundValues(oldest_imu_time);
   std::vector<lc::CombinedNavState> extrapolated_states;
   // Create integrated imu states between successive combined nav states using the
@@ -90,7 +89,7 @@ std::vector<lc::CombinedNavState> ImuBiasExtrapolator::VIOStateCallback(
   while (combined_nav_states_.size() >= 2) {
     auto lower_bound_state_it = combined_nav_states_.set().begin();
     const auto upper_bound_timestamp = std::next(lower_bound_state_it)->first;
-    if (imu_integrator_->Latest()->timestamp < upper_bound_timestamp) break;
+    if (*(imu_integrator_->LatestTimestamp()) < upper_bound_timestamp) break;
     if (!Initialized()) Initialize(lower_bound_state_it->second);
     imu_integrator_->RemoveOldValues(lower_bound_state_it->second.timestamp());
     // Initialize starting state using latest extrapolated pose/velocity/timestamp
@@ -110,8 +109,7 @@ void ImuBiasExtrapolator::AddExtrapolatedStates() {
   for (const rosbag::MessageInstance msg : view) {
     if (string_ends_with(msg.getTopic(), TOPIC_GRAPH_VIO_STATE)) {
       const ff_msgs::GraphVIOState::ConstPtr vio_msg = msg.instantiate<ff_msgs::GraphVIOState>();
-      const auto extrapolated_states =
-        VIOStateCallback(*vio_msg);
+      const auto extrapolated_states = VIOStateCallback(*vio_msg);
       SaveExtrapolatedStates(extrapolated_states, output_bag_);
     } else if (string_ends_with(msg.getTopic(), TOPIC_HARDWARE_IMU)) {
       sensor_msgs::ImuConstPtr imu_msg = msg.instantiate<sensor_msgs::Imu>();

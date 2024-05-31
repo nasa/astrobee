@@ -55,11 +55,11 @@ boost::optional<lc::Time> ImuIntegrator::IntegrateImuMeasurements(const lc::Time
     LogError("IntegrateImuMeasurements: Less than 2 measurements available.");
     return boost::none;
   }
-  if (end_time < Oldest()->timestamp) {
-    LogDebug("IntegrateImuMeasurements: End time occurs before first measurement.");
+  if (end_time < *OldestTimestamp()) {
+    LogError("IntegrateImuMeasurements: End time occurs before first measurement.");
     return boost::none;
   }
-  if (end_time > Latest()->timestamp) {
+  if (end_time > *LatestTimestamp()) {
     LogError("IntegrateImuMeasurements: End time occurs after last measurement.");
     return boost::none;
   }
@@ -109,7 +109,7 @@ boost::optional<gtsam::PreintegratedCombinedMeasurements> ImuIntegrator::Integra
   auto pim = Pim(bias, pim_params_);
   const auto last_integrated_measurement_time = IntegrateImuMeasurements(start_time, end_time, pim);
   if (!last_integrated_measurement_time) {
-    LogDebug("IntegratedPim: Failed to integrate imu measurments.");
+    LogError("IntegratedPim: Failed to integrate imu measurments.");
     return boost::none;
   }
   return pim;
@@ -126,18 +126,18 @@ boost::optional<lc::CombinedNavState> ImuIntegrator::Extrapolate(const lc::Combi
   return PimPredict(combined_nav_state, *pim);
 }
 
-localization_common::CombinedNavState ImuIntegrator::ExtrapolateLatest(
+boost::optional<localization_common::CombinedNavState> ImuIntegrator::ExtrapolateLatest(
   const localization_common::CombinedNavState& combined_nav_state) const {
   const auto latest = Latest();
   if (!latest) {
     LogError("ExtrapolateLatest: Failed to get latest measurement.");
-    return combined_nav_state;
+    return boost::none;
   }
 
   const auto extrapolated_combined_nav_state = Extrapolate(combined_nav_state, latest->timestamp);
-  if (!latest) {
+  if (!extrapolated_combined_nav_state) {
     LogError("ExtrapolateLatest: Failed to extrapolate combined nav state.");
-    return combined_nav_state;
+    return boost::none;
   }
 
   return *extrapolated_combined_nav_state;

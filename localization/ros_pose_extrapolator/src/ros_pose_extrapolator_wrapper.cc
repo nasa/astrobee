@@ -51,6 +51,7 @@ RosPoseExtrapolatorWrapper::RosPoseExtrapolatorWrapper(const RosPoseExtrapolator
 void RosPoseExtrapolatorWrapper::Initialize(const RosPoseExtrapolatorParams& params) {
   params_ = params;
   imu_integrator_.reset(new ii::ImuIntegrator(params_.imu_integrator));
+  odom_interpolator_ = lc::PoseInterpolater(params_.max_relative_vio_buffer_size);
 
   // Preintegration_helper_ is only being used to frame change and remove centrifugal acceleration, so body_T_imu is the
   // only parameter needed.
@@ -75,12 +76,6 @@ void RosPoseExtrapolatorWrapper::GraphVIOStateCallback(const ff_msgs::GraphVIOSt
 }
 
 void RosPoseExtrapolatorWrapper::LocalizationStateCallback(const ff_msgs::GraphLocState& loc_msg) {
-  loc_state_timer_.RecordAndVlogEveryN(10, 2);
-  const auto loc_state_elapsed_time = loc_state_timer_.LastValue();
-  if (loc_state_elapsed_time && *loc_state_elapsed_time >= 10) {
-    LogWarning("LocalizationStateCallback: More than 10 seconds elapsed between loc state msgs.");
-  }
-
   latest_loc_msg_ = loc_msg;
   const auto world_T_body = lc::PoseFromMsg(loc_msg.pose.pose);
   // TODO(rsoussan): Store and use loc covariances
@@ -117,18 +112,21 @@ void RosPoseExtrapolatorWrapper::FlightModeCallback(const ff_msgs::FlightMode& f
 boost::optional<std::pair<lc::CombinedNavState, lc::CombinedNavStateCovariances>>
 RosPoseExtrapolatorWrapper::LatestExtrapolatedStateAndCovariances() {
   if (!world_T_odom_ || !latest_extrapolated_vio_state_) {
-    LogError("LatestExtrapolatedStateAndCovariances: Not enough information available to create desired data.");
+    LogWarningEveryN(200,
+                     "LatestExtrapolatedStateAndCovariances: Not enough information available to create desired data.");
     return boost::none;
   }
 
   // Extrapolate VIO data with latest IMU measurements.
   // Don't add IMU data if at standstill to avoid adding noisy IMU measurements to
-  // extrapolated state.
-  if (!standstill())
-    latest_extrapolated_vio_state_ = imu_integrator_->ExtrapolateLatest(*latest_extrapolated_vio_state_);
-  if (!latest_extrapolated_vio_state_) {
-    LogError("LatestExtrapolatedCombinedNavStateAndCovariances: Failed to extrapolate latest vio state.");
-    return boost::none;
+  // extrapolated state. Avoid adding IMU data if too few measurements ( < 2) are in imu integrator.
+  if (!standstill() && static_cast<int>(imu_integrator_->size()) > 1) {
+    const auto latest_extrapolated_state = imu_integrator_->ExtrapolateLatest(*latest_extrapolated_vio_state_);
+    if (!latest_extrapolated_state) {
+      LogError("LatestExtrapolatedCombinedNavStateAndCovariances: Failed to extrapolate latest vio state.");
+      return boost::none;
+    }
+    latest_extrapolated_vio_state_ = *latest_extrapolated_state;
   }
 
   // Convert from odom frame to world frame
@@ -136,11 +134,12 @@ RosPoseExtrapolatorWrapper::LatestExtrapolatedStateAndCovariances() {
   // Rotate body velocity from odom frame to world frame.
   const gtsam::Vector3 extrapolated_world_F_body_velocity =
     world_T_odom_->rotation() * latest_extrapolated_vio_state_->velocity();
-  // Use latest bias estimate and use latest IMU time as extrapolated timestamp.
+  // Use latest bias estimate and use latest IMU time as extrapolated timestamp if available.
   // Even if at standstill, the timestamp should be the latest one available.
+  const auto timestamp = imu_integrator_->LatestTimestamp() ? *(imu_integrator_->LatestTimestamp())
+                                                            : latest_extrapolated_vio_state_->timestamp();
   const lc::CombinedNavState extrapolated_state(extrapolated_world_T_body, extrapolated_world_F_body_velocity,
-                                                latest_extrapolated_vio_state_->bias(),
-                                                imu_integrator_->Latest()->timestamp);
+                                                latest_extrapolated_vio_state_->bias(), timestamp);
 
   // TODO(rsoussan): propogate uncertainties from imu integrator and odom_interpolator
   // TODO(rsoussan): how to get covariances???? Use odom ones for now???
@@ -150,13 +149,14 @@ RosPoseExtrapolatorWrapper::LatestExtrapolatedStateAndCovariances() {
 
 boost::optional<ff_msgs::EkfState> RosPoseExtrapolatorWrapper::LatestExtrapolatedLocalizationMsg() {
   if (!latest_loc_msg_ || !latest_vio_msg_) {
-    LogDebugEveryN(50, "LatestExtrapolatedLocalizationMsg: No latest loc msg available.");
+    LogDebugEveryN(200, "LatestExtrapolatedLocalizationMsg: No latest loc msg available.");
     return boost::none;
   }
 
   const auto latest_extrapolated_state_and_covariances = LatestExtrapolatedStateAndCovariances();
   if (!latest_extrapolated_state_and_covariances) {
-    LogError("LatestExtrapolatedLocalizationMsg: Failed to get latest imu augmented nav state and covariances.");
+    LogWarningEveryN(
+      200, "LatestExtrapolatedLocalizationMsg: Failed to get latest imu augmented nav state and covariances.");
     return boost::none;
   }
 

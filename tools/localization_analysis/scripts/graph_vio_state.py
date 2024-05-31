@@ -18,7 +18,7 @@
 # under the License.
 
 # GraphVIOState object containing information from a GraphVIOState Msg
-class GraphVIOState():
+class GraphVIOState:
     def __init__(self):
         self.timestamp = None
         self.pose_with_covariance = None
@@ -26,6 +26,10 @@ class GraphVIOState():
         self.imu_bias_with_covariance = None
         self.num_detected_of_features = None
         self.num_of_factors = None
+        self.num_depth_factors = None
+        self.num_states = None
+        self.optimization_iterations = None
         self.optimization_time = None
         self.update_time = None
-        # TODO: change this using bag start time??
+        self.duration = None
+        self.standstill = None

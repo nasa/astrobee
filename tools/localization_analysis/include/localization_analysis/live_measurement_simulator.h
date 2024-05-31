@@ -19,6 +19,7 @@
 #ifndef LOCALIZATION_ANALYSIS_LIVE_MEASUREMENT_SIMULATOR_H_
 #define LOCALIZATION_ANALYSIS_LIVE_MEASUREMENT_SIMULATOR_H_
 
+#include <depth_odometry/depth_odometry_wrapper.h>
 #include <ff_common/utils.h>
 #include <ff_msgs/DepthOdometry.h>
 #include <ff_msgs/Feature2dArray.h>
@@ -67,9 +68,12 @@ class LiveMeasurementSimulator {
   rosbag::Bag bag_;
   sparse_mapping::SparseMap map_;
   localization_node::Localizer map_feature_matcher_;
+  depth_odometry::DepthOdometryWrapper depth_odometry_wrapper_;
   LiveMeasurementSimulatorParams params_;
   lk_optical_flow::LKOpticalFlow optical_flow_tracker_;
   const std::string kImageTopic_;
+  std::string topic_localization_depth_image_;
+  std::string topic_localization_depth_cloud_;
   std::unique_ptr<rosbag::View> view_;
   boost::optional<rosbag::View::iterator> view_it_;
   std::map<localization_common::Time, sensor_msgs::ImageConstPtr> img_buffer_;

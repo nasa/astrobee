@@ -15,17 +15,31 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef ROS_POSE_EXTRAPOLATOR_ROS_POSE_EXTRAPOLATOR_PARAMS_H_
-#define ROS_POSE_EXTRAPOLATOR_ROS_POSE_EXTRAPOLATOR_PARAMS_H_
+#ifndef ROS_GRAPH_LOCALIZER_ROS_GRAPH_LOCALIZER_WRAPPER_PARAMS_H_
+#define ROS_GRAPH_LOCALIZER_ROS_GRAPH_LOCALIZER_WRAPPER_PARAMS_H_
 
 #include <imu_integration/imu_integrator_params.h>
 
-namespace ros_pose_extrapolator {
-struct RosPoseExtrapolatorParams {
-  imu_integration::ImuIntegratorParams imu_integrator;
-  bool standstill_enabled;
-  int max_relative_vio_buffer_size;
-};
-}  // namespace ros_pose_extrapolator
+#include <boost/serialization/serialization.hpp>
 
-#endif  // ROS_POSE_EXTRAPOLATOR_ROS_POSE_EXTRAPOLATOR_PARAMS_H_
+namespace ros_graph_localizer {
+struct RosGraphLocalizerWrapperParams {
+  imu_integration::ImuIntegratorParams imu_integrator;
+  bool extrapolate_dock_pose_with_imu;
+  int max_relative_vio_buffer_size;
+  double max_duration_between_vl_msgs;
+
+ private:
+  // Serialization function
+  friend class boost::serialization::access;
+  template <class ARCHIVE>
+  void serialize(ARCHIVE& ar, const unsigned int /*version*/) {
+    ar& BOOST_SERIALIZATION_NVP(imu_integrator);
+    ar& BOOST_SERIALIZATION_NVP(extrapolate_dock_pose_with_imu);
+    ar& BOOST_SERIALIZATION_NVP(max_relative_vio_buffer_size);
+    ar& BOOST_SERIALIZATION_NVP(max_duration_between_vl_msgs);
+  }
+};
+}  // namespace ros_graph_localizer
+
+#endif  // ROS_GRAPH_LOCALIZER_ROS_GRAPH_LOCALIZER_WRAPPER_PARAMS_H_

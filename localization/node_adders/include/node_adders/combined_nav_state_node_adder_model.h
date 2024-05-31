@@ -60,6 +60,8 @@ class CombinedNavStateNodeAdderModel
   bool RemoveRelativeFactors(const localization_common::Time timestamp_a, const localization_common::Time timestamp_b,
                              const NodesType& nodes, gtsam::NonlinearFactorGraph& factors) const final;
 
+  void SetFanSpeedMode(const localization_measurements::FanSpeedMode& fan_speed_mode);
+
  private:
   bool AddRelativeFactors(const gtsam::KeyVector& keys_a, const localization_common::Time timestamp_a,
                           const gtsam::KeyVector& keys_b, const localization_common::Time timestamp_b,

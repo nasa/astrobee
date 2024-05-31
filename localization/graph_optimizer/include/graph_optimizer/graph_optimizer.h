@@ -124,6 +124,9 @@ class GraphOptimizer {
   // Returns a const reference to the optimization timer
   const localization_common::Timer& optimization_timer() const;
 
+  // Returns a const reference to the optimization_iterations averager
+  const localization_common::Averager& optimization_iterations_averager() const;
+
   // Sum of factor errors for each factor in the graph
   double TotalGraphError() const;
 
@@ -162,7 +165,7 @@ class GraphOptimizer {
     ar& BOOST_SERIALIZATION_NVP(stats_logger_);
     ar& BOOST_SERIALIZATION_NVP(optimization_timer_);
     ar& BOOST_SERIALIZATION_NVP(optimization_timer_);
-    ar& BOOST_SERIALIZATION_NVP(iterations_averager_);
+    ar& BOOST_SERIALIZATION_NVP(optimization_iterations_averager_);
     ar& BOOST_SERIALIZATION_NVP(total_error_averager_);
   }
 
@@ -176,7 +179,8 @@ class GraphOptimizer {
 
   // Logging
   localization_common::Timer optimization_timer_ = localization_common::Timer("Optimization");
-  localization_common::Averager iterations_averager_ = localization_common::Averager("Optimization Iterations");
+  localization_common::Averager optimization_iterations_averager_ =
+    localization_common::Averager("Optimization Iterations");
   localization_common::Averager total_error_averager_ = localization_common::Averager("Total Factor Error");
 };
 

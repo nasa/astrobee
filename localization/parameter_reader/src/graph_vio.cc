@@ -29,6 +29,7 @@ namespace gv = graph_vio;
 namespace mc = msg_conversions;
 
 void LoadGraphVIOParams(config_reader::ConfigReader& config, gv::GraphVIOParams& params, const std::string& prefix) {
+  LoadDepthOdometryFactorAdderParams(config, params.depth_odometry_factor_adder, prefix + "gv_fa_do_", "haz");
   LoadStandstillFactorAdderParams(config, params.standstill_factor_adder, prefix + "gv_fa_standstill_");
   LoadVoSmartProjectionFactorAdderParams(config, params.vo_smart_projection_factor_adder, "gv_fa_vo_");
   LoadCombinedNavStateNodeAdderParams(config, params.combined_nav_state_node_adder, prefix + "gv_na_cns_");

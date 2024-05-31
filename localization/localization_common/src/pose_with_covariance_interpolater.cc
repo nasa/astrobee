@@ -31,7 +31,7 @@ PoseWithCovariance PoseWithCovarianceInterpolater::Relative(const PoseWithCovari
                                                             const PoseWithCovariance& b) const {
   const Eigen::Isometry3d relative_pose = a.pose.inverse() * b.pose;
 
-  // Covariance Calculation
+  /*// Covariance Calculation
   const double translation_norm = relative_pose.translation().norm();
   const double orientation_angle = Eigen::AngleAxisd(relative_pose.linear()).angle();
   constexpr double kMinCov = 1e-4;
@@ -47,12 +47,12 @@ PoseWithCovariance PoseWithCovarianceInterpolater::Relative(const PoseWithCovari
     if (relative_covariance(i, i) < kMinCov) {
       relative_covariance(i, i) = kMinCov;
     }
-  }
+  }*/
   /*std::cout << "Relative Covariance: " << std::endl << relative_covariance.matrix() << std::endl;
   std::cout << "A covariance: " << std::endl << a.covariance.matrix() << std::endl;
   std::cout << "B covariance: " << std::endl << b.covariance.matrix() << std::endl;*/
-  return PoseWithCovariance(relative_pose, relative_covariance);
-/*  // See https://gtsam.org/2021/02/23/uncertainties-part3.html
+  /*return PoseWithCovariance(relative_pose, relative_covariance); */
+  // See https://gtsam.org/2021/02/23/uncertainties-part3.html
   // Adjoints
   // Uses convention w_T_a and w_T_b for poses, s.t. adj_w_a is the adjoint for the
   // w_T_a pose.
@@ -67,10 +67,10 @@ PoseWithCovariance PoseWithCovarianceInterpolater::Relative(const PoseWithCovari
   gtsam::Matrix6 relative_covariance = h * a.covariance * h_t + b.covariance;
   // Add correlation terms if they exist
   // Assumes correlation_covariances stores covariances a_b rather than b_a
-  const auto covariance_a_b = b.correlation_covariances.Get(a.correlation_covariances.Latest()->timestamp);
+  // const auto covariance_a_b = b.correlation_covariances.Get(*(a.correlation_covariances.LatestTimestamp()));
   if (covariance_a_b) {
-    relative_covariance = relative_covariance - h * covariance_a_b->value - covariance_a_b->value.transpose() * h_t;
+    relative_covariance = relative_covariance - h * (*covariance_a_b) - (*covariance_a_b).transpose() * h_t;
   }
-  return PoseWithCovariance(relative_pose, relative_covariance);*/
+  return PoseWithCovariance(relative_pose, relative_covariance);
 }
 }  // namespace localization_common

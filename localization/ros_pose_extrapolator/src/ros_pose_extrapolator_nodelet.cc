@@ -57,9 +57,9 @@ void RosPoseExtrapolatorNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
   flight_mode_sub_ =
     imu_nh_.subscribe(TOPIC_MOBILITY_FLIGHT_MODE, 10, &RosPoseExtrapolatorNodelet::FlightModeCallback, this);
   loc_sub_ = loc_nh_.subscribe(TOPIC_GRAPH_LOC_STATE, 1, &RosPoseExtrapolatorNodelet::LocalizationStateCallback, this,
-                                 ros::TransportHints().tcpNoDelay());
+                               ros::TransportHints().tcpNoDelay());
   vio_sub_ = vio_nh_.subscribe(TOPIC_GRAPH_VIO_STATE, 1, &RosPoseExtrapolatorNodelet::GraphVIOStateCallback, this,
-                                 ros::TransportHints().tcpNoDelay());
+                               ros::TransportHints().tcpNoDelay());
 }
 
 void RosPoseExtrapolatorNodelet::ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_msg) {

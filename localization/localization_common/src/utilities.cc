@@ -44,10 +44,15 @@ gtsam::Vector3 LoadVector3(config_reader::ConfigReader& config, const std::strin
   return vec;
 }
 
+Eigen::Matrix3d LoadCameraIntrinsicsMatrix(config_reader::ConfigReader& config,
+                                           const std::string& intrinsics_config_name, const std::string& prefix) {
+  const camera::CameraParameters cam_params(&config, (prefix + intrinsics_config_name).c_str());
+  return cam_params.GetIntrinsicMatrix<camera::UNDISTORTED_C>();
+}
+
 gtsam::Cal3_S2 LoadCameraIntrinsics(config_reader::ConfigReader& config, const std::string& intrinsics_config_name,
                                     const std::string& prefix) {
-  const camera::CameraParameters cam_params(&config, (prefix + intrinsics_config_name).c_str());
-  const auto intrinsics = cam_params.GetIntrinsicMatrix<camera::UNDISTORTED_C>();
+  const auto intrinsics = LoadCameraIntrinsicsMatrix(config, intrinsics_config_name, prefix);
   // Assumes zero skew
   return gtsam::Cal3_S2(intrinsics(0, 0), intrinsics(1, 1), 0, intrinsics(0, 2), intrinsics(1, 2));
 }
@@ -234,9 +239,8 @@ Eigen::Isometry3d FrameChangeRelativePose(const Eigen::Isometry3d& a_F_relative_
 
 Eigen::Matrix<double, 6, 6> FrameChangeRelativeCovariance(
   const Eigen::Matrix<double, 6, 6>& a_F_relative_pose_covariance, const Eigen::Isometry3d& b_T_a) {
-  // TODO(rsoussan): This might be right for translation component (frame change is equivalent to single rotation),
-  // but might be wrong for rotation component
-  return gtsam::TransformCovariance<gtsam::Pose3>(GtPose(b_T_a))(a_F_relative_pose_covariance);
+  const gtsam::Pose3 b_R_a(gtsam::Rot3(b_T_a.linear()), Eigen::Vector3d::Zero());
+  return gtsam::TransformCovariance<gtsam::Pose3>(b_R_a)(a_F_relative_pose_covariance);
 }
 
 PoseWithCovariance FrameChangeRelativePoseWithCovariance(const PoseWithCovariance& a_F_relative_pose_with_covariance,
@@ -294,9 +298,9 @@ PoseWithCovariance Interpolate(const PoseWithCovariance& lower_bound_pose, const
                                const double alpha) {
   const Eigen::Isometry3d interpolated_pose = Interpolate(lower_bound_pose.pose, upper_bound_pose.pose, alpha);
   // TODO(rsoussan): Implement this properly
-  const PoseCovariance&  interpolated_covariance =
+  const PoseCovariance& interpolated_covariance =
     alpha > 0.5 ? upper_bound_pose.covariance : lower_bound_pose.covariance;
-  const auto&  correlation_covariances =
+  const auto& correlation_covariances =
     alpha > 0.5 ? upper_bound_pose.correlation_covariances : lower_bound_pose.correlation_covariances;
 
   return PoseWithCovariance(interpolated_pose, interpolated_covariance, correlation_covariances);

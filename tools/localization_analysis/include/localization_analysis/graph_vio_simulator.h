@@ -21,11 +21,14 @@
 
 #include <ff_msgs/Feature2dArray.h>
 #include <ff_msgs/FlightMode.h>
+#include <ff_msgs/VisualLandmarks.h>
 #include <localization_analysis/graph_vio_simulator_params.h>
 #include <localization_common/time.h>
 #include <ros_graph_vio/ros_graph_vio_wrapper.h>
 
+#include <sensor_msgs/Image.h>
 #include <sensor_msgs/Imu.h>
+#include <sensor_msgs/PointCloud2.h>
 
 #include <string>
 #include <vector>
@@ -44,13 +47,13 @@ class GraphVIOSimulator : public ros_graph_vio::RosGraphVIOWrapper {
 
   void BufferFlightModeMsg(const ff_msgs::FlightMode& flight_mode_msg);
 
-  // void BufferDepthOdometryMsg(const ff_msgs::DepthOdometry& depth_odometry_msg);
+  void BufferDepthOdometryMsg(const ff_msgs::DepthOdometry& depth_odometry_msg);
 
   bool AddMeasurementsAndUpdateIfReady(const localization_common::Time& current_time);
 
  private:
   std::vector<ff_msgs::Feature2dArray> of_msg_buffer_;
-  // std::vector<ff_msgs::DepthOdometry> depth_odometry_msg_buffer_;
+  std::vector<ff_msgs::DepthOdometry> depth_odometry_msg_buffer_;
   std::vector<sensor_msgs::Imu> imu_msg_buffer_;
   std::vector<ff_msgs::FlightMode> flight_mode_msg_buffer_;
   boost::optional<localization_common::Time> last_update_time_;

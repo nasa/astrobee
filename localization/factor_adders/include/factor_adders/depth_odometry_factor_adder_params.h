@@ -16,30 +16,27 @@
  * under the License.
  */
 
-#ifndef LOCALIZATION_ANALYSIS_AR_TAG_POSE_ADDER_H_
-#define LOCALIZATION_ANALYSIS_AR_TAG_POSE_ADDER_H_
+#ifndef FACTOR_ADDERS_DEPTH_ODOMETRY_FACTOR_ADDER_PARAMS_H_
+#define FACTOR_ADDERS_DEPTH_ODOMETRY_FACTOR_ADDER_PARAMS_H_
+
+#include <factor_adders/factor_adder_params.h>
 
 #include <gtsam/geometry/Pose3.h>
 
-#include <rosbag/bag.h>
-#include <rosbag/view.h>
-
-#include <string>
-
-namespace localization_analysis {
-// Reads through a bag file and adds ar tag poses using ml/features/pose messages
-// and body_T_dock_cam extrinsics
-class ArTagPoseAdder {
- public:
-  ArTagPoseAdder(const std::string& input_bag_name, const std::string& output_bag_name,
-                 const gtsam::Pose3& dock_cam_T_body);
-  void AddPoses();
-
- private:
-  rosbag::Bag input_bag_;
-  rosbag::Bag output_bag_;
-  gtsam::Pose3 dock_cam_T_body_;
+namespace factor_adders {
+struct DepthOdometryFactorAdderParams : public FactorAdderParams {
+  double pose_covariance_scale;
+  double point_noise_scale;
+  bool use_points_between_factor;
+  bool scale_point_between_factors_with_inverse_distance;
+  bool scale_point_between_factors_with_estimate_error;
+  bool reject_large_translation_norm;
+  double pose_translation_norm_threshold;
+  bool reject_large_point_to_point_error;
+  double point_to_point_error_threshold;
+  int max_num_points_between_factors;
+  gtsam::Pose3 body_T_sensor;
 };
-}  // end namespace localization_analysis
+}  // namespace factor_adders
 
-#endif  // LOCALIZATION_ANALYSIS_AR_TAG_POSE_ADDER_H_
+#endif  // FACTOR_ADDERS_DEPTH_ODOMETRY_FACTOR_ADDER_PARAMS_H_

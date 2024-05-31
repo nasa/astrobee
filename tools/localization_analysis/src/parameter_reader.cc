@@ -42,6 +42,7 @@ void LoadLiveMeasurementSimulatorParams(config_reader::ConfigReader& config, con
   LoadMessageBufferParams("ar", config, params.ar, "or_");
   LoadMessageBufferParams("vio", config, params.vio, "or_");
   LOAD_PARAM(params.save_optical_flow_images, config, "or_");
+  LOAD_PARAM(params.use_bag_depth_odom_msgs, config, "or_");
   params.bag_name = bag_name;
   params.map_file = map_file;
   params.image_topic = image_topic;

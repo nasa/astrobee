@@ -34,8 +34,6 @@ from multipose_plotter import MultiPosePlotter
 from multivector3d_plotter import MultiVector3dPlotter
 from timestamped_pose import TimestampedPose
 
-# import plotting_utilities
-
 matplotlib.use("pdf")
 import csv
 import math
@@ -53,6 +51,7 @@ def plot_loc_results(
     graph_loc_states,
     extrapolated_loc_states,
     ar_tag_poses,
+    imu_accelerations,
 ):
     poses_plotter = MultiPosePlotter(
         "Time (s)", "Position (m)", "Loc vs. Groundtruth Position", True
@@ -153,6 +152,35 @@ def plot_loc_results(
             "Extrapolated Integrated Velocity Poses",
         )
 
+        extrapolated_accelerations_plotter = MultiVector3dPlotter(
+            "Time (s)", "Acceleration (m/s^2)", "Bias Corrected Accelerations", True
+        )
+        extrapolated_acceleration_plotter = plot_conversions.acceleration_plotter_from_extrapolated_loc_states(
+            extrapolated_loc_states
+        )
+        extrapolated_accelerations_plotter.add(extrapolated_acceleration_plotter)
+        extrapolated_accelerations_plotter.plot(pdf)
+
+    if imu_accelerations:
+        imu_accelerations_plotter = MultiVector3dPlotter(
+            "Time (s)", "Acceleration (m/s^2)", "Raw IMU Accelerations", True
+        )
+        imu_acceleration_plotter = plot_conversions.acceleration_plotter_from_imu_accelerations(
+            imu_accelerations
+        )
+        imu_accelerations_plotter.add(imu_acceleration_plotter)
+        imu_accelerations_plotter.plot(pdf)
+
+    ml_count_plotter = plot_conversions.ml_feature_count_plotter_from_graph_loc_states(
+        graph_loc_states
+    )
+    ml_count_plotter.plot(pdf)
+
+    ar_count_plotter = plot_conversions.ar_feature_count_plotter_from_graph_loc_states(
+        graph_loc_states
+    )
+    ar_count_plotter.plot(pdf)
+
     ml_num_pose_factors_plotter = plot_conversions.ml_pose_factor_count_plotter_from_graph_loc_states(
         graph_loc_states
     )
@@ -163,6 +191,14 @@ def plot_loc_results(
     )
     ml_num_projection_factors_plotter.plot(pdf)
 
+    num_states_plotter = plot_conversions.num_states_plotter_from_states(
+        graph_loc_states
+    )
+    num_states_plotter.plot(pdf)
+
+    duration_plotter = plot_conversions.duration_plotter_from_states(graph_loc_states)
+    duration_plotter.plot(pdf)
+
     optimization_time_plotter = plot_conversions.optimization_time_plotter_from_states(
         graph_loc_states
     )
@@ -172,6 +208,11 @@ def plot_loc_results(
         graph_loc_states
     )
     update_time_plotter.plot(pdf)
+
+    optimization_iterations_plotter = plot_conversions.optimization_iterations_plotter_from_states(
+        graph_loc_states
+    )
+    optimization_iterations_plotter.plot(pdf)
 
 
 # Loads poses from the provided bagfile, generates plots, and saves results to a pdf and csv file.
@@ -216,6 +257,12 @@ def load_data_and_create_loc_plots(
     # Load AR Tag poses
     ar_tag_poses = []
     message_reader.load_poses(ar_tag_poses, "/ar_tag/pose", bag, bag_start_time)
+
+    # Load IMU data
+    imu_accelerations = []
+    message_reader.load_imu_accelerations(
+        imu_accelerations, "/hw/imu", bag, bag_start_time
+    )
     bag.close()
 
     with PdfPages(output_pdf_file) as pdf:
@@ -226,6 +273,7 @@ def load_data_and_create_loc_plots(
             graph_loc_states,
             extrapolated_loc_states,
             ar_tag_poses,
+            imu_accelerations,
         )
 
 

@@ -15,21 +15,16 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef ROS_GRAPH_VIO_PARAMETER_READER_H_
-#define ROS_GRAPH_VIO_PARAMETER_READER_H_
 
-#include <config_reader/config_reader.h>
-#include <ros_graph_vio/imu_bias_initializer_params.h>
-#include <ros_graph_vio/ros_graph_vio_wrapper_params.h>
+#ifndef FACTOR_ADDERS_RELATIVE_POSE_FACTOR_ADDER_PARAMS_H_
+#define FACTOR_ADDERS_RELATIVE_POSE_FACTOR_ADDER_PARAMS_H_
 
-#include <string>
+#include <factor_adders/factor_adder_params.h>
 
-namespace ros_graph_vio {
-void LoadImuBiasInitializerParams(config_reader::ConfigReader& config, ImuBiasInitializerParams& params,
-                                  const std::string& prefix = "");
+namespace factor_adders {
+struct RelativePoseFactorAdderParams : public FactorAdderParams {
+  double covariance_scale;
+};
+}  // namespace factor_adders
 
-void LoadRosGraphVIOWrapperParams(config_reader::ConfigReader& config, RosGraphVIOWrapperParams& params,
-                                  const std::string& prefix = "");
-}  // namespace ros_graph_vio
-
-#endif  // ROS_GRAPH_VIO_PARAMETER_READER_H_
+#endif  // FACTOR_ADDERS_RELATIVE_POSE_FACTOR_ADDER_PARAMS_H_

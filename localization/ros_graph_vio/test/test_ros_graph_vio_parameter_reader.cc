@@ -43,18 +43,11 @@ class RosGraphVIOParameterReaderTest : public ::testing::Test {
       LogFatal("Failed to read config files.");
     }
 
-    rv::LoadRosGraphVIONodeletParams(config, nodelet_params_);
     rv::LoadImuBiasInitializerParams(config, imu_params_);
   }
 
-  rv::RosGraphVIONodeletParams nodelet_params_;
   rv::ImuBiasInitializerParams imu_params_;
 };
-
-TEST_F(RosGraphVIOParameterReaderTest, RosGraphVIONodeletParams) {
-  EXPECT_EQ(nodelet_params_.max_imu_buffer_size, 125);
-  EXPECT_EQ(nodelet_params_.max_feature_point_buffer_size, 20);
-}
 
 TEST_F(RosGraphVIOParameterReaderTest, ImuBiasInitializerParams) {
   const std::string astrobee_configs_path = ros::package::getPath("astrobee");

@@ -45,9 +45,9 @@ int main(int argc, char** argv) {
                    "Robot config file")("world,w", po::value<std::string>(&world)->default_value("iss"), "World name")(
     "output-bagfile,o", po::value<std::string>(&output_bagfile)->default_value(""),
     "Output bagfile, defaults to input_bag + _map_matches.bag")(
-    "config-path-prefix,p", po::value<std::string>(&config_path_prefix)->default_value(""), "Config path prefix")
-    ("save-noloc-imgs,s", po::value<std::string>(&save_noloc_imgs)->default_value("")->implicit_value(""),
-     "Save non-localized images to a bag, defaults to input_bag + _nonloc_imgs.bag");
+    "config-path-prefix,p", po::value<std::string>(&config_path_prefix)->default_value(""), "Config path prefix")(
+    "save-noloc-imgs,s", po::value<std::string>(&save_noloc_imgs)->default_value("")->implicit_value(""),
+    "Save non-localized images to a bag, defaults to input_bag + _nonloc_imgs.bag");
   po::positional_options_description p;
   p.add("bagfile", 1);
   p.add("map-file", 1);

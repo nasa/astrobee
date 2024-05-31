@@ -167,6 +167,14 @@ boost::optional<lc::Time> SlidingWindowGraphOptimizer::LatestNodeAdderEndTime() 
   return latest_end_time;
 }
 
+double SlidingWindowGraphOptimizer::Duration() const {
+  double duration;
+  const auto latest_end_time = LatestNodeAdderEndTime();
+  const auto earliest_start_time = EarliestNodeAdderStartTime();
+  if (!latest_end_time || !earliest_start_time) return 0;
+  return *latest_end_time - *earliest_start_time;
+}
+
 gtsam::NonlinearFactorGraph SlidingWindowGraphOptimizer::RemoveFactors(const gtsam::KeyVector& keys_to_remove) {
   gtsam::NonlinearFactorGraph removed_factors;
   if (keys_to_remove.empty()) return removed_factors;

@@ -27,6 +27,8 @@ struct LiveMeasurementSimulatorParams {
   MessageBufferParams imu;
   MessageBufferParams flight_mode;
   MessageBufferParams depth_odometry;
+  MessageBufferParams depth_image;
+  MessageBufferParams depth_cloud;
   MessageBufferParams of;
   MessageBufferParams vl;
   MessageBufferParams ar;
@@ -36,6 +38,7 @@ struct LiveMeasurementSimulatorParams {
   std::string map_file;
   std::string image_topic;
   bool use_bag_image_feature_msgs;
+  bool use_bag_depth_odom_msgs;
   bool save_optical_flow_images;
 };
 }  // namespace localization_analysis

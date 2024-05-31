@@ -70,7 +70,7 @@ bool GraphOptimizer::Optimize() {
   const bool successful_optimization = optimizer_->Optimize(factors_, gtsam_values());
   optimization_timer_.Stop();
 
-  // iterations_averager_.Update(optimizer.iterations());
+  optimization_iterations_averager_.Update(optimizer_->iterations());
   total_error_averager_.Update(TotalGraphError());
 
   if (params_.print_after_optimization) Print();
@@ -84,7 +84,6 @@ boost::optional<gtsam::Matrix> GraphOptimizer::Covariance(const gtsam::Key& key)
 boost::optional<gtsam::Matrix> GraphOptimizer::Covariance(const gtsam::Key& key_a, const gtsam::Key& key_b) const {
   return optimizer_->Covariance(key_a, key_b);
 }
-
 
 const gtsam::NonlinearFactorGraph& GraphOptimizer::factors() const { return factors_; }
 
@@ -105,6 +104,10 @@ gtsam::Values& GraphOptimizer::gtsam_values() { return values_->gtsam_values(); 
 lc::StatsLogger& GraphOptimizer::stats_logger() { return stats_logger_; }
 
 const lc::Timer& GraphOptimizer::optimization_timer() const { return optimization_timer_; }
+
+const localization_common::Averager& GraphOptimizer::optimization_iterations_averager() const {
+  return optimization_iterations_averager_;
+}
 
 double GraphOptimizer::TotalGraphError() const {
   double total_error = 0;
@@ -131,7 +134,7 @@ boost::optional<const gtsam::Marginals&> GraphOptimizer::marginals() const { ret
 
 void GraphOptimizer::AddAveragersAndTimers() {
   stats_logger_.AddTimer(optimization_timer_);
-  stats_logger_.AddAverager(iterations_averager_);
+  stats_logger_.AddAverager(optimization_iterations_averager_);
   stats_logger_.AddAverager(total_error_averager_);
 }
 }  // namespace graph_optimizer

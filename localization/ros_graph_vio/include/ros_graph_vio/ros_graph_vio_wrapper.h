@@ -18,6 +18,7 @@
 #ifndef ROS_GRAPH_VIO_ROS_GRAPH_VIO_WRAPPER_H_
 #define ROS_GRAPH_VIO_ROS_GRAPH_VIO_WRAPPER_H_
 
+#include <ff_msgs/DepthOdometry.h>
 #include <ff_msgs/Feature2dArray.h>
 #include <ff_msgs/FlightMode.h>
 #include <ff_msgs/GraphVIOState.h>
@@ -26,6 +27,7 @@
 #include <localization_measurements/fan_speed_mode.h>
 #include <localization_measurements/imu_measurement.h>
 #include <ros_graph_vio/imu_bias_initializer.h>
+#include <ros_graph_vio/ros_graph_vio_wrapper_params.h>
 
 #include <sensor_msgs/Imu.h>
 
@@ -50,6 +52,9 @@ class RosGraphVIOWrapper {
   // If the graph hasn't been initialized and an imu bias is
   // available in the initializer, initializes the graph.
   void ImuCallback(const sensor_msgs::Imu& imu_msg);
+
+  // Add depth odometry msg to graph_vio.
+  void DepthOdometryCallback(const ff_msgs::DepthOdometry& depth_odometry_msg);
 
   // Add flight mode msg to graph_vio and IMU bias initializer.
   void FlightModeCallback(const ff_msgs::FlightMode& flight_mode);
@@ -86,6 +91,8 @@ class RosGraphVIOWrapper {
   std::unique_ptr<ImuBiasInitializer> imu_bias_initializer_;
   graph_vio::GraphVIOParams params_;
   boost::optional<localization_common::Time> latest_msg_time_;
+  RosGraphVIOWrapperParams wrapper_params_;
+  int feature_point_count_;
 };
 }  // namespace ros_graph_vio
 

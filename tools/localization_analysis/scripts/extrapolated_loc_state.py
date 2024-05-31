@@ -18,8 +18,9 @@
 # under the License.
 
 # ExtrapolatedLocState object containing information from a Ekf Msg
-class ExtrapolatedLocState():
+class ExtrapolatedLocState:
     def __init__(self):
         self.timestamp = None
         self.pose = None
         self.velocity = None
+        self.acceleration = None

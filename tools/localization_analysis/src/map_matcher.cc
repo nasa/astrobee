@@ -88,8 +88,7 @@ void MapMatcher::AddMapMatches() {
         if (static_cast<int>(vl_msg.landmarks.size()) >= 5) {
           const gtsam::Pose3 sparse_mapping_global_T_body =
             lc::PoseFromMsgWithExtrinsics(vl_msg.pose, body_T_nav_cam_.inverse());
-          const auto pose_msg =
-            PoseMsg(lc::EigenPose(sparse_mapping_global_T_body), lc::TimeFromHeader(vl_msg.header));
+          const auto pose_msg = PoseMsg(lc::EigenPose(sparse_mapping_global_T_body), lc::TimeFromHeader(vl_msg.header));
           output_bag_.write(std::string("/") + TOPIC_SPARSE_MAPPING_POSE, timestamp, pose_msg);
         }
       } else if (nonloc_bag_.isOpen()) {

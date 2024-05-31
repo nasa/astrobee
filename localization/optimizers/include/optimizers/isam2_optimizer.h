@@ -43,6 +43,8 @@ class ISAM2Optimizer : public Optimizer {
   // Performs Levenberg-Marquardt nonlinear optimization using GTSAM on the factor graph.
   bool Optimize(const gtsam::NonlinearFactorGraph& factors, gtsam::Values& values) final;
 
+  int iterations() const final;
+
  private:
   // Set optimization params based on provided ISAM2OptimizerParams.
   void SetOptimizationParams();

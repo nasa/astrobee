@@ -17,18 +17,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-# GraphLocState object containing information from a GraphLocState Msg
-class GraphLocState:
+# DepthOdometry object containing information from a DepthOdometry Msg
+class DepthOdometry:
     def __init__(self):
         self.timestamp = None
         self.pose_with_covariance = None
-        self.num_detected_ar_features = None
-        self.num_detected_ml_features = None
-        self.optimization_iterations = None
-        self.optimization_time = None
-        self.update_time = None
-        self.num_factors = None
-        self.num_ml_projection_factors = None
-        self.num_ml_pose_factors = None
-        self.num_states = None
-        self.duration = None
+        self.num_features = None
+        self.runtime = None

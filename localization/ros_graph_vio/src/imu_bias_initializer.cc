@@ -55,13 +55,25 @@ void ImuBiasInitializer::AddImuMeasurement(const localization_measurements::ImuM
   const Eigen::Vector3d gyro_bias = sum_of_angular_velocity_measurements / imu_bias_measurements_.size();
   LogDebug("Estimated accelerometer bias: " << std::endl << accelerometer_bias.matrix());
   LogDebug("Estimated gyro bias: " << std::endl << gyro_bias.matrix());
-  imu_bias_ = gtsam::imuBias::ConstantBias(accelerometer_bias, gyro_bias);
+
+  // Compute standard deviations
+  Eigen::Vector3d accelerometer_variance = Eigen::Vector3d::Zero();
+  Eigen::Vector3d gyro_variance = Eigen::Vector3d::Zero();
+  for (const auto& imu_measurement : imu_bias_measurements_) {
+    accelerometer_variance += (imu_measurement.acceleration - accelerometer_bias).cwiseAbs2();
+    gyro_variance += (imu_measurement.angular_velocity - gyro_bias).cwiseAbs2();
+  }
+  accelerometer_variance /= static_cast<double>(imu_bias_measurements_.size());
+  gyro_variance /= static_cast<double>(imu_bias_measurements_.size());
+  imu_bias_ =
+    ImuBiasWithStddev(gtsam::imuBias::ConstantBias(accelerometer_bias, gyro_bias),
+                      Eigen::Vector3d(accelerometer_variance.cwiseSqrt()), Eigen::Vector3d(gyro_variance.cwiseSqrt()));
   SaveToFile();
 }
 
-boost::optional<gtsam::imuBias::ConstantBias> ImuBiasInitializer::Bias() const { return imu_bias_; }
+boost::optional<ImuBiasWithStddev> ImuBiasInitializer::Bias() const { return imu_bias_; }
 
-void ImuBiasInitializer::UpdateBias(const gtsam::imuBias::ConstantBias& bias) {
+void ImuBiasInitializer::UpdateBias(const ImuBiasWithStddev& bias) {
   imu_bias_ = bias;
   SaveToFile();
 }
@@ -79,9 +91,8 @@ bool ImuBiasInitializer::LoadFromFile() {
     return false;
   }
 
-  gtsam::Vector3 accelerometer_bias;
-  gtsam::Vector3 gyro_bias;
-  for (int line_num = 0; line_num < 2; ++line_num) {
+  Eigen::Vector3d accelerometer_bias, gyro_bias, accelerometer_bias_stddev, gyro_bias_stddev;
+  for (int line_num = 0; line_num < 4; ++line_num) {
     std::string line;
     if (!std::getline(imu_bias_file, line)) {
       LogError("LoadFromFile: Failed to get line from imu bias file.");
@@ -96,12 +107,17 @@ bool ImuBiasInitializer::LoadFromFile() {
       }
       if (line_num == 0) {
         accelerometer_bias[val_index] = std::stold(val);
-      } else {
+      } else if (line_num == 1) {
         gyro_bias[val_index] = std::stold(val);
+      } else if (line_num == 2) {
+        accelerometer_bias_stddev[val_index] = std::stold(val);
+      } else {
+        gyro_bias_stddev[val_index] = std::stold(val);
       }
     }
   }
-  imu_bias_ = gtsam::imuBias::ConstantBias(accelerometer_bias, gyro_bias);
+  imu_bias_ = ImuBiasWithStddev(gtsam::imuBias::ConstantBias(accelerometer_bias, gyro_bias), accelerometer_bias_stddev,
+                                gyro_bias_stddev);
   return true;
 }
 
@@ -115,10 +131,15 @@ bool ImuBiasInitializer::SaveToFile() const {
     LogError("SaveToFile: Failed to create imu bias output file.");
     return false;
   }
-  const auto& accel_bias = imu_bias_->accelerometer();
+  const auto& accel_bias = imu_bias_->bias.accelerometer();
   imu_bias_file << accel_bias.x() << "," << accel_bias.y() << "," << accel_bias.z() << std::endl;
-  const auto& gyro_bias = imu_bias_->gyroscope();
+  const auto& gyro_bias = imu_bias_->bias.gyroscope();
   imu_bias_file << gyro_bias.x() << "," << gyro_bias.y() << "," << gyro_bias.z() << std::endl;
+  const auto& accelerometer_bias_stddev = imu_bias_->accelerometer_bias_stddev;
+  imu_bias_file << accelerometer_bias_stddev.x() << "," << accelerometer_bias_stddev.y() << ","
+                << accelerometer_bias_stddev.z() << std::endl;
+  const auto& gyro_bias_stddev = imu_bias_->gyro_bias_stddev;
+  imu_bias_file << gyro_bias_stddev.x() << "," << gyro_bias_stddev.y() << "," << gyro_bias_stddev.z() << std::endl;
   imu_bias_file.close();
   return true;
 }

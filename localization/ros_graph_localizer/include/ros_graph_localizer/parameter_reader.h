@@ -20,10 +20,13 @@
 
 #include <config_reader/config_reader.h>
 #include <ros_graph_localizer/ros_graph_localizer_nodelet_params.h>
+#include <ros_graph_localizer/ros_graph_localizer_wrapper_params.h>
 
 #include <string>
 
 namespace ros_graph_localizer {
+void LoadRosGraphLocalizerWrapperParams(config_reader::ConfigReader& config, RosGraphLocalizerWrapperParams& params,
+                                        const std::string& prefix = "");
 void LoadRosGraphLocalizerNodeletParams(config_reader::ConfigReader& config, RosGraphLocalizerNodeletParams& params,
                                         const std::string& prefix = "");
 }  // namespace ros_graph_localizer

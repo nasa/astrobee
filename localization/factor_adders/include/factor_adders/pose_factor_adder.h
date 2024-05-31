@@ -42,8 +42,8 @@ class PoseFactorAdder
   int AddFactorsForSingleMeasurement(const localization_measurements::PoseWithCovarianceMeasurement& measurement,
                                      gtsam::NonlinearFactorGraph& factors) final;
 
-  // Able to add a factor if the node adder can create a node at the provided timestamp.
-  bool CanAddFactor(const localization_common::Time time) const final;
+  // Able to add a factor if the node adder can create a node for the provided measurement.
+  bool CanAddFactor(const localization_measurements::PoseWithCovarianceMeasurement& measurement) const final;
 
   std::shared_ptr<PoseNodeAdderType> node_adder_;
   PoseFactorAdderParams params_;
@@ -70,8 +70,9 @@ int PoseFactorAdder<PoseNodeAdderType>::AddFactorsForSingleMeasurement(
 }
 
 template <class PoseNodeAdderType>
-bool PoseFactorAdder<PoseNodeAdderType>::CanAddFactor(const localization_common::Time time) const {
-  return node_adder_->CanAddNode(time);
+bool PoseFactorAdder<PoseNodeAdderType>::CanAddFactor(
+  const localization_measurements::PoseWithCovarianceMeasurement& measurement) const {
+  return node_adder_->CanAddNode(measurement.timestamp);
 }
 }  // namespace factor_adders
 

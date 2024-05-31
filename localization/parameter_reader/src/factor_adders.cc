@@ -56,6 +56,28 @@ void LoadLocFactorAdderParams(config_reader::ConfigReader& config, fa::LocFactor
     gtsam::noiseModel::Isotropic::Sigma(2, mc::LoadDouble(config, camera_name + "_cam_noise_stddev", prefix));
 }
 
+void LoadDepthOdometryFactorAdderParams(config_reader::ConfigReader& config, fa::DepthOdometryFactorAdderParams& params,
+                              const std::string& prefix, const std::string& camera_name) {
+  LoadFactorAdderParams(config, params, prefix);
+  LOAD_PARAM(params.pose_covariance_scale, config, prefix);
+  LOAD_PARAM(params.point_noise_scale, config, prefix);
+  LOAD_PARAM(params.use_points_between_factor, config, prefix);
+  LOAD_PARAM(params.scale_point_between_factors_with_inverse_distance, config, prefix);
+  LOAD_PARAM(params.scale_point_between_factors_with_estimate_error, config, prefix);
+  LOAD_PARAM(params.reject_large_point_to_point_error, config, prefix);
+  LOAD_PARAM(params.point_to_point_error_threshold, config, prefix);
+  LOAD_PARAM(params.reject_large_translation_norm, config, prefix);
+  LOAD_PARAM(params.pose_translation_norm_threshold, config, prefix);
+  LOAD_PARAM(params.max_num_points_between_factors, config, prefix);
+  params.body_T_sensor = lc::LoadTransform(config, camera_name + "_cam_transform");
+}
+
+void LoadRelativePoseFactorAdderParams(config_reader::ConfigReader& config, fa::RelativePoseFactorAdderParams& params,
+                              const std::string& prefix) {
+  LoadFactorAdderParams(config, params, prefix);
+  LOAD_PARAM(params.covariance_scale, config, prefix);
+}
+
 void LoadStandstillFactorAdderParams(config_reader::ConfigReader& config, fa::StandstillFactorAdderParams& params,
                                      const std::string& prefix) {
   LoadFactorAdderParams(config, params, prefix);
