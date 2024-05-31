@@ -260,7 +260,10 @@ if __name__ == "__main__":
     )
     parser.add_argument("bagfile", help="Input bagfile.")
     parser.add_argument(
-        "-i", "--image-topic", default="/hw/cam_nav", help="Image topic name."
+        "-i",
+        "--image-topic",
+        default="/hw/cam_nav",
+        help="Image topic name.",
     )
 
     args = parser.parse_args()

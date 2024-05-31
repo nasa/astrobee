@@ -81,7 +81,10 @@ if __name__ == "__main__":
         action="store_true",
     )
     parser.add_argument(
-        "-o", "--output", help="path for output bag", default="sample_bags.bag"
+        "-o",
+        "--output",
+        help="path for output bag",
+        default="sample_bags.bag",
     )
     parser.add_argument(
         "-r",

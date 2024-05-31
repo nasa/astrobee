@@ -26,7 +26,4 @@
   <run_depend>localization_measurements</run_depend>
   <run_depend>node_adders</run_depend>
   <run_depend>sliding_window_graph_optimizer</run_depend>
-  <export>
-    <nodelet plugin="${prefix}/nodelet_plugins.xml" />
-  </export>
 </package>

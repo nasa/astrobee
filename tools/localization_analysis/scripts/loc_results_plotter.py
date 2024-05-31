@@ -34,9 +34,6 @@ from multipose_plotter import MultiPosePlotter
 from multivector3d_plotter import MultiVector3dPlotter
 from timestamped_pose import TimestampedPose
 
-# import plotting_utilities
-
-
 matplotlib.use("pdf")
 import csv
 import math

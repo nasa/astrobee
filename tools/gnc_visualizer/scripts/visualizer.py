@@ -58,11 +58,11 @@ com_manager = com.ComManager()
 def quat_to_eulers(quat):
     return [
         atan2(
-            2 * (quat.w * quat.x + quat.y * quat.z), 1 - 2 * (quat.x ** 2 + quat.y ** 2)
+            2 * (quat.w * quat.x + quat.y * quat.z), 1 - 2 * (quat.x**2 + quat.y**2)
         ),
         asin(2 * (quat.w * quat.y - quat.z * quat.x)),
         atan2(
-            2 * (quat.w * quat.z + quat.x * quat.y), 1 - 2 * (quat.y ** 2 + quat.z ** 2)
+            2 * (quat.w * quat.z + quat.x * quat.y), 1 - 2 * (quat.y**2 + quat.z**2)
         ),
     ]
 
@@ -579,7 +579,10 @@ class Visualizer(QMainWindow):
 
     def choose_plan(self):
         result = QtGui.QFileDialog.getOpenFileName(
-            self, "Open Plan", ASTROBEE_ROOT, "Plans (*.fplan)"
+            self,
+            "Open Plan",
+            ASTROBEE_ROOT,
+            "Plans (*.fplan)",
         )
         if result != None:
             self.plan = str(result)

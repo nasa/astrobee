@@ -83,6 +83,9 @@ def xyz_acceleration_vectors_from_imu_accelerations(imu_accelerations):
     return [xs, ys, zs]
 
 
+    return [xs, ys, zs]
+
+
 # Return list of 3 lists, one each for x, y, z values in IMU accelerometer bias
 def xyz_accel_bias_vectors_from_graph_vio_states(graph_vio_states):
     # TODO: Do this more efficiently
