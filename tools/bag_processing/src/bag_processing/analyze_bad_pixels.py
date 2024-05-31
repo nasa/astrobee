@@ -115,7 +115,10 @@ def report(
 
     report_path = output_dir / f"{corrector.__class__.__name__}_{cam}_cam_report.pdf"
     with PdfPages(report_path) as pdf:
-        data_to_plot = {"Raw images": stats, "Corrected images": stats2}
+        data_to_plot = {
+            "Raw images": stats,
+            "Corrected images": stats2,
+        }
         fig, axes = plt.subplots(1, len(data_to_plot), figsize=PAGE_DIMENSIONS)
         for i, (title, stats_i) in enumerate(data_to_plot.items()):
             pu.plot_mean_vs_rms_err(axes[i], stats_i, title)
@@ -170,7 +173,10 @@ def analyze_bad_pixels(
             accum_class = pu.DebugStatsAccumulator
 
         t0 = time.time()
-        print(f"Analyzing {cam} images raw... ", end="")
+        print(
+            f"Analyzing {cam} images raw... ",
+            end="",
+        )
         sys.stdout.flush()
 
         topic = topic_template.format(cam=cam)
@@ -219,7 +225,11 @@ def main(argv: Optional[List[str]] = None) -> None:
         description=__doc__,
         formatter_class=CustomFormatter,
     )
-    parser.add_argument("inbag", nargs="+", help="bags to read images from")
+    parser.add_argument(
+        "inbag",
+        nargs="+",
+        help="bags to read images from",
+    )
     parser.add_argument(
         "-c",
         "--cameras",

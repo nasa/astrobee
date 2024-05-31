@@ -234,7 +234,11 @@ class TestPixelUtils(unittest.TestCase):  # pylint: disable=too-many-public-meth
         truth, observed = get_hot_pixel_test_images(gradient=True)
         filtered = get_median_filtered(observed)
 
-        images_to_plot = {"truth": truth, "observed": observed, "filtered": filtered}
+        images_to_plot = {
+            "truth": truth,
+            "observed": observed,
+            "filtered": filtered,
+        }
         fig, axes = plt.subplots(len(images_to_plot), 1)
         plt.jet()
         for i, (title, im) in enumerate(images_to_plot.items()):
@@ -266,7 +270,10 @@ class TestPixelUtils(unittest.TestCase):  # pylint: disable=too-many-public-meth
             observed, pu.NAVCAM_BAYER_CONVENTION
         )
 
-        images_to_plot = {"observed": observed, "estimated": estimated}
+        images_to_plot = {
+            "observed": observed,
+            "estimated": estimated,
+        }
         fig, axes = plt.subplots(len(images_to_plot), 1)
         plt.jet()
         for i, (title, im) in enumerate(images_to_plot.items()):
@@ -350,7 +357,11 @@ class TestPixelUtils(unittest.TestCase):  # pylint: disable=too-many-public-meth
         corrector = pu.NeighborMeanCorrector(stats.mean.shape, bad_coords)
         corrected = corrector(observed)
 
-        images_to_plot = {"truth": truth, "observed": observed, "corrected": corrected}
+        images_to_plot = {
+            "truth": truth,
+            "observed": observed,
+            "corrected": corrected,
+        }
         self.plot_neighbor_mean_corrector(images_to_plot)
 
     def demo_all(self) -> None:

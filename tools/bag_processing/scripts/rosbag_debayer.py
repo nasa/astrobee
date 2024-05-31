@@ -133,7 +133,9 @@ def convert_bayer(
                     gray_image_msg = bridge.cv2_to_imgmsg(gray_image, encoding="mono8")
                     gray_image_msg.header = msg.header
                     output_bag.write(
-                        gray_image_topic.format(cam=cam), gray_image_msg, t
+                        gray_image_topic.format(cam=cam),
+                        gray_image_msg,
+                        t,
                     )
                 # Check if we should save color image
                 if color_image_topic != "":
@@ -143,7 +145,9 @@ def convert_bayer(
                     color_image_msg = bridge.cv2_to_imgmsg(color_image, encoding="bgr8")
                     color_image_msg.header = msg.header
                     output_bag.write(
-                        color_image_topic.format(cam=cam), color_image_msg, t
+                        color_image_topic.format(cam=cam),
+                        color_image_msg,
+                        t,
                     )
             if save_all_topics:
                 output_bag.write(topic, msg, t)

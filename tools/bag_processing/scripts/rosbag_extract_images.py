@@ -72,9 +72,7 @@ def rosbag_extract_images(
 
     count = 0
     for msg, t in messages:
-        image = bridge.imgmsg_to_cv2(
-            msg, msg.encoding
-        )  # type: ignore  # mypy doesn't have msg definition
+        image = bridge.imgmsg_to_cv2(msg, msg.encoding)  # type: ignore  # mypy doesn't have msg definition
         if msg.encoding == "bgr8":  # type: ignore
             adjust = WHITE_BALANCE_LEVELS * CONTRAST_ENHANCE
             image = np.clip(image * adjust[np.newaxis, np.newaxis, :], 0, 255).astype(
@@ -98,7 +96,10 @@ def main():
         description=__doc__, formatter_class=CustomFormatter
     )
     parser.add_argument(
-        "inbag", nargs="+", default=[], help="bags to extract images from"
+        "inbag",
+        nargs="+",
+        default=[],
+        help="bags to extract images from",
     )
     parser.add_argument(
         "-o",
@@ -107,13 +108,22 @@ def main():
         default="rosbag_extract_images_output",
     )
     parser.add_argument(
-        "-t", "--topic", default="/hw/cam_nav_bayer", help="image topic name."
+        "-t",
+        "--topic",
+        default="/hw/cam_nav_bayer",
+        help="image topic name.",
     )
     parser.add_argument(
-        "--head", type=int, default=None, help="process first HEAD images only"
+        "--head",
+        type=int,
+        default=None,
+        help="process first HEAD images only",
     )
     parser.add_argument(
-        "--ratio", type=int, default=1, help="process 1 out of every RATIO images"
+        "--ratio",
+        type=int,
+        default=1,
+        help="process 1 out of every RATIO images",
     )
     args = parser.parse_args()
 
