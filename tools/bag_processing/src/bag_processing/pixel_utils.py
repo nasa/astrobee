@@ -358,7 +358,11 @@ class ImageSourcePaths:  # pylint: disable=too-few-public-methods # use __iter__
 class ImageSourceBagPaths:  # pylint: disable=too-few-public-methods # use __iter__()
     "A source of images read from bags."
 
-    def __init__(self, bag_paths: List[str], topic: str = "/hw/cam_nav_bayer"):
+    def __init__(
+        self,
+        bag_paths: List[str],
+        topic: str = "/hw/cam_nav_bayer",
+    ):
         """
         :param bag_paths: ROS bag paths to read images from.
         :param topic: Topic that relevant images are on.
@@ -436,7 +440,9 @@ class ImageStatsAccumulator(abc.ABC, Generic[ImageStatsT]):
 
     @classmethod
     def get_image_stats(
-        cls, images: Iterable[BayerImage], preprocess: Optional[BayerImageFilter] = None
+        cls,
+        images: Iterable[BayerImage],
+        preprocess: Optional[BayerImageFilter] = None,
     ) -> Optional[ImageStatsT]:
         """
         Return image stats for bad pixel detection computed from `images`, or return None if there
@@ -600,9 +606,7 @@ class DebugStatsAccumulator(
             count=self.n,
             shape=self.shape,
             mean=self.sum_actual / self.n,
-            stdev=np.sqrt(
-                (self.sum_actual_sq / self.n) - np.square(self.sum_actual / self.n)
-            ),  # type: ignore
+            stdev=np.sqrt((self.sum_actual_sq / self.n) - np.square(self.sum_actual / self.n)),  # type: ignore
             mean_err=(self.sum_actual - self.sum_est) / self.n,
             rms_err=np.sqrt(self.sum_err_sq / self.n),  # type: ignore
             stdev_err=np.sqrt(  # type: ignore
@@ -658,7 +662,9 @@ class BiasStatsAccumulator(
             self.unsat_sum_err[unsat_ok] / self.unsat_n[unsat_ok]
         ).astype(np.int16)
 
-        return BiasStats(unsat_mean_err=unsat_mean_err)
+        return BiasStats(
+            unsat_mean_err=unsat_mean_err,
+        )
 
 
 def plot_image_stats1(
@@ -879,7 +885,11 @@ class NeighborMeanCorrector(
         "Return a NeighborMeanCorrector constructed from `stats`."
         assert isinstance(stats, DebugStats)
         bad_coords = get_bad_pixel_coords(stats)
-        return cls(image_shape=stats.shape, bad_coords=bad_coords, note=note)
+        return cls(
+            image_shape=stats.shape,
+            bad_coords=bad_coords,
+            note=note,
+        )
 
 
 class BiasCorrector(
@@ -981,7 +991,10 @@ def coords_union(coords1: CoordArray, coords2: CoordArray) -> CoordArray:
     y2, x2 = coords2
 
     # concatenate
-    result0 = (np.concatenate((y1, y2)), np.concatenate((x1, x2)))
+    result0 = (
+        np.concatenate((y1, y2)),
+        np.concatenate((x1, x2)),
+    )
 
     # remove duplicates
     union_set = set(zip(*result0))
@@ -994,7 +1007,10 @@ def plot_mean_vs_rms_err(
     ax: matplotlib.axes.Axes, stats: DebugStats, title: str
 ) -> None:
     "Plot `stats.mean_err` vs. `stats.rms_err`."
-    fields = {"RMS error": stats.rms_err, "Mean error": stats.mean_err}
+    fields = {
+        "RMS error": stats.rms_err,
+        "Mean error": stats.mean_err,
+    }
     x, y = fields.values()
     hist, xedges, yedges = np.histogram2d(x.flatten(), y.flatten(), bins=300)
     plt.jet()
@@ -1068,7 +1084,10 @@ def plot_image_correction_example(
         im = label_with_circles(im, bad_coords)
         corr = label_with_circles(corr, bad_coords)
 
-    images_to_plot = {"Raw image": im, "Corrected image": corr}
+    images_to_plot = {
+        "Raw image": im,
+        "Corrected image": corr,
+    }
     fig, axes = plt.subplots(1, len(images_to_plot))
     for i, (title, image) in enumerate(images_to_plot.items()):
         plot_image_stats1(axes[i], image, title, colorbar=False, crop_center=0.15)

@@ -64,8 +64,16 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    parser.add_argument("src_path", type=str, help="source path")
-    parser.add_argument("tgt_path", type=str, help="target path")
+    parser.add_argument(
+        "src_path",
+        type=str,
+        help="source path",
+    )
+    parser.add_argument(
+        "tgt_path",
+        type=str,
+        help="target path",
+    )
     parser.add_argument(
         "-v",
         "--verbose",

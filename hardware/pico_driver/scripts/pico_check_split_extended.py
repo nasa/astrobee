@@ -46,7 +46,9 @@ def check_points_msgs(
     # test_bag will have timestamps the same as the extended messages they are
     # derived from.  We set dt_limit to reflect this.
     pair_stream = pico.get_matched_msg_pairs(
-        orig_msgs, test_msgs, dt_limit=pico.EXT_MINUS_PTS_DT_LIMIT
+        orig_msgs,
+        test_msgs,
+        dt_limit=pico.EXT_MINUS_PTS_DT_LIMIT,
     )
     if fast:
         pair_stream = pico.fast_filter(pair_stream)
@@ -85,7 +87,11 @@ def check_amp_msgs(
     # message by the pico_proxy nodelet. The amp messages in orig_bag should be
     # timestamped like amp messages, but the timestamps in test_bag inherit
     # their timestamps from the extended messages. Therefore dt should be negative.
-    pair_stream = pico.get_matched_msg_pairs(orig_msgs, test_msgs, dt_limit=(-0.2, 0))
+    pair_stream = pico.get_matched_msg_pairs(
+        orig_msgs,
+        test_msgs,
+        dt_limit=(-0.2, 0),
+    )
     if fast:
         pair_stream = pico.fast_filter(pair_stream)
 
@@ -122,7 +128,11 @@ def main():
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument(
-        "-v", "--verbose", help="Print debug info", default=False, action="store_true"
+        "-v",
+        "--verbose",
+        help="Print debug info",
+        default=False,
+        action="store_true",
     )
     parser.add_argument(
         "-f",
@@ -152,7 +162,11 @@ def main():
     logging.basicConfig(level=level, format="%(message)s")
 
     pico_check_split_extended(
-        args.orig_bag, args.test_bag, fast=args.fast, verbose=args.verbose, cam=args.cam
+        args.orig_bag,
+        args.test_bag,
+        fast=args.fast,
+        verbose=args.verbose,
+        cam=args.cam,
     )
 
     # suppress confusing ROS message at exit
