@@ -31,14 +31,15 @@ import itertools
 import math
 import multiprocessing
 import os
-import rospkg
 
 import numpy as np
+import rospkg
 
 import config_creator
 import localization_common.utilities as lu
-import parameter_sweep_utilities
 import parameter_sweep_results_plotter
+import parameter_sweep_utilities
+
 
 # Create new config file with substituted values
 def make_config_file(config_filename, new_output_dir, config_path, values, value_names):

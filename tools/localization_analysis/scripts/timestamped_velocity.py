@@ -17,7 +17,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from velocity import Velocity 
+from velocity import Velocity
+
 
 # Class that contains a timestamped velocity and covariance.
 class TimestampedVelocity(Velocity):

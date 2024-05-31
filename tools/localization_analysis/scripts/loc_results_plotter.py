@@ -25,15 +25,17 @@ import argparse
 import os
 import sys
 
-import message_reader 
-from multipose_plotter import MultiPosePlotter
-from multivector3d_plotter import MultiVector3dPlotter
+import matplotlib
+
+import message_reader
 import plot_conversions
 import results_savers
+from multipose_plotter import MultiPosePlotter
+from multivector3d_plotter import MultiVector3dPlotter
 from timestamped_pose import TimestampedPose
-#import plotting_utilities
 
-import matplotlib
+# import plotting_utilities
+
 matplotlib.use("pdf")
 import csv
 import math
@@ -43,17 +45,20 @@ import matplotlib.pyplot as plt
 import rosbag
 from matplotlib.backends.backend_pdf import PdfPages
 
+
 def plot_loc_results(
     pdf,
-    results_csv_file, 
+    results_csv_file,
     groundtruth_poses,
     graph_loc_states,
     extrapolated_loc_states,
-    ar_tag_poses, 
+    ar_tag_poses,
 ):
-    poses_plotter = MultiPosePlotter("Time (s)", "Position (m)", "Loc vs. Groundtruth Position", True)
+    poses_plotter = MultiPosePlotter(
+        "Time (s)", "Position (m)", "Loc vs. Groundtruth Position", True
+    )
     poses_plotter.add_poses(
-        "Groundtruth Poses", 
+        "Groundtruth Poses",
         groundtruth_poses,
         linestyle="None",
         marker="o",
@@ -61,15 +66,11 @@ def plot_loc_results(
         markersize=1.5,
     )
 
-    graph_loc_poses = plot_conversions.poses_from_graph_loc_states(graph_loc_states) 
-    poses_plotter.add_poses(
-        "Graph Loc Poses", 
-        graph_loc_poses,
-        linestyle="-",
-    )
+    graph_loc_poses = plot_conversions.poses_from_graph_loc_states(graph_loc_states)
+    poses_plotter.add_poses("Graph Loc Poses", graph_loc_poses, linestyle="-")
 
     poses_plotter.add_poses(
-        "AR Tag Poses", 
+        "AR Tag Poses",
         ar_tag_poses,
         linestyle="None",
         marker="x",
@@ -77,38 +78,61 @@ def plot_loc_results(
         markersize=1.5,
     )
     poses_plotter.plot(pdf)
-    results_savers.save_rmse(graph_loc_poses, groundtruth_poses, results_csv_file, pdf, "Graph Loc Poses") 
+    results_savers.save_rmse(
+        graph_loc_poses, groundtruth_poses, results_csv_file, pdf, "Graph Loc Poses"
+    )
 
     if extrapolated_loc_states:
-        extrapolated_poses_plotter = MultiPosePlotter("Time (s)", "Position (m)", "Extrapolated Loc vs. Groundtruth Position", True)
+        extrapolated_poses_plotter = MultiPosePlotter(
+            "Time (s)",
+            "Position (m)",
+            "Extrapolated Loc vs. Groundtruth Position",
+            True,
+        )
         extrapolated_poses_plotter.add_poses(
-            "Groundtruth Poses", 
+            "Groundtruth Poses",
             groundtruth_poses,
             linestyle="None",
             marker="o",
             markeredgewidth=0.1,
             markersize=1.5,
         )
-    
-        extrapolated_loc_poses = plot_conversions.poses_from_extrapolated_loc_states(extrapolated_loc_states) 
+
+        extrapolated_loc_poses = plot_conversions.poses_from_extrapolated_loc_states(
+            extrapolated_loc_states
+        )
         extrapolated_poses_plotter.add_poses(
-            "Extrapolated Loc Poses", 
-            extrapolated_loc_poses,
-            linestyle="-",
+            "Extrapolated Loc Poses", extrapolated_loc_poses, linestyle="-"
         )
         extrapolated_poses_plotter.plot(pdf)
-        results_savers.save_rmse(extrapolated_loc_poses, groundtruth_poses, results_csv_file, pdf, "Extrapolated Loc Poses") 
+        results_savers.save_rmse(
+            extrapolated_loc_poses,
+            groundtruth_poses,
+            results_csv_file,
+            pdf,
+            "Extrapolated Loc Poses",
+        )
 
-
-        extrapolated_velocities_plotter = MultiVector3dPlotter("Time (s)", "Velocity (m/s)", "Extrapolated Velocities", True)
-        extrapolated_velocity_plotter = plot_conversions.velocity_plotter_from_extrapolated_loc_states(extrapolated_loc_states) 
+        extrapolated_velocities_plotter = MultiVector3dPlotter(
+            "Time (s)", "Velocity (m/s)", "Extrapolated Velocities", True
+        )
+        extrapolated_velocity_plotter = plot_conversions.velocity_plotter_from_extrapolated_loc_states(
+            extrapolated_loc_states
+        )
         extrapolated_velocities_plotter.add(extrapolated_velocity_plotter)
         extrapolated_velocities_plotter.plot(pdf)
 
-        extrapolated_integrated_velocity_poses = plot_conversions.absolute_poses_from_integrated_extrapolated_loc_state_velocities(extrapolated_loc_states, groundtruth_poses)
-        extrapolated_integrated_velocity_poses_plotter = MultiPosePlotter("Time (s)", "Position (m)", "Extrapolated Loc Integrated Velocities vs. Groundtruth Position", True)
+        extrapolated_integrated_velocity_poses = plot_conversions.absolute_poses_from_integrated_extrapolated_loc_state_velocities(
+            extrapolated_loc_states, groundtruth_poses
+        )
+        extrapolated_integrated_velocity_poses_plotter = MultiPosePlotter(
+            "Time (s)",
+            "Position (m)",
+            "Extrapolated Loc Integrated Velocities vs. Groundtruth Position",
+            True,
+        )
         extrapolated_integrated_velocity_poses_plotter.add_poses(
-            "Groundtruth Poses", 
+            "Groundtruth Poses",
             groundtruth_poses,
             linestyle="None",
             marker="o",
@@ -116,28 +140,43 @@ def plot_loc_results(
             markersize=1.5,
         )
         extrapolated_integrated_velocity_poses_plotter.add_poses(
-            "Extrapolted Loc Integrated Velocity Poses", 
+            "Extrapolted Loc Integrated Velocity Poses",
             extrapolated_integrated_velocity_poses,
             linestyle="-",
         )
         extrapolated_integrated_velocity_poses_plotter.plot_positions(pdf)
-        results_savers.save_rmse(extrapolated_integrated_velocity_poses, groundtruth_poses, results_csv_file, pdf, "Extrapolated Integrated Velocity Poses") 
+        results_savers.save_rmse(
+            extrapolated_integrated_velocity_poses,
+            groundtruth_poses,
+            results_csv_file,
+            pdf,
+            "Extrapolated Integrated Velocity Poses",
+        )
 
-    ml_num_pose_factors_plotter = plot_conversions.ml_pose_factor_count_plotter_from_graph_loc_states(graph_loc_states)
+    ml_num_pose_factors_plotter = plot_conversions.ml_pose_factor_count_plotter_from_graph_loc_states(
+        graph_loc_states
+    )
     ml_num_pose_factors_plotter.plot(pdf)
 
-    ml_num_projection_factors_plotter = plot_conversions.ml_projection_factor_count_plotter_from_graph_loc_states(graph_loc_states)
+    ml_num_projection_factors_plotter = plot_conversions.ml_projection_factor_count_plotter_from_graph_loc_states(
+        graph_loc_states
+    )
     ml_num_projection_factors_plotter.plot(pdf)
 
-    optimization_time_plotter = plot_conversions.optimization_time_plotter_from_states(graph_loc_states)
+    optimization_time_plotter = plot_conversions.optimization_time_plotter_from_states(
+        graph_loc_states
+    )
     optimization_time_plotter.plot(pdf)
 
-    update_time_plotter = plot_conversions.update_time_plotter_from_states(graph_loc_states)
+    update_time_plotter = plot_conversions.update_time_plotter_from_states(
+        graph_loc_states
+    )
     update_time_plotter.plot(pdf)
+
 
 # Loads poses from the provided bagfile, generates plots, and saves results to a pdf and csv file.
 # The csv file contains results in (TODO: define format).
-# The RMSE rel start and end time define the time range for evaluating the RMSE, in case the bag starts or ends with little/uninteresting movement 
+# The RMSE rel start and end time define the time range for evaluating the RMSE, in case the bag starts or ends with little/uninteresting movement
 # that shouldn't be included in the RMSE calculation.
 # The groundtruth bag must have the same start time as other bagfile, otherwise RMSE calculations will be flawed
 def load_data_and_create_loc_plots(
@@ -156,17 +195,23 @@ def load_data_and_create_loc_plots(
     bag_start_time = bag.get_start_time()
 
     # Load groundtruth poses
-    # Use sparse mapping poses as groundtruth. 
+    # Use sparse mapping poses as groundtruth.
     groundtruth_poses = []
-    message_reader.load_poses(groundtruth_poses, "/sparse_mapping/pose", groundtruth_bag, bag_start_time)
+    message_reader.load_poses(
+        groundtruth_poses, "/sparse_mapping/pose", groundtruth_bag, bag_start_time
+    )
 
-    # Load graph localization states 
+    # Load graph localization states
     graph_loc_states = []
-    message_reader.load_graph_loc_states(graph_loc_states, "/graph_loc/state", bag, bag_start_time)
+    message_reader.load_graph_loc_states(
+        graph_loc_states, "/graph_loc/state", bag, bag_start_time
+    )
 
-    # Load extrapolated localization states 
+    # Load extrapolated localization states
     extrapolated_loc_states = []
-    message_reader.load_extrapolated_loc_states(extrapolated_loc_states, "/gnc/ekf", bag, bag_start_time)
+    message_reader.load_extrapolated_loc_states(
+        extrapolated_loc_states, "/gnc/ekf", bag, bag_start_time
+    )
 
     # Load AR Tag poses
     ar_tag_poses = []
@@ -176,19 +221,22 @@ def load_data_and_create_loc_plots(
     with PdfPages(output_pdf_file) as pdf:
         plot_loc_results(
             pdf,
-            results_csv_file, 
+            results_csv_file,
             groundtruth_poses,
             graph_loc_states,
             extrapolated_loc_states,
             ar_tag_poses,
         )
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument("bagfile", help="Input bagfile.")
-    parser.add_argument("--output-file", default="loc_output.pdf", help="Output pdf file.")
+    parser.add_argument(
+        "--output-file", default="loc_output.pdf", help="Output pdf file."
+    )
     parser.add_argument(
         "--results-csv-file",
         default="loc_results.csv",

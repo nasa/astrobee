@@ -18,21 +18,24 @@
 # under the License.
 
 import matplotlib
-from vector3d_plotter import Vector3dPlotter
+
 import plot_conversions
 import pose
 import vector3d_plotter
+from vector3d_plotter import Vector3dPlotter
 
 matplotlib.use("pdf")
+import sys
+
 import matplotlib.pyplot as plt
 import numpy as np
-import sys
+
 
 # Plotter that allows plotting multiple vector3d values in the same plots.
 # Pass vector3d values to plot using the add function.
 # Optionally also plot individual plots for each vector component (x/y/z) if individual plots is true.
 class MultiVector3dPlotter:
-    def __init__(self, xlabel, ylabel, title, individual_plots = False):
+    def __init__(self, xlabel, ylabel, title, individual_plots=False):
         self.xlabel = xlabel
         self.ylabel = ylabel
         self.title = title
@@ -61,7 +64,7 @@ class MultiVector3dPlotter:
             self.plot_ys(pdf)
             self.plot_zs(pdf)
 
-    # Plot x values. 
+    # Plot x values.
     def plot_xs(self, pdf):
         plt.figure()
         for vector3d_plotter in self.vector3d_plotters:
@@ -73,7 +76,7 @@ class MultiVector3dPlotter:
         pdf.savefig()
         plt.close()
 
-    # Plot y values. 
+    # Plot y values.
     def plot_ys(self, pdf):
         plt.figure()
         for vector3d_plotter in self.vector3d_plotters:
@@ -85,7 +88,7 @@ class MultiVector3dPlotter:
         pdf.savefig()
         plt.close()
 
-    # Plot z values. 
+    # Plot z values.
     def plot_zs(self, pdf):
         plt.figure()
         for vector3d_plotter in self.vector3d_plotters:

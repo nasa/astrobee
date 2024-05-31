@@ -23,18 +23,15 @@ import math
 import numpy as np
 import scipy.spatial.transform
 
+
 # Assumes poses_a and poses_b are sorted in time.
 # Optionally pass the max allowed time difference between poses defined to be
-# at the same timestamp, along with the start and end time bounds for computing 
-# same timestamp poses (passing an end time of -1 is equivalent to having no upper bound time). 
+# at the same timestamp, along with the start and end time bounds for computing
+# same timestamp poses (passing an end time of -1 is equivalent to having no upper bound time).
 def get_same_timestamp_poses(
-    poses_a,
-    poses_b,
-    max_allowed_time_diff=0.01,
-    start_time=0,
-    end_time=-1,
+    poses_a, poses_b, max_allowed_time_diff=0.01, start_time=0, end_time=-1
 ):
-    same_poses_a = [] 
+    same_poses_a = []
     same_poses_b = []
     poses_a_size = len(poses_a)
     poses_b_size = len(poses_b)
@@ -68,13 +65,14 @@ def get_same_timestamp_poses(
             b_index += 1
     return same_poses_a, same_poses_b
 
+
 # Computes squared position difference between position vectors a and b
 def position_squared_difference(a, b):
     difference_vec = np.subtract(a, b)
     return np.inner(difference_vec, difference_vec)
 
 
-# Computes squared orientation difference using square of radian difference of 
+# Computes squared orientation difference using square of radian difference of
 # rotations in axis angle representation
 def orientation_squared_difference(world_R_a, world_R_b):
     a_R_b = world_R_a.inv() * world_R_b
@@ -83,21 +81,13 @@ def orientation_squared_difference(world_R_a, world_R_b):
 
 # Computes RMSE between two sequences of poses. Only uses poses with the same timestamp.
 # Optionally pass the max allowed time difference between poses defined to be
-# at the same timestamp, along with the start and end time bounds for computing 
-# same timestamp poses (passing an end time of -1 is equivalent to having no upper bound time). 
-def pose_rmse(
-    poses_a,
-    poses_b,
-    max_allowed_time_diff=0.01,
-    start_time=0,
-    end_time=-1,
-):
+# at the same timestamp, along with the start and end time bounds for computing
+# same timestamp poses (passing an end time of -1 is equivalent to having no upper bound time).
+def pose_rmse(poses_a, poses_b, max_allowed_time_diff=0.01, start_time=0, end_time=-1):
     same_poses_a, same_poses_b = get_same_timestamp_poses(
         poses_a, poses_b, max_allowed_time_diff, start_time, end_time
     )
-    assert len(same_poses_a) == len(
-        same_poses_b
-    ), "Length mismatch of poses"
+    assert len(same_poses_a) == len(same_poses_b), "Length mismatch of poses"
     num_poses = len(same_poses_a)
     mean_squared_position_error = 0
     mean_squared_orientation_error = 0
@@ -124,9 +114,9 @@ def pose_rmse(
 
 ## Relative RMSE between two sequences of poses. Only uses poses with the same timestamp
 ## Optionally pass the max allowed time difference between poses defined to be
-## at the same timestamp, along with the start and end time bounds for computing 
-## same timestamp poses (passing an end time of -1 is equivalent to having no upper bound time). 
-#def rmse_timestamped_poses_relative(
+## at the same timestamp, along with the start and end time bounds for computing
+## same timestamp poses (passing an end time of -1 is equivalent to having no upper bound time).
+# def rmse_timestamped_poses_relative(
 #    poses_a,
 #    poses_b,
 #    max_allowed_time_diff=0.01,
@@ -134,7 +124,7 @@ def pose_rmse(
 #    end_time=-1,
 #    min_relative_elapsed_time=10,
 #    max_relative_elapsed_time=20,
-#):
+# ):
 #    same_poses_a, same_poses_b = get_same_timestamp_poses(
 #        poses_a, poses_b, max_allowed_time_diff, start_time, end_time
 #    )

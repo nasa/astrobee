@@ -19,6 +19,7 @@
 
 import ImuBias
 
+
 # Class that contains an imu bias and covariance.
 class ImuBiasWithCovariance(ImuBias):
     def __init__(self, accelerometer_bias, gyroscope_bias, covariance):

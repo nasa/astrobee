@@ -804,6 +804,30 @@
 
     {
       "type": "CommandSpec",
+      "id": "Settings.setExposure",
+      "isRapidNative": false,
+      "notes": "Set the exposure value for either the nav or dock camera.",
+      "availableContexts": [
+        "teleop"
+      ],
+      "parent": "Command",
+      "params": [
+        {
+          "type": "ParamSpec",
+          "id": "cameraName",
+          "parent": "Settings.CameraName"
+        },
+        {
+          "type": "ParamSpec",
+          "id": "exposure",
+          "valueType": "float",
+          "notes": "The value to set the exposurec to."
+        }
+      ]
+    },
+
+    {
+      "type": "CommandSpec",
       "id": "GuestScience.startGuestScience",
       "isRapidNative": false,
       "notes": "Starts a guest science app (APK) running on the Astrobee HLP. This command is part of the guest science app life cycle, implemented by the guest science manager node on the HLP. Steps of the life cycle include:<p/><ul><li>startGuestScience: Starts a guest science app, making it available to receive commands.</li><li>customGuestScience: Routes a command to a running guest science app.</li><li>stopGuestScience: Terminates a running guest science app.</li></ul>",
@@ -890,6 +914,25 @@
           "id": "command",
           "valueType": "string",
           "notes": "The command to send (usually formatted as a JSON dictionary, enabling an arbitrary number and types of parameters)."
+        }
+      ]
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Settings.setMap",
+      "isRapidNative": false,
+      "notes": "Sets the map used for localization.",
+      "availableContexts": [
+        "teleop"
+      ],
+      "parent": "Command",
+      "params": [
+        {
+          "type": "ParamSpec",
+          "id": "mapName",
+          "valueType" : "string",
+          "notes": "Full path to the map file to use. 'default' uses the default map loaded on startup."
         }
       ]
     },
@@ -1007,7 +1050,14 @@
         "teleop"
       ],
       "parent": "Command",
-      "params": []
+      "params": [
+        {
+          "type": "ParamSpec",
+          "id": "berthNumber",
+          "valueType": "long",
+          "notes": "Which berth Astrobee is using. 1=left, 2=right."
+        }
+      ]
     },
 
     {

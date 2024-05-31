@@ -17,7 +17,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from pose_with_covariance import PoseWithCovariance 
+from pose_with_covariance import PoseWithCovariance
+
 
 # Class that contains a timestamped pose and covariance.
 class TimestampedPoseWithCovariance(PoseWithCovariance):

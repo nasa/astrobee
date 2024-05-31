@@ -18,35 +18,44 @@
 # under the License.
 
 import matplotlib
-from orientation_plotter import OrientationPlotter
-from position_plotter import PositionPlotter
+
 import plot_conversions
 import pose
 from multivector3d_plotter import MultiVector3dPlotter
+from orientation_plotter import OrientationPlotter
+from position_plotter import PositionPlotter
 
 matplotlib.use("pdf")
+import sys
+
 import matplotlib.pyplot as plt
 import numpy as np
-import sys
+
 
 # Convert a list of angles from radians to degrees.
 def radians_to_degrees(angles):
     return np.rad2deg(np.unwrap(np.deg2rad(angles)))
 
+
 # Plotter that allows plotting multiple pose positions and orientations in the same plots.
 # Pass poses to plot using the add_poses function.
 # Optionally also plot individual plots for each position or orientation axis (x/y/z or r/p/y) if individual plots is true.
 class MultiPosePlotter:
-    def __init__(self, xlabel, ylabel, title, individual_plots = True):
+    def __init__(self, xlabel, ylabel, title, individual_plots=True):
         self.xlabel = xlabel
         self.ylabel = ylabel
         self.title = title
-        self.orientations_plotter = MultiVector3dPlotter(xlabel, ylabel, title, individual_plots)
-        self.positions_plotter = MultiVector3dPlotter(xlabel, ylabel, title, individual_plots)
+        self.orientations_plotter = MultiVector3dPlotter(
+            xlabel, ylabel, title, individual_plots
+        )
+        self.positions_plotter = MultiVector3dPlotter(
+            xlabel, ylabel, title, individual_plots
+        )
 
     # Add poses to position and orientation plots
-    def add_poses(self,
-        name, 
+    def add_poses(
+        self,
+        name,
         timestamped_poses,
         colors=["r", "b", "g"],
         linestyle="-",
@@ -55,28 +64,32 @@ class MultiPosePlotter:
         markeredgewidth=None,
         markersize=1,
     ):
-        self.add_pose_positions(name, timestamped_poses,
-        colors,
-        linestyle,
-        linewidth,
-        marker,
-        markeredgewidth,
-        markersize)
+        self.add_pose_positions(
+            name,
+            timestamped_poses,
+            colors,
+            linestyle,
+            linewidth,
+            marker,
+            markeredgewidth,
+            markersize,
+        )
 
-        self.add_pose_orientations(name, timestamped_poses,
-        colors,
-        linestyle,
-        linewidth,
-        marker,
-        markeredgewidth,
-        markersize)
-
- 
+        self.add_pose_orientations(
+            name,
+            timestamped_poses,
+            colors,
+            linestyle,
+            linewidth,
+            marker,
+            markeredgewidth,
+            markersize,
+        )
 
     # Add poses to position plots.
     def add_pose_positions(
         self,
-        name, 
+        name,
         timestamped_poses,
         colors=["r", "b", "g"],
         linestyle="-",
@@ -106,7 +119,7 @@ class MultiPosePlotter:
     # Add poses to orientation plots
     def add_pose_orientations(
         self,
-        name, 
+        name,
         timestamped_poses,
         colors=["r", "b", "g"],
         linestyle="-",

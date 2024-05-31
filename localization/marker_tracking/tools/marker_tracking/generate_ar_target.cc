@@ -53,7 +53,8 @@ int main(int argc, char** argv) {
 
   int resolution = marker.GetRes();
   int margin = static_cast<int>(marker.GetMargin());
-  cv::Mat_<unsigned char> content, content_no_border = cv::cvarrToMat(marker.GetContent());
+  cv::Mat content, content_no_border;
+  content_no_border = marker.GetContent();
   cv::copyMakeBorder(content_no_border, content, margin, margin, margin, margin,
                      cv::BORDER_CONSTANT, 0);
 
@@ -112,7 +113,7 @@ int main(int argc, char** argv) {
           "1 4 translate\n");
   for (int r = 0; r < content.rows; ++r) {
     for (int c = 0; c < content.cols; ++c) {
-      fprintf(file, "%d csquare\n", content(r, c) / 255);
+      fprintf(file, "%d csquare\n", content.at<uchar>(r, c) / 255);
       fprintf(file, "1 0 translate\n");
     }
     fprintf(file, "%d 1 translate\n", -content.cols);

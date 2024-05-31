@@ -17,11 +17,12 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from velocity_with_covariance import VelocityWithCovariance 
+from velocity_with_covariance import VelocityWithCovariance
+
 
 # Class that contains a timestamped velocity and covariance.
 class TimestampedVelocityWithCovariance(VelocityWithCovariance):
     def __init__(self, velocity, covariance, timestamp):
-        self.velocity = velocity 
+        self.velocity = velocity
         self.covariance = covariance
         self.timestamp = timestamp

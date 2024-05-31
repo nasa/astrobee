@@ -19,9 +19,10 @@
 
 import ImuBiasWithCovariance
 
+
 # Class that contains a timestamped imu_bias and covariance.
 class TimestampedImuBiasWithCovariance(ImuBiasWithCovariance):
     def __init__(self, imu_bias, covariance, timestamp):
-        self.imu_bias = imu_bias 
+        self.imu_bias = imu_bias
         self.covariance = covariance
         self.timestamp = timestamp

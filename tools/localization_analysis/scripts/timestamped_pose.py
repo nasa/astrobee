@@ -17,7 +17,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from pose import Pose 
+from pose import Pose
+
 
 # Class that contains a timestamped pose.
 class TimestampedPose(Pose):

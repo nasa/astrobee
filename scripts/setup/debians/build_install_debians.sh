@@ -1,4 +1,4 @@
-#/bin/bash -e
+#!/bin/bash -e
 #
 # Copyright (c) 2017, United States Government, as represented by the
 # Administrator of the National Aeronautics and Space Administration.
@@ -29,23 +29,9 @@ sudo apt-get install -y devscripts equivs libproj-dev
 # delete old files (-f avoids 'no such file' warning on first run)
 rm -f *.deb *.debian.tar.xz *.orig.tar.gz *.dsc *.build *.buildinfo *.changes *.ddeb
 
-case $dist in
-  xenial)
-    echo "Ubuntu 16 detected"
-    ;;
-  focal)
-    echo "Ubuntu 20 detected"
-    build_list+=( opencv )
-    # jps3d deps
-    sudo apt-get install -y libvtk7.1p libboost-filesystem1.71.0 libboost-system1.71.0
-    ;;
-  *)
-    echo "No supported distribution detected"
-    exit 1
-esac
-
 # Add public debians to build list
-build_list+=( alvar dlib dbow2 gtsam decomputil jps3d openmvg )
+build_list+=( ar-track-alvar-msgs ar-track-alvar dlib dbow2 gtsam decomputil jps3d openmvg opencv-xfeatures2d)
+
 # If restricted rti-dev debian is present, add miro and soracore as well
 dpkg-query -W -f='${Status}\n' rti-dev 2>&1 | grep -q "install ok installed" &&
 echo "Package rti-dev exists. Including miro and soracore to build list..." &&

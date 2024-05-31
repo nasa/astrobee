@@ -18,9 +18,11 @@
 # under the License.
 
 import matplotlib
+
 matplotlib.use("pdf")
 import matplotlib.pyplot as plt
 import numpy as np
+
 
 # Class for plotting values.
 class ValuePlotter(object):
@@ -50,7 +52,7 @@ class ValuePlotter(object):
         self.markeredgewidth = markeredgewidth
         self.markersize = markersize
 
-    # Plot values 
+    # Plot values
     def plot(self, pdf):
         plt.figure()
         plt.plot(
