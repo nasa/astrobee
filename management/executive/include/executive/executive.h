@@ -98,7 +98,7 @@ class OpState;
  */
 class Executive : public ff_util::FreeFlyerComponent {
  public:
-  explicit Executive(rclcpp::NodeOptions const& options);
+  explicit Executive(const rclcpp::NodeOptions& options);
   ~Executive();
 
   // Message and timeout callbacks

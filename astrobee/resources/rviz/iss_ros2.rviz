@@ -8,7 +8,7 @@ Panels:
         - /Status1
         - /Debug1
       Splitter Ratio: 0.5
-    Tree Height: 564
+    Tree Height: 415
   - Class: rviz_common/Selection
     Name: Selection
   - Class: rviz_common/Tool Properties
@@ -120,6 +120,39 @@ Visualization Manager:
       Show Names: false
       Tree:
         world:
+          body:
+            ar_tag:
+              {}
+            dock_cam:
+              {}
+            flashlight_aft:
+              {}
+            flashlight_front:
+              {}
+            haz_cam:
+              {}
+            imu:
+              {}
+            inertial_link:
+              {}
+            laser:
+              {}
+            nav_cam:
+              {}
+            payload/bottom_aft:
+              {}
+            payload/bottom_front:
+              {}
+            payload/top_aft:
+              {}
+            payload/top_front:
+              {}
+            perch_cam:
+              {}
+            sci_cam:
+              {}
+            top_aft:
+              {}
           dock/body:
             dock/berth1:
               dock/berth1/approach:
@@ -281,25 +314,20 @@ Visualization Manager:
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /handrail_21_5/robot_description
-      Enabled: true
+      Enabled: false
       Links:
         All Links Enabled: true
         Expand Joint Details: false
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
-        body:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
       Mass Properties:
         Inertia: false
         Mass: false
       Name: Handrail
       TF Prefix: handrail
       Update Interval: 0
-      Value: true
+      Value: false
       Visual Enabled: true
     - Alpha: 1
       Class: rviz_default_plugins/RobotModel
@@ -312,64 +340,20 @@ Visualization Manager:
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /robot_description
-      Enabled: true
+      Enabled: false
       Links:
         All Links Enabled: true
         Expand Joint Details: false
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
-        body:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        inertial_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        top_aft:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        top_aft_arm_distal_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        top_aft_arm_proximal_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        top_aft_gripper_left_distal_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        top_aft_gripper_left_proximal_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        top_aft_gripper_right_distal_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        top_aft_gripper_right_proximal_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
       Mass Properties:
         Inertia: false
         Mass: false
       Name: Honey
       TF Prefix: honey
       Update Interval: 0
-      Value: true
+      Value: false
       Visual Enabled: true
     - Alpha: 1
       Class: rviz_default_plugins/RobotModel
@@ -382,64 +366,20 @@ Visualization Manager:
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /robot_description
-      Enabled: true
+      Enabled: false
       Links:
         All Links Enabled: true
         Expand Joint Details: false
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
-        body:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        inertial_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        top_aft:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        top_aft_arm_distal_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        top_aft_arm_proximal_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        top_aft_gripper_left_distal_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        top_aft_gripper_left_proximal_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        top_aft_gripper_right_distal_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        top_aft_gripper_right_proximal_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
       Mass Properties:
         Inertia: false
         Mass: false
       Name: Bumble
       TF Prefix: bumble
       Update Interval: 0
-      Value: true
+      Value: false
       Visual Enabled: true
     - Alpha: 1
       Class: rviz_default_plugins/RobotModel
@@ -452,64 +392,20 @@ Visualization Manager:
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /robot_description
-      Enabled: true
+      Enabled: false
       Links:
         All Links Enabled: true
         Expand Joint Details: false
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
-        body:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        inertial_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        top_aft:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        top_aft_arm_distal_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        top_aft_arm_proximal_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        top_aft_gripper_left_distal_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        top_aft_gripper_left_proximal_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        top_aft_gripper_right_distal_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        top_aft_gripper_right_proximal_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
       Mass Properties:
         Inertia: false
         Mass: false
       Name: Queen
       TF Prefix: queen
       Update Interval: 0
-      Value: true
+      Value: false
       Visual Enabled: true
     - Class: rviz_common/Group
       Displays:
@@ -524,64 +420,20 @@ Visualization Manager:
             History Policy: Keep Last
             Reliability Policy: Reliable
             Value: /robot_description
-          Enabled: true
+          Enabled: false
           Links:
             All Links Enabled: true
             Expand Joint Details: false
             Expand Link Details: false
             Expand Tree: false
             Link Tree Style: Links in Alphabetic Order
-            body:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            inertial_link:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-            top_aft:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            top_aft_arm_distal_link:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            top_aft_arm_proximal_link:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            top_aft_gripper_left_distal_link:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            top_aft_gripper_left_proximal_link:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            top_aft_gripper_right_distal_link:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
-            top_aft_gripper_right_proximal_link:
-              Alpha: 1
-              Show Axes: false
-              Show Trail: false
-              Value: true
           Mass Properties:
             Inertia: false
             Mass: false
           Name: /
           TF Prefix: ""
           Update Interval: 0
-          Value: true
+          Value: false
           Visual Enabled: true
         - Class: rviz_common/Group
           Displays: ~
@@ -700,12 +552,12 @@ Window Geometry:
     collapsed: false
   Dock Cam:
     collapsed: false
-  Height: 1245
+  Height: 1016
   Hide Left Dock: false
   Hide Right Dock: false
   Nav Cam:
     collapsed: false
-  QMainWindow State: 000000ff00000000fd00000004000000000000025a00000443fc020000000afb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003b000002bd000000c700fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb000000100044006f0063006b002000430061006d01000002fe000000a80000002800fffffffb0000000e004e00610076002000430061006d01000003ac000000d20000002800ffffff000000010000010f00000443fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073010000003b00000443000000a000fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000008700000003efc0100000002fb0000000800540069006d00650100000000000008700000024400fffffffb0000000800540069006d00650100000000000004500000000000000000000004fb0000044300000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd00000004000000000000025a0000035efc020000000afb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003b00000228000000c700fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb000000100044006f0063006b002000430061006d0100000269000000850000002800fffffffb0000000e004e00610076002000430061006d01000002f4000000a50000002800ffffff000000010000010f0000035efc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073010000003b0000035e000000a000fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000007380000003efc0100000002fb0000000800540069006d00650100000000000007380000024400fffffffb0000000800540069006d00650100000000000004500000000000000000000003c30000035e00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Selection:
     collapsed: false
   Time:
@@ -714,6 +566,6 @@ Window Geometry:
     collapsed: false
   Views:
     collapsed: false
-  Width: 2160
-  X: 241
-  Y: 152
+  Width: 1848
+  X: 72
+  Y: 27

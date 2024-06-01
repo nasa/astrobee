@@ -58,7 +58,8 @@ add_library(sequencer SHARED
   src/utils/sequencer/plan_io.cc
   src/utils/sequencer/sequencer.cc
 )
-ament_target_dependencies(sequencer rclcpp rclcpp_components ff_common ff_msgs ff_hw_msgs config_reader ff_util jsonloader)
+target_link_libraries(sequencer ${Boost_LIBRARIES})
+ament_target_dependencies(sequencer rclcpp rclcpp_components ff_common ff_msgs ff_hw_msgs config_reader ff_util jsonloader Boost)
 
 # Declare C++ libraries
 add_library(executive SHARED
@@ -71,6 +72,7 @@ add_library(executive SHARED
   src/op_state_repo.cc
   src/op_state_teleop.cc
 )
+target_link_libraries(executive sequencer)
 target_compile_definitions(executive PRIVATE "COMPOSITION_BUILDING_DLL")
 ament_target_dependencies(executive rclcpp rclcpp_components ff_common ff_msgs ff_hw_msgs config_reader ff_util jsonloader)
 rclcpp_components_register_nodes(executive "executive::Executive")
@@ -138,8 +140,8 @@ install(TARGETS ${PROJECT_NAME}
 # Install C++ executables
 install(TARGETS data_to_disk_pub DESTINATION bin)
 install(TARGETS plan_pub DESTINATION bin)
-#install(TARGETS simple_move DESTINATION bin)
-#install(TARGETS teleop_tool DESTINATION bin)
+install(TARGETS simple_move DESTINATION lib/${PROJECT_NAME})
+install(TARGETS teleop_tool RUNTIME DESTINATION lib/${PROJECT_NAME})
 #install(TARGETS zones_pub DESTINATION bin)
 #install(CODE "execute_process(
 #  COMMAND ln -s ../../bin/data_to_disk_pub share/${PROJECT_NAME}

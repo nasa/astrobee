@@ -26,11 +26,12 @@ FF_DEFINE_LOGGER("executive");
 
 namespace executive {
 
-Executive::Executive(rclcpp::NodeOptions const& options) :
-  ff_util::FreeFlyerComponent(options, NODE_EXECUTIVE),
+Executive::Executive(const rclcpp::NodeOptions& options) :
+  ff_util::FreeFlyerComponent(options, NODE_EXECUTIVE, true),
   state_(OpStateRepo::Instance()->ready()),
   sys_monitor_init_fault_response_(new ff_msgs::msg::CommandStamped()),
   sys_monitor_heartbeat_fault_response_(new ff_msgs::msg::CommandStamped()),
+  camera_states_(new ff_msgs::msg::CameraStatesStamped()),
   dock_state_(NULL),
   fault_state_(NULL),
   guest_science_config_(NULL),
@@ -1596,18 +1597,18 @@ void Executive::StopWaitTimer() {
 }
 
 /****************************** Output functions ******************************/
-void Debug(std::string output) {
+void Executive::Debug(std::string output) {
   FF_DEBUG_STREAM(output);
 }
-void Error(std::string output) {
+void Executive::Error(std::string output) {
   FF_ERROR_STREAM(output);
 }
 
-void Info(std::string output) {
+void Executive::Info(std::string output) {
   FF_INFO_STREAM(output);
 }
 
-void Warn(std::string output) {
+void Executive::Warn(std::string output) {
   FF_WARN_STREAM(output);
 }
 

@@ -233,7 +233,7 @@ def generate_launch_description():
         name='mlp_management',
         namespace='',
         package='rclcpp_components',
-        executable='component_container',
+        executable='component_container_mt',
         composable_node_descriptions=[
             ComposableNode(
                 package='executive',
@@ -291,11 +291,11 @@ def generate_launch_description():
         executable='component_container',
         condition=UnlessCondition(LaunchConfiguration("drivers")),
         composable_node_descriptions=[
-            # ComposableNode(
-            #     package='sys_monitor',
-            #     plugin='sys_monitor::SysMonitor',
-            #     name='sys_monitor',
-            #     extra_arguments=[{'use_intra_process_comms': True}]),
+             ComposableNode(
+                 package='sys_monitor',
+                 plugin='sys_monitor::SysMonitor',
+                 name='sys_monitor',
+                 extra_arguments=[{'use_intra_process_comms': True}]),
             ]
         ),
         ComposableNodeContainer(
