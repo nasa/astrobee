@@ -84,13 +84,12 @@ void RosGraphVIOWrapper::ImuCallback(const sensor_msgs::Imu& imu_msg) {
     // to uncertainty in initial velocity
     const auto& accel_bias_stddev = imu_bias_initializer_->Bias()->accelerometer_bias_stddev;
     const auto& gyro_bias_stddev = imu_bias_initializer_->Bias()->gyro_bias_stddev;
-    const gtsam::Vector3 velocity_stddev = accel_bias_stddev * wrapper_params_.starting_velocity_stddev_scale;
-    const gtsam::Vector3 velocity_noise_sigmas(
-      (gtsam::Vector(3) << velocity_stddev, velocity_stddev, velocity_stddev).finished());
+    const gtsam::Vector3 velocity_noise_sigmas = accel_bias_stddev * wrapper_params_.starting_velocity_stddev_scale;
     const auto velocity_noise =
       lc::Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(velocity_noise_sigmas)),
                  params_.combined_nav_state_node_adder.huber_k);
     params_.combined_nav_state_node_adder.start_noise_models.emplace_back(velocity_noise);
+
     // Set starting bias noise using scaled calculated bias stddevs
     const gtsam::Vector6 bias_noise_sigmas(
       (gtsam::Vector(6) << accel_bias_stddev * wrapper_params_.starting_accel_bias_stddev_scale,
