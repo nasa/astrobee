@@ -88,7 +88,7 @@ template <typename MeasurementType, typename NodeType, typename TimestampedNodes
 void MeasurementBasedTimestampedNodeAdder<
   MeasurementType, NodeType, TimestampedNodesType,
   MeasurementBasedTimestampedNodeAdderModelType>::AddMeasurement(const MeasurementType& measurement) {
-  this->node_adder_model_.AddMeasurement(measurement);
+  Base::node_adder_model().AddMeasurement(measurement);
 }
 
 template <typename MeasurementType, typename NodeType, typename TimestampedNodesType,
@@ -96,7 +96,7 @@ template <typename MeasurementType, typename NodeType, typename TimestampedNodes
 void MeasurementBasedTimestampedNodeAdder<MeasurementType, NodeType, TimestampedNodesType,
                                           MeasurementBasedTimestampedNodeAdderModelType>::
   RemoveMeasurements(const localization_common::Time oldest_allowed_time) {
-  this->node_adder_model_.RemoveMeasurements(oldest_allowed_time);
+  Base::node_adder_model().RemoveMeasurements(oldest_allowed_time);
 }
 
 template <typename MeasurementType, typename NodeType, typename TimestampedNodesType,

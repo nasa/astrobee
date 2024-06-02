@@ -27,50 +27,17 @@ PoseWithCovariance PoseWithCovarianceInterpolater::Interpolate(const PoseWithCov
 }
 
 template <>
-PoseWithCovariance PoseWithCovarianceInterpolater::Relative(const PoseWithCovariance& a,
-                                                            const PoseWithCovariance& b) const {
-  const Eigen::Isometry3d relative_pose = a.pose.inverse() * b.pose;
-
-  /*// Covariance Calculation
-  const double translation_norm = relative_pose.translation().norm();
-  const double orientation_angle = Eigen::AngleAxisd(relative_pose.linear()).angle();
-  constexpr double kMinCov = 1e-4;
-  constexpr double kTranslationScale = 1;
-  constexpr double kOrientationScale = 0.01;
-  Eigen::Matrix<double, 6, 6> relative_covariance = Eigen::Matrix<double, 6, 6>::Zero();
-  // Set translation part of covariance using translation norm
-  relative_covariance.block<3, 3>(3, 3) = (relative_pose.translation().cwiseAbs() * kTranslationScale).asDiagonal();
-  // Set orientation part of covariance using orientation angle
-  relative_covariance.block<3, 3>(0, 0) = Eigen::Matrix3d::Identity() * orientation_angle * kOrientationScale;
-  // Make sure no component of the covariance matrix is too small
-  for (int i = 0; i < 6; ++i) {
-    if (relative_covariance(i, i) < kMinCov) {
-      relative_covariance(i, i) = kMinCov;
-    }
-  }*/
-  /*std::cout << "Relative Covariance: " << std::endl << relative_covariance.matrix() << std::endl;
-  std::cout << "A covariance: " << std::endl << a.covariance.matrix() << std::endl;
-  std::cout << "B covariance: " << std::endl << b.covariance.matrix() << std::endl;*/
-  /*return PoseWithCovariance(relative_pose, relative_covariance); */
-  // See https://gtsam.org/2021/02/23/uncertainties-part3.html
-  // Adjoints
-  // Uses convention w_T_a and w_T_b for poses, s.t. adj_w_a is the adjoint for the
-  // w_T_a pose.
-  const gtsam::Pose3 w_T_a = GtPose(a.pose);
-  const gtsam::Pose3 w_T_b = GtPose(b.pose);
-  const gtsam::Matrix6 adj_w_a = w_T_a.AdjointMap();
-  const gtsam::Matrix6 adj_b_w = w_T_b.inverse().AdjointMap();
-  // Helper terms
-  const gtsam::Matrix6 h = adj_b_w * adj_w_a;
-  const gtsam::Matrix6 h_t = h.transpose();
-  // Compute covariance without correlation terms
-  gtsam::Matrix6 relative_covariance = h * a.covariance * h_t + b.covariance;
-  // Add correlation terms if they exist
-  // Assumes correlation_covariances stores covariances a_b rather than b_a
-  // const auto covariance_a_b = b.correlation_covariances.Get(*(a.correlation_covariances.LatestTimestamp()));
-  if (covariance_a_b) {
-    relative_covariance = relative_covariance - h * (*covariance_a_b) - (*covariance_a_b).transpose() * h_t;
+boost::optional<PoseWithCovariance> PoseWithCovarianceInterpolater::Relative(const Time timestamp_a,
+                                                                             const Time timestamp_b) const {
+  const auto a = Interpolate(timestamp_a);
+  const auto b = Interpolate(timestamp_b);
+  if (!a || !b) {
+    LogDebug("Relative: Failed to get interpolated objects for query timestamps " << timestamp_a << " and "
+                                                                                  << timestamp_b << ".");
+    return boost::none;
   }
+  const Eigen::Isometry3d relative_pose = a->pose.inverse() * b->pose;
+  const auto relative_covariance = params().pose_covariance_interpolater->Interpolate(*a, *b, timestamp_a, timestamp_b);
   return PoseWithCovariance(relative_pose, relative_covariance);
 }
 }  // namespace localization_common

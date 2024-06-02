@@ -19,20 +19,28 @@
 #ifndef LOCALIZATION_COMMON_POSE_WITH_COVARIANCE_INTERPOLATER_H_
 #define LOCALIZATION_COMMON_POSE_WITH_COVARIANCE_INTERPOLATER_H_
 
+#include <localization_common/pose_covariance_interpolater.h>
 #include <localization_common/pose_with_covariance.h>
 #include <localization_common/timestamped_interpolater.h>
-#include <gtsam/base/Matrix.h>
 
 namespace localization_common {
-using PoseWithCovarianceInterpolater = TimestampedInterpolater<PoseWithCovariance>;
+struct PoseWithCovarianceInterpolaterParams {
+  PoseWithCovarianceInterpolaterParams(const std::shared_ptr<PoseCovarianceInterpolater>& pose_covariance_interpolater =
+                                         std::make_shared<PoseCovarianceInterpolater>())
+      : pose_covariance_interpolater(pose_covariance_interpolater) {}
+  std::shared_ptr<PoseCovarianceInterpolater> pose_covariance_interpolater;
+};
+
+using PoseWithCovarianceInterpolater =
+  TimestampedInterpolater<PoseWithCovariance, PoseWithCovarianceInterpolaterParams>;
 
 template <>
 PoseWithCovariance PoseWithCovarianceInterpolater::Interpolate(const PoseWithCovariance& a, const PoseWithCovariance& b,
                                                                const double alpha) const;
 
 template <>
-PoseWithCovariance PoseWithCovarianceInterpolater::Relative(const PoseWithCovariance& a,
-                                                            const PoseWithCovariance& b) const;
+boost::optional<PoseWithCovariance> PoseWithCovarianceInterpolater::Relative(const Time timestamp_a,
+                                                                             const Time timestamp_b) const;
 }  // namespace localization_common
 
 #endif  // LOCALIZATION_COMMON_POSE_WITH_COVARIANCE_INTERPOLATER_H_

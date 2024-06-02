@@ -23,6 +23,7 @@
 #include <factor_adders/standstill_factor_adder.h>
 #include <factor_adders/vo_smart_projection_factor_adder.h>
 #include <graph_vio/graph_vio_params.h>
+#include <localization_common/marginals_pose_covariance_interpolater.h>
 #include <localization_measurements/depth_odometry_measurement.h>
 #include <localization_measurements/fan_speed_mode.h>
 #include <localization_measurements/feature_points_measurement.h>
@@ -70,7 +71,10 @@ class GraphVIO : public sliding_window_graph_optimizer::SlidingWindowGraphOptimi
 
   // Const accesor to feature tracker used for smart factor creation
   const vision_common::SpacedFeatureTracker& feature_tracker() const;
-  std::shared_ptr<node_adders::CombinedNavStateNodeAdder> combined_nav_state_node_adder_;
+
+  // Construct pose covariance interpolater using latest marginals and nodes
+  std::shared_ptr<localization_common::MarginalsPoseCovarianceInterpolater<nodes::CombinedNavStateNodes>>
+  MarginalsPoseCovarianceInterpolater();
 
  private:
   // Uses the latest feature track points to detect standstill.
@@ -91,6 +95,7 @@ class GraphVIO : public sliding_window_graph_optimizer::SlidingWindowGraphOptimi
   }
 
   GraphVIOParams params_;
+  std::shared_ptr<node_adders::CombinedNavStateNodeAdder> combined_nav_state_node_adder_;
   bool standstill_;
 
   // Factor Adders

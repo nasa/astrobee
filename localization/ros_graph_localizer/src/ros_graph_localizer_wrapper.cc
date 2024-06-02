@@ -268,6 +268,14 @@ void RosGraphLocalizerWrapper::ResetWorldTDock() { world_T_dock_ = boost::none; 
 
 boost::optional<gtsam::Pose3> RosGraphLocalizerWrapper::WorldTDock() const { return world_T_dock_; }
 
+std::unique_ptr<graph_localizer::GraphLocalizer>& RosGraphLocalizerWrapper::graph_localizer() {
+  return graph_localizer_;
+}
+
+const std::unique_ptr<graph_localizer::GraphLocalizer>& RosGraphLocalizerWrapper::graph_localizer() const {
+  return graph_localizer_;
+}
+
 boost::optional<ff_msgs::GraphLocState> RosGraphLocalizerWrapper::GraphLocStateMsg() {
   if (!Initialized()) {
     LogDebugEveryN(200, "GraphLocStateMsg: Localizer not yet initialized");

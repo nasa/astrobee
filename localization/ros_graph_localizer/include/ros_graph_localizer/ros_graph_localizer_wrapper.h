@@ -90,12 +90,17 @@ class RosGraphLocalizerWrapper {
   // Returns boost::none if no state is available or no changes have occured since last msg.
   boost::optional<ff_msgs::GraphLocState> GraphLocStateMsg();
 
-  std::unique_ptr<graph_localizer::GraphLocalizer> graph_localizer_;
+  // Accessor to graph localizer
+  std::unique_ptr<graph_localizer::GraphLocalizer>& graph_localizer();
+
+  // Const accessor to graph localizer
+  const std::unique_ptr<graph_localizer::GraphLocalizer>& graph_localizer() const;
 
  private:
   // Initialize the graph
   void Initialize();
 
+  std::unique_ptr<graph_localizer::GraphLocalizer> graph_localizer_;
   std::unique_ptr<imu_integration::ImuIntegrator> imu_integrator_;
   localization_common::PoseInterpolater odom_interpolator_;
   graph_localizer::GraphLocalizerParams params_;

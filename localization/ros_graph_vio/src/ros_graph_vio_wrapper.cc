@@ -219,5 +219,7 @@ boost::optional<ff_msgs::GraphVIOState> RosGraphVIOWrapper::GraphVIOStateMsg() {
   return msg;
 }
 
-const std::unique_ptr<graph_vio::GraphVIO>& RosGraphVIOWrapper::graph_vio() { return graph_vio_; }
+const std::unique_ptr<graph_vio::GraphVIO>& RosGraphVIOWrapper::graph_vio() const { return graph_vio_; }
+
+std::unique_ptr<graph_vio::GraphVIO>& RosGraphVIOWrapper::graph_vio() { return graph_vio_; }
 }  // namespace ros_graph_vio

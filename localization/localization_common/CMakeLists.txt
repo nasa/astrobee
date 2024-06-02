@@ -67,6 +67,8 @@ add_library(${PROJECT_NAME}
   src/averager.cc
   src/combined_nav_state.cc
   src/combined_nav_state_covariances.cc
+  src/distance_scaled_pose_covariance_interpolater.cc
+  src/pose_covariance_interpolater.cc
   src/pose_interpolater.cc
   src/pose_with_covariance_interpolater.cc
   src/rate_timer.cc

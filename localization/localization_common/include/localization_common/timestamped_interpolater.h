@@ -31,8 +31,12 @@
 #include <vector>
 
 namespace localization_common {
+// Empty default interpolater params
+struct DefaultInterpolationParams {};
+
 // Provides interpolation functions that extends a timestamp set for interpolatable objects.
-template <typename T>
+// Optionally stores params to help with interpolation.
+template <typename T, class ParamsT = DefaultInterpolationParams>
 class TimestampedInterpolater : public TimestampedSet<T> {
  public:
   explicit TimestampedInterpolater(const boost::optional<int> max_size = boost::none);
@@ -55,24 +59,32 @@ class TimestampedInterpolater : public TimestampedSet<T> {
   // This needs to be specialized.
   T Relative(const T& a, const T& b) const;
 
+  // Accessor to params.
+  ParamsT& params();
+
+  // Const accessor to params.
+  const ParamsT& params() const;
+
   mutable boost::optional<gtsam::Matrix> covariance_a_b;
 
  private:
   TimestampedSet<T> timestamped_objects_;
+  ParamsT params_;
 };
 
 // Implementation
-template <typename T>
-TimestampedInterpolater<T>::TimestampedInterpolater(const boost::optional<int> max_size)
+template <typename T, class ParamsT>
+TimestampedInterpolater<T, ParamsT>::TimestampedInterpolater(const boost::optional<int> max_size)
     : TimestampedSet<T>(max_size) {}
 
-template <typename T>
-TimestampedInterpolater<T>::TimestampedInterpolater(const std::vector<Time>& timestamps, const std::vector<T>& objects,
-                                                    const boost::optional<int> max_size)
+template <typename T, class ParamsT>
+TimestampedInterpolater<T, ParamsT>::TimestampedInterpolater(const std::vector<Time>& timestamps,
+                                                             const std::vector<T>& objects,
+                                                             const boost::optional<int> max_size)
     : TimestampedSet<T>(timestamps, objects, max_size) {}
 
-template <typename T>
-boost::optional<T> TimestampedInterpolater<T>::Interpolate(const Time timestamp) const {
+template <typename T, class ParamsT>
+boost::optional<T> TimestampedInterpolater<T, ParamsT>::Interpolate(const Time timestamp) const {
   const auto lower_and_upper_bound = TimestampedSet<T>::LowerAndUpperBound(timestamp);
   // Check if equal timestamp exists
   if (lower_and_upper_bound.second && lower_and_upper_bound.second->timestamp == timestamp)
@@ -88,13 +100,13 @@ boost::optional<T> TimestampedInterpolater<T>::Interpolate(const Time timestamp)
   return Interpolate(lower_and_upper_bound.first->value, lower_and_upper_bound.second->value, alpha);
 }
 
-template <typename T>
-T TimestampedInterpolater<T>::Interpolate(const T& a, const T& b, const double alpha) const {
+template <typename T, class ParamsT>
+T TimestampedInterpolater<T, ParamsT>::Interpolate(const T& a, const T& b, const double alpha) const {
   static_assert(sizeof(T) == std::size_t(-1), "This needs to be specialized by template class.");
 }
 
-template <typename T>
-boost::optional<T> TimestampedInterpolater<T>::Relative(const Time timestamp_a, const Time timestamp_b) const {
+template <typename T, class ParamsT>
+boost::optional<T> TimestampedInterpolater<T, ParamsT>::Relative(const Time timestamp_a, const Time timestamp_b) const {
   const auto a = Interpolate(timestamp_a);
   const auto b = Interpolate(timestamp_b);
   if (!a || !b) {
@@ -106,9 +118,19 @@ boost::optional<T> TimestampedInterpolater<T>::Relative(const Time timestamp_a, 
   return Relative(*a, *b);
 }
 
-template <typename T>
-T TimestampedInterpolater<T>::Relative(const T& a, const T& b) const {
+template <typename T, class ParamsT>
+T TimestampedInterpolater<T, ParamsT>::Relative(const T& a, const T& b) const {
   static_assert(sizeof(T) == std::size_t(-1), "This needs to be specialized by template class.");
+}
+
+template <typename T, class ParamsT>
+ParamsT& TimestampedInterpolater<T, ParamsT>::params() {
+  return params_;
+}
+
+template <typename T, class ParamsT>
+const ParamsT& TimestampedInterpolater<T, ParamsT>::params() const {
+  return params_;
 }
 }  // namespace localization_common
 

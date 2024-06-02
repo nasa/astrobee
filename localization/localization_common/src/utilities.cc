@@ -230,6 +230,31 @@ Eigen::Matrix3d RotationFromEulerAngles(const double yaw_degrees, const double p
   return rotation;
 }
 
+PoseCovariance RelativePoseCovariance(const PoseWithCovariance& a, const PoseWithCovariance& b,
+                                      const boost::optional<PoseCovariance> covariance_a_b) {
+  // Calculate covariance
+  // See https://gtsam.org/2021/02/23/uncertainties-part3.html
+  // Adjoints
+  // Uses convention w_T_a and w_T_b for poses, s.t. adj_w_a is the adjoint for the
+  // w_T_a pose.
+  const gtsam::Pose3 w_T_a = GtPose(a.pose);
+  const gtsam::Pose3 w_T_b = GtPose(b.pose);
+  const gtsam::Matrix6 adj_w_a = w_T_a.AdjointMap();
+  const gtsam::Matrix6 adj_b_w = w_T_b.inverse().AdjointMap();
+  // Helper terms
+  const gtsam::Matrix6 h = adj_b_w * adj_w_a;
+  const gtsam::Matrix6 h_t = h.transpose();
+  // Compute covariance without correlation terms
+  gtsam::Matrix6 relative_covariance = h * a.covariance * h_t + b.covariance;
+  // Add correlation terms if they exist
+  // Assumes correlation_covariances stores covariances a_b rather than b_a
+  // const auto covariance_a_b = b.correlation_covariances.Get(*(a.correlation_covariances.LatestTimestamp()));
+  if (covariance_a_b) {
+    relative_covariance = relative_covariance - h * (*covariance_a_b) - (*covariance_a_b).transpose() * h_t;
+  }
+  return relative_covariance;
+}
+
 Eigen::Isometry3d FrameChangeRelativePose(const Eigen::Isometry3d& a_F_relative_pose, const Eigen::Isometry3d& b_T_a) {
   // Consider for example a sensor odometry measurement, sensor_time_0_T_sensor_time_1.
   // To find the movement of the robot body given static body_T_sensor extrinsics,

@@ -19,11 +19,12 @@
 #ifndef NODE_ADDERS_POSE_NODE_ADDER_MODEL_H_
 #define NODE_ADDERS_POSE_NODE_ADDER_MODEL_H_
 
+#include <localization_common/marginals_pose_covariance_interpolater.h>
 #include <localization_common/pose_with_covariance_interpolater.h>
 #include <localization_measurements/pose_with_covariance_measurement.h>
 #include <node_adders/between_factor_node_adder_model.h>
-#include <nodes/timestamped_nodes.h>
 #include <nodes/combined_nav_state_nodes.h>
+#include <nodes/timestamped_nodes.h>
 
 #include <gtsam/inference/Key.h>
 #include <gtsam/geometry/Pose3.h>
@@ -53,8 +54,12 @@ class PoseNodeAdderModel : public BetweenFactorMeasurementBasedTimestampedNodeAd
   // Keeps lower_bound measurement <= oldest_allowed_time to use for interpolation if needed.
   void RemoveMeasurements(const localization_common::Time oldest_allowed_time);
   bool CanAddNode(const localization_common::Time timestamp) const final;
-  gtsam::Marginals marginals_;
-  nodes::CombinedNavStateNodes const* nodes_;
+  // Sets pose covariance interpolater for relative odometry pose node creation
+  void SetPoseCovarianceInterpolater(
+    const std::shared_ptr<localization_common::MarginalsPoseCovarianceInterpolater<nodes::CombinedNavStateNodes>>&
+      pose_covariance_interpolater);
+  // Accessor to pose interpolater
+  localization_common::PoseWithCovarianceInterpolater& pose_interpolater();
 
  private:
   // Serialization function

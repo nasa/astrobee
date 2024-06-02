@@ -60,4 +60,11 @@ void GraphLocalizer::AddArTagMatchedProjectionsMeasurement(
 }
 
 const no::TimestampedNodes<gtsam::Pose3>& GraphLocalizer::pose_nodes() const { return pose_node_adder_->nodes(); }
+
+void GraphLocalizer::SetPoseCovarianceInterpolater(
+  const std::shared_ptr<lc::MarginalsPoseCovarianceInterpolater<no::CombinedNavStateNodes>>&
+    pose_covariance_interpolater) {
+  pose_node_adder_->node_adder_model().pose_interpolater().params().pose_covariance_interpolater =
+    pose_covariance_interpolater;
+}
 }  // namespace graph_localizer

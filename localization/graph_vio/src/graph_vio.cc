@@ -88,4 +88,10 @@ bool GraphVIO::standstill() const { return standstill_; }
 const vc::SpacedFeatureTracker& GraphVIO::feature_tracker() const {
   return vo_smart_projection_factor_adder_->feature_tracker();
 }
+
+std::shared_ptr<lc::MarginalsPoseCovarianceInterpolater<no::CombinedNavStateNodes>>
+GraphVIO::MarginalsPoseCovarianceInterpolater() {
+  return std::make_shared<lc::MarginalsPoseCovarianceInterpolater<no::CombinedNavStateNodes>>(
+    combined_nav_state_node_adder_->nodes_ptr(), marginals());
+}
 }  // namespace graph_vio

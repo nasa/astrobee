@@ -139,13 +139,11 @@ void OfflineReplay::Run() {
 
     const bool updated_vio_graph = graph_vio_simulator_->AddMeasurementsAndUpdateIfReady(current_time);
     if (updated_vio_graph) {
+      // Pass pose covariance interpolater used for relative factors
+      // from graph vio to graph localizer
       if (graph_vio_simulator_->Initialized() && graph_localizer_simulator_->Initialized()) {
-        graph_localizer_simulator_->graph_localizer_->pose_node_adder_->node_adder_model_.nodes_ =
-          graph_vio_simulator_->graph_vio()->combined_nav_state_node_adder_->nodes_.get();
-        if (graph_vio_simulator_->graph_vio()->marginals()) {
-          graph_localizer_simulator_->graph_localizer_->pose_node_adder_->node_adder_model_.marginals_ =
-            *(graph_vio_simulator_->graph_vio()->marginals());
-        }
+        graph_localizer_simulator_->graph_localizer()->SetPoseCovarianceInterpolater(
+          graph_vio_simulator_->graph_vio()->MarginalsPoseCovarianceInterpolater());
       }
       const auto vio_msg = graph_vio_simulator_->GraphVIOStateMsg();
       if (!vio_msg) {

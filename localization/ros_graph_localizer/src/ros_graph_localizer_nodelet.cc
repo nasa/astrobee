@@ -278,14 +278,11 @@ void RosGraphLocalizerNodelet::Run() {
     private_queue_.callAvailable();
     if (localizer_and_vio_enabled()) {
       ros_graph_vio_wrapper_.Update();
-      // Pass data and msgs from graph vio to graph localizer
+      // Pass pose covariance interpolater used for relative factors
+      // from graph vio to graph localizer
       if (ros_graph_vio_wrapper_.Initialized() && ros_graph_localizer_wrapper_.Initialized()) {
-        ros_graph_localizer_wrapper_.graph_localizer_->pose_node_adder_->node_adder_model_.nodes_ =
-          ros_graph_vio_wrapper_.graph_vio()->combined_nav_state_node_adder_->nodes_.get();
-        if (ros_graph_vio_wrapper_.graph_vio()->marginals()) {
-          ros_graph_localizer_wrapper_.graph_localizer_->pose_node_adder_->node_adder_model_.marginals_ =
-            *(ros_graph_vio_wrapper_.graph_vio()->marginals());
-        }
+        ros_graph_localizer_wrapper_.graph_localizer()->SetPoseCovarianceInterpolater(
+          ros_graph_vio_wrapper_.graph_vio()->MarginalsPoseCovarianceInterpolater());
       }
 
       const auto graph_vio_state_msg = ros_graph_vio_wrapper_.GraphVIOStateMsg();

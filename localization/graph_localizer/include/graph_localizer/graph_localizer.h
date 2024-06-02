@@ -54,7 +54,11 @@ class GraphLocalizer : public sliding_window_graph_optimizer::SlidingWindowGraph
 
   // Returns a const reference to pose nodes.
   const nodes::TimestampedNodes<gtsam::Pose3>& pose_nodes() const;
-  std::shared_ptr<node_adders::PoseNodeAdder> pose_node_adder_;
+
+  // Sets pose covariance interpolater for relative odometry pose node creation
+  void SetPoseCovarianceInterpolater(
+    const std::shared_ptr<localization_common::MarginalsPoseCovarianceInterpolater<nodes::CombinedNavStateNodes>>&
+      pose_covariance_interpolater);
 
  private:
   // bool ValidGraph() const final;
@@ -77,6 +81,7 @@ class GraphLocalizer : public sliding_window_graph_optimizer::SlidingWindowGraph
   std::shared_ptr<factor_adders::LocFactorAdder<node_adders::PoseNodeAdder>> ar_tag_loc_factor_adder_;
 
   // Node Adders
+  std::shared_ptr<node_adders::PoseNodeAdder> pose_node_adder_;
 };
 }  // namespace graph_localizer
 

@@ -81,7 +81,10 @@ class RosGraphVIOWrapper {
   boost::optional<ff_msgs::GraphVIOState> GraphVIOStateMsg();
 
   // Const accessor to graph_vio object
-  const std::unique_ptr<graph_vio::GraphVIO>& graph_vio();
+  const std::unique_ptr<graph_vio::GraphVIO>& graph_vio() const;
+
+  // Accessor to graph_vio object
+  std::unique_ptr<graph_vio::GraphVIO>& graph_vio();
 
  private:
   // Initialize the graph if the IMU bias is initialized.

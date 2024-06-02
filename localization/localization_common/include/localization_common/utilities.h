@@ -143,6 +143,11 @@ Eigen::Vector3d CylindricalToCartesian(const Eigen::Vector3d& cylindrical_coordi
 // Uses Euler Angles in intrinsic ypr representation in degrees
 Eigen::Matrix3d RotationFromEulerAngles(const double yaw, const double pitch, const double roll);
 
+// Returns the relative covariance between two pose with covariances.
+// Optionally uses the correlation covariance matrix covariance_a_b for a more accurate estimate if provided.
+PoseCovariance RelativePoseCovariance(const PoseWithCovariance& a, const PoseWithCovariance& b,
+                                      const boost::optional<PoseCovariance> covariance_a_b = boost::none);
+
 Eigen::Isometry3d FrameChangeRelativePose(const Eigen::Isometry3d& a_F_relative_pose, const Eigen::Isometry3d& b_T_a);
 
 Eigen::Matrix<double, 6, 6> FrameChangeRelativeCovariance(
