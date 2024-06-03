@@ -418,7 +418,12 @@ def integrate_velocities(velocities, starting_pose):
 # Assumes velocities are in a separate odom frame and uses the closest groundtruth pose to rotete
 # each velocity to the world frame.
 def integrate_velocities_with_frame_change(
-    velocities, starting_pose, groundtruth_poses, starting_groundtruth_index, poses
+    velocities,
+    starting_pose,
+    groundtruth_poses,
+    starting_groundtruth_index,
+    poses,
+    max_diff=0.5,
 ):
     # Calculate relative x,y,z increments using v*dt for each increment
     # Succesively add these increments to starting pose to generate future poses
@@ -444,7 +449,7 @@ def integrate_velocities_with_frame_change(
             if next_gt_time_diff < current_gt_time_diff:
                 groundtruth_index = groundtruth_index + 1
                 # Update gt world_R_odom if time diffs between gt pose and velocity are close enough
-                if next_gt_time_diff < 0.5:
+                if next_gt_time_diff < max_diff:
                     # Update world_R_odom
                     world_R_odom = (
                         groundtruth_poses[groundtruth_index] * poses[i].inverse()
