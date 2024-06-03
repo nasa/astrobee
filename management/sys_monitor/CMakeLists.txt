@@ -47,7 +47,9 @@ include_directories(
 add_library(sys_monitor SHARED
   src/sys_monitor.cc
 )
+target_compile_definitions(sys_monitor PRIVATE "COMPOSITION_BUILDING_DLL")
 ament_target_dependencies(sys_monitor rclcpp rclcpp_components ff_msgs config_reader ff_util)
+rclcpp_components_register_nodes(sys_monitor "sys_monitor::SysMonitor")
 
 ## Declare a C++ executable: fault_tester
 #add_executable(fault_tester tools/fault_tester.cc)

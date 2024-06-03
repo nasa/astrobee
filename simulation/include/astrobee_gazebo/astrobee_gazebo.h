@@ -102,7 +102,7 @@ class FreeFlyerPlugin : public ff_util::FreeFlyerComponent {
 
   // Child classes need access
   std::string robot_name_, plugin_name_, plugin_frame_, parent_frame_;
-  NodeHandle nh_;
+  //NodeHandle nh_;
   std::shared_ptr<tf2_ros::Buffer> buffer_;
   std::shared_ptr<tf2_ros::TransformListener> listener_;
   // ros::CallbackQueue callback_queue_;

@@ -106,6 +106,7 @@ class PlannerImplementation : public ff_util::FreeFlyerComponent {
 
   // Send the planner result
   void PlanResult(ff_msgs::Plan::Result::SharedPtr const& result) {
+    Warn("ANA -- Plan Result");
     switch (state_) {
     case PLANNING:
       Debug("Plan result received");
@@ -230,6 +231,8 @@ class PlannerImplementation : public ff_util::FreeFlyerComponent {
   // Finish this action
   void Complete(int32_t response_code,
                 ff_msgs::Plan::Result::SharedPtr result = ff_msgs::Plan::Result::SharedPtr()) {
+    std::string str = "ANA-- Complete. Response code: " + std::to_string( response_code ); 
+    Warn(str.c_str());
     switch (state_) {
     case PLANNING:
       result->response = response_code;
@@ -243,9 +246,10 @@ class PlannerImplementation : public ff_util::FreeFlyerComponent {
     default:
       Warn("Plan result received in non-planning state");
       break;
-    }
+    } Warn("ANA -- Complete ended fine");
     // We are now back to waiting
     state_ = WAITING;
+    return;
   }
 
   // Ensure all clients are connected
@@ -319,7 +323,10 @@ class PlannerImplementation : public ff_util::FreeFlyerComponent {
     // We are now planning
     state_ = PLANNING;
     // Call the implementation with the plan goal
-    return PlanCallback(*old_goal);
+    Warn("ANA -- Calling PlanCallback from GoalCall back start ");
+    PlanCallback(*old_goal);
+        Warn("ANA -- Calling PlanCallback from GoalCall back end ");
+    return;
   }
 
   // Cancel the current operation

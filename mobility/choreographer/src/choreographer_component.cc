@@ -64,6 +64,9 @@
 #include <functional>
 #include <map>
 #include <utility>
+#include <chrono>
+
+using namespace std::chrono_literals;
 
 /**
  * \ingroup mobility
@@ -232,12 +235,15 @@ class ChoreographerComponent : public ff_util::FreeFlyerComponent {
       PLAN_SUCCESS,
       [this](FSM::Event const& event) -> FSM::State {
         // If we need to validate
+        FF_WARN("ANA -- Plan returned was successful. Now we try to validate");
         if (cfg_.Get<bool>("enable_validation")) {
+           FF_WARN("ANA -- Validating...");
           Validator::Response result = validator_.CheckSegment(segment_,
             flight_mode_, cfg_.Get<bool>("enable_faceforward"));
+          FF_WARN("ANA -- Ended validation");
           if (result != Validator::SUCCESS)
             return ValidateResult(result);
-        }
+        } FF_WARN("ANA -- Planning returned GOOD");
         // If this returns false then we are already on the correct speed gain
         if (FlightMode())
           return STATE::PREPARING;
@@ -422,7 +428,11 @@ class ChoreographerComponent : public ff_util::FreeFlyerComponent {
       GOAL_PREP,
       [this](FSM::Event const& event) -> FSM::State {
         if (FlightMode())
+        {
+          FF_WARN("ANA -- Return state prepping, flight mode was true");
           return STATE::PREPPING;
+        }
+        FF_WARN("ANA -- Returning success, flight mode was false :) ....");
         return Result(RESPONSE::SUCCESS);
       });
     // [22]
@@ -606,7 +616,7 @@ class ChoreographerComponent : public ff_util::FreeFlyerComponent {
     UpdateCallback(fsm_.GetState(), MANUAL_STATE_SET);
   }
 
-  // Called on registration of aplanner
+  // Called on registration of a planner
   void SetInertiaCallback(const std::shared_ptr<ff_msgs::srv::SetInertia::Request> req,
                           std::shared_ptr<ff_msgs::srv::SetInertia::Response> res) {
     // TODO(Andrew) Potentially sanity check inertia?
@@ -846,9 +856,11 @@ class ChoreographerComponent : public ff_util::FreeFlyerComponent {
     std::string child_frame = std::string(FRAME_NAME_BODY);
     if (!GetPlatform().empty())
       child_frame = GetPlatform() + "/" + child_frame;
+      FF_WARN("Time now: %f ", (GetTimeNow().seconds()));
     try {
+      rclcpp::Time now = GetTimeNow();
       geometry_msgs::TransformStamped tf = tf_buffer_->lookupTransform(
-        std::string(FRAME_NAME_WORLD), child_frame, ros::Time(0));
+        std::string(FRAME_NAME_WORLD), child_frame, now, 50ms);
       pose.header = tf.header;
       pose.pose = msg_conversions::ros_transform_to_ros_pose(tf.transform);
     }
@@ -998,12 +1010,13 @@ class ChoreographerComponent : public ff_util::FreeFlyerComponent {
     }
     // Find and send to the planner
     std::string planner = cfg_.Get<std::string>("planner");
+    FF_WARN("ANA -- Planner: %s", planner.c_str());
     if (planners_.find(planner) != planners_.end()) {
       planners_[planner].SetDeadlineTimeout(rclcpp::Duration(plan_goal.max_time).seconds());
       if (!planners_[planner].SendGoal(plan_goal)) {
         FF_WARN_STREAM("Planner rejected goal");
         return false;
-      }
+      } FF_WARN("Planner seems to have returned true");
       return true;
     }
     // Planner does not exist
@@ -1028,7 +1041,9 @@ class ChoreographerComponent : public ff_util::FreeFlyerComponent {
   // Planner result -- trigger an update to the FSM
   void PResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
     std::shared_ptr<const ff_msgs::action::Plan::Result> const& result) {
+      FF_WARN("ANA -- Returned plan result in choreographer");
     if (result_code ==  ff_util::FreeFlyerActionState::SUCCESS) {
+            FF_WARN("ANA -- Returned plan result was successful");
       switch (fsm_.GetState()) {
       // If the result from the boostrap is ALREADY_THERE, then we expect
       // the segment to be empty / invalid. So, only in the case where we
@@ -1096,11 +1111,13 @@ class ChoreographerComponent : public ff_util::FreeFlyerComponent {
     // Set the new flight mode to indicate prep is complete
     flight_mode_ = goal_flight_mode_;
     // We are now prepped and ready to fly
+    FF_WARN("ANA -- Updating with PMC Ready");
     fsm_.Update(PMC_READY);
   }
 
   // Called if the prep fails
   void PmcTimeout() {
+    FF_WARN("ANA -- Updating with PMC Timeout!");
     fsm_.Update(PMC_TIMEOUT);
   }
 
@@ -1143,6 +1160,7 @@ class ChoreographerComponent : public ff_util::FreeFlyerComponent {
       break;
     }
     // Send the goal
+    FF_WARN("ANA -- Sendin goal for CONTROL!!");
     if (!client_c_.SendGoal(goal))
       return false;
     // Publish the segment to rviz for user introspection
@@ -1304,6 +1322,7 @@ class ChoreographerComponent : public ff_util::FreeFlyerComponent {
       return fsm_.Update(GOAL_IDLE);
     case ff_msgs::action::Motion::Goal::PREP:
       FF_DEBUG_STREAM("Received new PREP command");
+      FF_WARN("ANA -- Received a PREP Goal");
       return fsm_.Update(GOAL_PREP);
     case ff_msgs::action::Motion::Goal::EXEC:
       FF_DEBUG_STREAM("Received new EXEC command");

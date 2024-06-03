@@ -261,13 +261,13 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
        std::bind(&GazeboModelPluginEps::LedsConfigureCallback, this, std::placeholders::_1, std::placeholders::_2));
     // Once we have berth locations start timer for checking dock status
     timer_delay_.createTimer(delay_,
-      std::bind(&GazeboModelPluginEps::DelayCallback, this), nh_, true, false);
+      std::bind(&GazeboModelPluginEps::DelayCallback, this), node_, true, false);
       // Once we have berth locations start timer for checking dock status
     timer_update_.createTimer(1 / rate_,
-      std::bind(&GazeboModelPluginEps::UpdateCallback, this), nh_, false, false);
+      std::bind(&GazeboModelPluginEps::UpdateCallback, this), node_, false, false);
     // Create timer to publish battery states
     telem_timer_.createTimer(5.0,
-      std::bind(&GazeboModelPluginEps::TelemetryCallback, this), nh_, false, true);
+      std::bind(&GazeboModelPluginEps::TelemetryCallback, this), node_, false, true);
      // Defer the extrinsics setup to allow plugins to load
     update_ = event::Events::ConnectWorldUpdateEnd(
       std::bind(&GazeboModelPluginEps::BerthCallback, this));

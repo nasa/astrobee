@@ -33,7 +33,7 @@ class ConfigClient {
   explicit ConfigClient(NodeHandle & platform_nh, const std::string &node);
   virtual ~ConfigClient();
   // Call a reconfigure with all set variables
-  bool Reconfigure();
+  bool Reconfigure() { return true; };
   // Getters and Setters
   template<typename T>
   bool Get(const std::string &name, T &value) {

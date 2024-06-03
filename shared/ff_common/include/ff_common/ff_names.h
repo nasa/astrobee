@@ -463,6 +463,7 @@ inline bool LatchedTopic(std::string const& topic) {
                                         TOPIC_GNC_CTL_SEGMENT,
                                         TOPIC_HARDWARE_LASER_RVIZ,
                                         TOPIC_HARDWARE_LIGHTS_RVIZ,
+                                        TOPIC_HARDWARE_PMC_STATE,
                                         TOPIC_LOCALIZATION_MANAGER_STATE,
                                         TOPIC_MANAGEMENT_ACCESS_CONTROL_STATE,
                                         TOPIC_MANAGEMENT_CAMERA_STATE,

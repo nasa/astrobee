@@ -266,6 +266,7 @@ class DockComponent : public ff_util::FreeFlyerComponent {
           Switch(LOCALIZATION_NONE);
           return STATE::RECOVERY_SWITCHING_TO_NO_LOC;
         }
+        FF_WARN("ANA -- About to start prepping");
         Prep(ff_msgs::Motion::Goal::NOMINAL);
         return STATE::UNDOCKING_WAITING_FOR_SPIN_UP;
       });
@@ -325,6 +326,7 @@ class DockComponent : public ff_util::FreeFlyerComponent {
     // [26]
     fsm_.Add(STATE::UNDOCKING_WAITING_FOR_SPIN_UP,
       MOTION_SUCCESS, [this](FSM::Event const& event) -> FSM::State {
+         FF_WARN("ANA -- Waiting for spin up -- Motion success");
         // Problem case
         if (!Undock()) {
           Prep(ff_msgs::Motion::Goal::OFF);
@@ -352,6 +354,7 @@ class DockComponent : public ff_util::FreeFlyerComponent {
     // [29]
     fsm_.Add(STATE::UNDOCKING_WAITING_FOR_SPIN_UP,
       MOTION_FAILED, [this](FSM::Event const& event) -> FSM::State {
+        FF_WARN("ANA -- Waiting for sping up, motion failed");
         err_ = RESPONSE::PREP_ENABLE_FAILED;
         err_msg_ = "Spin up was not successful";
         Prep(ff_msgs::Motion::Goal::OFF);
@@ -453,12 +456,14 @@ class DockComponent : public ff_util::FreeFlyerComponent {
     client_l_.Create(nh, SERVICE_LOCALIZATION_MANAGER_GET_CURR_PIPELINE);
 
     // Contact EPS service for undocking
+    FF_WARN("Setting up client_u...");
     client_u_.SetConnectedTimeout(cfg_.Get<double>("timeout_undock_connected"));
     client_u_.SetConnectedCallback(std::bind(
       &DockComponent::ConnectedCallback, this));
     client_u_.SetTimeoutCallback(std::bind(
       &DockComponent::UndockTimeoutCallback, this));
     client_u_.Create(nh, SERVICE_HARDWARE_EPS_UNDOCK);
+    FF_WARN("Finished setting up client_u...");
 
     // Setup move client action
     client_m_.SetConnectedTimeout(cfg_.Get<double>("timeout_motion_connected"));
@@ -697,8 +702,11 @@ class DockComponent : public ff_util::FreeFlyerComponent {
     // Call the undock service
     ff_hw_msgs::Undock::Request request;
     auto response = std::make_shared<ff_hw_msgs::Undock::Response>();
+        FF_WARN("About to call client_u_...");
     if (!client_u_.Call(request, response))
       return false;
+          FF_WARN("Called client_u...");
+
     // Check that we actually called EPS undock() successfully
     switch (response->value) {
     case ff_hw_msgs::Undock::Response::SUCCESS:
@@ -750,6 +758,7 @@ class DockComponent : public ff_util::FreeFlyerComponent {
   // Do something with the switch result
   void SResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
     std::shared_ptr<const ff_msgs::Localization::Result> result) {
+    FF_WARN("ANA -- Switch result back: %d / %d ", result_code, ff_util::FreeFlyerActionState::SUCCESS);
     switch (result_code) {
     case ff_util::FreeFlyerActionState::SUCCESS:
       return fsm_.Update(SWITCH_SUCCESS);
@@ -762,10 +771,14 @@ class DockComponent : public ff_util::FreeFlyerComponent {
 
   // Prepare for a motion
   bool Prep(std::string const& flight_mode) {
+     FF_WARN("ANA -- Start prep for flight mode %s", flight_mode.c_str());
     static ff_msgs::Motion::Goal goal;
     goal.command = ff_msgs::Motion::Goal::PREP;
     goal.flight_mode = flight_mode;
-    return client_m_.SendGoal(goal);
+        FF_WARN("ANA -- Sending PREP goal");
+    bool b = client_m_.SendGoal(goal);
+         FF_WARN("End prep for flight mode %s", flight_mode.c_str());
+    return b;
   }
 
   // Send a move command
@@ -779,9 +792,10 @@ class DockComponent : public ff_util::FreeFlyerComponent {
     geometry_msgs::PoseStamped msg;
     msg.header.stamp = GetTimeNow();
     ff_util::ConfigClient cfg(node_, NODE_CHOREOGRAPHER);
+
     // Set parameters for the choreographer
-    cfg.Set<bool>("enable_collision_checking", false);
-    cfg.Set<bool>("enable_validation", false);
+    /*cfg.Set<bool>("enable_collision_checking", false);
+    cfg.Set<bool>("enable_validation", false); 
     cfg.Set<bool>("enable_bootstrapping", true);
     cfg.Set<bool>("enable_immediate", true);
     cfg.Set<bool>("enable_faceforward", false);
@@ -789,7 +803,7 @@ class DockComponent : public ff_util::FreeFlyerComponent {
     cfg.Set<double>("desired_accel", -1.0);
     cfg.Set<double>("desired_omega", -1.0);
     cfg.Set<double>("desired_alpha", -1.0);
-    cfg.Set<std::string>("planner", "trapezoidal");
+    cfg.Set<std::string>("planner", "trapezoidal");*/
 
     switch (type) {
     case BERTHING_POSE:
@@ -852,6 +866,7 @@ class DockComponent : public ff_util::FreeFlyerComponent {
         return false;
       }
     }
+
     // Reconfigure the choreographer
     if (!cfg.Reconfigure()) {
       FF_ERROR_STREAM("Failed to reconfigure choreographer");
@@ -867,6 +882,7 @@ class DockComponent : public ff_util::FreeFlyerComponent {
   // Result of a move action
   void MResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
     std::shared_ptr<const ff_msgs::Motion::Result> result) {
+    FF_WARN("MResult callback with result code: %d (%d) ********************", result_code, ff_util::FreeFlyerActionState::SUCCESS); 
     switch (result_code) {
     case ff_util::FreeFlyerActionState::SUCCESS:
       return fsm_.Update(MOTION_SUCCESS);

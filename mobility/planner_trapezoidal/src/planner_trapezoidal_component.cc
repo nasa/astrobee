@@ -78,7 +78,9 @@ class PlannerTrapezoidalComponent : public planner::PlannerImplementation {
   }
 
   double GetEpsilon() {
-    return cfg_.Get<double>("epsilon");
+    double d = cfg_.Get<double>("epsilon");
+
+    return d;
   }
 
   void PlanCallback(ff_msgs::Plan::Goal const& goal) {
@@ -158,12 +160,15 @@ class PlannerTrapezoidalComponent : public planner::PlannerImplementation {
         InsertTrapezoid(plan_result.segment, offset, dt, tf_1, tf_2,
                         desired_vel_, desired_omega_, desired_accel_, desired_alpha_,
                         min_control_period_, GetEpsilon());
+
         InsertTrapezoid(plan_result.segment, offset, dt, tf_2, tf_3,
                         desired_vel_, desired_omega_, desired_accel_, desired_alpha_,
                         min_control_period_, GetEpsilon());
+
         InsertTrapezoid(plan_result.segment, offset, dt, tf_3, tf_4,
                         desired_vel_, desired_omega_, desired_accel_, desired_alpha_,
                         min_control_period_, GetEpsilon());
+
       } else {
         // Fully-holonomic smear of delta across all axes
         InsertTrapezoid(plan_result.segment, offset, dt, tf_1, tf_4,
@@ -175,7 +180,9 @@ class PlannerTrapezoidalComponent : public planner::PlannerImplementation {
     if (plan_result.segment.size() < 2)
       plan_result.response = RESPONSE::ALREADY_THERE;
     // Callback with the result
-    return PlanResult(std::make_shared<ff_msgs::Plan::Result>(plan_result));
+    FF_WARN("ANA -- Trapezoidal component: PlanResult segment size: %d", plan_result.segment.size());
+     PlanResult(std::make_shared<ff_msgs::Plan::Result>(plan_result));
+    return;
   }
 
   // Called to interrupt the process

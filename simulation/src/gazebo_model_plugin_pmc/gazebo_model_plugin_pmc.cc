@@ -214,7 +214,7 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
 
     // Create a watchdog timer to ensure the PMC commands are set
     timer_watchdog_.createTimer(watchdog_period_,
-      std::bind(&GazeboModelPluginPmc::WatchdogCallback, this), nh_, false, true);
+      std::bind(&GazeboModelPluginPmc::WatchdogCallback, this), node_, false, true);
 
     // Update PMC watchdog timer timeout
     update_timeout_srv_ = nh->create_service<ff_msgs::SetFloat>(
@@ -223,7 +223,7 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
 
     // Create a watchdog timer to ensure the PMC commands are set
     timer_command_.createTimer(1.0/control_rate_hz_,
-      std::bind(&GazeboModelPluginPmc::CommandTimerCallback, this), nh_, false, true);
+      std::bind(&GazeboModelPluginPmc::CommandTimerCallback, this), node_, false, true);
 
     // Called before each iteration of simulated world update
     update_ = event::Events::ConnectWorldUpdateBegin(
