@@ -299,10 +299,11 @@ def absolute_poses_from_relative_poses(relative_poses, groundtruth_poses, max_di
 # so they can be plotted against groundtruth poses. The earliest corresponding timestamp is the first timestamp
 # with a dt <= max_diff compared to a velocity.
 def absolute_poses_from_integrated_velocities(
-    timestamped_velocities, groundtruth_poses, max_diff=0.1
+    timestamped_velocities, groundtruth_poses, frame_change_velocity = False, max_diff=0.1
 ):
     times = np.array([velocity.timestamp for velocity in timestamped_velocities])
     start_index = None
+    start_groundtruth_index = None
     starting_groundtruth_pose = None
     for i in range(len(groundtruth_poses)):
         closest_matching_index = np.argmin(
@@ -314,13 +315,19 @@ def absolute_poses_from_integrated_velocities(
         if timestamp_diff <= max_diff:
             start_index = closest_matching_index
             starting_groundtruth_pose = groundtruth_poses[i]
+            start_groundtruth_index = i
             break
     if start_index is None:
         print("Failed to find corresponding groundtruth pose to graph VIO poses")
         sys.exit(0)
-    return integrate_velocities(
-        timestamped_velocities[start_index:], starting_groundtruth_pose
-    )
+    if frame_change_velocity:
+        return integrate_velocities_with_frame_change(
+            timestamped_velocities[start_index:], starting_groundtruth_pose, groundtruth_poses, start_groundtruth_index
+        )
+    else:
+        return integrate_velocities(
+            timestamped_velocities[start_index:], starting_groundtruth_pose
+        )
 
 
 # Return list of poses from integrated graph_vio velocities.
@@ -340,7 +347,7 @@ def absolute_poses_from_integrated_graph_vio_state_velocities(
         for graph_vio_state in graph_vio_states
     ]
     return absolute_poses_from_integrated_velocities(
-        velocities, groundtruth_poses, max_diff
+        velocities, groundtruth_poses, True, max_diff
     )
 
 
@@ -361,7 +368,7 @@ def absolute_poses_from_integrated_extrapolated_loc_state_velocities(
         for extrapolated_loc_state in extrapolated_loc_states
     ]
     return absolute_poses_from_integrated_velocities(
-        velocities, groundtruth_poses, max_diff
+        velocities, groundtruth_poses, False, max_diff
     )
 
 
@@ -390,6 +397,54 @@ def integrate_velocities(velocities, starting_pose):
         z += dz
     return integrated_poses
 
+# Integrates graph vio velocities and appends these to a starting pose to generate absolute pose estimates
+# Assumes velocities are in a separate odom frame and uses the closest groundtruth pose to rotete
+# each velocity to the world frame.
+def integrate_velocities_with_frame_change(velocities, starting_pose, groundtruth_poses, starting_groundtruth_index):
+    # Calculate relative x,y,z increments using v*dt for each increment
+    # Succesively add these increments to starting pose to generate future poses
+    x = starting_pose.position.x
+    y = starting_pose.position.y
+    z = starting_pose.position.z
+    world_R_odom = starting_pose
+    world_R_odom.position = Position([0, 0, 0])
+    integrated_poses = []
+    groundtruth_index = starting_groundtruth_index
+    for i in range(len(velocities) - 1):
+        if groundtruth_index + 1 < len(groundtruth_poses):
+            # Update groundtruth world_R_odom if successive groundtruth pose is closer in time to 
+            # current velocity estimate
+            current_gt_time_diff = abs(groundtruth_poses[groundtruth_index].timestamp - velocities[i].timestamp)
+            next_gt_time_diff = abs(groundtruth_poses[groundtruth_index+1].timestamp - velocities[i].timestamp)
+            if next_gt_time_diff < current_gt_time_diff:
+                groundtruth_index = groundtruth_index + 1
+                world_R_odom.orientation = groundtruth_poses[groundtruth_index].orientation
+        integrated_poses.append(
+            TimestampedPose(
+                scipy.spatial.transform.Rotation.from_rotvec([0, 0, 0]),
+                Position([x, y, z]),
+                velocities[i].timestamp,
+            )
+        )
+        dt = velocities[i + 1].timestamp - velocities[i].timestamp
+        dx = dt * velocities[i].x
+        dy = dt * velocities[i].y
+        dz = dt * velocities[i].z
+        # Frame change velocity
+        odom_F_rel_velocity_pose = TimestampedPose(
+            scipy.spatial.transform.Rotation.from_rotvec([0, 0, 0]),
+            Position([dx, dy, dz]),
+            velocities[i].timestamp,
+        )
+        world_F_rel_velocity_pose = world_R_odom*odom_F_rel_velocity_pose
+        dx = world_F_rel_velocity_pose.position.x 
+        dy = world_F_rel_velocity_pose.position.y
+        dz = world_F_rel_velocity_pose.position.z
+            
+        x += dx
+        y += dy
+        z += dz
+    return integrated_poses
 
 # Return list of ml measurement counts from graph loc states
 def ml_feature_counts_from_graph_loc_states(graph_loc_states):
