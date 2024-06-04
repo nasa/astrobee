@@ -3917,7 +3917,7 @@ void Executive::Initialize(NodeHandle &nh) {
 
   agent_state_.holonomic_enabled = false;
   agent_state_.check_obstacles = true;
-  agent_state_.check_zones = true;
+  agent_state_.check_zones = false; // true; // ANA DEBUG: JPS3D is crashing in the Validator, deactivating for now
   agent_state_.auto_return_enabled = true;
   agent_state_.immediate_enabled = true;
   agent_state_.replanning_enabled = false;

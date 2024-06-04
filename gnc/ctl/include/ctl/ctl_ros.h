@@ -81,7 +81,7 @@ class Ctl {
   };
 
   // Maximum acceptable latency
-  static constexpr double MAX_LATENCY = 50; //0.5; // ANA DEBUG JUST TO SEE IF THE DAMN THING MOVES!
+  static constexpr double MAX_LATENCY = 0.5;
 
   /**
    * Ctl allocate, register, initialize model
