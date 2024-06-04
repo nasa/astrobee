@@ -180,9 +180,7 @@ class PlannerTrapezoidalComponent : public planner::PlannerImplementation {
     if (plan_result.segment.size() < 2)
       plan_result.response = RESPONSE::ALREADY_THERE;
     // Callback with the result
-    FF_WARN("ANA -- Trapezoidal component: PlanResult segment size: %d", plan_result.segment.size());
-     PlanResult(std::make_shared<ff_msgs::Plan::Result>(plan_result));
-    return;
+     return PlanResult(std::make_shared<ff_msgs::Plan::Result>(plan_result));
   }
 
   // Called to interrupt the process

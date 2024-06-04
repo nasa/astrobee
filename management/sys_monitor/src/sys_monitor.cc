@@ -23,7 +23,7 @@ FF_DEFINE_LOGGER("sys_monitor");
 namespace sys_monitor {
 
 SysMonitor::SysMonitor(const rclcpp::NodeOptions& options) :
-  ff_util::FreeFlyerComponent(options, NODE_SYS_MONITOR, true),
+  ff_util::FreeFlyerComponent(options, NODE_SYS_MONITOR, false),
   time_diff_node_("imu_aug"),
   time_diff_fault_triggered_(false),
   log_time_llp_(true),
@@ -535,7 +535,7 @@ void SysMonitor::PublishHeartbeat(bool initialization_fault) {
     // occurs before the fault ids are read in from the config files. Also the
     // fault id is not being sent to the ground. Thus we are just going to set
     // the initialization fault id to zero.
-
+    FF_WARN("ANA -- SysMonitor init failed");
     // Check to make sure the fault wasn't already added
     if (heartbeat_.faults.size() == 0) {
       ff_msgs::msg::Fault fault;

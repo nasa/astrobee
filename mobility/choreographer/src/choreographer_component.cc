@@ -235,15 +235,12 @@ class ChoreographerComponent : public ff_util::FreeFlyerComponent {
       PLAN_SUCCESS,
       [this](FSM::Event const& event) -> FSM::State {
         // If we need to validate
-        FF_WARN("ANA -- Plan returned was successful. Now we try to validate");
         if (cfg_.Get<bool>("enable_validation")) {
-           FF_WARN("ANA -- Validating...");
           Validator::Response result = validator_.CheckSegment(segment_,
             flight_mode_, cfg_.Get<bool>("enable_faceforward"));
-          FF_WARN("ANA -- Ended validation");
           if (result != Validator::SUCCESS)
             return ValidateResult(result);
-        } FF_WARN("ANA -- Planning returned GOOD");
+        }
         // If this returns false then we are already on the correct speed gain
         if (FlightMode())
           return STATE::PREPARING;
@@ -429,10 +426,8 @@ class ChoreographerComponent : public ff_util::FreeFlyerComponent {
       [this](FSM::Event const& event) -> FSM::State {
         if (FlightMode())
         {
-          FF_WARN("ANA -- Return state prepping, flight mode was true");
           return STATE::PREPPING;
         }
-        FF_WARN("ANA -- Returning success, flight mode was false :) ....");
         return Result(RESPONSE::SUCCESS);
       });
     // [22]
@@ -1010,7 +1005,6 @@ class ChoreographerComponent : public ff_util::FreeFlyerComponent {
     }
     // Find and send to the planner
     std::string planner = cfg_.Get<std::string>("planner");
-    FF_WARN("ANA -- Planner: %s", planner.c_str());
     if (planners_.find(planner) != planners_.end()) {
       planners_[planner].SetDeadlineTimeout(rclcpp::Duration(plan_goal.max_time).seconds());
       if (!planners_[planner].SendGoal(plan_goal)) {
@@ -1041,9 +1035,7 @@ class ChoreographerComponent : public ff_util::FreeFlyerComponent {
   // Planner result -- trigger an update to the FSM
   void PResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
     std::shared_ptr<const ff_msgs::action::Plan::Result> const& result) {
-      FF_WARN("ANA -- Returned plan result in choreographer");
     if (result_code ==  ff_util::FreeFlyerActionState::SUCCESS) {
-            FF_WARN("ANA -- Returned plan result was successful");
       switch (fsm_.GetState()) {
       // If the result from the boostrap is ALREADY_THERE, then we expect
       // the segment to be empty / invalid. So, only in the case where we
@@ -1160,7 +1152,6 @@ class ChoreographerComponent : public ff_util::FreeFlyerComponent {
       break;
     }
     // Send the goal
-    FF_WARN("ANA -- Sendin goal for CONTROL!!");
     if (!client_c_.SendGoal(goal))
       return false;
     // Publish the segment to rviz for user introspection
@@ -1322,7 +1313,6 @@ class ChoreographerComponent : public ff_util::FreeFlyerComponent {
       return fsm_.Update(GOAL_IDLE);
     case ff_msgs::action::Motion::Goal::PREP:
       FF_DEBUG_STREAM("Received new PREP command");
-      FF_WARN("ANA -- Received a PREP Goal");
       return fsm_.Update(GOAL_PREP);
     case ff_msgs::action::Motion::Goal::EXEC:
       FF_DEBUG_STREAM("Received new EXEC command");

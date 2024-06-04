@@ -37,11 +37,15 @@ class ConfigClient {
   // Getters and Setters
   template<typename T>
   bool Get(const std::string &name, T &value) {
+    Error("CFG Get Start");
     if (!parameters_client_->has_parameter(name)) {
         Error("Cannot query parameter " + name);
         return false;
     }
+    Error("CFG Get End before");
     value = parameters_client_->get_parameter<T>(name);
+        Error("CFG End after");
+
     return true;
   }
 
@@ -58,7 +62,9 @@ class ConfigClient {
 
   template<typename T>
   T Get(const std::string &name) {
+    Error("CFG Get Start 2!!!!!");
     T tmp;
+    Error("CFG About to call!!!!!");
     if (!Get(name, tmp)) {
       Error("Cannot query parameter " + name);
     }

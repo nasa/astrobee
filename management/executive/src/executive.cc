@@ -115,7 +115,6 @@ void Executive::CmdCallback(ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   }
 
   // TODO(Katie) add more checks
-
   SetOpState(state_->HandleCmd(cmd));
 }
 
@@ -1203,7 +1202,7 @@ bool Executive::ConfigureMobility(bool move_to_start, std::string& err_msg) {
 
   // Set values for configuring, these values will persist until changed
   // Choreographer
-  choreographer_cfg_->Set<double>("desired_vel",
+  /*choreographer_cfg_->Set<double>("desired_vel",
                                           agent_state_.target_linear_velocity);
   choreographer_cfg_->Set<double>("desired_accel",
                                           agent_state_.target_linear_accel);
@@ -1223,7 +1222,7 @@ bool Executive::ConfigureMobility(bool move_to_start, std::string& err_msg) {
   // move to start
   choreographer_cfg_->Set<bool>("enable_bootstrapping", move_to_start);
   choreographer_cfg_->Set<bool>("enable_replanning",
-                                              agent_state_.replanning_enabled);
+                                              agent_state_.replanning_enabled);*/
 
   // Reconfigure choreographer
   if (!choreographer_cfg_->Reconfigure()) {

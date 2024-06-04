@@ -87,7 +87,7 @@ using Subscriber = std::shared_ptr<rclcpp::Subscription<MessageType>>;
 inline rclcpp::QoS QoSType(std::string const& topic, size_t history_depth) {
   if (LatchedTopic(topic)) {
     rclcpp::QoS latched_qos(1);
-    latched_qos.durability(TRANSIENT_LOCAL);
+    latched_qos.durability(RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL);
     return latched_qos;
   }
   return rclcpp::QoS(history_depth);

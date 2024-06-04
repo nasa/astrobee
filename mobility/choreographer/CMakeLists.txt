@@ -40,6 +40,10 @@ find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(visualization_msgs REQUIRED)
 
+# Find jps3d
+LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
+find_package(JPS3D REQUIRED)
+
 ###########
 ## Build ##
 ###########
@@ -47,6 +51,7 @@ find_package(visualization_msgs REQUIRED)
 # Specify additional locations of header files
 include_directories(
   include
+  ${JPS3D_INCLUDE_DIR}
 )
 
 # Declare C++ libraries
@@ -54,6 +59,8 @@ add_library(choreographer SHARED
   src/choreographer_component.cc
   src/validator.cc
 )
+message(STATUS "JPS 3D LIBRARIES ${JPS3D_LIBRARIES} !!!!!!!!!!!!!!!!!!")
+target_link_libraries(choreographer ${JPS3D_LIBRARIES})
 target_compile_definitions(choreographer
   PRIVATE "COMPOSITION_BUILDING_DLL")
 ament_target_dependencies(choreographer rclcpp rclcpp_components ff_common ff_util ff_msgs ff_hw_msgs jsonloader geometry_msgs nav_msgs visualization_msgs)
