@@ -313,6 +313,7 @@ class Executive : public ff_util::FreeFlyerComponent {
   geometry_msgs::msg::InertiaStamped::SharedPtr current_inertia_;
 
   NodeHandle nh_;
+  std::shared_ptr<rclcpp::Node> cfg_node_;
 
   Publisher<ff_msgs::msg::AgentStateStamped> agent_state_pub_;
   Publisher<ff_msgs::msg::AckStamped> cmd_ack_pub_;

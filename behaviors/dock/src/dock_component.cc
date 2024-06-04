@@ -453,14 +453,12 @@ class DockComponent : public ff_util::FreeFlyerComponent {
     client_l_.Create(nh, SERVICE_LOCALIZATION_MANAGER_GET_CURR_PIPELINE);
 
     // Contact EPS service for undocking
-    FF_WARN("Setting up client_u...");
     client_u_.SetConnectedTimeout(cfg_.Get<double>("timeout_undock_connected"));
     client_u_.SetConnectedCallback(std::bind(
       &DockComponent::ConnectedCallback, this));
     client_u_.SetTimeoutCallback(std::bind(
       &DockComponent::UndockTimeoutCallback, this));
     client_u_.Create(nh, SERVICE_HARDWARE_EPS_UNDOCK);
-    FF_WARN("Finished setting up client_u...");
 
     // Setup move client action
     client_m_.SetConnectedTimeout(cfg_.Get<double>("timeout_motion_connected"));
@@ -788,7 +786,7 @@ class DockComponent : public ff_util::FreeFlyerComponent {
 
     // Set parameters for the choreographer
     cfg.Set<bool>("enable_collision_checking", false);
-    cfg.Set<bool>("enable_validation", false); 
+    cfg.Set<bool>("enable_validation", false);
     cfg.Set<bool>("enable_bootstrapping", true);
     cfg.Set<bool>("enable_immediate", true);
     cfg.Set<bool>("enable_faceforward", false);

@@ -1196,13 +1196,14 @@ bool Executive::ConfigureLed(
 bool Executive::ConfigureMobility(bool move_to_start, std::string& err_msg) {
   // Initialize choreographer config client if it hasn't been initialized
   if (!choreographer_cfg_) {
+    cfg_node_ = std::make_shared<rclcpp::Node>("executive_cfg_node", "", rclcpp::NodeOptions().use_global_arguments(false));
     choreographer_cfg_ =
-              std::make_shared<ff_util::ConfigClient>(nh_, NODE_CHOREOGRAPHER);
+              std::make_shared<ff_util::ConfigClient>(cfg_node_, NODE_CHOREOGRAPHER);
   }
 
   // Set values for configuring, these values will persist until changed
   // Choreographer
-  /*choreographer_cfg_->Set<double>("desired_vel",
+  choreographer_cfg_->Set<double>("desired_vel",
                                           agent_state_.target_linear_velocity);
   choreographer_cfg_->Set<double>("desired_accel",
                                           agent_state_.target_linear_accel);
@@ -1222,7 +1223,7 @@ bool Executive::ConfigureMobility(bool move_to_start, std::string& err_msg) {
   // move to start
   choreographer_cfg_->Set<bool>("enable_bootstrapping", move_to_start);
   choreographer_cfg_->Set<bool>("enable_replanning",
-                                              agent_state_.replanning_enabled);*/
+                                              agent_state_.replanning_enabled);
 
   // Reconfigure choreographer
   if (!choreographer_cfg_->Reconfigure()) {
