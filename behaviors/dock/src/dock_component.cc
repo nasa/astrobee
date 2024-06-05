@@ -699,7 +699,6 @@ class DockComponent : public ff_util::FreeFlyerComponent {
     auto response = std::make_shared<ff_hw_msgs::Undock::Response>();
     if (!client_u_.Call(request, response))
       return false;
-
     // Check that we actually called EPS undock() successfully
     switch (response->value) {
     case ff_hw_msgs::Undock::Response::SUCCESS:
@@ -857,7 +856,6 @@ class DockComponent : public ff_util::FreeFlyerComponent {
         return false;
       }
     }
-
     // Reconfigure the choreographer
     if (!cfg.Reconfigure()) {
       FF_ERROR_STREAM("Failed to reconfigure choreographer");
@@ -873,7 +871,6 @@ class DockComponent : public ff_util::FreeFlyerComponent {
   // Result of a move action
   void MResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
     std::shared_ptr<const ff_msgs::Motion::Result> result) {
-    FF_WARN("MResult callback with result code: %d (%d) ********************", result_code, ff_util::FreeFlyerActionState::SUCCESS); 
     switch (result_code) {
     case ff_util::FreeFlyerActionState::SUCCESS:
       return fsm_.Update(MOTION_SUCCESS);

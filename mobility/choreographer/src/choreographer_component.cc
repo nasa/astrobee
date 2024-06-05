@@ -280,7 +280,6 @@ class ChoreographerComponent : public ff_util::FreeFlyerComponent {
     fsm_.Add(STATE::CONTROLLING,
       CONTROL_SUCCESS,
       [this](FSM::Event const& event) -> FSM::State {
-              FF_WARN("ANA -- Controlling. Event: Control success!");
         return Result(RESPONSE::SUCCESS);
       });
     // [9]
@@ -319,7 +318,6 @@ class ChoreographerComponent : public ff_util::FreeFlyerComponent {
     fsm_.Add(STATE::CONTROLLING,
       CONTROL_FAILED | GOAL_CANCEL,
       [this](FSM::Event const& event) -> FSM::State {
-        FF_WARN("ANA -- Controlling. Event: Control failed or goal cancel!");
         if (event == GOAL_CANCEL)
           return Result(RESPONSE::CANCELLED);
         return Result(RESPONSE::CONTROL_FAILED);
@@ -329,7 +327,6 @@ class ChoreographerComponent : public ff_util::FreeFlyerComponent {
       TOLERANCE_POS | TOLERANCE_ATT | TOLERANCE_VEL
       | TOLERANCE_OMEGA | TOLERANCE_POS_ENDPOINT,
       [this](FSM::Event const& event) -> FSM::State {
-        FF_WARN("ANA -- Controlling. Event: Tolerance alert!");
         switch (event) {
         case TOLERANCE_POS_ENDPOINT:
           return Result(RESPONSE::TOLERANCE_VIOLATION_POSITION_ENDPOINT);
@@ -428,9 +425,7 @@ class ChoreographerComponent : public ff_util::FreeFlyerComponent {
       GOAL_PREP,
       [this](FSM::Event const& event) -> FSM::State {
         if (FlightMode())
-        {
           return STATE::PREPPING;
-        }
         return Result(RESPONSE::SUCCESS);
       });
     // [22]
@@ -1012,7 +1007,7 @@ class ChoreographerComponent : public ff_util::FreeFlyerComponent {
       if (!planners_[planner].SendGoal(plan_goal)) {
         FF_WARN_STREAM("Planner rejected goal");
         return false;
-      } FF_WARN("Planner seems to have returned true");
+      }
       return true;
     }
     // Planner does not exist
@@ -1105,13 +1100,11 @@ class ChoreographerComponent : public ff_util::FreeFlyerComponent {
     // Set the new flight mode to indicate prep is complete
     flight_mode_ = goal_flight_mode_;
     // We are now prepped and ready to fly
-    FF_WARN("ANA -- Updating with PMC Ready");
     fsm_.Update(PMC_READY);
   }
 
   // Called if the prep fails
   void PmcTimeout() {
-    FF_WARN("ANA -- Updating with PMC Timeout!");
     fsm_.Update(PMC_TIMEOUT);
   }
 
@@ -1183,7 +1176,6 @@ class ChoreographerComponent : public ff_util::FreeFlyerComponent {
     switch (fsm_.GetState()) {
     // Perform tolerance checking while controling
     case STATE::CONTROLLING:
-      FF_WARN("ANA -- Feedback errors; pos: %f/%f att: %f/%f. Vel lin: %f/%f vel ang: %f/%f ", feedback->error_position, flight_mode_.tolerance_pos, feedback->error_attitude, flight_mode_.tolerance_att, feedback->error_velocity, flight_mode_.tolerance_vel, feedback->error_omega, flight_mode_.tolerance_omega);
       pos_error_ = feedback->error_position;
       if (flight_mode_.tolerance_pos > 0.0 &&
           feedback->error_position > flight_mode_.tolerance_pos) {

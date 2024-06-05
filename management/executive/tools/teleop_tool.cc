@@ -99,7 +99,6 @@ bool Finished() {
 
 void AgentStateCallback(
                       ff_msgs::msg::AgentStateStamped::SharedPtr const state) {
-  std::cout << "Agent state callback!" << std::endl;
   if (get_face_forward) {
     get_face_forward = false;
     if (state->holonomic_enabled) {
@@ -128,7 +127,7 @@ void AgentStateCallback(
     std::cout << "\nPlanner is set to " << state->planner << ".\n";
   }
 
-  if (get_state) { std::cout << "Get state!" << std::endl;
+  if (get_state) {
     get_state = false;
     std::string msg = "\nOperating State: ";
     switch (state->operating_state.state) {
@@ -843,9 +842,11 @@ int main(int argc, char** argv) {
       dock_count++;
     }
   }
+  
   if (!SendNextCommand()) {
     return 1;
   }
+  
   // Synchronous mode
   rclcpp::spin(nh);
 

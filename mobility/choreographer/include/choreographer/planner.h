@@ -246,7 +246,6 @@ class PlannerImplementation : public ff_util::FreeFlyerComponent {
     }
     // We are now back to waiting
     state_ = WAITING;
-    return;
   }
 
   // Ensure all clients are connected

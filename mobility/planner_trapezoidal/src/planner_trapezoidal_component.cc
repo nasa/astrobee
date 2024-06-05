@@ -158,15 +158,12 @@ class PlannerTrapezoidalComponent : public planner::PlannerImplementation {
         InsertTrapezoid(plan_result.segment, offset, dt, tf_1, tf_2,
                         desired_vel_, desired_omega_, desired_accel_, desired_alpha_,
                         min_control_period_, GetEpsilon());
-
         InsertTrapezoid(plan_result.segment, offset, dt, tf_2, tf_3,
                         desired_vel_, desired_omega_, desired_accel_, desired_alpha_,
                         min_control_period_, GetEpsilon());
-
         InsertTrapezoid(plan_result.segment, offset, dt, tf_3, tf_4,
                         desired_vel_, desired_omega_, desired_accel_, desired_alpha_,
                         min_control_period_, GetEpsilon());
-
       } else {
         // Fully-holonomic smear of delta across all axes
         InsertTrapezoid(plan_result.segment, offset, dt, tf_1, tf_4,

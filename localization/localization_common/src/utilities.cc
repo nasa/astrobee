@@ -85,8 +85,6 @@ rclcpp::Time TimeToRosTime(const Time timestamp) {
   return rclcpp::Time(sec, nanosec, RCL_ROS_TIME); 
 }
 
-
-//void TimeToHeader(const Time timestamp, std_msgs::Header& header) { header.stamp = rclcpp::Time(timestamp); }
 void TimeToHeader(const Time timestamp, std_msgs::Header& header) { header.stamp = TimeToRosTime(timestamp); }
 
 gtsam::Pose3 PoseFromMsg(const geometry_msgs::PoseStamped& msg) { return PoseFromMsg(msg.pose); }
@@ -112,8 +110,7 @@ geometry_msgs::TransformStamped PoseToTF(const Eigen::Isometry3d& pose, const st
                                          const std::string& child_frame, const Time timestamp,
                                          const std::string& platform_name) {
   geometry_msgs::TransformStamped transform;
-  transform.header.stamp = TimeToRosTime(timestamp);
-  //TimeToHeader(timestamp, transform.header);
+  TimeToHeader(timestamp, transform.header);
   transform.header.frame_id = parent_frame;
   transform.child_frame_id = platform_name + child_frame;
   mc::EigenPoseToMsg(pose, transform.transform);
