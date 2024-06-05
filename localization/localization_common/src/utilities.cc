@@ -86,7 +86,8 @@ rclcpp::Time TimeToRosTime(const Time timestamp) {
 }
 
 
-void TimeToHeader(const Time timestamp, std_msgs::Header& header) { header.stamp = rclcpp::Time(timestamp); }
+//void TimeToHeader(const Time timestamp, std_msgs::Header& header) { header.stamp = rclcpp::Time(timestamp); }
+void TimeToHeader(const Time timestamp, std_msgs::Header& header) { header.stamp = TimeToRosTime(timestamp); }
 
 gtsam::Pose3 PoseFromMsg(const geometry_msgs::PoseStamped& msg) { return PoseFromMsg(msg.pose); }
 

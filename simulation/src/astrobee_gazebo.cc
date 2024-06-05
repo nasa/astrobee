@@ -52,15 +52,15 @@ void FreeFlyerPlugin::InitializePlugin(std::string const& robot_name, std::strin
   robot_name_ = robot_name;
 
   // Get nodehandle based on the model.
-  NodeHandle nh = gazebo_ros::Node::Get(sdf);
+  nh_ = gazebo_ros::Node::Get(sdf);
   // Initialize ROS node for Gazebo
-  FreeFlyerComponent::FreeFlyerComponentGazeboInit(nh, plugin_name);
+  FreeFlyerComponent::FreeFlyerComponentGazeboInit(nh_, plugin_name);
   FF_DEBUG_STREAM("Loading " << plugin_name_  << plugin_name << " on robot " << robot_name_);
 
   // Get nodehandle based on the model name.
   // nh_.setCallbackQueue(&callback_queue_);
   // thread_ = std::thread(&FreeFlyerPlugin::CallbackThread, this);
-  buffer_.reset(new tf2_ros::Buffer(node_->get_clock()));
+  buffer_.reset(new tf2_ros::Buffer(nh_->get_clock()));
   listener_.reset(new tf2_ros::TransformListener(*buffer_));
 
   // Assign special node handles that use custom callback queues to avoid
@@ -70,7 +70,7 @@ void FreeFlyerPlugin::InitializePlugin(std::string const& robot_name, std::strin
 
   // If we have a frame then defer chainloading until we receive them
   timer_.createTimer(5.0,
-      std::bind(&FreeFlyerPlugin::SetupExtrinsics, this), node_);
+      std::bind(&FreeFlyerPlugin::SetupExtrinsics, this), nh_);
 }
 
 // Service the callback thread
@@ -95,7 +95,7 @@ void FreeFlyerPlugin::SetupExtrinsics() {
     geometry_msgs::TransformStamped tf =
       buffer_->lookupTransform(parent_frame_, GetFrame(), ros::Time(0));
     if (ExtrinsicsCallback(&tf)) {
-      OnExtrinsicsReceived(node_);
+      OnExtrinsicsReceived(nh_);
       timer_.stop();
     }
   } catch (tf2::TransformException &ex) {}
@@ -142,7 +142,7 @@ void FreeFlyerModelPlugin::Load(physics::ModelPtr model, sdf::ElementPtr sdf) {
   InitializePlugin(ns, plugin_name, sdf);
 
   // Now load the rest of the plugin
-  LoadCallback(node_, model_, sdf_);
+  LoadCallback(nh_, model_, sdf_);
 }
 
 // Get the model link
@@ -222,7 +222,7 @@ void FreeFlyerSensorPlugin::Load(sensors::SensorPtr sensor, sdf::ElementPtr sdf)
   InitializePlugin(ns, plugin_name, sdf_);
 
   // Now load the rest of the plugin
-  LoadCallback(node_, sensor_, sdf_);
+  LoadCallback(nh_, sensor_, sdf_);
 }
 
 // Get the sensor world

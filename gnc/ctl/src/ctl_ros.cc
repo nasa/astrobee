@@ -57,10 +57,8 @@ Ctl::Ctl(NodeHandle& nh, std::string const& name) :
       mutex_segment_.lock();
       rclcpp::Time event_time(segment_.front().when);
       rclcpp::Duration delta = event_time - clock_->now();
-      FF_WARN("Segment front: %f now: %f", event_time.seconds(), (clock_->now()).seconds());
       if (delta.toSec() < -MAX_LATENCY) {
         mutex_segment_.unlock();
-        FF_WARN("ANA -- Tymesync issue!??");
         return Result(RESPONSE::TIMESYNC_ISSUE);
       }
       // For deferred executions

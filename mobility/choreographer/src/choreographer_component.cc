@@ -280,6 +280,7 @@ class ChoreographerComponent : public ff_util::FreeFlyerComponent {
     fsm_.Add(STATE::CONTROLLING,
       CONTROL_SUCCESS,
       [this](FSM::Event const& event) -> FSM::State {
+              FF_WARN("ANA -- Controlling. Event: Control success!");
         return Result(RESPONSE::SUCCESS);
       });
     // [9]
@@ -318,6 +319,7 @@ class ChoreographerComponent : public ff_util::FreeFlyerComponent {
     fsm_.Add(STATE::CONTROLLING,
       CONTROL_FAILED | GOAL_CANCEL,
       [this](FSM::Event const& event) -> FSM::State {
+        FF_WARN("ANA -- Controlling. Event: Control failed or goal cancel!");
         if (event == GOAL_CANCEL)
           return Result(RESPONSE::CANCELLED);
         return Result(RESPONSE::CONTROL_FAILED);
@@ -327,6 +329,7 @@ class ChoreographerComponent : public ff_util::FreeFlyerComponent {
       TOLERANCE_POS | TOLERANCE_ATT | TOLERANCE_VEL
       | TOLERANCE_OMEGA | TOLERANCE_POS_ENDPOINT,
       [this](FSM::Event const& event) -> FSM::State {
+        FF_WARN("ANA -- Controlling. Event: Tolerance alert!");
         switch (event) {
         case TOLERANCE_POS_ENDPOINT:
           return Result(RESPONSE::TOLERANCE_VIOLATION_POSITION_ENDPOINT);
@@ -851,7 +854,6 @@ class ChoreographerComponent : public ff_util::FreeFlyerComponent {
     std::string child_frame = std::string(FRAME_NAME_BODY);
     if (!GetPlatform().empty())
       child_frame = GetPlatform() + "/" + child_frame;
-      FF_WARN("Time now: %f ", (GetTimeNow().seconds()));
     try {
       rclcpp::Time now = GetTimeNow();
       geometry_msgs::TransformStamped tf = tf_buffer_->lookupTransform(
@@ -1181,6 +1183,7 @@ class ChoreographerComponent : public ff_util::FreeFlyerComponent {
     switch (fsm_.GetState()) {
     // Perform tolerance checking while controling
     case STATE::CONTROLLING:
+      FF_WARN("ANA -- Feedback errors; pos: %f/%f att: %f/%f. Vel lin: %f/%f vel ang: %f/%f ", feedback->error_position, flight_mode_.tolerance_pos, feedback->error_attitude, flight_mode_.tolerance_att, feedback->error_velocity, flight_mode_.tolerance_vel, feedback->error_omega, flight_mode_.tolerance_omega);
       pos_error_ = feedback->error_position;
       if (flight_mode_.tolerance_pos > 0.0 &&
           feedback->error_position > flight_mode_.tolerance_pos) {

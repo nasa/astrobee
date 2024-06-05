@@ -230,8 +230,6 @@ class PlannerImplementation : public ff_util::FreeFlyerComponent {
   // Finish this action
   void Complete(int32_t response_code,
                 ff_msgs::Plan::Result::SharedPtr result = ff_msgs::Plan::Result::SharedPtr()) {
-    std::string str = "ANA-- Complete. Response code: " + std::to_string( response_code ); 
-    Warn(str.c_str());
     switch (state_) {
     case PLANNING:
       result->response = response_code;

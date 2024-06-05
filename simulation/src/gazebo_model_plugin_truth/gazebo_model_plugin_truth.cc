@@ -35,7 +35,7 @@ typedef msg::TwistStamped TwistStamped;
 
 // STL includes
 #include <string>
-FF_DEFINE_LOGGER("plugin_truth_gazie");
+
 namespace gazebo {
 
 // This class is a plugin that calls the GNC autocode to predict
