@@ -38,6 +38,8 @@ void LoadDepthOdometryWrapperParams(config_reader::ConfigReader& config, DepthOd
   params.haz_cam_A_haz_depth = Eigen::Affine3d::Identity();
   LoadPointToPlaneICPDepthOdometryParams(config, params.icp);
   LoadImageFeaturesWithKnownCorrespondencesAlignerDepthOdometryParams(config, params.image_features);
+  params.max_buffer_size = mc::LoadDouble(config, "max_buffer_size");
+  params.max_depth_images = mc::LoadDouble(config, "max_depth_images");
 }
 
 void LoadDepthOdometryParams(config_reader::ConfigReader& config, DepthOdometryParams& params) {

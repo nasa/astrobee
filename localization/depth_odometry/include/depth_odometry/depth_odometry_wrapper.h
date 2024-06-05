@@ -21,9 +21,9 @@
 #include <depth_odometry/depth_odometry.h>
 #include <depth_odometry/depth_odometry_wrapper_params.h>
 #include <ff_msgs/DepthOdometry.h>
-#include <localization_common/measurement_buffer.h>
 #include <localization_common/time.h>
 #include <localization_common/timer.h>
+#include <localization_common/timestamped_set.h>
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
@@ -48,8 +48,8 @@ class DepthOdometryWrapper {
   std::vector<ff_msgs::DepthOdometry> ProcessDepthImageIfAvailable();
   std::unique_ptr<DepthOdometry> depth_odometry_;
   DepthOdometryWrapperParams params_;
-  localization_common::MeasurementBuffer<sensor_msgs::PointCloud2ConstPtr> point_cloud_buffer_;
-  localization_common::MeasurementBuffer<sensor_msgs::ImageConstPtr> image_buffer_;
+  localization_common::TimestampedSet<sensor_msgs::PointCloud2ConstPtr> point_cloud_buffer_;
+  localization_common::TimestampedSet<sensor_msgs::ImageConstPtr> image_buffer_;
   localization_common::Timer timer_ = localization_common::Timer("Depth Odometry");
 };
 }  // namespace depth_odometry
