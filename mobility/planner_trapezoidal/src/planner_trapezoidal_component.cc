@@ -78,9 +78,7 @@ class PlannerTrapezoidalComponent : public planner::PlannerImplementation {
   }
 
   double GetEpsilon() {
-    double d = cfg_.Get<double>("epsilon");
-
-    return d;
+    return cfg_.Get<double>("epsilon");
   }
 
   void PlanCallback(ff_msgs::Plan::Goal const& goal) {
@@ -180,7 +178,7 @@ class PlannerTrapezoidalComponent : public planner::PlannerImplementation {
     if (plan_result.segment.size() < 2)
       plan_result.response = RESPONSE::ALREADY_THERE;
     // Callback with the result
-     return PlanResult(std::make_shared<ff_msgs::Plan::Result>(plan_result));
+    return PlanResult(std::make_shared<ff_msgs::Plan::Result>(plan_result));
   }
 
   // Called to interrupt the process
