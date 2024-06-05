@@ -85,8 +85,7 @@ std::vector<ff_msgs::DepthOdometry> DepthOdometryWrapper::ProcessDepthImageIfAva
   for (auto image_msg_it = image_buffer_.set().rbegin();
        image_msg_it != image_buffer_.set().rend() && added_depth_images < params_.max_depth_images; ++image_msg_it) {
     const auto image_msg_timestamp = image_msg_it->first;
-    const auto point_cloud_msg =
-      point_cloud_buffer_.Closest(image_msg_timestamp);
+    const auto point_cloud_msg = point_cloud_buffer_.Closest(image_msg_timestamp);
     if (point_cloud_msg &&
         std::abs(point_cloud_msg->timestamp - image_msg_timestamp) <= params_.max_image_and_point_cloud_time_diff) {
       const auto depth_image_measurement =
@@ -97,18 +96,16 @@ std::vector<ff_msgs::DepthOdometry> DepthOdometryWrapper::ProcessDepthImageIfAva
       }
       depth_image_measurements.emplace_back(*depth_image_measurement);
       ++added_depth_images;
-      if (!latest_added_point_cloud_msg_time)
-        latest_added_point_cloud_msg_time = point_cloud_msg->timestamp;
-      if (!latest_added_image_msg_time)
-      latest_added_image_msg_time = image_msg_timestamp;
+      if (!latest_added_point_cloud_msg_time) latest_added_point_cloud_msg_time = point_cloud_msg->timestamp;
+      if (!latest_added_image_msg_time) latest_added_image_msg_time = image_msg_timestamp;
     }
   }
 
   // Remove any measuremets older than measurements used for depth image creation
   // Also remove measurements used for depth image creation
   if (latest_added_point_cloud_msg_time) {
-      point_cloud_buffer_.RemoveOldValues(*latest_added_point_cloud_msg_time);
-      point_cloud_buffer_.Remove(*latest_added_point_cloud_msg_time);
+    point_cloud_buffer_.RemoveOldValues(*latest_added_point_cloud_msg_time);
+    point_cloud_buffer_.Remove(*latest_added_point_cloud_msg_time);
   }
   if (latest_added_image_msg_time) {
     image_buffer_.RemoveOldValues(*latest_added_image_msg_time);
