@@ -32,34 +32,35 @@ def read_pose(context, *args, **kwargs):
         DeclareLaunchArgument('Y', default_value=pose[5]),
     ]
 
+def launch_setup(context, *args, **kwargs):
+  ns = str( (LaunchConfiguration('ns').perform(context)) )
+  
+  topic = "/robot_description"
+  entity = "bsharp"
+
+  if ns:
+    topic = "/" + ns + topic     
+    entity = ns
+    
+  spawn_entity = Node(
+            package='gazebo_ros',
+            executable='spawn_entity.py',
+            name='spawn_astrobee',
+            output='screen',
+            arguments=["-topic", topic, "-entity", entity, "-timeout", "30.0",
+                        "-x", LaunchConfiguration("x"), "-y", LaunchConfiguration("y"), "-z", LaunchConfiguration("z"),
+                        "-R", LaunchConfiguration("R"), "-P", LaunchConfiguration("P"), "-Y", LaunchConfiguration("Y")],
+            condition=LaunchConfigurationEquals("ns", "")
+        )
+  
+  return [spawn_entity]
+
 def generate_launch_description():
+    
     return LaunchDescription([
         DeclareLaunchArgument("ns",    default_value=""),     # Robot namespace
         DeclareLaunchArgument("pose"),                        # Robot pose
         OpaqueFunction(function=read_pose),
         DeclareLaunchArgument("robot_description"),           # Robot description
-
-        Node(
-            package='gazebo_ros',
-            executable='spawn_entity.py',
-            name='spawn_astrobee',
-            output='screen',
-            arguments=["-entity", "bsharp", "-timeout", "30.0",
-                        "-x", LaunchConfiguration("x"), "-y", LaunchConfiguration("y"), "-z", LaunchConfiguration("z"),
-                        "-R", LaunchConfiguration("R"), "-P", LaunchConfiguration("P"), "-Y", LaunchConfiguration("Y"), 
-                        "-stdin", LaunchConfiguration("robot_description")],
-            condition=LaunchConfigurationEquals("ns", "")
-        ),
-        Node(
-            package='gazebo_ros',
-            executable='spawn_entity.py',
-            name='spawn_astrobee',
-            output='screen',
-            arguments=["-entity", LaunchConfiguration("ns"), "-timeout", "30.0",
-                        "-x", LaunchConfiguration("x"), "-y", LaunchConfiguration("y"), "-z", LaunchConfiguration("z"),
-                        "-R", LaunchConfiguration("R"), "-P", LaunchConfiguration("P"), "-Y", LaunchConfiguration("Y"),
-                        "-stdin", LaunchConfiguration("robot_description")],
-            condition=LaunchConfigurationNotEquals("ns", "")
-        )
-
+        OpaqueFunction(function=launch_setup)
     ])
