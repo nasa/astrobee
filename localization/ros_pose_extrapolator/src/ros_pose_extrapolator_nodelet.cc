@@ -30,6 +30,7 @@ namespace lc = localization_common;
 RosPoseExtrapolatorNodelet::RosPoseExtrapolatorNodelet() : ff_util::FreeFlyerNodelet(NODE_POSE_EXTR, true) {
   imu_nh_.setCallbackQueue(&imu_queue_);
   loc_nh_.setCallbackQueue(&loc_queue_);
+  vio_nh_.setCallbackQueue(&vio_queue_);
   heartbeat_.node = GetName();
   heartbeat_.nodelet_manager = ros::this_node::getName();
   last_time_ = ros::Time::now();
@@ -132,6 +133,7 @@ void RosPoseExtrapolatorNodelet::Run() {
   ros::Rate rate(100);
   while (ros::ok()) {
     imu_queue_.callAvailable();
+    vio_queue_.callAvailable();
     loc_queue_.callAvailable();
     const auto loc_msg = PublishLatestExtrapolatedLocalizationState();
     if (loc_msg) {
