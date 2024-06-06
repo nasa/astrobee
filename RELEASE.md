@@ -1,5 +1,9 @@
 # Releases
 
+## Release 0.18.0
+
+  * Astrobee now using OpenCV 4! Please see install updates in INSTALL.md
+
 # Release 0.17.3
 
   * Comms bridge added rate feature
