@@ -34,9 +34,9 @@ class MatchingTest : public ::testing::Test {
     // that is not where the test imagery is located.
     std::string data_dir = std::string(std::getenv("DATA_DIR"));
     image1 = cv::imread(data_dir + "/m0004000.jpg",
-                        CV_LOAD_IMAGE_GRAYSCALE);
+                        cv::IMREAD_GRAYSCALE);
     image2 = cv::imread(data_dir + "/m0004025.jpg",
-                        CV_LOAD_IMAGE_GRAYSCALE);
+                        cv::IMREAD_GRAYSCALE);
 
     // Decimate the image to speed things up for our unit tests
     cv::resize(image1, image1, cv::Size(), 0.7, 0.7, cv::INTER_AREA);
@@ -62,7 +62,7 @@ TEST_F(MatchingTest, SURF) {
   EXPECT_NEAR(keypoints2.size(), 2047u, 10);
   EXPECT_EQ(descriptor1.cols, 64);
   // KNN matching seems to be variable
-  EXPECT_NEAR(matches.size(), 798u, 10);
+  EXPECT_NEAR(matches.size(), 800u, 10);
 }
 
 TEST_F(MatchingTest, ORGBRISK) {

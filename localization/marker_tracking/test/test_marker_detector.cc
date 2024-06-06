@@ -51,17 +51,13 @@ TEST(MarkerDetector, TestDetection) {
   expected_corner_loc.push_back(std::make_pair(350, 482));
   expected_corner_loc.push_back(std::make_pair(52, 537));
 
-  cv::Mat image;
-  IplImage ipl_image;
+  std::shared_ptr<cv::Mat> image;
+
   std::vector<std::pair<int, int> >::iterator expected_it = expected_corner_loc.begin();
   for (std::string const& image_filename : image_filenames) {
-    #if (CV_VERSION_MAJOR >= 4)
-        image = cv::imread(data_dir + image_filename, cv::IMREAD_GRAYSCALE);
-    #else
-        image = cv::imread(data_dir + image_filename, CV_LOAD_IMAGE_GRAYSCALE);
-    #endif
-    ipl_image = image;
-    detector.Detect(&ipl_image, 0.08, 0.2);
+    image = std::make_shared<cv::Mat>(cv::imread(data_dir + image_filename, cv::IMREAD_GRAYSCALE));
+
+    detector.Detect(image, 0.08, 0.2);
     EXPECT_EQ(1u, detector.NumMarkers());
 
     alvar::MarkerData& marker = detector.GetMarker(0);
@@ -76,5 +72,7 @@ TEST(MarkerDetector, TestDetection) {
 // Run all the tests that were declared with TEST()
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
+  // Initialize ROS
+  ros::init(argc, argv, "test_marker_detector", ros::init_options::AnonymousName);
   return RUN_ALL_TESTS();
 }

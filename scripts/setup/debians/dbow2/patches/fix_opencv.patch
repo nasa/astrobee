@@ -9,17 +9,16 @@ Index: libdbow2/CMakeLists.txt
  include(ExternalProject)
  
  option(BUILD_DBoW2   "Build DBoW2"            ON)
-@@ -33,6 +33,9 @@ set(SRCS
+@@ -33,7 +33,7 @@ set(SRCS
  set(DEPENDENCY_DIR ${CMAKE_CURRENT_BINARY_DIR}/dependencies)
  set(DEPENDENCY_INSTALL_DIR ${DEPENDENCY_DIR}/install)
  
-+list(APPEND CMAKE_INSTALL_RPATH "/opt/ros/kinetic/lib" "/opt/ros/kinetic/lib/x86_64-linux-gnu" "/opt/ros/kinetic/lib/arm-linux-gnueabihf" "/usr/local/lib") # find opencv3
-+find_path(OpenCV_DIR OpenCVConfig.cmake PATHS /opt/ros/kinetic/share/ /usr/local/share/
-+  PATH_SUFFIXES OpenCV-3.1.0 OpenCV-3.1.0-dev OpenCV-3.2.0 OpenCV-3.2.0-dev OpenCV-3.3.1 OpenCV-3.3.1-dev OpenCV)
- find_package(OpenCV REQUIRED)
+-find_package(OpenCV REQUIRED)
++find_package(OpenCV 4.0 REQUIRED)
  include_directories(${OpenCV_INCLUDE_DIRS})
  
-@@ -49,13 +52,15 @@ else(${DLib_FOUND})
+ find_package(Boost REQUIRED)
+@@ -49,13 +49,15 @@ else(${DLib_FOUND})
    message("DLib library not found in the system, it will be downloaded on build")
    option(DOWNLOAD_DLib_dependency "Download DLib dependency" ON)
    if(${DOWNLOAD_DLib_dependency})
@@ -36,7 +35,7 @@ Index: libdbow2/CMakeLists.txt
    else()
      message(SEND_ERROR "Please, activate DOWNLOAD_DLib_dependency option or download manually")
    endif(${DOWNLOAD_DLib_dependency})
-@@ -74,15 +79,39 @@ if(BUILD_Demo)
+@@ -74,15 +76,39 @@ if(BUILD_Demo)
    file(COPY demo/images DESTINATION ${CMAKE_BINARY_DIR}/)
  endif(BUILD_Demo)
  
