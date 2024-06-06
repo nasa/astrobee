@@ -75,17 +75,22 @@ def generate_launch_description():
 
         # If we need to load synthetic drivers (we are not running on a real robot)
         # TODO(asymingt) - pass nodes, spurn and extra into gazebo
-        IncludeLaunchDescription(
-            get_launch_file("launch/controller/synthetic.launch.py"),
-            launch_arguments={
-                "world": LaunchConfiguration("world"),     # Don't start driver nodes
-                "ns"   : LaunchConfiguration("ns"),        # Prevent node
-                "sim"  : LaunchConfiguration("sim"),       # Launch node group
-                "pose" : LaunchConfiguration("pose"),      # Inject extra nodes
-                "bag"  : LaunchConfiguration("bag"),       # Debug a node set
-                "robot_description"  : robot_description,  # Robot description
-            }.items(), 
-            condition=UnlessCondition(LaunchConfiguration("drivers"))
+        GroupAction(
+          actions=[
+            PushRosNamespace(LaunchConfiguration('ns')),
+            IncludeLaunchDescription(
+                get_launch_file("launch/controller/synthetic.launch.py"),
+                launch_arguments={
+                    "world": LaunchConfiguration("world"),     # Don't start driver nodes
+                    "ns"   : LaunchConfiguration("ns"),        # Prevent node
+                    "sim"  : LaunchConfiguration("sim"),       # Launch node group
+                    "pose" : LaunchConfiguration("pose"),      # Inject extra nodes
+                    "bag"  : LaunchConfiguration("bag"),       # Debug a node set
+                    "robot_description"  : robot_description,  # Robot description
+                }.items(), 
+                condition=UnlessCondition(LaunchConfiguration("drivers"))
+            )
+          ]
         ),
 
         # LLP
