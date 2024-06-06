@@ -61,15 +61,13 @@ void GraphVIO::AddFeaturePointsMeasurement(const lm::FeaturePointsMeasurement& f
   if (params_.vo_smart_projection_factor_adder.enabled)
     vo_smart_projection_factor_adder_->AddMeasurement(feature_points_measurement);
 
-  if (params_.standstill_factor_adder.enabled) {
-    // Check for standstill and add standstill measurement if detected.
-    const auto& feature_tracks = vo_smart_projection_factor_adder_->feature_tracker().feature_tracks();
-    standstill_ = vc::Standstill(feature_tracks, params_.standstill);
-    if (standstill_) {
-      const lc::Time latest_timestamp = feature_points_measurement.timestamp;
-      const auto previous_timestamp = feature_tracks.cbegin()->second.SecondLatestTimestamp();
-      standstill_factor_adder_->AddMeasurement(lm::StandstillMeasurement(latest_timestamp, *previous_timestamp));
-    }
+  // Check for standstill and optionally add standstill measurement if detected.
+  const auto& feature_tracks = vo_smart_projection_factor_adder_->feature_tracker().feature_tracks();
+  standstill_ = vc::Standstill(feature_tracks, params_.standstill);
+  if (standstill_ && params_.standstill_factor_adder.enabled) {
+    const lc::Time latest_timestamp = feature_points_measurement.timestamp;
+    const auto previous_timestamp = feature_tracks.cbegin()->second.SecondLatestTimestamp();
+    standstill_factor_adder_->AddMeasurement(lm::StandstillMeasurement(latest_timestamp, *previous_timestamp));
   }
 }
 
