@@ -75,7 +75,9 @@ void GraphVIO::AddFeaturePointsMeasurement(const lm::FeaturePointsMeasurement& f
 
 void GraphVIO::AddDepthOdometryMeasurement(
   const localization_measurements::DepthOdometryMeasurement& depth_odometry_measurement) {
-  if (params_.depth_odometry_factor_adder.enabled)
+  // Don't add depth odom measurements when at standstill to avoid
+  // introducing pose and velocity noise
+  if (params_.depth_odometry_factor_adder.enabled && !standstill_)
     depth_odometry_factor_adder_->AddMeasurement(depth_odometry_measurement);
 }
 
