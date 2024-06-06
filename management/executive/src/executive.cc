@@ -1196,7 +1196,8 @@ bool Executive::ConfigureLed(
 bool Executive::ConfigureMobility(bool move_to_start, std::string& err_msg) {
   // Initialize choreographer config client if it hasn't been initialized
   if (!choreographer_cfg_) {
-    cfg_node_ = std::make_shared<rclcpp::Node>("executive_cfg_node", "", rclcpp::NodeOptions().use_global_arguments(false));
+    std::string platform = this->GetPlatform();
+    cfg_node_ = std::make_shared<rclcpp::Node>("executive_cfg_node", platform, rclcpp::NodeOptions().use_global_arguments(false));
     choreographer_cfg_ =
               std::make_shared<ff_util::ConfigClient>(cfg_node_, NODE_CHOREOGRAPHER);
   }

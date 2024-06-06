@@ -33,7 +33,7 @@ def read_pose(context, *args, **kwargs):
     ]
 
 def launch_setup(context, *args, **kwargs):
-  ns = str( (LaunchConfiguration('ns').perform(context)) )
+  ns = str( (LaunchConfiguration("ns").perform(context)) )
   
   topic = "/robot_description"
   entity = "bsharp"
@@ -49,8 +49,8 @@ def launch_setup(context, *args, **kwargs):
             output='screen',
             arguments=["-topic", topic, "-entity", entity, "-timeout", "30.0",
                         "-x", LaunchConfiguration("x"), "-y", LaunchConfiguration("y"), "-z", LaunchConfiguration("z"),
-                        "-R", LaunchConfiguration("R"), "-P", LaunchConfiguration("P"), "-Y", LaunchConfiguration("Y")],
-            condition=LaunchConfigurationEquals("ns", "")
+                        "-R", LaunchConfiguration("R"), "-P", LaunchConfiguration("P"), "-Y", LaunchConfiguration("Y"),
+                        "-robot_namespace", LaunchConfiguration("ns")]
         )
   
   return [spawn_entity]
