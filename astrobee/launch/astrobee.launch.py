@@ -17,7 +17,8 @@
 
 
 from utilities.utilities import *
-
+from launch.actions import GroupAction
+from launch_ros.actions import PushRosNamespace
 
 def generate_launch_description():
     robot_description = Command(['xacro ', get_path('urdf/model.urdf.xacro', 'description'),
@@ -63,7 +64,7 @@ def generate_launch_description():
         # Set the TF prefix, create a robot description and joint state publisher
         Node(
             package="robot_state_publisher",
-            namespace="",
+            namespace=LaunchConfiguration("ns"),
             executable="robot_state_publisher",
             name="robot_state_publisher",
             parameters=[
@@ -88,34 +89,41 @@ def generate_launch_description():
         ),
 
         # LLP
-#       <!-- Connect and update environment variables if required -->
-#       <machine unless="$(eval arg('llp')=='local')" timeout="10"
-#                name="llp" address="$(arg llp)" user="astrobee" password="astrobee"
-#                env-loader="/opt/astrobee/env_wrapper.sh" default="true">
-#       </machine>
-        IncludeLaunchDescription(
-            get_launch_file("launch/robot/LLP.launch.py"),
-            launch_arguments={
-                "drivers": LaunchConfiguration("drivers"),  # Don't start driver nodes
-                "spurn"  : LaunchConfiguration("spurn"),    # Prevent node
-                "nodes"  : LaunchConfiguration("nodes"),    # Launch node group
-                "extra"  : LaunchConfiguration("extra"),    # Inject extra nodes
-                "debug"  : LaunchConfiguration("debug"),    # Debug a node set
-                "output" : LaunchConfiguration("output"), 
-                "gtloc"  : LaunchConfiguration("gtloc"),    # Use Ground Truth Localizer
-            }.items(),
-            condition=LaunchConfigurationNotEquals("llp", "disabled"),
+        #       <!-- Connect and update environment variables if required -->
+        #       <machine unless="$(eval arg('llp')=='local')" timeout="10"
+        #                name="llp" address="$(arg llp)" user="astrobee" password="astrobee"
+        #                env-loader="/opt/astrobee/env_wrapper.sh" default="true">
+        #       </machine>
+        GroupAction(
+            actions=[
+              PushRosNamespace(LaunchConfiguration('ns')),
+              IncludeLaunchDescription(
+                get_launch_file("launch/robot/LLP.launch.py"),
+                launch_arguments={
+                  "drivers": LaunchConfiguration("drivers"),  # Don't start driver nodes
+                  "spurn"  : LaunchConfiguration("spurn"),    # Prevent node
+                  "nodes"  : LaunchConfiguration("nodes"),    # Launch node group
+                  "extra"  : LaunchConfiguration("extra"),    # Inject extra nodes
+                  "debug"  : LaunchConfiguration("debug"),    # Debug a node set
+                  "output" : LaunchConfiguration("output"), 
+                  "gtloc"  : LaunchConfiguration("gtloc"),    # Use Ground Truth Localizer
+                }.items(),
+                condition=LaunchConfigurationNotEquals("llp", "disabled"),
+              )                      
+            ]
         ),
-
         # MLP
-#       <!-- Connect and update environment variables if required -->
-#       <machine unless="$(eval arg('mlp')=='local')" timeout="10"
-#                name="mlp" address="$(arg mlp)" user="astrobee" password="astrobee"
-#                env-loader="/opt/astrobee/env_wrapper.sh" default="true">
-#       </machine>
-        IncludeLaunchDescription(
-            get_launch_file("launch/robot/MLP.launch.py"),
-            launch_arguments={
+        #       <!-- Connect and update environment variables if required -->
+        #       <machine unless="$(eval arg('mlp')=='local')" timeout="10"
+        #                name="mlp" address="$(arg mlp)" user="astrobee" password="astrobee"
+        #                env-loader="/opt/astrobee/env_wrapper.sh" default="true">
+        #       </machine>
+        GroupAction(
+            actions=[
+              PushRosNamespace(LaunchConfiguration('ns')),
+              IncludeLaunchDescription(
+              get_launch_file("launch/robot/MLP.launch.py"),
+              launch_arguments={
                 "drivers": LaunchConfiguration("drivers"), # Don't start driver nodes
                 "spurn"  : LaunchConfiguration("spurn"),   # Prevent node
                 "nodes"  : LaunchConfiguration("nodes"),   # Launch node group
@@ -123,9 +131,12 @@ def generate_launch_description():
                 "debug"  : LaunchConfiguration("debug"),   # Debug a node set
                 "output" : LaunchConfiguration("output"), 
                 "gtloc"  : LaunchConfiguration("gtloc"),   # Use Ground Truth Localizer
-            }.items(),
-            condition=LaunchConfigurationNotEquals("llp", "disabled"),
-        ),
+              }.items(),
+              condition=LaunchConfigurationNotEquals("llp", "disabled"),
+              )
+            ]
+        )
+
     ])
 
 
