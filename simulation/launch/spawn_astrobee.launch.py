@@ -44,9 +44,10 @@ def generate_launch_description():
             executable='spawn_entity.py',
             name='spawn_astrobee',
             output='screen',
-            arguments=["-topic", "/robot_description", "-entity", "bsharp", "-timeout", "30.0",
+            arguments=["-entity", "bsharp", "-timeout", "30.0",
                         "-x", LaunchConfiguration("x"), "-y", LaunchConfiguration("y"), "-z", LaunchConfiguration("z"),
-                        "-R", LaunchConfiguration("R"), "-P", LaunchConfiguration("P"), "-Y", LaunchConfiguration("Y")],
+                        "-R", LaunchConfiguration("R"), "-P", LaunchConfiguration("P"), "-Y", LaunchConfiguration("Y"), 
+                        "-stdin", LaunchConfiguration("robot_description")],
             condition=LaunchConfigurationEquals("ns", "")
         ),
         Node(
@@ -54,9 +55,10 @@ def generate_launch_description():
             executable='spawn_entity.py',
             name='spawn_astrobee',
             output='screen',
-            arguments=["-topic", "/robot_description", "-entity", LaunchConfiguration("ns"), "-timeout", "30.0",
+            arguments=["-entity", LaunchConfiguration("ns"), "-timeout", "30.0",
                         "-x", LaunchConfiguration("x"), "-y", LaunchConfiguration("y"), "-z", LaunchConfiguration("z"),
-                        "-R", LaunchConfiguration("R"), "-P", LaunchConfiguration("P"), "-Y", LaunchConfiguration("Y")],
+                        "-R", LaunchConfiguration("R"), "-P", LaunchConfiguration("P"), "-Y", LaunchConfiguration("Y"),
+                        "-stdin", LaunchConfiguration("robot_description")],
             condition=LaunchConfigurationNotEquals("ns", "")
         )
 
