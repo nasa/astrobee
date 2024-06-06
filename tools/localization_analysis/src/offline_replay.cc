@@ -184,7 +184,8 @@ void OfflineReplay::Run() {
       }
       if (latest_ar_msg_ && graph_localizer_simulator_->WorldTDock()) {
         if (static_cast<int>(ar_msg->landmarks.size()) >= params_.ar_min_num_landmarks) {
-          const gtsam::Pose3 world_T_body = (*graph_localizer_simulator_->WorldTDock())*
+          const gtsam::Pose3 world_T_body =
+            (*graph_localizer_simulator_->WorldTDock()) *
             lc::PoseFromMsgWithExtrinsics(ar_msg->pose, params_.body_T_dock_cam.inverse());
           const lc::Time timestamp = lc::TimeFromHeader(ar_msg->header);
           SaveMsg(PoseMsg(world_T_body, timestamp), TOPIC_AR_TAG_POSE, results_bag_);
