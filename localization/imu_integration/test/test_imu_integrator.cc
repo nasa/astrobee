@@ -85,14 +85,15 @@ class ConstantIMUTest : public ::testing::Test {
       params.initial_pose, params.initial_velocity,
       gtsam::imuBias::ConstantBias(params.accelerometer_bias, params.gyroscope_bias), params.integration_start_time);
     const auto imu_augmented_state = imu_integrator().ExtrapolateLatest(initial_state);
+    ASSERT_TRUE(imu_augmented_state);
     const double duration = Duration() - params.integration_start_time;
-    EXPECT_NEAR(imu_augmented_state.timestamp(), Duration(), 1e-6);
+    EXPECT_NEAR(imu_augmented_state->timestamp(), Duration(), 1e-6);
     const Eigen::Vector3d expected_velocity = AccelerationOnlyIntegratedVelocity(params, duration);
-    EXPECT_MATRIX_NEAR(imu_augmented_state.velocity(), expected_velocity, 1e-6);
+    EXPECT_MATRIX_NEAR(imu_augmented_state->velocity(), expected_velocity, 1e-6);
     const Eigen::Vector3d expected_position = AccelerationOnlyIntegratedPosition(params, duration);
-    EXPECT_MATRIX_NEAR(imu_augmented_state.pose().translation(), expected_position, 1e-6);
-    EXPECT_MATRIX_NEAR(imu_augmented_state.bias().accelerometer(), initial_state.bias().accelerometer(), 1e-6);
-    EXPECT_MATRIX_NEAR(imu_augmented_state.bias().gyroscope(), initial_state.bias().gyroscope(), 1e-6);
+    EXPECT_MATRIX_NEAR(imu_augmented_state->pose().translation(), expected_position, 1e-6);
+    EXPECT_MATRIX_NEAR(imu_augmented_state->bias().accelerometer(), initial_state.bias().accelerometer(), 1e-6);
+    EXPECT_MATRIX_NEAR(imu_augmented_state->bias().gyroscope(), initial_state.bias().gyroscope(), 1e-6);
   }
 
   void Test(const TestParams& params) {
@@ -102,6 +103,7 @@ class ConstantIMUTest : public ::testing::Test {
       gtsam::imuBias::ConstantBias(params.accelerometer_bias, params.gyroscope_bias), params.integration_start_time);
 
     const auto imu_augmented_state = imu_integrator().ExtrapolateLatest(initial_state);
+    ASSERT_TRUE(imu_augmented_state);
 
     const Eigen::Vector3d corrected_angular_velocity =
       params.body_T_sensor.rotation() * (params.angular_velocity - params.gyroscope_bias);
@@ -129,8 +131,8 @@ class ConstantIMUTest : public ::testing::Test {
       const Eigen::Isometry3d relative_pose = lc::Isometry3d(relative_translation, relative_orientation);
       pose = pose * lc::GtPose(relative_pose);
     }
-    EXPECT_MATRIX_NEAR(imu_augmented_state.velocity(), velocity, 1e-6);
-    EXPECT_MATRIX_NEAR(imu_augmented_state.pose(), pose, 1e-6);
+    EXPECT_MATRIX_NEAR(imu_augmented_state->velocity(), velocity, 1e-6);
+    EXPECT_MATRIX_NEAR(imu_augmented_state->pose(), pose, 1e-6);
   }
 
   ii::ImuIntegrator& imu_integrator() { return *imu_integrator_; }

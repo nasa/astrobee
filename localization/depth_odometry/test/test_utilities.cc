@@ -234,8 +234,10 @@ DefaultImageFeaturesWithKnownCorrespondencesAlignerDepthOdometryParams() {
   params.clahe_clip_limit = 40;
   params.min_x_distance_to_border = 0;
   params.min_y_distance_to_border = 0;
-  params.min_num_inliers = 0;
+  params.min_num_correspondences = 0;
+  params.only_correspondences = false;
   params.refine_estimate = false;
+  params.filter_outliers = false;
   DefaultDepthOdometryParams(params);
   return params;
 }
