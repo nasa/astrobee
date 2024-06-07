@@ -1,0 +1,15 @@
+\begin{minted}[]{c++}
+#include <localization_measurements/timestamped_pose_with_covariance.h>
+#include <node_adders/measurement_based_timestamped_node_adder.h>
+#include <nodes/timestamped_nodes.h>
+
+#include <gtsam/geometry/Pose3.h>
+
+"relative_pose_node_adder_model.h"
+
+  using RelativePoseNodeAdder =
+    MeasurementBasedTimestampedNodeAdder<
+      localization_measurements::TimestampedPoseWithCovariance,
+      gtsam::Pose3, nodes::TimestampedNodes<gtsam::Pose3>,
+      RelativePoseNodeAdderModel>;
+\end{minted}

@@ -1,0 +1,53 @@
+\section{Simple Localizer}\label{sec:simple_localizer}
+Here we will create a simple localizer taking relative odometry pose measurements and absolute map-based pose measurements as input.
+The structure of the localizer is shown in Figure ~\ref{img:simple_localizer}.
+
+\begin{figure}[ht]
+    \centering
+\includegraphics[width=0.9\textwidth]{simple_localizer.pdf}
+ \caption{Localizer structure.}
+  \label{img:simple_localizer}
+\end{figure}
+The localizer takes relative and absolute pose measurements and passes these to the node adder and factor adder respectively. 
+These are described in more detail below. \par
+
+The graph structure is shown in Figure ~\ref{img:loc_graph}.
+
+\begin{figure}[ht]
+    \centering
+\includegraphics[width=0.9\textwidth]{loc_graph.pdf}
+ \caption{Localization graph structure. Optimized pose nodes are connected by pose between factors. An initial prior constrains the first node and absolute measurement priors are added to future nodes.}
+  \label{img:loc_graph}
+\end{figure}
+
+Pose nodes are optimized at various timestamps. 
+An initial pose prior factor is added to the first pose node, while pose between factors connect successive pose nodes.
+Absolute pose priors are added using incoming measurements that trigger the creation of new pose nodes and relative factors at the same timestamp.
+
+\subsection{Localizer Sliding Window Graph Optimizer}
+We will make the localizer a sliding-window graph optimizer so that old nodes and factors are removed. 
+\input{graph_localizer_h.tex}
+The graph localizer includes both the relative pose node adder and absolute pose factor adder. 
+
+\subsection{Relative Pose Node Adder}
+The pose node adder uses timestamped relative pose measurements to create gtsam::Pose3 nodes. 
+It relies on the pose node adder model for node and relative factor creation.
+\input{relative_pose_node_adder_h.tex}
+\subsubsection{Pose Measurement}
+A timestamped pose with covariance is used to generate values for future node and relative factors.
+\subsubsection{Pose Node and TimestampedNodes}
+The node type is a gtsam::Pose3 and the timestamped nodes type is a TimestampedNodes object since the node type is a single value.
+\subsubsection{Relative Pose Node Adder Model}
+\input{relative_pose_node_adder_model_h.tex}
+The pose node adder model uses a pose interpolator to generate required relative poses and covariances using input relative pose measurements.
+Since the model is a between factor adder model, it inserts gtsam::Pose3 between factors as relative factors.
+\subsection{Absolute Pose Factor Adder}
+The absolute pose factor adder creates a GTSAM pose prior factor for each absolute pose measurement.
+Since each created factor uses a single measurement, the factor adder is a SingleMeasurementBasedFactorAdder.
+When adding the prior factor, it uses the relative pose node adder to add a pose node at the same timestamp as the prior factor.
+\input{absolute_pose_factor_adder.tex}
+\subsection{Interfacing with Localizer}
+Measurements are passed to the node and factor adders at various timestamps. 
+Optimization, factor and node creation, and sliding the window occur during the Update() call.
+Various helper functions exist for accessing optimized values and covariances from the localizer.
+\input{interfacing_cc}

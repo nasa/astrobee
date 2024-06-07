@@ -1,0 +1,68 @@
+\begin{minted}[]{c++}
+#include <localization_common/pose_with_covariance_interpolater.h>
+#include <localization_measurements/timestamped_pose_with_covariance.h>
+#include <node_adders/between_factor_node_adder_model.h>
+#include <nodes/timestamped_nodes.h>
+
+#include <gtsam/geometry/Pose3.h>
+#include <gtsam/inference/Key.h>
+
+#include <utility>
+
+class RelativePoseNodeAdderModel
+    : public BetweenFactorMeasurementBasedTimestampedNodeAdderModel<
+        localization_measurements::TimestampedPoseWithCovariance,
+        gtsam::Pose3> {
+ public:
+  using NodesType = nodes::TimestampedNodes<gtsam::Pose3>;
+  using Params = TimestampedNodeAdderModelParams;
+
+  explicit PoseNodeAdderModel(const Params& params)
+      : Base(params) {}
+
+  gtsam::KeyVector AddNode(
+    const localization_common::Time timestamp,
+    NodesType& nodes) const final {
+    const auto pose = interpolator_.Interpolate(timestamp);
+    return nodes.Add(timestamp, pose->pose);
+  }
+
+  boost::optional<
+    std::pair<gtsam::Pose3, gtsam::SharedNoiseModel>>
+  RelativeNodeAndNoise(
+    const localization_common::Time timestamp_a,
+    const localization_common::Time timestamp_b) const final {
+    const auto relative_pose =
+      interpolator_.Relative(timestamp_a, timestamp_b);
+    const auto relative_pose_noise =
+      gtsam::noiseModel::Gaussian::Covariance(
+        relative_pose->covariance);
+    return std::pair<gtsam::Pose3, gtsam::SharedNoiseModel>(
+      relative_pose->pose, relative_pose_noise);
+  }
+
+  void AddMeasurement(
+    const localization_measurements::
+      TimestampedPoseWithCovariance& measurement) {
+    interpolator_.Add(measurement.time,
+                      measurement.pose_with_covariance);
+  }
+
+  void RemoveMeasurements(
+    const localization_common::Time oldest_allowed_time) {
+    // Keep lower bound so future measurements can be
+    // interpolated using it.
+    interpolator_.RemoveBelowLowerBoundValues(
+      oldest_allowed_time);
+  }
+  bool CanAddNode(
+    const localization_common::Time timestamp) const final {
+    return interpolator_.WithinBounds(timestamp);
+    ;
+  }
+
+ private:
+  localization_common::PoseWithCovarianceInterpolater
+    interpolator_;
+};
+\end{minted}
