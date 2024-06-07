@@ -32,7 +32,6 @@ import sys
 import multiprocessing_helpers
 
 import localization_common.utilities as lu
-import utilities
 
 
 class GroundtruthParams(object):

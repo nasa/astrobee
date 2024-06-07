@@ -29,10 +29,8 @@ import matplotlib
 
 import message_reader
 import plot_conversions
+import plotters
 import results_savers
-from multipose_plotter import MultiPosePlotter
-from multivector3d_plotter import MultiVector3dPlotter
-from timestamped_pose import TimestampedPose
 
 matplotlib.use("pdf")
 import csv
@@ -53,7 +51,7 @@ def plot_loc_results(
     ar_tag_poses,
     imu_accelerations,
 ):
-    poses_plotter = MultiPosePlotter(
+    poses_plotter = plotters.MultiPosePlotter(
         "Time (s)", "Position (m)", "Loc vs. Groundtruth Position", True
     )
     poses_plotter.add_poses(
@@ -82,7 +80,7 @@ def plot_loc_results(
     )
 
     if extrapolated_loc_states:
-        extrapolated_poses_plotter = MultiPosePlotter(
+        extrapolated_poses_plotter = plotters.MultiPosePlotter(
             "Time (s)",
             "Position (m)",
             "Extrapolated Loc vs. Groundtruth Position",
@@ -112,7 +110,7 @@ def plot_loc_results(
             "Extrapolated Loc Poses",
         )
 
-        extrapolated_velocities_plotter = MultiVector3dPlotter(
+        extrapolated_velocities_plotter = plotters.MultiVector3dPlotter(
             "Time (s)", "Velocity (m/s)", "Extrapolated Velocities", True
         )
         extrapolated_velocity_plotter = (
@@ -126,7 +124,7 @@ def plot_loc_results(
         extrapolated_integrated_velocity_poses = plot_conversions.absolute_poses_from_integrated_extrapolated_loc_state_velocities(
             extrapolated_loc_states, groundtruth_poses
         )
-        extrapolated_integrated_velocity_poses_plotter = MultiPosePlotter(
+        extrapolated_integrated_velocity_poses_plotter = plotters.MultiPosePlotter(
             "Time (s)",
             "Position (m)",
             "Extrapolated Loc Integrated Velocities vs. Groundtruth Position",
@@ -154,7 +152,7 @@ def plot_loc_results(
             "Extrapolated Integrated Velocity Poses",
         )
 
-        extrapolated_accelerations_plotter = MultiVector3dPlotter(
+        extrapolated_accelerations_plotter = plotters.MultiVector3dPlotter(
             "Time (s)", "Acceleration (m/s^2)", "Bias Corrected Accelerations", True
         )
         extrapolated_acceleration_plotter = (
@@ -166,7 +164,7 @@ def plot_loc_results(
         extrapolated_accelerations_plotter.plot(pdf)
 
     if imu_accelerations:
-        imu_accelerations_plotter = MultiVector3dPlotter(
+        imu_accelerations_plotter = plotters.MultiVector3dPlotter(
             "Time (s)", "Acceleration (m/s^2)", "Raw IMU Accelerations", True
         )
         imu_acceleration_plotter = (

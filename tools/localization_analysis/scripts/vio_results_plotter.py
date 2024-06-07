@@ -30,10 +30,8 @@ import matplotlib
 
 import message_reader
 import plot_conversions
+import plotters
 import results_savers
-from multipose_plotter import MultiPosePlotter
-from multivector3d_plotter import MultiVector3dPlotter
-from timestamped_pose import TimestampedPose
 
 matplotlib.use("pdf")
 import csv
@@ -53,7 +51,7 @@ def plot_vio_results(
     imu_bias_extrapolated_poses,
     depth_odometries,
 ):
-    poses_plotter = MultiPosePlotter(
+    poses_plotter = plotters.MultiPosePlotter(
         "Time (s)", "Position (m)", "Graph vs. Groundtruth Position", True
     )
     poses_plotter.add_poses(
@@ -74,7 +72,7 @@ def plot_vio_results(
         graph_vio_poses, groundtruth_poses, results_csv_file, pdf, "Graph VIO Poses"
     )
 
-    velocities_plotter = MultiVector3dPlotter(
+    velocities_plotter = plotters.MultiVector3dPlotter(
         "Time (s)", "Velocity (m/s)", "Graph VIO Velocities", True
     )
     graph_vio_velocity_plotter = (
@@ -83,7 +81,7 @@ def plot_vio_results(
     velocities_plotter.add(graph_vio_velocity_plotter)
     velocities_plotter.plot(pdf)
 
-    accel_bias_plotters = MultiVector3dPlotter(
+    accel_bias_plotters = plotters.MultiVector3dPlotter(
         "Time (s)", "Accelerometer Bias (m/s^2)", "Graph VIO Accel. Biases", True
     )
     graph_vio_accel_bias_plotter = (
@@ -92,7 +90,7 @@ def plot_vio_results(
     accel_bias_plotters.add(graph_vio_accel_bias_plotter)
     accel_bias_plotters.plot(pdf)
 
-    gyro_bias_plotters = MultiVector3dPlotter(
+    gyro_bias_plotters = plotters.MultiVector3dPlotter(
         "Time (s)", "Gyro Bias (rad/s^2)", "Graph VIO Gyro. Biases", True
     )
     graph_vio_gyro_bias_plotter = (
@@ -127,7 +125,7 @@ def plot_vio_results(
             graph_vio_states, groundtruth_poses
         )
     )
-    integrated_velocity_poses_plotter = MultiPosePlotter(
+    integrated_velocity_poses_plotter = plotters.MultiPosePlotter(
         "Time (s)",
         "Position (m)",
         "Integrated Velocities vs. Groundtruth Position",
@@ -159,7 +157,7 @@ def plot_vio_results(
                 imu_bias_extrapolated_poses, groundtruth_poses
             )
         )
-        imu_bias_extrapolated_poses_plotter = MultiPosePlotter(
+        imu_bias_extrapolated_poses_plotter = plotters.MultiPosePlotter(
             "Time (s)",
             "Position (m)",
             "IMU Bias Extrapolated vs. Groundtruth Position",
@@ -194,7 +192,7 @@ def plot_vio_results(
                 groundtruth_poses,
             )
         )
-        depth_odom_relative_poses_plotter = MultiPosePlotter(
+        depth_odom_relative_poses_plotter = plotters.MultiPosePlotter(
             "Time (s)", "Position (m)", "Depth Odometry vs. Groundtruth Position", True
         )
         depth_odom_relative_poses_plotter.add_poses(

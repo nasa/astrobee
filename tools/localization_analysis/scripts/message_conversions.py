@@ -20,23 +20,7 @@
 import numpy as np
 import scipy.spatial.transform
 
-from acceleration import Acceleration
-from accelerometer_bias import AccelerometerBias
-from depth_odometry import DepthOdometry
-from extrapolated_loc_state import ExtrapolatedLocState
-from graph_loc_state import GraphLocState
-from graph_vio_state import GraphVIOState
-from gyroscope_bias import GyroscopeBias
-from imu_bias import ImuBias
-from pose import Pose
-from pose_with_covariance import PoseWithCovariance
-from position import Position
-from timestamped_acceleration import TimestampedAcceleration
-from timestamped_pose import TimestampedPose
-from timestamped_pose_with_covariance import TimestampedPoseWithCovariance
-from timestamped_velocity import TimestampedVelocity
-from velocity import Velocity
-from velocity_with_covariance import VelocityWithCovariance
+import states
 
 
 # Subtract the bag start time from the timestamp
@@ -55,7 +39,7 @@ def orientation_position_from_msg(pose_msg):
             pose_msg.pose.orientation.w,
         ]
     )
-    position = Position(
+    position = states.Position(
         [pose_msg.pose.position.x, pose_msg.pose.position.y, pose_msg.pose.position.z]
     )
     return orientation, position
@@ -73,7 +57,7 @@ def timestamped_pose_from_msg(pose_msg, bag_start_time=0):
     orientation, position, timestamp = orientation_position_timestamp_from_msg(
         pose_msg, bag_start_time
     )
-    return TimestampedPose(orientation, position, timestamp)
+    return states.TimestampedPose(orientation, position, timestamp)
 
 
 # Create a timestamped pose with covariance from an odometry msg using relative bag time.
@@ -82,19 +66,19 @@ def timestamped_pose_from_odometry_msg(odometry_msg, bag_start_time=0):
         odometry_msg.body_F_source_T_target
     )
     timestamp = relative_timestamp(odometry_msg.source_time, bag_start_time)
-    return TimestampedPose(orientation, position, timestamp)
+    return states.TimestampedPose(orientation, position, timestamp)
 
 
 # Create a pose from a pose msg
 def pose_from_msg(pose_msg):
     orientation, position = orientation_position_from_msg(pose_msg)
-    return Pose(orientation, position)
+    return states.Pose(orientation, position)
 
 
 # Create a pose with covariance from a pose msg
 def pose_with_covariance_from_msg(pose_msg):
     orientation, position = orientation_position_from_msg(pose_msg)
-    return PoseWithCovariance(orientation, position, pose_msg.covariance)
+    return states.PoseWithCovariance(orientation, position, pose_msg.covariance)
 
 
 # Create a timestamped pose with covariance from a pose msg using relative bag time.
@@ -102,7 +86,7 @@ def timestamped_pose_with_covariance_from_msg(pose_msg, bag_start_time=0):
     orientation, position, timestamp = orientation_position_timestamp_from_msg(
         pose_msg, bag_start_time
     )
-    return TimestampedPoseWithCovariance(
+    return states.TimestampedPoseWithCovariance(
         orientation, position, pose_msgs.covariance, timestamp
     )
 
@@ -110,7 +94,7 @@ def timestamped_pose_with_covariance_from_msg(pose_msg, bag_start_time=0):
 # Create a timestamped velocity from a velocity msg using relative bag time.
 def timestamped_velocity_from_msg(velocity_msg, bag_start_time=0):
     timestamp = relative_timestamp(velocity_msg.header.stamp, bag_start_time)
-    return TimestampedVelocity(
+    return states.TimestampedVelocity(
         velocity_msg.velocity.x,
         velocity_msg.velocity.y,
         velocity_msg.velocity.z,
@@ -120,14 +104,14 @@ def timestamped_velocity_from_msg(velocity_msg, bag_start_time=0):
 
 # Create a velocity from a velocity msg.
 def velocity_from_msg(velocity_msg):
-    return Velocity(
+    return states.Velocity(
         velocity_msg.velocity.x, velocity_msg.velocity.y, velocity_msg.velocity.z
     )
 
 
 # Create an acceleration from an acceleration msg.
 def acceleration_from_msg(acceleration_msg):
-    return Acceleration(
+    return states.Acceleration(
         acceleration_msg.accel.x, acceleration_msg.accel.y, acceleration_msg.accel.z
     )
 
@@ -135,7 +119,7 @@ def acceleration_from_msg(acceleration_msg):
 # Create an acceleration from an imu msg.
 def timestamped_acceleration_from_imu_msg(imu_msg, bag_start_time=0):
     timestamp = relative_timestamp(imu_msg.header.stamp, bag_start_time)
-    return TimestampedAcceleration(
+    return states.TimestampedAcceleration(
         imu_msg.linear_acceleration.x,
         imu_msg.linear_acceleration.y,
         imu_msg.linear_acceleration.z,
@@ -145,7 +129,7 @@ def timestamped_acceleration_from_imu_msg(imu_msg, bag_start_time=0):
 
 # Create a timestamped velocity from a velocity msg using relative bag time.
 def velocity_with_covariance_from_msg(velocity_msg, bag_start_time=0):
-    return VelocityWithCovariance(
+    return states.VelocityWithCovariance(
         velocity_msg.velocity.x,
         velocity_msg.velocity.y,
         velocity_msg.velocity.z,
@@ -155,7 +139,7 @@ def velocity_with_covariance_from_msg(velocity_msg, bag_start_time=0):
 
 # Create a depth odometry object from a msg using relative bag time.
 def depth_odometry_from_msg(msg, bag_start_time=0):
-    depth_odometry = DepthOdometry()
+    depth_odometry = states.DepthOdometry()
     depth_odometry.timestamp = relative_timestamp(msg.header.stamp, bag_start_time)
     depth_odometry.pose_with_covariance = pose_with_covariance_from_msg(
         msg.odometry.body_F_source_T_target
@@ -167,7 +151,7 @@ def depth_odometry_from_msg(msg, bag_start_time=0):
 
 # Create a graph vio state from a msg using relative bag time.
 def graph_vio_state_from_msg(msg, bag_start_time=0):
-    graph_vio_state = GraphVIOState()
+    graph_vio_state = states.GraphVIOState()
     # TODO: load all combined nav states???
     graph_vio_state.timestamp = relative_timestamp(msg.header.stamp, bag_start_time)
     latest_state = msg.combined_nav_states.combined_nav_states[-1]
@@ -178,18 +162,20 @@ def graph_vio_state_from_msg(msg, bag_start_time=0):
         latest_state.velocity
     )
     # TODO: make function for this?
-    accelerometer_bias = AccelerometerBias(
+    accelerometer_bias = states.AccelerometerBias(
         latest_state.imu_bias.accelerometer_bias.x,
         latest_state.imu_bias.accelerometer_bias.y,
         latest_state.imu_bias.accelerometer_bias.z,
     )
-    gyro_bias = GyroscopeBias(
+    gyro_bias = states.GyroscopeBias(
         latest_state.imu_bias.gyroscope_bias.x,
         latest_state.imu_bias.gyroscope_bias.y,
         latest_state.imu_bias.gyroscope_bias.z,
     )
     # TODO: load covariance?
-    graph_vio_state.imu_bias_with_covariance = ImuBias(accelerometer_bias, gyro_bias)
+    graph_vio_state.imu_bias_with_covariance = states.ImuBias(
+        accelerometer_bias, gyro_bias
+    )
     graph_vio_state.num_detected_of_features = msg.num_detected_of_features
     graph_vio_state.num_of_factors = msg.num_of_factors
     graph_vio_state.num_depth_factors = msg.num_depth_factors
@@ -204,7 +190,7 @@ def graph_vio_state_from_msg(msg, bag_start_time=0):
 
 # Create a graph loc state from a msg using relative bag time.
 def graph_loc_state_from_msg(msg, bag_start_time=0):
-    graph_loc_state = GraphLocState()
+    graph_loc_state = states.GraphLocState()
     graph_loc_state.timestamp = relative_timestamp(msg.header.stamp, bag_start_time)
     graph_loc_state.pose_with_covariance = pose_with_covariance_from_msg(msg.pose)
     graph_loc_state.num_detected_ar_features = msg.num_detected_ar_features
@@ -222,7 +208,7 @@ def graph_loc_state_from_msg(msg, bag_start_time=0):
 
 # Create a extrapolated loc state from a msg using relative bag time.
 def extrapolated_loc_state_from_msg(msg, bag_start_time=0):
-    extrapolated_loc_state = ExtrapolatedLocState()
+    extrapolated_loc_state = states.ExtrapolatedLocState()
     extrapolated_loc_state.timestamp = relative_timestamp(
         msg.header.stamp, bag_start_time
     )

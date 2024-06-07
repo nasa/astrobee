@@ -28,10 +28,8 @@ import matplotlib
 
 import message_reader
 import plot_conversions
+import plotters
 import results_savers
-from multipose_plotter import MultiPosePlotter
-from multivector3d_plotter import MultiVector3dPlotter
-from timestamped_pose import TimestampedPose
 
 matplotlib.use("pdf")
 import csv
@@ -50,7 +48,7 @@ def plot_depth_odom_results(pdf, results_csv_file, groundtruth_poses, depth_odom
             groundtruth_poses,
         )
     )
-    depth_odom_relative_poses_plotter = MultiPosePlotter(
+    depth_odom_relative_poses_plotter = plotters.MultiPosePlotter(
         "Time (s)", "Position (m)", "Depth Odometry vs. Groundtruth Position", True
     )
     depth_odom_relative_poses_plotter.add_poses(

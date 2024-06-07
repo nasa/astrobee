@@ -50,6 +50,8 @@ class SimpleOptimizer : public op::Optimizer {
   boost::optional<gtsam::Matrix> Covariance(const gtsam::Key& key) const final {
     return gtsam::Matrix(gtsam::Matrix6::Identity());
   }
+
+  int iterations() const final { return 0; }
 };
 
 // For testing new window start time and end time
@@ -152,7 +154,6 @@ class SlidingWindowGraphOptimizerTest : public ::testing::Test {
     params.min_num_states = 1;
     params.max_num_states = 4;
     params.SetStartNoiseModels();
-    params.SetStartMeasurement();
     return params;
   }
 

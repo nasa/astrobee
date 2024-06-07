@@ -22,11 +22,8 @@ import sys
 import numpy as np
 import scipy.spatial.transform
 
-from position import Position
-from timestamped_pose import TimestampedPose
-from timestamped_velocity import TimestampedVelocity
-from value_plotter import ValuePlotter
-from vector3d_plotter import Vector3dPlotter
+import plotters
+import states
 
 
 # Return list of 3 lists, one each for x, y, z values in poses
@@ -180,13 +177,13 @@ def adjusted_graph_vio_poses_from_graph_vio_states(
         sys.exit(0)
     adjusted_graph_vio_poses = []
     for graph_vio_state in graph_vio_states:
-        adjusted_pose = world_T_vio * TimestampedPose(
+        adjusted_pose = world_T_vio * states.TimestampedPose(
             graph_vio_state.pose_with_covariance.orientation,
             graph_vio_state.pose_with_covariance.position,
             graph_vio_state.timestamp,
         )
         adjusted_graph_vio_poses.append(
-            TimestampedPose(
+            states.TimestampedPose(
                 adjusted_pose.orientation,
                 adjusted_pose.position,
                 graph_vio_state.timestamp,
@@ -227,11 +224,11 @@ def absolute_poses_from_imu_bias_extrapolated_poses(
         sys.exit(0)
     adjusted_imu_bias_poses = []
     for imu_bias in imu_bias_extrapolated_poses:
-        adjusted_pose = world_T_vio * TimestampedPose(
+        adjusted_pose = world_T_vio * states.TimestampedPose(
             imu_bias.orientation, imu_bias.position, imu_bias.timestamp
         )
         adjusted_imu_bias_poses.append(
-            TimestampedPose(
+            states.TimestampedPose(
                 adjusted_pose.orientation, adjusted_pose.position, imu_bias.timestamp
             )
         )
@@ -268,14 +265,14 @@ def absolute_poses_from_relative_poses(relative_poses, groundtruth_poses, max_di
     adjusted_relative_pose_poses = []
     previous_relative_pose = None
     for relative_pose in relative_poses:
-        pose = TimestampedPose(
+        pose = states.TimestampedPose(
             relative_pose.orientation, relative_pose.position, relative_pose.timestamp
         )
         if previous_relative_pose:
             pose = previous_relative_pose * pose
         adjusted_pose = world_T_odom * pose
         adjusted_relative_pose_poses.append(
-            TimestampedPose(
+            states.TimestampedPose(
                 adjusted_pose.orientation,
                 adjusted_pose.position,
                 relative_pose.timestamp,
@@ -337,7 +334,7 @@ def absolute_poses_from_integrated_graph_vio_state_velocities(
     graph_vio_states, groundtruth_poses, max_diff=0.1
 ):
     velocities = [
-        TimestampedVelocity(
+        states.TimestampedVelocity(
             graph_vio_state.velocity_with_covariance.x,
             graph_vio_state.velocity_with_covariance.y,
             graph_vio_state.velocity_with_covariance.z,
@@ -346,7 +343,7 @@ def absolute_poses_from_integrated_graph_vio_state_velocities(
         for graph_vio_state in graph_vio_states
     ]
     poses = [
-        TimestampedPose(
+        states.TimestampedPose(
             graph_vio_state.pose_with_covariance.orientation,
             graph_vio_state.pose_with_covariance.position,
             graph_vio_state.timestamp,
@@ -367,7 +364,7 @@ def absolute_poses_from_integrated_extrapolated_loc_state_velocities(
     extrapolated_loc_states, groundtruth_poses, max_diff=0.1
 ):
     velocities = [
-        TimestampedVelocity(
+        states.TimestampedVelocity(
             extrapolated_loc_state.velocity.x,
             extrapolated_loc_state.velocity.y,
             extrapolated_loc_state.velocity.z,
@@ -390,9 +387,9 @@ def integrate_velocities(velocities, starting_pose):
     integrated_poses = []
     for i in range(len(velocities) - 1):
         integrated_poses.append(
-            TimestampedPose(
+            states.TimestampedPose(
                 scipy.spatial.transform.Rotation.from_rotvec([0, 0, 0]),
-                Position([x, y, z]),
+                states.Position([x, y, z]),
                 velocities[i].timestamp,
             )
         )
@@ -425,7 +422,7 @@ def integrate_velocities_with_frame_change(
     groundtruth_index = starting_groundtruth_index
     # Initialize world_R_odom
     world_R_odom = groundtruth_poses[groundtruth_index] * poses[0].inverse()
-    world_R_odom.position = Position([0, 0, 0])
+    world_R_odom.position = states.Position([0, 0, 0])
     integrated_poses = []
     for i in range(len(velocities) - 1):
         if groundtruth_index + 1 < len(groundtruth_poses):
@@ -446,11 +443,11 @@ def integrate_velocities_with_frame_change(
                     world_R_odom = (
                         groundtruth_poses[groundtruth_index] * poses[i].inverse()
                     )
-                    world_R_odom.position = Position([0, 0, 0])
+                    world_R_odom.position = states.Position([0, 0, 0])
         integrated_poses.append(
-            TimestampedPose(
+            states.TimestampedPose(
                 scipy.spatial.transform.Rotation.from_rotvec([0, 0, 0]),
-                Position([x, y, z]),
+                states.Position([x, y, z]),
                 velocities[i].timestamp,
             )
         )
@@ -459,9 +456,9 @@ def integrate_velocities_with_frame_change(
         dy = dt * velocities[i].y
         dz = dt * velocities[i].z
         # Frame change velocity
-        odom_F_rel_velocity_pose = TimestampedPose(
+        odom_F_rel_velocity_pose = states.TimestampedPose(
             scipy.spatial.transform.Rotation.from_rotvec([0, 0, 0]),
-            Position([dx, dy, dz]),
+            states.Position([dx, dy, dz]),
             velocities[i].timestamp,
         )
         world_F_rel_velocity_pose = world_R_odom * odom_F_rel_velocity_pose
@@ -562,7 +559,7 @@ def runtimes_from_depth_odometries(depth_odometries):
 # Return list of timestamped poses from depth odometries
 def poses_from_depth_odometries(depth_odometries):
     return [
-        TimestampedPose(
+        states.TimestampedPose(
             depth_odometry.pose_with_covariance.orientation,
             depth_odometry.pose_with_covariance.position,
             depth_odometry.timestamp,
@@ -574,7 +571,7 @@ def poses_from_depth_odometries(depth_odometries):
 # Return list of timestamped poses from graph loc states
 def poses_from_graph_loc_states(graph_loc_states):
     return [
-        TimestampedPose(
+        states.TimestampedPose(
             graph_loc_state.pose_with_covariance.orientation,
             graph_loc_state.pose_with_covariance.position,
             graph_loc_state.timestamp,
@@ -586,7 +583,7 @@ def poses_from_graph_loc_states(graph_loc_states):
 # Return list of timestamped poses from extrapolated loc states
 def poses_from_extrapolated_loc_states(extrapolated_loc_states):
     return [
-        TimestampedPose(
+        states.TimestampedPose(
             extrapolated_loc_state.pose.orientation,
             extrapolated_loc_state.pose.position,
             extrapolated_loc_state.timestamp,
@@ -598,7 +595,7 @@ def poses_from_extrapolated_loc_states(extrapolated_loc_states):
 def velocity_plotter_from_graph_vio_states(graph_vio_states):
     xs, ys, zs = xyz_velocity_vectors_from_graph_vio_states(graph_vio_states)
     times = times_from_timestamped_objects(graph_vio_states)
-    return Vector3dPlotter(
+    return plotters.Vector3dPlotter(
         "Graph VIO Velocity", times, xs, ys, zs, ["X", "Y", "Z"], marker="o"
     )
 
@@ -608,7 +605,7 @@ def velocity_plotter_from_extrapolated_loc_states(extrapolated_loc_states):
         extrapolated_loc_states
     )
     times = times_from_timestamped_objects(extrapolated_loc_states)
-    return Vector3dPlotter(
+    return plotters.Vector3dPlotter(
         "Extrapolated Loc Velocity", times, xs, ys, zs, ["X", "Y", "Z"]
     )
 
@@ -618,7 +615,7 @@ def acceleration_plotter_from_extrapolated_loc_states(extrapolated_loc_states):
         extrapolated_loc_states
     )
     times = times_from_timestamped_objects(extrapolated_loc_states)
-    return Vector3dPlotter(
+    return plotters.Vector3dPlotter(
         "Extrapolated Loc Acceleration", times, xs, ys, zs, ["X", "Y", "Z"]
     )
 
@@ -626,25 +623,31 @@ def acceleration_plotter_from_extrapolated_loc_states(extrapolated_loc_states):
 def acceleration_plotter_from_imu_accelerations(imu_accelerations):
     xs, ys, zs = xyz_acceleration_vectors_from_imu_accelerations(imu_accelerations)
     times = times_from_timestamped_objects(imu_accelerations)
-    return Vector3dPlotter("Raw IMU Acceleration", times, xs, ys, zs, ["X", "Y", "Z"])
+    return plotters.Vector3dPlotter(
+        "Raw IMU Acceleration", times, xs, ys, zs, ["X", "Y", "Z"]
+    )
 
 
 def accel_bias_plotter_from_graph_vio_states(graph_vio_states):
     xs, ys, zs = xyz_accel_bias_vectors_from_graph_vio_states(graph_vio_states)
     times = times_from_timestamped_objects(graph_vio_states)
-    return Vector3dPlotter("Graph VIO Accel. Bias", times, xs, ys, zs, ["X", "Y", "Z"])
+    return plotters.Vector3dPlotter(
+        "Graph VIO Accel. Bias", times, xs, ys, zs, ["X", "Y", "Z"]
+    )
 
 
 def gyro_bias_plotter_from_graph_vio_states(graph_vio_states):
     xs, ys, zs = xyz_gyro_bias_vectors_from_graph_vio_states(graph_vio_states)
     times = times_from_timestamped_objects(graph_vio_states)
-    return Vector3dPlotter("Graph VIO Gyro Bias", times, xs, ys, zs, ["X", "Y", "Z"])
+    return plotters.Vector3dPlotter(
+        "Graph VIO Gyro Bias", times, xs, ys, zs, ["X", "Y", "Z"]
+    )
 
 
 def ml_feature_count_plotter_from_graph_loc_states(graph_loc_states):
     counts = ml_feature_counts_from_graph_loc_states(graph_loc_states)
     times = times_from_timestamped_objects(graph_loc_states)
-    return ValuePlotter(
+    return plotters.ValuePlotter(
         "Graph Loc ML Feature Counts", times, counts, "Time (s)", "Num Features", "ML"
     )
 
@@ -652,7 +655,7 @@ def ml_feature_count_plotter_from_graph_loc_states(graph_loc_states):
 def ar_feature_count_plotter_from_graph_loc_states(graph_loc_states):
     counts = ar_feature_counts_from_graph_loc_states(graph_loc_states)
     times = times_from_timestamped_objects(graph_loc_states)
-    return ValuePlotter(
+    return plotters.ValuePlotter(
         "Graph Loc AR Feature Counts", times, counts, "Time (s)", "Num Features", "AR"
     )
 
@@ -660,7 +663,7 @@ def ar_feature_count_plotter_from_graph_loc_states(graph_loc_states):
 def optical_flow_feature_count_plotter_from_graph_vio_states(graph_vio_states):
     counts = optical_flow_feature_counts_from_graph_vio_states(graph_vio_states)
     times = times_from_timestamped_objects(graph_vio_states)
-    return ValuePlotter(
+    return plotters.ValuePlotter(
         "Graph VIO OF Counts", times, counts, "Time (s)", "Num Features", "OF"
     )
 
@@ -668,7 +671,7 @@ def optical_flow_feature_count_plotter_from_graph_vio_states(graph_vio_states):
 def optical_flow_factor_count_plotter_from_graph_vio_states(graph_vio_states):
     counts = optical_flow_factor_counts_from_graph_vio_states(graph_vio_states)
     times = times_from_timestamped_objects(graph_vio_states)
-    return ValuePlotter(
+    return plotters.ValuePlotter(
         "Graph VIO OF Factors", times, counts, "Time (s)", "Num Factors", "OF"
     )
 
@@ -676,7 +679,7 @@ def optical_flow_factor_count_plotter_from_graph_vio_states(graph_vio_states):
 def depth_factor_count_plotter_from_graph_vio_states(graph_vio_states):
     counts = depth_factor_counts_from_graph_vio_states(graph_vio_states)
     times = times_from_timestamped_objects(graph_vio_states)
-    return ValuePlotter(
+    return plotters.ValuePlotter(
         "Graph VIO Depth Factors", times, counts, "Time (s)", "Num Factors", "Depth"
     )
 
@@ -684,7 +687,7 @@ def depth_factor_count_plotter_from_graph_vio_states(graph_vio_states):
 def ml_pose_factor_count_plotter_from_graph_loc_states(graph_loc_states):
     counts = ml_pose_factor_counts_from_graph_loc_states(graph_loc_states)
     times = times_from_timestamped_objects(graph_loc_states)
-    return ValuePlotter(
+    return plotters.ValuePlotter(
         "Graph Loc ML Pose Factors", times, counts, "Time (s)", "Num Factors", "ML"
     )
 
@@ -692,7 +695,7 @@ def ml_pose_factor_count_plotter_from_graph_loc_states(graph_loc_states):
 def ml_projection_factor_count_plotter_from_graph_loc_states(graph_loc_states):
     counts = ml_projection_factor_counts_from_graph_loc_states(graph_loc_states)
     times = times_from_timestamped_objects(graph_loc_states)
-    return ValuePlotter(
+    return plotters.ValuePlotter(
         "Graph Loc ML Projection Factors",
         times,
         counts,
@@ -705,7 +708,7 @@ def ml_projection_factor_count_plotter_from_graph_loc_states(graph_loc_states):
 def standstill_plotter_from_states(states):
     standstill = standstill_from_states(states)
     times = times_from_timestamped_objects(states)
-    return ValuePlotter(
+    return plotters.ValuePlotter(
         "Standstill Occurances",
         times,
         standstill,
@@ -718,7 +721,7 @@ def standstill_plotter_from_states(states):
 def optimization_iterations_plotter_from_states(states):
     optimization_iterations = optimization_iterations_from_states(states)
     times = times_from_timestamped_objects(states)
-    return ValuePlotter(
+    return plotters.ValuePlotter(
         "Num Graph Optimization Iterations",
         times,
         optimization_iterations,
@@ -731,7 +734,7 @@ def optimization_iterations_plotter_from_states(states):
 def num_states_plotter_from_states(states):
     num_states = num_states_from_states(states)
     times = times_from_timestamped_objects(states)
-    return ValuePlotter(
+    return plotters.ValuePlotter(
         "Num Graph States", times, num_states, "Time (s)", "Num States", "Num States"
     )
 
@@ -739,7 +742,7 @@ def num_states_plotter_from_states(states):
 def duration_plotter_from_states(states):
     durations = durations_from_states(states)
     times = times_from_timestamped_objects(states)
-    return ValuePlotter(
+    return plotters.ValuePlotter(
         "Duration", times, durations, "Time (s)", "Duration (s)", "Duration"
     )
 
@@ -747,7 +750,7 @@ def duration_plotter_from_states(states):
 def optimization_time_plotter_from_states(states):
     optimization_times = optimization_times_from_states(states)
     times = times_from_timestamped_objects(states)
-    return ValuePlotter(
+    return plotters.ValuePlotter(
         "Optimization Times",
         times,
         optimization_times,
@@ -760,7 +763,7 @@ def optimization_time_plotter_from_states(states):
 def update_time_plotter_from_states(states):
     update_times = update_times_from_states(states)
     times = times_from_timestamped_objects(states)
-    return ValuePlotter(
+    return plotters.ValuePlotter(
         "Update Times",
         times,
         update_times,
@@ -773,7 +776,7 @@ def update_time_plotter_from_states(states):
 def runtime_plotter_from_depth_odometries(depth_odometries):
     runtimes = runtimes_from_depth_odometries(depth_odometries)
     times = times_from_timestamped_objects(depth_odometries)
-    return ValuePlotter(
+    return plotters.ValuePlotter(
         "Depth Odometry Runtime",
         times,
         runtimes,
@@ -786,7 +789,7 @@ def runtime_plotter_from_depth_odometries(depth_odometries):
 def num_features_plotter_from_depth_odometries(depth_odometries):
     num_features = num_features_from_depth_odometries(depth_odometries)
     times = times_from_timestamped_objects(depth_odometries)
-    return ValuePlotter(
+    return plotters.ValuePlotter(
         "Depth Odometry Num Features",
         times,
         num_features,

@@ -103,6 +103,8 @@ class SimpleOptimizer : public op::Optimizer {
   boost::optional<gtsam::Matrix> Covariance(const gtsam::Key& key) const final {
     return gtsam::Matrix(gtsam::Matrix6::Identity());
   }
+
+  int iterations() const final { return 0; }
 };
 
 class GraphOptimizerTest : public ::testing::Test {

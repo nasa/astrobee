@@ -39,7 +39,7 @@ class OfflineReplayParameterReaderTest : public ::testing::Test {
 
     la::LoadLiveMeasurementSimulatorParams(config, "test.bag", "test.map", "test_topic",
                                            live_measurement_simulator_params_);
-    live_measurement_simulator_params_.use_image_features = true;
+    live_measurement_simulator_params_.use_bag_image_feature_msgs = true;
     la::LoadGraphLocalizerSimulatorParams(config, graph_localizer_simulator_params_);
     la::LoadGraphVIOSimulatorParams(config, graph_vio_simulator_params_);
     la::LoadOfflineReplayParams(config, offline_replay_params_);
@@ -70,7 +70,7 @@ TEST_F(OfflineReplayParameterReaderTest, LiveMeasurementSimulatorParams) {
   EXPECT_EQ(params.bag_name, "test.bag");
   EXPECT_EQ(params.map_file, "test.map");
   EXPECT_EQ(params.image_topic, "test_topic");
-  EXPECT_EQ(params.use_image_features, true);
+  EXPECT_EQ(params.use_bag_image_feature_msgs, true);
   EXPECT_EQ(params.save_optical_flow_images, false);
 }
 

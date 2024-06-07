@@ -21,7 +21,6 @@ import math
 import unittest
 
 import numpy as np
-
 import poses
 import rmse_utilities
 
