@@ -1,7 +1,7 @@
 \page graphvio Graph VIO
 
 # Package Overview
-Performs sliding-window graph based visual-intertial odometry (VIO) using a VOSmartProjectionFactorAdder and StandstillFactorAdder. Uses a CombinedNavStateNodeAdder for creating combined nav state nodes (containing a pose, velocity, and IMU bias) at required timestamps using IMU measurements.
+Performs sliding-window graph based visual-intertial odometry (VIO) using a VOSmartProjectionFactorAdder and StandstillFactorAdder. Uses a CombinedNavStateNodeAdder for creating combined nav state nodes (containing a pose, velocity, and IMU bias) at required timestamps using IMU measurements. Optionally adds depth image correspondences as point-to-point between factors.
 
 # Background
 For more information on the theory behind the GraphVIO and the factors used, please see our paper: 
@@ -13,9 +13,11 @@ For more information on the theory behind the GraphVIO and the factors used, ple
 </p>
 
 ## Factor Adders
+* DepthOdometryFactorAdder
 * VoSmartProjectionFactorAdder
 * StandstillFactorAdder 
 ## Graph Factors
+* Point BetweenFactors (for depth odometry correspondences)
 * CombinedIMUFactor
 * RobustSmartProjectionFactor
 * Standstill Factors (zero velocity prior and identity relative transform between factors)

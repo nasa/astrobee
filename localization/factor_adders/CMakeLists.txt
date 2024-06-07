@@ -38,7 +38,6 @@ find_package(Eigen3 REQUIRED)
 
 # include ff_nodelet to get ff_util header files since these aren't exposed elsewhere
 catkin_package(
-  LIBRARIES ${PROJECT_NAME} ${GLOG_LIBRARIES}
   INCLUDE_DIRS include ${GLOG_INCLUDE_DIRS}
   CATKIN_DEPENDS graph_factors localization_common localization_measurements node_adders vision_common 
 )
@@ -55,17 +54,6 @@ include_directories(
   ${GLOG_INCLUDE_DIRS}
 )
 
-file(GLOB cc_files
-     "src/*.cc"
-)
-
-# Declare C++ libraries
-add_library(${PROJECT_NAME}
-  ${cc_files}
-)
-add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
-
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
   # Loc factor adder test
@@ -74,7 +62,7 @@ if(CATKIN_ENABLE_TESTING)
     test/test_loc_factor_adder.cc
   )
   target_link_libraries(test_loc_factor_adder
-    factor_adders ${catkin_LIBRARIES} 
+    ${catkin_LIBRARIES} 
   )
   # Single measurement based factor adder test
   add_rostest_gtest(test_single_measurement_based_factor_adder
@@ -82,7 +70,7 @@ if(CATKIN_ENABLE_TESTING)
     test/test_single_measurement_based_factor_adder.cc
   )
   target_link_libraries(test_single_measurement_based_factor_adder
-    factor_adders ${catkin_LIBRARIES} 
+    ${catkin_LIBRARIES} 
   )
   # Standstill factor adder test
   add_rostest_gtest(test_standstill_factor_adder
@@ -90,27 +78,20 @@ if(CATKIN_ENABLE_TESTING)
     test/test_standstill_factor_adder.cc
   )
   target_link_libraries(test_standstill_factor_adder
-    factor_adders ${catkin_LIBRARIES} 
+    ${catkin_LIBRARIES} 
   )
   add_rostest_gtest(test_vo_smart_projection_factor_adder
     test/test_vo_smart_projection_factor_adder.test
     test/test_vo_smart_projection_factor_adder.cc
   )
   target_link_libraries(test_vo_smart_projection_factor_adder
-    factor_adders ${catkin_LIBRARIES} 
+    ${catkin_LIBRARIES} 
   )
 endif()
 
 #############
 ## Install ##
 #############
-
-# Mark libraries for installation
-install(TARGETS ${PROJECT_NAME}
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
-)
 
 # Mark cpp header files for installation
 install(DIRECTORY include/${PROJECT_NAME}/

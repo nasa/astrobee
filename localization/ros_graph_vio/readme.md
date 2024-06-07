@@ -6,10 +6,14 @@ Ros wrapper for the graph VIO. The graph VIO wrapper takes ros messages, convers
 ## RosGraphVIOWrapper
 Contains the GraphVIO. Converts ROS messages to localization measurements and provides these to the VIO object.
 
+## ImuBiasInitializer
+Assumes standstill and estimates IMU biases and stddevs from a sequence of IMU measurements.
+
 # Inputs
 * `/hw/imu`
 * `/loc/of/features`
+* `/loc/depth/odom`
+* `/mob/flight_mode`
 
 # Outputs
-* `graph_vio/graph`
-* `graph_vio/state`
+* `/graph_vio/state`
