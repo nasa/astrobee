@@ -17,6 +17,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+
 # Acceleration object
 class Acceleration(object):
     def __init__(self, x, y, z):

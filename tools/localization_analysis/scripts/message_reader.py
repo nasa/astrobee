@@ -102,6 +102,7 @@ def load_imu_accelerations(imu_accelerations, topic, bag, bag_start_time):
 #                )
 #                break
 
+
 # Loads covariances from a bag file given a set of covariance topics.
 # Start at the provided bag start time.
 # def load_pose_with_cov_msgs(vec_of_poses, bag, bag_start_time):

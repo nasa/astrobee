@@ -77,8 +77,8 @@ def plot_vio_results(
     velocities_plotter = MultiVector3dPlotter(
         "Time (s)", "Velocity (m/s)", "Graph VIO Velocities", True
     )
-    graph_vio_velocity_plotter = plot_conversions.velocity_plotter_from_graph_vio_states(
-        graph_vio_states
+    graph_vio_velocity_plotter = (
+        plot_conversions.velocity_plotter_from_graph_vio_states(graph_vio_states)
     )
     velocities_plotter.add(graph_vio_velocity_plotter)
     velocities_plotter.plot(pdf)
@@ -86,8 +86,8 @@ def plot_vio_results(
     accel_bias_plotters = MultiVector3dPlotter(
         "Time (s)", "Accelerometer Bias (m/s^2)", "Graph VIO Accel. Biases", True
     )
-    graph_vio_accel_bias_plotter = plot_conversions.accel_bias_plotter_from_graph_vio_states(
-        graph_vio_states
+    graph_vio_accel_bias_plotter = (
+        plot_conversions.accel_bias_plotter_from_graph_vio_states(graph_vio_states)
     )
     accel_bias_plotters.add(graph_vio_accel_bias_plotter)
     accel_bias_plotters.plot(pdf)
@@ -95,29 +95,37 @@ def plot_vio_results(
     gyro_bias_plotters = MultiVector3dPlotter(
         "Time (s)", "Gyro Bias (rad/s^2)", "Graph VIO Gyro. Biases", True
     )
-    graph_vio_gyro_bias_plotter = plot_conversions.gyro_bias_plotter_from_graph_vio_states(
-        graph_vio_states
+    graph_vio_gyro_bias_plotter = (
+        plot_conversions.gyro_bias_plotter_from_graph_vio_states(graph_vio_states)
     )
     gyro_bias_plotters.add(graph_vio_gyro_bias_plotter)
     gyro_bias_plotters.plot(pdf)
 
-    of_count_plotter = plot_conversions.optical_flow_feature_count_plotter_from_graph_vio_states(
-        graph_vio_states
+    of_count_plotter = (
+        plot_conversions.optical_flow_feature_count_plotter_from_graph_vio_states(
+            graph_vio_states
+        )
     )
     of_count_plotter.plot(pdf)
 
-    of_num_factors_plotter = plot_conversions.optical_flow_factor_count_plotter_from_graph_vio_states(
-        graph_vio_states
+    of_num_factors_plotter = (
+        plot_conversions.optical_flow_factor_count_plotter_from_graph_vio_states(
+            graph_vio_states
+        )
     )
     of_num_factors_plotter.plot(pdf)
 
-    depth_num_factors_plotter = plot_conversions.depth_factor_count_plotter_from_graph_vio_states(
-        graph_vio_states
+    depth_num_factors_plotter = (
+        plot_conversions.depth_factor_count_plotter_from_graph_vio_states(
+            graph_vio_states
+        )
     )
     depth_num_factors_plotter.plot(pdf)
 
-    integrated_velocity_poses = plot_conversions.absolute_poses_from_integrated_graph_vio_state_velocities(
-        graph_vio_states, groundtruth_poses
+    integrated_velocity_poses = (
+        plot_conversions.absolute_poses_from_integrated_graph_vio_state_velocities(
+            graph_vio_states, groundtruth_poses
+        )
     )
     integrated_velocity_poses_plotter = MultiPosePlotter(
         "Time (s)",
@@ -146,8 +154,10 @@ def plot_vio_results(
     )
 
     if len(imu_bias_extrapolated_poses) != 0:
-        absolute_imu_bias_extrapolated_poses = plot_conversions.absolute_poses_from_imu_bias_extrapolated_poses(
-            imu_bias_extrapolated_poses, groundtruth_poses
+        absolute_imu_bias_extrapolated_poses = (
+            plot_conversions.absolute_poses_from_imu_bias_extrapolated_poses(
+                imu_bias_extrapolated_poses, groundtruth_poses
+            )
         )
         imu_bias_extrapolated_poses_plotter = MultiPosePlotter(
             "Time (s)",
@@ -178,9 +188,11 @@ def plot_vio_results(
         )
 
     if len(depth_odometries) != 0:
-        absolute_depth_odom_relative_poses = plot_conversions.absolute_poses_from_relative_poses(
-            plot_conversions.poses_from_depth_odometries(depth_odometries),
-            groundtruth_poses,
+        absolute_depth_odom_relative_poses = (
+            plot_conversions.absolute_poses_from_relative_poses(
+                plot_conversions.poses_from_depth_odometries(depth_odometries),
+                groundtruth_poses,
+            )
         )
         depth_odom_relative_poses_plotter = MultiPosePlotter(
             "Time (s)", "Position (m)", "Depth Odometry vs. Groundtruth Position", True
@@ -198,8 +210,10 @@ def plot_vio_results(
         )
         depth_odom_relative_poses_plotter.plot(pdf)
 
-        num_features_plotter = plot_conversions.num_features_plotter_from_depth_odometries(
-            depth_odometries
+        num_features_plotter = (
+            plot_conversions.num_features_plotter_from_depth_odometries(
+                depth_odometries
+            )
         )
         num_features_plotter.plot(pdf)
 
@@ -231,8 +245,8 @@ def plot_vio_results(
     )
     update_time_plotter.plot(pdf)
 
-    optimization_iterations_plotter = plot_conversions.optimization_iterations_plotter_from_states(
-        graph_vio_states
+    optimization_iterations_plotter = (
+        plot_conversions.optimization_iterations_plotter_from_states(graph_vio_states)
     )
     optimization_iterations_plotter.plot(pdf)
 

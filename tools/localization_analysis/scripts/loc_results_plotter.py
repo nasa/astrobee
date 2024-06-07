@@ -115,8 +115,10 @@ def plot_loc_results(
         extrapolated_velocities_plotter = MultiVector3dPlotter(
             "Time (s)", "Velocity (m/s)", "Extrapolated Velocities", True
         )
-        extrapolated_velocity_plotter = plot_conversions.velocity_plotter_from_extrapolated_loc_states(
-            extrapolated_loc_states
+        extrapolated_velocity_plotter = (
+            plot_conversions.velocity_plotter_from_extrapolated_loc_states(
+                extrapolated_loc_states
+            )
         )
         extrapolated_velocities_plotter.add(extrapolated_velocity_plotter)
         extrapolated_velocities_plotter.plot(pdf)
@@ -155,8 +157,10 @@ def plot_loc_results(
         extrapolated_accelerations_plotter = MultiVector3dPlotter(
             "Time (s)", "Acceleration (m/s^2)", "Bias Corrected Accelerations", True
         )
-        extrapolated_acceleration_plotter = plot_conversions.acceleration_plotter_from_extrapolated_loc_states(
-            extrapolated_loc_states
+        extrapolated_acceleration_plotter = (
+            plot_conversions.acceleration_plotter_from_extrapolated_loc_states(
+                extrapolated_loc_states
+            )
         )
         extrapolated_accelerations_plotter.add(extrapolated_acceleration_plotter)
         extrapolated_accelerations_plotter.plot(pdf)
@@ -165,8 +169,10 @@ def plot_loc_results(
         imu_accelerations_plotter = MultiVector3dPlotter(
             "Time (s)", "Acceleration (m/s^2)", "Raw IMU Accelerations", True
         )
-        imu_acceleration_plotter = plot_conversions.acceleration_plotter_from_imu_accelerations(
-            imu_accelerations
+        imu_acceleration_plotter = (
+            plot_conversions.acceleration_plotter_from_imu_accelerations(
+                imu_accelerations
+            )
         )
         imu_accelerations_plotter.add(imu_acceleration_plotter)
         imu_accelerations_plotter.plot(pdf)
@@ -181,13 +187,17 @@ def plot_loc_results(
     )
     ar_count_plotter.plot(pdf)
 
-    ml_num_pose_factors_plotter = plot_conversions.ml_pose_factor_count_plotter_from_graph_loc_states(
-        graph_loc_states
+    ml_num_pose_factors_plotter = (
+        plot_conversions.ml_pose_factor_count_plotter_from_graph_loc_states(
+            graph_loc_states
+        )
     )
     ml_num_pose_factors_plotter.plot(pdf)
 
-    ml_num_projection_factors_plotter = plot_conversions.ml_projection_factor_count_plotter_from_graph_loc_states(
-        graph_loc_states
+    ml_num_projection_factors_plotter = (
+        plot_conversions.ml_projection_factor_count_plotter_from_graph_loc_states(
+            graph_loc_states
+        )
     )
     ml_num_projection_factors_plotter.plot(pdf)
 
@@ -209,8 +219,8 @@ def plot_loc_results(
     )
     update_time_plotter.plot(pdf)
 
-    optimization_iterations_plotter = plot_conversions.optimization_iterations_plotter_from_states(
-        graph_loc_states
+    optimization_iterations_plotter = (
+        plot_conversions.optimization_iterations_plotter_from_states(graph_loc_states)
     )
     optimization_iterations_plotter.plot(pdf)
 

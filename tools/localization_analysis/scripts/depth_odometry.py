@@ -17,6 +17,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+
 # DepthOdometry object containing information from a DepthOdometry Msg
 class DepthOdometry:
     def __init__(self):

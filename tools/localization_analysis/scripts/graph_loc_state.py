@@ -17,6 +17,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+
 # GraphLocState object containing information from a GraphLocState Msg
 class GraphLocState:
     def __init__(self):

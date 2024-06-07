@@ -92,15 +92,17 @@ def bag_and_parameter_sweep(offline_replay_params_list, output_dir):
             os.path.basename(offline_replay_params.bagfile)
         )[0]
         bag_output_dir = os.path.join(output_dir, bag_name_prefix)
-        param_range_directory_for_bag = parameter_sweeper.make_values_and_parameter_sweep(
-            bag_output_dir,
-            offline_replay_params.bagfile,
-            offline_replay_params.map_file,
-            offline_replay_params.image_topic,
-            offline_replay_params.robot_config_file,
-            offline_replay_params.world,
-            offline_replay_params.use_bag_image_feature_msgs,
-            offline_replay_params.groundtruth_bagfile,
+        param_range_directory_for_bag = (
+            parameter_sweeper.make_values_and_parameter_sweep(
+                bag_output_dir,
+                offline_replay_params.bagfile,
+                offline_replay_params.map_file,
+                offline_replay_params.image_topic,
+                offline_replay_params.robot_config_file,
+                offline_replay_params.world,
+                offline_replay_params.use_bag_image_feature_msgs,
+                offline_replay_params.groundtruth_bagfile,
+            )
         )
         if not param_range_directory:
             param_range_directory = param_range_directory_for_bag

@@ -51,9 +51,9 @@ def save_rmse_results_to_csv(
         relative_change_in_rmses.append(mean_rmses_list[0] / mean_rmses_list[1] - 1.0)
         relative_change_in_rmses.append(mean_rmses_list[1] / mean_rmses_list[0] - 1.0)
         mean_rmses_dataframe["rel_" + prefix + "rmse_%"] = relative_rmses
-        mean_rmses_dataframe[
-            "rel_" + prefix + "rmse_delta_%"
-        ] = relative_change_in_rmses
+        mean_rmses_dataframe["rel_" + prefix + "rmse_delta_%"] = (
+            relative_change_in_rmses
+        )
     mean_rmses_dataframe["mean_" + prefix + "rmse"] = mean_rmses_list
     mean_rmses_csv_file = "mean_rmses.csv"
     mean_rmses_dataframe.to_csv(mean_rmses_csv_file, index=False, mode="a")
@@ -234,9 +234,11 @@ def create_plot(
     bag_names = dataframe["Bag"].tolist()
     max_name_length = 45
     shortened_bag_names = [
-        bag_name[-1 * max_name_length :]
-        if len(bag_name) > max_name_length
-        else bag_name
+        (
+            bag_name[-1 * max_name_length :]
+            if len(bag_name) > max_name_length
+            else bag_name
+        )
         for bag_name in bag_names
     ]
     x_axis_vals = list(range(len(shortened_bag_names)))

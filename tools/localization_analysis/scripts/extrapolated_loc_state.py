@@ -17,6 +17,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+
 # ExtrapolatedLocState object containing information from a Ekf Msg
 class ExtrapolatedLocState:
     def __init__(self):
