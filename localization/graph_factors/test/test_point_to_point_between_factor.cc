@@ -17,7 +17,6 @@
  */
 
 #include <graph_factors/point_to_point_between_factor.h>
-#include <graph_factors/test_utilities.h>
 #include <localization_common/logger.h>
 #include <localization_common/test_utilities.h>
 #include <localization_common/utilities.h>
@@ -28,7 +27,6 @@
 
 #include <gtest/gtest.h>
 
-namespace gl = graph_factors;
 namespace lc = localization_common;
 namespace sym = gtsam::symbol_shorthand;
 

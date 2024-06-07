@@ -24,7 +24,7 @@
 
 #include <gtest/gtest.h>
 
-namespace gl = graph_factors;
+namespace gf = graph_factors;
 namespace lc = localization_common;
 TEST(SiluTester, Jacobian) {
   for (int i = 0; i < 500; ++i) {

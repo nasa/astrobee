@@ -129,17 +129,23 @@ if __name__ == "__main__":
         + " -o "
         + groundtruth_bag
         + " --loc-output-file "
-        + "loc_" + groundtruth_pdf
+        + "loc_"
+        + groundtruth_pdf
         + " --vio-output-file "
-        + "vio_" + groundtruth_pdf
+        + "vio_"
+        + groundtruth_pdf
         + " --loc-results-csv-file "
-        + "loc_" + groundtruth_csv
+        + "loc_"
+        + groundtruth_csv
         + " --vio-results-csv-file "
-        + "vio_" + groundtruth_csv
+        + "vio_"
+        + groundtruth_csv
         + " --generate-image-features"
     )
     lu.run_command_and_save_output(make_groundtruth_command, "make_groundtruth.txt")
-    os.rename("run_offline_replay_command.txt", "groundtruth_run_offline_replay_command.txt")
+    os.rename(
+        "run_offline_replay_command.txt", "groundtruth_run_offline_replay_command.txt"
+    )
 
     if args.loc_map != "":
         loc_results_bag = bag_prefix + "_results.bag"
@@ -155,17 +161,23 @@ if __name__ == "__main__":
             + " -o "
             + loc_results_bag
             + " --loc-output-file "
-            + "loc_" + loc_pdf
+            + "loc_"
+            + loc_pdf
             + " --vio-output-file "
-            + "vio_" + loc_pdf
+            + "vio_"
+            + loc_pdf
             + " --loc-results-csv-file "
-            + "loc_" + loc_csv
+            + "loc_"
+            + loc_csv
             + " --vio-results-csv-file "
-            + "vio_" + loc_csv
+            + "vio_"
+            + loc_csv
             + " -g "
             + groundtruth_bag
         )
         if args.generate_image_features:
             get_loc_results_command += " --generate-image-features"
         lu.run_command_and_save_output(get_loc_results_command, "get_loc_results.txt")
-        os.rename("run_offline_replay_command.txt", "loc_run_offline_replay_command.txt")
+        os.rename(
+            "run_offline_replay_command.txt", "loc_run_offline_replay_command.txt"
+        )

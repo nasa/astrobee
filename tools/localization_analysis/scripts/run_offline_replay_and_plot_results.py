@@ -43,9 +43,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-r", "--robot-config-file", default="bumble.config", help="Robot config file."
     )
-    parser.add_argument(
-        "-w", "--world", default="iss", help="World (iss or granite)."
-    )
+    parser.add_argument("-w", "--world", default="iss", help="World (iss or granite).")
     parser.add_argument(
         "-o", "--output-bagfile", default="results.bag", help="Output bagfile."
     )
@@ -53,7 +51,7 @@ if __name__ == "__main__":
         "--generate-image-features",
         dest="use_image_features",
         action="store_false",
-        help="Use image features msgs from bagfile or generate features from images.",
+        help="Generate image features instead of using image features msgs from bagfile.",
     )
     parser.add_argument("--vio-output-file", default="vio_output.pdf")
     parser.add_argument("--loc-output-file", default="loc_output.pdf")
@@ -102,11 +100,13 @@ if __name__ == "__main__":
         + " -o "
         + args.output_bagfile
         + " -r "
-        + args.robot_config_file 
-        + " -w " 
+        + args.robot_config_file
+        + " -w "
         + args.world
     )
-    lu.run_command_and_save_output(run_offline_replay_command, "run_offline_replay_command.txt")
+    lu.run_command_and_save_output(
+        run_offline_replay_command, "run_offline_replay_command.txt"
+    )
 
     # Plot results
     plot_vio_results_command = (
@@ -119,7 +119,9 @@ if __name__ == "__main__":
     )
     if args.groundtruth_bagfile:
         plot_vio_results_command += " -g " + args.groundtruth_bagfile
-    lu.run_command_and_save_output(plot_vio_results_command, "plot_vio_results_command.txt")
+    lu.run_command_and_save_output(
+        plot_vio_results_command, "plot_vio_results_command.txt"
+    )
 
     # Plot loc results
     plot_loc_results_command = (
@@ -132,4 +134,6 @@ if __name__ == "__main__":
     )
     if args.groundtruth_bagfile:
         plot_loc_results_command += " -g " + args.groundtruth_bagfile
-    lu.run_command_and_save_output(plot_loc_results_command, "plot_loc_results_command.txt")
+    lu.run_command_and_save_output(
+        plot_loc_results_command, "plot_loc_results_command.txt"
+    )

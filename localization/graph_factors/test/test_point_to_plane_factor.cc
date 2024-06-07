@@ -17,7 +17,6 @@
  */
 
 #include <graph_factors/point_to_plane_factor.h>
-#include <graph_factors/test_utilities.h>
 #include <localization_common/logger.h>
 #include <localization_common/test_utilities.h>
 #include <localization_measurements/plane.h>
@@ -28,14 +27,20 @@
 
 #include <gtest/gtest.h>
 
-namespace gl = graph_factors;
 namespace lc = localization_common;
 namespace lm = localization_measurements;
 namespace sym = gtsam::symbol_shorthand;
+
+localization_measurements::Plane RandomPlane() {
+  gtsam::Point3 point = lc::RandomPoint3d();
+  gtsam::Vector3 normal = lc::RandomVector3d().normalized();
+  return localization_measurements::Plane(point, normal);
+}
+
 TEST(PointToPlaneFactorTester, Jacobian) {
   for (int i = 0; i < 500; ++i) {
     const gtsam::Point3 sensor_t_point = lc::RandomPoint3d();
-    const lm::Plane world_T_handrail_plane = gf::RandomPlane();
+    const lm::Plane world_T_handrail_plane = RandomPlane();
     const gtsam::Pose3 body_T_sensor = lc::RandomPose();
     const gtsam::Pose3 world_T_body = lc::RandomPose();
     const auto noise = gtsam::noiseModel::Unit::Create(1);
