@@ -52,12 +52,12 @@ TEST_F(GraphLocalizerParameterReaderTest, SparseMapLocFactorAdderParams) {
   EXPECT_EQ(params.add_prior_if_projection_factors_fail, true);
   EXPECT_NEAR(params.prior_translation_stddev, 0.06, 1e-6);
   EXPECT_NEAR(params.prior_quaternion_stddev, 0.06, 1e-6);
-  EXPECT_EQ(params.scale_pose_noise_with_num_landmarks, true);
+  EXPECT_EQ(params.scale_pose_noise_with_num_landmarks, false);
   EXPECT_EQ(params.scale_projection_noise_with_num_landmarks, false);
   EXPECT_EQ(params.scale_projection_noise_with_landmark_distance, false);
-  EXPECT_NEAR(params.pose_noise_scale, 7, 1e-6);
-  EXPECT_NEAR(params.projection_noise_scale, 60, 1e-6);
-  EXPECT_EQ(params.max_num_projection_factors, 50);
+  EXPECT_NEAR(params.pose_noise_scale, 0.001, 1e-6);
+  EXPECT_NEAR(params.projection_noise_scale, 1.5, 1e-6);
+  EXPECT_EQ(params.max_num_projection_factors, 25);
   EXPECT_EQ(params.min_num_matches_per_measurement, 5);
   EXPECT_NEAR(params.max_valid_projection_error, 30, 1e-6);
   // Taken using current nav cam extrinsics
@@ -89,9 +89,9 @@ TEST_F(GraphLocalizerParameterReaderTest, PoseNodeAdderParams) {
   EXPECT_MATRIX_NEAR(na::Covariance(pose_noise), na::Covariance(params.start_noise_models[0]), 1e-6);
   EXPECT_NEAR(params.huber_k, 1.345, 1e-6);
   EXPECT_EQ(params.add_priors, true);
-  EXPECT_NEAR(params.ideal_duration, 20, 1e-6);
+  EXPECT_NEAR(params.ideal_duration, 4, 1e-6);
   EXPECT_EQ(params.min_num_states, 3);
-  EXPECT_EQ(params.max_num_states, 20);
+  EXPECT_EQ(params.max_num_states, 5);
 }
 
 TEST_F(GraphLocalizerParameterReaderTest, PoseNodeAdderModelParams) {

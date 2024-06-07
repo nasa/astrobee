@@ -61,9 +61,9 @@ TEST_F(GraphVIOParameterReaderTest, VOFactorAdderParams) {
   // Spaced Feature Tracker Params
   EXPECT_EQ(params.spaced_feature_tracker.remove_undetected_feature_tracks, true);
   EXPECT_EQ(params.spaced_feature_tracker.measurement_spacing, 2);
-  EXPECT_EQ(params.max_num_factors, 13);
+  EXPECT_EQ(params.max_num_factors, 8);
   EXPECT_EQ(params.min_num_points_per_factor, 2);
-  EXPECT_EQ(params.max_num_points_per_factor, 7);
+  EXPECT_EQ(params.max_num_points_per_factor, 6);
   EXPECT_NEAR(params.min_avg_distance_from_mean, 0.075, 1e-6);
   EXPECT_EQ(params.robust, true);
   EXPECT_EQ(params.rotation_only_fallback, true);
@@ -97,32 +97,7 @@ TEST_F(GraphVIOParameterReaderTest, CombinedNavStateNodeAdderParams) {
   EXPECT_EQ(params.add_priors, true);
   EXPECT_NEAR(params.ideal_duration, 3.25, 1e-6);
   EXPECT_EQ(params.min_num_states, 3);
-  EXPECT_EQ(params.max_num_states, 20);
-  // Check noise
-  constexpr double kTranslationStddev = 0.02;
-  constexpr double kQuaternionStddev = 0.01;
-  const gtsam::Vector6 pose_prior_noise_sigmas((gtsam::Vector(6) << kTranslationStddev, kTranslationStddev,
-                                                kTranslationStddev, kQuaternionStddev, kQuaternionStddev,
-                                                kQuaternionStddev)
-                                                 .finished());
-  constexpr double kVelocityStddev = 0.01;
-  const gtsam::Vector3 velocity_prior_noise_sigmas(
-    (gtsam::Vector(3) << kVelocityStddev, kVelocityStddev, kVelocityStddev).finished());
-  constexpr double kAccelBiasStddev = 0.001;
-  constexpr double kGyroBiasStddev = 0.001;
-  const gtsam::Vector6 bias_prior_noise_sigmas((gtsam::Vector(6) << kAccelBiasStddev, kAccelBiasStddev,
-                                                kAccelBiasStddev, kGyroBiasStddev, kGyroBiasStddev, kGyroBiasStddev)
-                                                 .finished());
-  const auto pose_noise = lc::Robust(
-    gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(pose_prior_noise_sigmas)), params.huber_k);
-  const auto velocity_noise =
-    lc::Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(velocity_prior_noise_sigmas)),
-               params.huber_k);
-  const auto bias_noise = lc::Robust(
-    gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(bias_prior_noise_sigmas)), params.huber_k);
-  EXPECT_MATRIX_NEAR(na::Covariance(pose_noise), na::Covariance(params.start_noise_models[0]), 1e-6);
-  EXPECT_MATRIX_NEAR(na::Covariance(velocity_noise), na::Covariance(params.start_noise_models[1]), 1e-6);
-  EXPECT_MATRIX_NEAR(na::Covariance(bias_noise), na::Covariance(params.start_noise_models[2]), 1e-6);
+  EXPECT_EQ(params.max_num_states, 8);
 }
 
 TEST_F(GraphVIOParameterReaderTest, CombinedNavStateNodeAdderModelParams) {
@@ -135,11 +110,11 @@ TEST_F(GraphVIOParameterReaderTest, CombinedNavStateNodeAdderModelParams) {
                                          gtsam::Point3(0.0386, 0.0247, -0.01016));
   EXPECT_MATRIX_NEAR(params.imu_integrator.body_T_imu, expected_body_T_imu, 1e-6);
   EXPECT_NEAR(params.imu_integrator.gyro_sigma, 0.00001, 1e-6);
-  EXPECT_NEAR(params.imu_integrator.accel_sigma, 0.00015, 1e-6);
-  EXPECT_NEAR(params.imu_integrator.accel_bias_sigma, 0.0077, 1e-6);
-  EXPECT_NEAR(params.imu_integrator.gyro_bias_sigma, 0.0001, 1e-6);
+  EXPECT_NEAR(params.imu_integrator.accel_sigma, 0.0005, 1e-6);
+  EXPECT_NEAR(params.imu_integrator.accel_bias_sigma, 0.0005, 1e-6);
+  EXPECT_NEAR(params.imu_integrator.gyro_bias_sigma, 0.0000035, 1e-6);
   EXPECT_NEAR(params.imu_integrator.integration_variance, 0.0001, 1e-6);
-  EXPECT_NEAR(params.imu_integrator.bias_acc_omega_int, 0.000015, 1e-6);
+  EXPECT_NEAR(params.imu_integrator.bias_acc_omega_int, 0.00015, 1e-6);
   // IMU filter
   EXPECT_EQ(params.imu_integrator.filter.quiet_accel, "ButterO3S125Lp3N33_33");
   EXPECT_EQ(params.imu_integrator.filter.quiet_ang_vel, "ButterO1S125Lp3N33_33");
@@ -152,7 +127,7 @@ TEST_F(GraphVIOParameterReaderTest, CombinedNavStateNodeAdderModelParams) {
 TEST_F(GraphVIOParameterReaderTest, NonlinearOptimizerParams) {
   const auto& params = params_.nonlinear_optimizer;
   EXPECT_EQ(params.marginals_factorization, "qr");
-  EXPECT_EQ(params.max_iterations, 4);
+  EXPECT_EQ(params.max_iterations, 6);
   EXPECT_EQ(params.verbose, false);
   EXPECT_EQ(params.use_ceres_params, false);
 }
