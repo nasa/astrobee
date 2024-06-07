@@ -1,3 +1,9 @@
+astrobee (0.18.0) testing; urgency=medium
+
+  * Astrobee now using OpenCV 4! Please see install updates in INSTALL.md
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Thu, 06 Jun 2024 16:22:41 -0700
+
 astrobee (0.17.3) testing; urgency=medium
 
   * Comms bridge added rate feature
