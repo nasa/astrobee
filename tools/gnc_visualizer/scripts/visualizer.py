@@ -32,6 +32,13 @@ from math import asin, atan2, isnan, pi, sqrt
 
 import numpy as np
 import pyqtgraph as pg
+from PyQt5.QtWidgets import (
+    QApplication,
+    QGraphicsScene,
+    QGraphicsTextItem,
+    QGraphicsView,
+    QMainWindow,
+)
 from pyqtgraph.Qt import QtCore, QtGui
 
 filepath = os.path.dirname(os.path.realpath(__file__))
@@ -254,7 +261,7 @@ callbacks_list = [
 ]
 
 
-class TerminalView(QtGui.QGraphicsTextItem):
+class TerminalView(QGraphicsTextItem):
     def __init__(self, graphics_view):
         super(TerminalView, self).__init__("")
         self.graphics_view = graphics_view
@@ -274,11 +281,11 @@ class TerminalView(QtGui.QGraphicsTextItem):
         super(TerminalView, self).paint(painter, o, w)
 
 
-class TerminalGraphicsView(QtGui.QGraphicsView):
+class TerminalGraphicsView(QGraphicsView):
     def __init__(self, parent):
         super(TerminalGraphicsView, self).__init__()
-        self.connect(parent, QtCore.SIGNAL("resize"), self.resize)
-        self.setScene(QtGui.QGraphicsScene())
+        # self.connect(parent, QtCore.SIGNAL("resize"), self.resize)
+        self.setScene(QGraphicsScene())
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setAttribute(QtCore.Qt.WA_TranslucentBackground)
@@ -292,17 +299,19 @@ class TerminalGraphicsView(QtGui.QGraphicsView):
 
 
 class ParentGraphicsView(pg.GraphicsView):
+    resized = QtCore.pyqtSignal(QtCore.QEvent)
+
     def __init__(self):
         super(ParentGraphicsView, self).__init__()
         self.setAntialiasing(False)
 
     def resizeEvent(self, event):
         super(ParentGraphicsView, self).resizeEvent(event)
-        if event != None:
-            self.emit(QtCore.SIGNAL("resize"), event)
+        if event is not None:
+            self.resized.emit(event)
 
 
-class Visualizer(QtGui.QMainWindow):
+class Visualizer(QMainWindow):
     def __init__(self, launch_command=None, plan=None, com_method=com.DDS_COM):
         super(Visualizer, self).__init__()
         self.com_method = com_method
@@ -362,10 +371,10 @@ class Visualizer(QtGui.QMainWindow):
         self.setWindowTitle("GNC Visualizer")
 
         self.settings = QtCore.QSettings("NASA", "gnc_visualizer")
-        self.restoreGeometry(self.settings.value("geometry", "").toByteArray())
-        self.restoreState(self.settings.value("windowState", "").toByteArray())
+        self.restoreGeometry(self.settings.value("geometry", "").encode())
+        self.restoreState(self.settings.value("windowState", "").encode())
 
-        QtGui.qApp.installEventFilter(self)
+        QApplication.instance().installEventFilter(self)
         # make sure initial window size includes menubar
         QtCore.QTimer.singleShot(0, self.menuBar().hide)
 
@@ -403,7 +412,7 @@ class Visualizer(QtGui.QMainWindow):
 
     def eventFilter(self, source, event):
         # do not hide menubar when menu shown
-        if QtGui.qApp.activePopupWidget() is None:
+        if QApplication.instance().activePopupWidget() is None:
             if event.type() == QtCore.QEvent.MouseMove:
                 if self.menuBar().isHidden():
                     rect = self.geometry()
@@ -420,7 +429,7 @@ class Visualizer(QtGui.QMainWindow):
                         self.menuBar().hide()
             elif event.type() == QtCore.QEvent.Leave and source is self:
                 self.menuBar().hide()
-        return QtGui.QMainWindow.eventFilter(self, source, event)
+        return super().eventFilter(source, event)
 
     def delete_plot(self, col, row):
         del self.columns[col][row]
@@ -711,7 +720,7 @@ class Visualizer(QtGui.QMainWindow):
 
 
 def sigint_handler(*args):
-    QtGui.QApplication.quit()
+    QApplication.quit()
 
 
 def main():
@@ -797,7 +806,7 @@ def main():
         if args.com_method in (com.DDS_COM, com.ROS_COM):
             com_method = args.com_method
         else:
-            print >> sys.stderr, "Invalid communication method. Must be dds or ros"
+            print("Invalid communication method. Must be dds or ros", file=sys.stderr)
             return
 
     launch_command = None
@@ -806,11 +815,12 @@ def main():
     if com_method == com.DDS_COM and (
         args.launch_command != None or args.disable_pmcs or args.plan != None
     ):
-        print >> sys.stderr, (
+        print(
             "\n###\n"
             + "\nAdditional arguments (--gantry --granite --bag --sim --plan --disable_pmcs) "
             + 'will not be processed when using DDS mode. You may use "--comm ros" or do not include this '
-            + "argument at all in order to use additional arguments.\n\n###\n"
+            + "argument at all in order to use additional arguments.\n\n###\n",
+            file=sys.stderr,
         )
         return
     # Exclude DDS commands when using ROS communication
@@ -820,18 +830,19 @@ def main():
         or args.public_ip != None
         or args.domain != None
     ):
-        print >> sys.stderr, (
+        print(
             "\n###\n"
             + "\nAdditional arguments (--use_ip --robot_name --public_ip) "
             + 'will not be processed when using ROS mode. You may include "--comm dds" '
-            + "argument in order to use these additional arguments.\n\n###\n"
+            + "argument in order to use these additional arguments.\n\n###\n",
+            file=sys.stderr,
         )
         return
     else:
         if args.launch_command == None:
             args.launch_command = []
         if len(args.launch_command) > 1:
-            print >> sys.stderr, "Can only specify one launch command."
+            print("Can only specify one launch command.", file=sys.stderr)
             return
         if len(args.launch_command) == 1:
             launch_command = args.launch_command[0]
@@ -849,7 +860,7 @@ def main():
     if not com_manager.set_com_method(com_method, dds_args):
         return
 
-    app = QtGui.QApplication([])
+    app = QApplication([])
     signal.signal(signal.SIGINT, sigint_handler)
     v = Visualizer(launch_command, args.plan, com_manager.current_com_method)
 

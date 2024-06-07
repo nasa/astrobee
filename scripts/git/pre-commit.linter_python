@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Copyright (c) 2017, United States Government, as represented by the
 # Administrator of the National Aeronautics and Space Administration.
@@ -71,12 +71,18 @@ echo "  Analysing python code style with 'isort'."
 # could happen for example if the .isort.cfg src_paths list gets out
 # of date.
 
-if $(isort . --extend-skip cmake,submodules --profile black --diff --check-only --quiet >/dev/null); then
+isort_args=(
+    "--extend-skip=cmake"
+    "--extend-skip=submodules"
+    "--extend-skip=debian"
+    "--profile=black"
+)
+if $(isort . "${isort_args[@]}" --diff --check-only --quiet >/dev/null); then
     echo "Linter checks using 'isort' passed."
 else
     echo "Errors detected with 'isort'. Fixing them. Try to add and commit your files again."
-  isort . --extend-skip cmake,submodules --profile black >/dev/null
-  failed_lint=true
+    isort . "${isort_args[@]}" >/dev/null
+    failed_lint=true
 fi
 
 # Cancel commit if linter failed

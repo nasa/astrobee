@@ -1,0 +1,12 @@
+Source: ros-noetic-rosjava-bootstrap
+Section: misc
+Priority: extra
+Maintainer: Ruben Garcia <nospam@nospam.org>
+Build-Depends: debhelper (>= 9.0.0), ros-noetic-catkin, ros-noetic-rosjava-build-tools
+Homepage: http://ros.org/wiki/rosjava_bootstrap
+Standards-Version: 3.9.2
+
+Package: ros-noetic-rosjava-bootstrap
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-noetic-rosjava-build-tools
+Description: Bootstrap utilities for rosjava builds.

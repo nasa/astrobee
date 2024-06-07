@@ -168,13 +168,15 @@ int main(int argc, char* argv[]) {
     // Decode ID of each marker tag into its hexadecimal code.
     std::deque<bool> bs;
     marker.SetContent(alvar::MarkerData::MarkerContentType::MARKER_CONTENT_TYPE_NUMBER, marker_tag.id, 0);
-    unsigned char* marker_data = marker.GetContent()->data.ptr;
-
-    for (int d = 0; d < marker.GetContent()->cols*marker.GetContent()->rows; d++) {
-      if (marker_data[d])
-        bs.push_back(true);
-      else
-        bs.push_back(false);
+    uchar* ip;
+    for (int i = 0; i < marker.GetContent().rows; ++i) {
+      ip = marker.GetContent().ptr<uchar>(i);
+      for (int j = 0; j < marker.GetContent().cols; ++j) {
+        if (ip[j] != 0)
+          bs.push_back(true);
+        else
+          bs.push_back(false);
+      }
     }
 
     marker_tag.hexCode = toHex(bs);

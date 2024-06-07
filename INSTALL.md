@@ -2,13 +2,13 @@
 
 ## System requirements
 
-Ubuntu 20.04 is currently the only supported platform for most Astrobee development use cases.
+Ubuntu 20.04 is currently the only supported platform.
 
 Here are the currently available host OS options with development roadmap details (use 64-bit PC (AMD64) desktop image):
-- [Ubuntu 20.04](http://releases.ubuntu.com/20.04): This is currently the only supported platform for most Astrobee development use cases. The Astrobee hardware on ISS has been running Ubuntu 20.04 since it was upgraded during the "Crew-Minimal S14" activity on December 19, 2023.
-- [Ubuntu 16.04](http://releases.ubuntu.com/16.04): No longer supported for most use cases. The Astrobee robot hardware ran Ubuntu 16.04 from its launch in 2019 until it was upgraded to run Ubuntu 20.04. Ubuntu 16.04 support was discontinued for most use cases in February 2024. Ending Ubuntu 16.04 support removed important limitations. For example, going forward, Astrobee's software will no longer need to be backward-compatible with Python 2 and OpenCV 3. However, Ubuntu 16.04 is still required in a very limited role that most developers don't need to worry about. We use it to compile a JAR file binary artifact of Astrobee message definitions used by the [astrobee_android](https://github.com/nasa/astrobee_android) code hosted on Astrobee's High-Level Processor, which runs a legacy version of Android with `rosjava`, which was designed to communicate with the ROS Kinetic distribution. Compiling the JAR file requires the `ros-kinetic-rosjava` package that is only available for Ubuntu 16.04. (But most developers shouldn't need to generate this artifact.)
+- [Ubuntu 20.04](http://releases.ubuntu.com/20.04): This is currently the only supported platform. The Astrobee hardware on ISS has been running Ubuntu 20.04 since it was upgraded during the "Crew-Minimal S14" activity on December 19, 2023.
 
 Specifically not supported:
+- ~~[Ubuntu 16.04](http://releases.ubuntu.com/16.04)~~: No longer supported. The Astrobee robot hardware ran Ubuntu 16.04 from its launch in 2019 until it was upgraded to run Ubuntu 20.04. Ubuntu 16.04 support was discontinued in February 2024. Ending Ubuntu 16.04 support removed important limitations. For example, going forward, Astrobee's software will no longer need to be backward-compatible with Python 2 and OpenCV 3.
 - ~~[Ubuntu 18.04](http://releases.ubuntu.com/18.04)~~: Ubuntu 18.04 support as a software development platform was discontinued as of November 2023. (It was never supported on the robot hardware.)
 - ~~[Ubuntu 22.04](http://releases.ubuntu.com/22.04)~~: There is currently no plan for Ubuntu 22.04 support on the Astrobee roadmap. However, note that Astrobee ROS2 support, when it eventually becomes available, is currently expected to use the ROS2 Humble Hawksbill distribution that normally runs on 22.04, but backported to run on 20.04 (the last Ubuntu version supported by ROS1). This will facilitate migrating from ROS1 to ROS2 without requiring a simultaneous Ubuntu distribution upgrade.
 
@@ -62,3 +62,25 @@ The native installation instructions below walk you through manually running the
 - If you are an external developer, see: \subpage install-nonNASA
 
 - If you have NASA internal access and need to cross-compile for the robot hardware, see: \subpage install-NASA
+
+### Important Notice: OpenCV 4 Upgrade
+
+Starting from version 0.18.0, our project uses exclusively OpenCV 4. If you have an earlier version of Astrobee natively build, please follow the steps below to uninstall the previous debians:
+
+    dpkg -r astrobee0
+    dpkg -r libalvar2
+    dpkg -r libopenmvg1
+    dpkg -r libdbow21
+    dpkg -r libdbowdlib1
+    dpkg -r libopencv3.3.1
+
+
+once this is done, please follow the external developer install instructions \ref install-nonNASA:
+
+    pushd $ASTROBEE_WS
+    cd src/scripts/setup/debians
+    sudo apt-get update
+    ./build_install_debians.sh
+    cd ../
+    ./install_desktop_packages.sh
+    popd

@@ -33,22 +33,20 @@ find_package(catkin2 REQUIRED COMPONENTS
   camera 
   nodelet
   msg_conversions
+  ar_track_alvar
 )
 
 # System dependencies are found with CMake's conventions
 find_package(cmake_modules REQUIRED)
 find_package(Eigen3 REQUIRED)
-find_package(Alvar REQUIRED)
-find_package(Alvar REQUIRED)
-
+find_package(PCL REQUIRED COMPONENTS common)
 
 # Find OpenCV
-LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
-find_package(OpenCV331 REQUIRED)
+find_package(OpenCV 4.0 REQUIRED)
 
 catkin_package(
   LIBRARIES ${PROJECT_NAME}
-  CATKIN_DEPENDS roscpp ff_util message_runtime std_msgs geometry_msgs cv_bridge image_transport camera msg_conversions nodelet
+  CATKIN_DEPENDS roscpp ff_util message_runtime std_msgs geometry_msgs cv_bridge image_transport camera msg_conversions nodelet ar_track_alvar
 )
 
 ###########
@@ -59,9 +57,9 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
-  ${ALVAR_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
+  ${PCL_INCLUDE_DIRS}
 )
 
 # Declare C++ libraries
@@ -72,7 +70,7 @@ add_library(marker_tracking
   src/marker_tracking/marker_detector.cc
 )
 add_dependencies(marker_tracking ${catkin_EXPORTED_TARGETS})
-target_link_libraries(marker_tracking ${catkin_LIBRARIES} ${ALVAR_LIBRARIES})
+target_link_libraries(marker_tracking ${catkin_LIBRARIES})
 
 ## Declare a C++ executable: generate_ar_target
 add_executable(generate_ar_target tools/marker_tracking/generate_ar_target.cc)

@@ -155,7 +155,7 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
     fsm_.Add(STATE::DOCKING_SWITCHING_TO_ML_LOC,
       SWITCH_FAILED, [this](FSM::Event const& event) -> FSM::State {
         Result(RESPONSE::SWITCH_TO_ML_FAILED,
-          "Could not switch to mapped landmark localization");
+          "Could not switch to mapped landmark localization. " + err_msg_);
         return STATE::UNDOCKED;
       });
     // [6]
@@ -168,7 +168,7 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
     fsm_.Add(STATE::DOCKING_MOVING_TO_APPROACH_POSE,
       MOTION_FAILED, [this](FSM::Event const& event) -> FSM::State {
         err_ = RESPONSE::MOTION_APPROACH_FAILED;
-        err_msg_ = "Failed while moving to the approach pose";
+        err_msg_ = "Failed while moving to the approach pose. " + err_msg_;
         Switch(LOCALIZATION_MAPPED_LANDMARKS);
         return STATE::RECOVERY_SWITCHING_TO_ML_LOC;
       });
@@ -182,7 +182,7 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
     fsm_.Add(STATE::DOCKING_SWITCHING_TO_AR_LOC, SWITCH_FAILED,
       [this](FSM::Event const& event) -> FSM::State {
         Result(RESPONSE::SWITCH_TO_AR_FAILED,
-          "Could not switch to marker tracking localization");
+          "Could not switch to marker tracking localization. " + err_msg_);
         return STATE::UNDOCKED;
       });
     // [8]
@@ -201,7 +201,7 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
         }
         if (event == MOTION_FAILED) {
           err_ = RESPONSE::MOTION_COMPLETE_FAILED;
-          err_msg_ = "Motion failed trying to go to complete pose";
+          err_msg_ = "Motion failed trying to go to complete pose. " + err_msg_;
         }
         Move(APPROACH_POSE, ff_msgs::MotionGoal::PRECISION);
         return STATE::RECOVERY_MOVING_TO_APPROACH_POSE;
@@ -230,7 +230,7 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
     fsm_.Add(STATE::DOCKING_SWITCHING_TO_NO_LOC,
       SWITCH_FAILED, [this](FSM::Event const& event) -> FSM::State {
         Result(RESPONSE::SWITCH_TO_NO_FAILED,
-          "Could not turn localization off");
+          "Could not turn localization off. " + err_msg_);
         return STATE::DOCKED;
       });
     // [14]
@@ -256,7 +256,7 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
     fsm_.Add(STATE::UNDOCKING_SWITCHING_TO_ML_LOC,
       SWITCH_FAILED, [this](FSM::Event const& event) -> FSM::State {
         err_ = RESPONSE::SWITCH_TO_ML_FAILED;
-        err_msg_ = "Switch to Mapped Landmarks Failed";
+        err_msg_ = "Switch to Mapped Landmarks Failed. " + err_msg_;
         Switch(LOCALIZATION_NONE);
         return STATE::RECOVERY_SWITCHING_TO_NO_LOC;
       });
@@ -271,7 +271,7 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
     fsm_.Add(STATE::UNDOCKING_MOVING_TO_APPROACH_POSE,
       MOTION_FAILED, [this](FSM::Event const& event) -> FSM::State {
         Result(RESPONSE::MOTION_APPROACH_FAILED,
-          "Could not move to approach point");
+          "Could not move to approach point. " + err_msg_);
         return STATE::UNDOCKED;
       });
     // [21]
@@ -328,7 +328,7 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
     // [28]
     fsm_.Add(STATE::DOCKING_WAITING_FOR_SPIN_DOWN,
       MOTION_FAILED, [this](FSM::Event const& event) -> FSM::State {
-        Result(RESPONSE::PREP_DISABLE_FAILED, "Could not spin down motors");
+        Result(RESPONSE::PREP_DISABLE_FAILED, "Could not spin down motors. " + err_msg_);
         Switch(LOCALIZATION_NONE);
         return STATE::DOCKED;
       });
@@ -336,7 +336,7 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
     fsm_.Add(STATE::UNDOCKING_WAITING_FOR_SPIN_UP,
       MOTION_FAILED, [this](FSM::Event const& event) -> FSM::State {
         err_ = RESPONSE::PREP_ENABLE_FAILED;
-        err_msg_ = "Spin up was not successful";
+        err_msg_ = "Spin up was not successful. " + err_msg_;
         Prep(ff_msgs::MotionGoal::OFF);
         return STATE::RECOVERY_WAITING_FOR_SPIN_DOWN;
       });
@@ -734,6 +734,7 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
     case ff_util::FreeFlyerActionState::SUCCESS:
       return fsm_.Update(SWITCH_SUCCESS);
     default:
+      err_msg_ = "Switch Code " + std::to_string(result->response) + ": (" + result->fsm_result + ")";
       return fsm_.Update(SWITCH_FAILED);
     }
   }
@@ -854,6 +855,7 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
     case ff_util::FreeFlyerActionState::SUCCESS:
       return fsm_.Update(MOTION_SUCCESS);
     default:
+      err_msg_ = "Move Code " + std::to_string(result->response) + ": (" + result->fsm_result + ")";
       return fsm_.Update(MOTION_FAILED);
     }
   }

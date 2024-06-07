@@ -9,7 +9,7 @@ function deb_version {
   fi
 }
 
-source /opt/ros/kinetic/setup.bash
+source /opt/ros/noetic/setup.bash
 date
 echo "Kernel: $(uname -r)"
 lsb_release -r

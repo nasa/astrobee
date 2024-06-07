@@ -77,7 +77,7 @@ ros-noetic-xacro
 ros-noetic-octomap
 ros-noetic-catkin
 ros-noetic-pcl-conversions
-libalvar2
+ros-noetic-ar-track-alvar
 libdbow21
 libgtsam
 libopenmvg1
@@ -88,6 +88,13 @@ libmiro0
 libsoracore1
 libdecomputil0
 libjps3d0
+libopencv-core4.2
+libopencv-calib3d4.2
+libopencv-highgui4.2
+libopencv-imgcodecs4.2
+libopencv-imgproc4.2
+libopencv-features2d4.2
+libopencv-xfeatures2d
 build-essential
 cmake
 libgoogle-glog-dev
@@ -113,7 +120,6 @@ libsuitesparse-dev
 libatlas-base-dev
 libjson-c-dev
 libargtable2-dev
-libalvar-dev
 libdbow2-dev
 libgtsam-dev
 libopenmvg-dev
@@ -124,6 +130,4 @@ libsoracore-dev
 libmiro-dev
 libdecomputil-dev
 libjps3d-dev
-libopencv3.3.1
-libopencv-dev3.3.1
 python3-catkin-tools

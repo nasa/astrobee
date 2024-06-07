@@ -187,6 +187,10 @@ module rapid {
       //@copy-declaration /** For expert use only. Returns Astrobee to its dock.<p/>As originally envisioned, this operation could be commanded from anywhere on the ISS, and Astrobee would plan a collision-free path back to the dock. Auto-return could also be invoked as an automatic response to a low-battery fault. To avoid contention for dock berths when multiple Astrobees are in use, each Astrobee should return to the same berth it originally departed from.<p/>However, using this command is not recommended at this time, because (1) it has not been sufficiently tested (including testing of the QP trajectory planner), (2) at present, the proper berth selection logic is not implemented; instead, Astrobee will always return to berth 1 (= left). */
       const rapid::String32 MOBILITY_METHOD_AUTO_RETURN = "autoReturn";
 
+      //@copy-declaration /** Which berth Astrobee is using. 1=left, 2=right. */
+      const rapid::String32 MOBILITY_METHOD_AUTO_RETURN_PARAM_BERTH_NUMBER = "berthNumber";
+      const rapid::DataType MOBILITY_METHOD_AUTO_RETURN_DTYPE_BERTH_NUMBER = rapid::RAPID_INT;
+
       //@copy-declaration /** Docks Astrobee at the specified berth. Preconditions: Astrobee must be near the dock approach point for the specified berth, the berth approach path must not be blocked, and the dock AR tags must not be occluded.<p/>The nominal docking sequence is as follows:<ol><li>Switch to the "MappedLandmarks" localization pipeline (the default for general-purpose navigation).</li><li>Coarsely correct positioning at dock approach point, ensuring dock AR tags are in view.</li><li>Switch to "ARTags" localization pipeline (uses AR tags on dock for more accurate dock-relative localization).</li><li>Fine-tune positioning at dock approach point.</li><li>Complete the docking approach, which should end with Astrobee magnetically retained on the berth, with power and data pins in contact.</li><li>Check magnetic retention by attempting to fly away from the dock. Lack of motion indicates success.</li><li>Idle propulsion.</li><li>Disable localization system.</li></ol> */
       const rapid::String32 MOBILITY_METHOD_DOCK = "dock";
 
@@ -331,6 +335,17 @@ module rapid {
       const rapid::String32 SETTINGS_METHOD_SET_ENABLE_REPLAN_PARAM_ENABLE_REPLAN = "enableReplan";
       const rapid::DataType SETTINGS_METHOD_SET_ENABLE_REPLAN_DTYPE_ENABLE_REPLAN = rapid::RAPID_BOOL;
 
+      //@copy-declaration /** Set the exposure value for either the nav or dock camera. */
+      const rapid::String32 SETTINGS_METHOD_SET_EXPOSURE = "setExposure";
+
+      //@copy-declaration /** Which camera */
+      const rapid::String32 SETTINGS_METHOD_SET_EXPOSURE_PARAM_CAMERA_NAME = "cameraName";
+      const rapid::DataType SETTINGS_METHOD_SET_EXPOSURE_DTYPE_CAMERA_NAME = rapid::RAPID_STRING;
+
+      //@copy-declaration /** The value to set the exposurec to. */
+      const rapid::String32 SETTINGS_METHOD_SET_EXPOSURE_PARAM_EXPOSURE = "exposure";
+      const rapid::DataType SETTINGS_METHOD_SET_EXPOSURE_DTYPE_EXPOSURE = rapid::RAPID_FLOAT;
+
       //@copy-declaration /** Sets flashlight brightness. */
       const rapid::String32 SETTINGS_METHOD_SET_FLASHLIGHT_BRIGHTNESS = "setFlashlightBrightness";
 
@@ -367,6 +382,13 @@ module rapid {
       //@copy-declaration /** The moment of inertia tensor. Must be a symmetric matrix. Specified relative to the center of mass. */
       const rapid::String32 SETTINGS_METHOD_SET_INERTIA_PARAM_MATRIX = "matrix";
       const rapid::DataType SETTINGS_METHOD_SET_INERTIA_DTYPE_MATRIX = rapid::RAPID_MAT33f;
+
+      //@copy-declaration /** Sets the map used for localization. */
+      const rapid::String32 SETTINGS_METHOD_SET_MAP = "setMap";
+
+      //@copy-declaration /** Full path to the map file to use. 'default' uses the default map loaded on startup. */
+      const rapid::String32 SETTINGS_METHOD_SET_MAP_PARAM_MAP_NAME = "mapName";
+      const rapid::DataType SETTINGS_METHOD_SET_MAP_DTYPE_MAP_NAME = rapid::RAPID_STRING;
 
       //@copy-declaration /** Changes the value of Astrobee operating limits */
       const rapid::String32 SETTINGS_METHOD_SET_OPERATING_LIMITS = "setOperatingLimits";

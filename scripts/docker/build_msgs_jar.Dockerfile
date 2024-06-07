@@ -21,18 +21,22 @@
 
 ARG REMOTE=astrobee
 ARG REPO=astrobee
-FROM ${REMOTE}/${REPO}:msgs-ubuntu16.04
+FROM ${REMOTE}/${REPO}:msgs-ubuntu20.04
 
-RUN apt-get update && apt-get install -y \
-  unzip \
-  libc6-dev-i386 \
-  lib32z1 \
-  python-wstool \
-  openjdk-8-jdk \
-  ros-kinetic-rosjava \
-  && rm -rf /var/lib/apt/lists/*
+COPY scripts/setup/debians/rosjava /src/msgs/src/scripts
 
-# Compile msg jar files, genjava_message_artifacts only works with bash
+# make sure there is a python binary
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 1
+
+# install dependencies for rosjava build script
+RUN apt-get update && apt-get install -y devscripts equivs
+
+# build rosjava debians
+RUN cd /src/msgs/src/scripts \
+    && /bin/bash build_rosjava_debians.sh --install-with-deps \
+    && rm -rf /var/lib/apt/lists/*
+
+# compile msg jar files, genjava_message_artifacts only works with bash
 RUN ["/bin/bash", "-c", "cd /src/msgs \
   && catkin config \
   && catkin build \

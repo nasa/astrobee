@@ -1,3 +1,16 @@
+libopenmvg (1.1-3) unstable; urgency=medium
+
+  * Minor OpenMVGConfig.cmake syntax fix
+
+ -- Ruben Garcia <nospam@nospam.org>  Fri, 03 May 2024 10:16:40 -0700
+
+libopenmvg (1.1-2) unstable; urgency=medium
+
+  * Remove libceres-dev from libopenmvg1 depends since it is not
+    needed in the robots. This saves space.
+
+ -- Ruben Garcia <nospam@nospam.org>  Wed, 05 Apr 2023 11:49:59 -0800
+
 libopenmvg (1.1-1) unstable; urgency=medium
 
   * Initial release

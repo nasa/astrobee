@@ -105,6 +105,8 @@ OpState* OpStateReady::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
     exec_->SetEnableImmediate(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SET_ENABLE_REPLAN) {
     exec_->SetEnableReplan(cmd);
+  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SET_EXPOSURE) {
+    exec_->SetExposure(cmd);
   } else if (cmd->cmd_name ==
                         CommandConstants::CMD_NAME_SET_FLASHLIGHT_BRIGHTNESS) {
     exec_->SetFlashlightBrightness(cmd);
@@ -112,6 +114,8 @@ OpState* OpStateReady::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
     exec_->SetHolonomicMode(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SET_INERTIA) {
     exec_->SetInertia(cmd);
+  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SET_MAP) {
+    exec_->SetMap(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SET_OPERATING_LIMITS) {
     exec_->SetOperatingLimits(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SET_PLAN) {
