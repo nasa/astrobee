@@ -67,6 +67,7 @@ int PoseFactorAdder<PoseNodeAdderType>::AddFactorsForSingleMeasurement(
   const gtsam::PriorFactor<gtsam::Pose3>::shared_ptr pose_prior_factor(
     new gtsam::PriorFactor<gtsam::Pose3>(pose_key, measurement.pose, pose_noise));
   factors.push_back(pose_prior_factor);
+  return 1;
 }
 
 template <class PoseNodeAdderType>

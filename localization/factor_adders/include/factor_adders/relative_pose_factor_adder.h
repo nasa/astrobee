@@ -81,7 +81,7 @@ int RelativePoseFactorAdder<PoseNodeAdderType>::AddFactorsForSingleMeasurement(
 template <class PoseNodeAdderType>
 bool RelativePoseFactorAdder<PoseNodeAdderType>::CanAddFactor(
   const localization_measurements::RelativePoseWithCovarianceMeasurement& measurement) const {
-  return node_adder_->CanAddNode(measurement.time_a) && node_adder_->CanAddNode(measurement.time_b);
+  return node_adder_->CanAddNode(measurement.timestamp_a) && node_adder_->CanAddNode(measurement.timestamp_b);
 }
 }  // namespace factor_adders
 

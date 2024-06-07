@@ -75,14 +75,14 @@ if(CATKIN_ENABLE_TESTING)
     test/test_simple_localizer.cc
   )
   target_link_libraries(test_simple_localizer
-    ${PROJECT_NAME} ${catkin_LIBRARIES} 
+    ${catkin_LIBRARIES} 
   )
   add_rostest_gtest(test_simple_odometry
     test/test_simple_odometry.test
     test/test_simple_odometry.cc
   )
   target_link_libraries(test_simple_odometry
-    ${PROJECT_NAME} ${catkin_LIBRARIES} 
+    ${catkin_LIBRARIES} 
   )
 
 endif() 
