@@ -68,17 +68,6 @@ include_directories(
   ${EIGEN3_INCLUDE_DIRS}
 )
 
-file(GLOB cc_files
-     "src/*.cc"
-)
-
-# Declare C++ libraries
-add_library(${PROJECT_NAME}
-  ${cc_files}
-)
-add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
-
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
   add_rostest_gtest(test_simple_localizer
@@ -97,21 +86,3 @@ if(CATKIN_ENABLE_TESTING)
   )
 
 endif() 
-
-#############
-## Install ##
-#############
-
-# Mark libraries for installation
-install(TARGETS ${PROJECT_NAME}
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
-)
-
-# Mark cpp header files for installation
-install(DIRECTORY include/${PROJECT_NAME}/
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-  FILES_MATCHING PATTERN "*.h"
-  PATTERN ".svn" EXCLUDE
-)
