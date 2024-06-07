@@ -31,7 +31,6 @@ from vector3d_plotter import Vector3dPlotter
 
 # Return list of 3 lists, one each for x, y, z values in poses
 def xyz_vectors_from_poses(poses):
-    # TODO: Do this more efficiently
     xs = [pose.position.x for pose in poses]
     ys = [pose.position.y for pose in poses]
     zs = [pose.position.z for pose in poses]
@@ -40,7 +39,6 @@ def xyz_vectors_from_poses(poses):
 
 # Return list of 3 lists, one each for y, p, r values in poses
 def ypr_vectors_from_poses(poses):
-    # TODO: Do this more efficiently
     ys = [euler_angles[0] for euler_angles in (pose.euler_angles() for pose in poses)]
     ps = [euler_angles[1] for euler_angles in (pose.euler_angles() for pose in poses)]
     rs = [euler_angles[2] for euler_angles in (pose.euler_angles() for pose in poses)]
@@ -49,7 +47,6 @@ def ypr_vectors_from_poses(poses):
 
 # Return list of 3 lists, one each for x, y, z values in velocities
 def xyz_velocity_vectors_from_graph_vio_states(graph_vio_states):
-    # TODO: Do this more efficiently
     xs = [state.velocity_with_covariance.x for state in graph_vio_states]
     ys = [state.velocity_with_covariance.y for state in graph_vio_states]
     zs = [state.velocity_with_covariance.z for state in graph_vio_states]
@@ -58,7 +55,6 @@ def xyz_velocity_vectors_from_graph_vio_states(graph_vio_states):
 
 # Return list of 3 lists, one each for x, y, z values in velocities
 def xyz_velocity_vectors_from_extrapolated_loc_states(extrapolated_loc_states):
-    # TODO: Do this more efficiently
     xs = [state.velocity.x for state in extrapolated_loc_states]
     ys = [state.velocity.y for state in extrapolated_loc_states]
     zs = [state.velocity.z for state in extrapolated_loc_states]
@@ -67,7 +63,6 @@ def xyz_velocity_vectors_from_extrapolated_loc_states(extrapolated_loc_states):
 
 # Return list of 3 lists, one each for x, y, z values in accelerations
 def xyz_acceleration_vectors_from_extrapolated_loc_states(extrapolated_loc_states):
-    # TODO: Do this more efficiently
     xs = [state.acceleration.x for state in extrapolated_loc_states]
     ys = [state.acceleration.y for state in extrapolated_loc_states]
     zs = [state.acceleration.z for state in extrapolated_loc_states]
@@ -76,7 +71,6 @@ def xyz_acceleration_vectors_from_extrapolated_loc_states(extrapolated_loc_state
 
 # Return list of 3 lists, one each for x, y, z values in accelerations
 def xyz_acceleration_vectors_from_imu_accelerations(imu_accelerations):
-    # TODO: Do this more efficiently
     xs = [acceleration.x for acceleration in imu_accelerations]
     ys = [acceleration.y for acceleration in imu_accelerations]
     zs = [acceleration.z for acceleration in imu_accelerations]
@@ -87,7 +81,6 @@ def xyz_acceleration_vectors_from_imu_accelerations(imu_accelerations):
 
 # Return list of 3 lists, one each for x, y, z values in IMU accelerometer bias
 def xyz_accel_bias_vectors_from_graph_vio_states(graph_vio_states):
-    # TODO: Do this more efficiently
     xs = [
         state.imu_bias_with_covariance.accelerometer_bias.x
         for state in graph_vio_states
@@ -105,7 +98,6 @@ def xyz_accel_bias_vectors_from_graph_vio_states(graph_vio_states):
 
 # Return list of 3 lists, one each for x, y, z values in IMU gyro bias
 def xyz_gyro_bias_vectors_from_graph_vio_states(graph_vio_states):
-    # TODO: Do this more efficiently
     xs = [state.imu_bias_with_covariance.gyroscope_bias.x for state in graph_vio_states]
     ys = [state.imu_bias_with_covariance.gyroscope_bias.y for state in graph_vio_states]
     zs = [state.imu_bias_with_covariance.gyroscope_bias.z for state in graph_vio_states]

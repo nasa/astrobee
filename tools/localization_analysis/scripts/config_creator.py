@@ -36,7 +36,7 @@ def fill_in_values(original_config, value_map, new_config):
 def make_value_map(values, value_names):
     value_map = {}
     if len(values) != len(value_names):
-        print("values and value_names not same length!")
+        print("Values and value_names not the same length.")
         exit()
 
     for index, value_name in enumerate(value_names):
