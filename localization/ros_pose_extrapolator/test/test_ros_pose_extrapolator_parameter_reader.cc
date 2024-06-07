@@ -56,11 +56,11 @@ TEST_F(RosPoseExtrapolatorParameterReaderTest, RosPoseExtrapolatorParams) {
                                          gtsam::Point3(0.0386, 0.0247, -0.01016));
   EXPECT_MATRIX_NEAR(params_.imu_integrator.body_T_imu, expected_body_T_imu, 1e-6);
   EXPECT_NEAR(params_.imu_integrator.gyro_sigma, 0.00001, 1e-6);
-  EXPECT_NEAR(params_.imu_integrator.accel_sigma, 0.00015, 1e-6);
-  EXPECT_NEAR(params_.imu_integrator.accel_bias_sigma, 0.0077, 1e-6);
-  EXPECT_NEAR(params_.imu_integrator.gyro_bias_sigma, 0.0001, 1e-6);
+  EXPECT_NEAR(params_.imu_integrator.accel_sigma, 0.0005, 1e-6);
+  EXPECT_NEAR(params_.imu_integrator.accel_bias_sigma, 0.0005, 1e-6);
+  EXPECT_NEAR(params_.imu_integrator.gyro_bias_sigma, 0.0000035, 1e-6);
   EXPECT_NEAR(params_.imu_integrator.integration_variance, 0.0001, 1e-6);
-  EXPECT_NEAR(params_.imu_integrator.bias_acc_omega_int, 0.000015, 1e-6);
+  EXPECT_NEAR(params_.imu_integrator.bias_acc_omega_int, 0.00015, 1e-6);
   // IMU filter
   EXPECT_EQ(params_.imu_integrator.filter.quiet_accel, "ButterO3S125Lp3N33_33");
   EXPECT_EQ(params_.imu_integrator.filter.quiet_ang_vel, "ButterO1S125Lp3N33_33");

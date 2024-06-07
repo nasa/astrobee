@@ -45,7 +45,7 @@ class RosGraphLocalizerParameterReaderTest : public ::testing::Test {
 };
 
 TEST_F(RosGraphLocalizerParameterReaderTest, RosGraphLocalizerNodeletParams) {
-  EXPECT_EQ(params_.max_graph_vio_state_buffer_size, 30);
+  EXPECT_EQ(params_.max_graph_vio_state_buffer_size, 10);
   EXPECT_EQ(params_.max_vl_matched_projections_buffer_size, 10);
 }
 
