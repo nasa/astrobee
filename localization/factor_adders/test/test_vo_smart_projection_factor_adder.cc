@@ -23,6 +23,7 @@
 #include <localization_measurements/feature_points_measurement.h>
 #include <node_adders/node_adder.h>
 #include <node_adders/utilities.h>
+#include <nodes/timestamped_nodes.h>
 #include <nodes/values.h>
 #include <vision_common/feature_point.h>
 
@@ -39,6 +40,7 @@ namespace vc = vision_common;
 // Key values are calculated using the integer timestamps passed.
 class SimplePoseNodeAdder : public na::NodeAdder {
  public:
+  SimplePoseNodeAdder() : values_(std::shared_ptr<no::Values>()), nodes_(values_) {}
   void AddInitialNodesAndPriors(gtsam::NonlinearFactorGraph& graph) final{};
 
   bool AddNode(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final { return true; }
@@ -56,15 +58,18 @@ class SimplePoseNodeAdder : public na::NodeAdder {
     return keys;
   }
 
-  const no::Values& values() const { return values_; }
+  const no::Values& values() const { return *values_; }
 
-  no::Values& values() { return values_; }
+  no::Values& values() { return *values_; }
+
+  no::TimestampedNodes<gtsam::Pose3>& nodes() { return nodes_; }
 
   // Simulate measurement delay for node adder and control end of measurements time.
   double latest_measurement_time_ = 10;
 
  private:
-  no::Values values_;
+  std::shared_ptr<no::Values> values_;
+  no::TimestampedNodes<gtsam::Pose3> nodes_;
 };
 
 class VoSmartProjectionFactorAdderTest : public ::testing::Test {

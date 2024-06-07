@@ -61,7 +61,7 @@ class SimpleAdder : public fa::SingleMeasurementBasedFactorAdder<lm::PoseMeasure
   }
 
   // Simulate some node adder delay and don't add factors if past end time.
-  bool CanAddFactor(const localization_common::Time time) const final { return time <= end_time_; }
+  bool CanAddFactor(const lm::PoseMeasurement& measurement) const final { return measurement.timestamp <= end_time_; }
 
   int key_value_ = 0;
   gtsam::SharedNoiseModel pose_noise_;
