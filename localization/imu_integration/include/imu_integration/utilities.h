@@ -36,7 +36,6 @@ boost::optional<localization_measurements::ImuMeasurement> Interpolate(
   const localization_measurements::ImuMeasurement& imu_measurement_a,
   const localization_measurements::ImuMeasurement& imu_measurement_b, const localization_common::Time timestamp);
 
-// TODO(rsoussan): Move these somewhere else?
 gtsam::PreintegratedCombinedMeasurements Pim(
   const gtsam::imuBias::ConstantBias& bias,
   const boost::shared_ptr<gtsam::PreintegratedCombinedMeasurements::Params>& params);

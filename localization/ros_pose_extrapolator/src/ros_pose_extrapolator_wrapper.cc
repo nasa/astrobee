@@ -68,7 +68,6 @@ void RosPoseExtrapolatorWrapper::GraphVIOStateCallback(const ff_msgs::GraphVIOSt
   // Reset extrapolated vio state when receive new VIO message so IMU extrapolation
   // restarts using this state.
   latest_extrapolated_vio_state_ = latest_vio_state;
-  // TODO(rsoussan): Add more than just the latest state?
   odom_interpolator_.Add(latest_vio_state.timestamp(), lc::EigenPose(latest_vio_state.pose()));
   standstill_ = graph_vio_state_msg.standstill;
   // Remove old measurements no longer needed for extrapolation.
@@ -96,7 +95,6 @@ void RosPoseExtrapolatorWrapper::LocalizationStateCallback(const ff_msgs::GraphL
 bool RosPoseExtrapolatorWrapper::standstill() const {
   if (!params_.standstill_enabled) return false;
   // If uninitialized, return not at standstill
-  // TODO(rsoussan): Is this the appropriate behavior?
   if (!standstill_) return false;
   return *standstill_;
 }
@@ -141,8 +139,7 @@ RosPoseExtrapolatorWrapper::LatestExtrapolatedStateAndCovariances() {
   const lc::CombinedNavState extrapolated_state(extrapolated_world_T_body, extrapolated_world_F_body_velocity,
                                                 latest_extrapolated_vio_state_->bias(), timestamp);
 
-  // TODO(rsoussan): propogate uncertainties from imu integrator and odom_interpolator
-  // TODO(rsoussan): how to get covariances???? Use odom ones for now???
+  // TODO(rsoussan): propogate uncertainties from imu integrator, odom_interpolator, and localization estimate
   return std::pair<lc::CombinedNavState, lc::CombinedNavStateCovariances>{extrapolated_state,
                                                                           *latest_vio_state_covariances_};
 }
@@ -164,7 +161,7 @@ boost::optional<ff_msgs::EkfState> RosPoseExtrapolatorWrapper::LatestExtrapolate
   ff_msgs::EkfState latest_extrapolated_loc_msg;
   latest_extrapolated_loc_msg.header = latest_loc_msg_->header;
   latest_extrapolated_loc_msg.child_frame_id = latest_loc_msg_->child_frame_id;
-  // Controller can't handle a confidence other than 0.  TODO(rsoussan): switch back when this is fixed.
+  // Controller can't handle a confidence other than 0.
   latest_extrapolated_loc_msg.confidence = 0;
   // Prevent overflow of uin8_t
   latest_extrapolated_loc_msg.of_count = latest_vio_msg_->num_of_factors <= 255 ? latest_vio_msg_->num_of_factors : 255;

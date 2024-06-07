@@ -332,7 +332,6 @@ template <typename PoseNodeAdderType>
 boost::optional<SharedRobustSmartFactor> VoSmartProjectionFactorAdder<PoseNodeAdderType>::FixedSmartFactor(
   const gtsam::Values& values, gtsam::PinholePose<gtsam::Cal3_S2>::MeasurementVector& measurements,
   gtsam::KeyVector& keys) const {
-  // TODO(rsoussan): Scale noise with num measurements?
   auto new_smart_factor = boost::make_shared<RobustSmartFactor>(
     params_.cam_noise, params_.cam_intrinsics, params_.body_T_cam, params_.smart_factor, params_.rotation_only_fallback,
     params_.robust, params_.huber_k);

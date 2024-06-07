@@ -102,7 +102,6 @@ void RosGraphLocalizerNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
     SERVICE_GNC_EKF_INIT_BIAS_FROM_FILE, &RosGraphLocalizerNodelet::ResetBiasesFromFileAndResetLocalizer, this);
   reset_map_srv_ =
     private_nh_.advertiseService(SERVICE_LOCALIZATION_RESET_MAP_LOC, &RosGraphLocalizerNodelet::ResetMap, this);
-  // TODO(rsoussan): Reset biases from file here?
   reset_srv_ = private_nh_.advertiseService(SERVICE_GNC_EKF_RESET,
                                             &RosGraphLocalizerNodelet::ResetBiasesFromFileAndResetLocalizer, this);
   input_mode_srv_ = private_nh_.advertiseService(SERVICE_GNC_EKF_SET_INPUT, &RosGraphLocalizerNodelet::SetMode, this);
@@ -118,7 +117,6 @@ bool RosGraphLocalizerNodelet::SetMode(ff_msgs::SetEkfInput::Request& req, ff_ms
       "Received Mode request that is not None and current mode is "
       "None, resetting Localizer.");
     ResetAndEnableLocalizer();
-    // TODO(rsoussan): also reset vio??
   }
 
   // Reset localizer when switch between ar mode
