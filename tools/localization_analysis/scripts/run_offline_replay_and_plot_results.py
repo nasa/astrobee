@@ -57,6 +57,7 @@ if __name__ == "__main__":
     parser.add_argument("--loc-output-file", default="loc_output.pdf")
     parser.add_argument("--vio-results-csv-file", default="vio_results.csv")
     parser.add_argument("--loc-results-csv-file", default="loc_results.csv")
+    parser.add_argument("--results-csv-file", default="results.csv")
     parser.add_argument("-g", "--groundtruth-bagfile", default=None)
     parser.add_argument(
         "--directory",
@@ -103,6 +104,8 @@ if __name__ == "__main__":
         + args.robot_config_file
         + " -w "
         + args.world
+        + " -s "
+        + args.results_csv_file
     )
     lu.run_command_and_save_output(
         run_offline_replay_command, "run_offline_replay_command.txt"

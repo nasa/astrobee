@@ -106,33 +106,33 @@ def run_offline_replay(params, output_dir):
     bag_name = os.path.splitext(os.path.basename(params.bagfile))[0]
     output_bag_path = os.path.join(output_dir, bag_name + "_results.bag")
     output_csv_file = os.path.join(output_dir, bag_name + "_stats.csv")
+    vio_output_file = os.path.join(output_dir, bag_name + "_vio_output.pdf")
+    loc_output_file = os.path.join(output_dir, bag_name + "_loc_output.pdf")
     run_command = (
-        "rosrun localization_analysis run_offline_replay "
+        "rosrun localization_analysis run_offline_replay_and_plot_results.py "
         + params.bagfile
         + " "
         + params.map_file
+        + " -r "
+        + params.robot_config_file
+        + " -w "
+        + params.world
         + " -i "
         + params.image_topic
         + " -o "
         + output_bag_path
-        + " -s "
+        + " --results-csv-file "
         + output_csv_file
-        + " -f "
-        + params.use_bag_image_feature_msgs
-    )
-    os.system(run_command)
-    output_pdf_file = os.path.join(output_dir, bag_name + "_output.pdf")
-    plot_command = (
-        "rosrun localization_analysis plot_results.py "
-        + output_bag_path
-        + " --output-file "
-        + output_pdf_file
-        + " --output-csv-file "
-        + output_csv_file
+        + " --vio-output-file "
+        + vio_output_file
+        + " --loc-output-file "
+        + loc_output_file
         + " -g "
         + params.groundtruth_bagfile
     )
-    os.system(plot_command)
+    if not params.use_bag_image_feature_msgs:
+        run_command += " --generate-image-features "
+    os.system(run_command)
 
 
 # Helper that unpacks arguments and calls original function
@@ -170,7 +170,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=Formatter)
     parser.add_argument(
         "config_file",
-        help="Config file containing bag names, map names, image topics, robot config, and world.  A new line should be used for each bagfile.  Example:\n /home/bag_name.bag /home/map_name.map /mgt/img_sampler/nav_cam/image_record bumble.config iss false \n /home/bag_name_2.bag /home/map_name.map /mgt/img_sampler/nav_cam/image_record bumble.config iss false",
+        help="Config file containing bag names, map names, image topics, robot config, and world.  A new line should be used for each bagfile.  Example:\n /home/bag_name.bag /home/map_name.map /mgt/img_sampler/nav_cam/image_record bumble.config iss false /home/groundtruth.bag \n /home/bag_name_2.bag /home/map_name.map /mgt/img_sampler/nav_cam/image_record bumble.config iss false /home/groundtruth.bag",
     )
     parser.add_argument(
         "output_dir", help="Output directory where results files are saved."
