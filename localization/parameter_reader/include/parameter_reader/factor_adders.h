@@ -38,8 +38,8 @@ void LoadLocFactorAdderParams(config_reader::ConfigReader& config, factor_adders
                               const std::string& prefix = "", const std::string& camera_name = "nav");
 
 void LoadDepthOdometryFactorAdderParams(config_reader::ConfigReader& config,
-                                       factor_adders::DepthOdometryFactorAdderParams& params,
-                                       const std::string& prefix = "", const std::string& camera_name = "haz");
+                                        factor_adders::DepthOdometryFactorAdderParams& params,
+                                        const std::string& prefix = "", const std::string& camera_name = "haz");
 
 void LoadRelativePoseFactorAdderParams(config_reader::ConfigReader& config,
                                        factor_adders::RelativePoseFactorAdderParams& params,

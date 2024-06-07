@@ -57,7 +57,7 @@ void LoadLocFactorAdderParams(config_reader::ConfigReader& config, fa::LocFactor
 }
 
 void LoadDepthOdometryFactorAdderParams(config_reader::ConfigReader& config, fa::DepthOdometryFactorAdderParams& params,
-                              const std::string& prefix, const std::string& camera_name) {
+                                        const std::string& prefix, const std::string& camera_name) {
   LoadFactorAdderParams(config, params, prefix);
   LOAD_PARAM(params.pose_covariance_scale, config, prefix);
   LOAD_PARAM(params.point_noise_scale, config, prefix);
@@ -73,7 +73,7 @@ void LoadDepthOdometryFactorAdderParams(config_reader::ConfigReader& config, fa:
 }
 
 void LoadRelativePoseFactorAdderParams(config_reader::ConfigReader& config, fa::RelativePoseFactorAdderParams& params,
-                              const std::string& prefix) {
+                                       const std::string& prefix) {
   LoadFactorAdderParams(config, params, prefix);
   LOAD_PARAM(params.covariance_scale, config, prefix);
 }
