@@ -41,6 +41,12 @@ if __name__ == "__main__":
         help="Image topic.",
     )
     parser.add_argument(
+        "-r", "--robot-config-file", default="bumble.config", help="Robot config file."
+    )
+    parser.add_argument(
+        "-w", "--world", default="iss", help="World (iss or granite)."
+    )
+    parser.add_argument(
         "-o", "--output-bagfile", default="results.bag", help="Output bagfile."
     )
     parser.add_argument(
@@ -49,8 +55,10 @@ if __name__ == "__main__":
         action="store_false",
         help="Use image features msgs from bagfile or generate features from images.",
     )
-    parser.add_argument("--output-file", default="output.pdf")
-    parser.add_argument("--output-csv-file", default="results.csv")
+    parser.add_argument("--vio-output-file", default="vio_output.pdf")
+    parser.add_argument("--loc-output-file", default="loc_output.pdf")
+    parser.add_argument("--vio-results-csv-file", default="vio_results.csv")
+    parser.add_argument("--loc-results-csv-file", default="loc_results.csv")
     parser.add_argument("-g", "--groundtruth-bagfile", default=None)
     parser.add_argument(
         "--directory",
@@ -64,11 +72,17 @@ if __name__ == "__main__":
     if not os.path.isfile(args.map_file):
         print("Map file " + args.map_file + " does not exist.")
         sys.exit()
-    if os.path.isfile(args.output_file):
-        print("Output file " + args.output_file + " already exist.")
+    if os.path.isfile(args.vio_output_file):
+        print("VIO output file " + args.vio_output_file + " already exist.")
         sys.exit()
-    if os.path.isfile(args.output_csv_file):
-        print("Output csv file " + args.output_csv_file + " already exist.")
+    if os.path.isfile(args.loc_output_file):
+        print("Loc output file " + args.loc_output_file + " already exist.")
+        sys.exit()
+    if os.path.isfile(args.vio_results_csv_file):
+        print("VIO results csv file " + args.vio_results_csv_file + " already exist.")
+        sys.exit()
+    if os.path.isfile(args.loc_results_csv_file):
+        print("Loc results csv file " + args.loc_results_csv_file + " already exist.")
         sys.exit()
     if args.groundtruth_bagfile and not os.path.isfile(args.groundtruth_bagfile):
         print("Groundtruth bag " + args.groundtruth_bagfile + " does not exist.")
@@ -78,27 +92,44 @@ if __name__ == "__main__":
     map_file = os.path.abspath(args.map_file)
 
     # Run localizer
-    run_graph_bag_command = (
-        "rosrun localization_analysis run_graph_bag "
+    run_offline_replay_command = (
+        "rosrun localization_analysis run_offline_replay "
         + bagfile
         + " "
         + map_file
-        + " --use-image-features "
+        + " --use-bag-image-feature-msgs "
         + (str(args.use_image_features)).lower()
         + " -o "
         + args.output_bagfile
+        + " -r "
+        + args.robot_config_file 
+        + " -w " 
+        + args.world
     )
-    lu.run_command_and_save_output(run_graph_bag_command, "run_graph_bag_command.txt")
+    lu.run_command_and_save_output(run_offline_replay_command, "run_offline_replay_command.txt")
 
     # Plot results
-    plot_results_command = (
-        "rosrun localization_analysis plot_results.py "
+    plot_vio_results_command = (
+        "rosrun localization_analysis vio_results_plotter.py "
         + args.output_bagfile
         + " --output-file "
-        + args.output_file
-        + " --output-csv-file "
-        + args.output_csv_file
+        + args.vio_output_file
+        + " --results-csv-file "
+        + args.vio_results_csv_file
     )
     if args.groundtruth_bagfile:
-        plot_results_command += " -g " + args.groundtruth_bagfile
-    lu.run_command_and_save_output(plot_results_command, "plot_results_command.txt")
+        plot_vio_results_command += " -g " + args.groundtruth_bagfile
+    lu.run_command_and_save_output(plot_vio_results_command, "plot_vio_results_command.txt")
+
+    # Plot loc results
+    plot_loc_results_command = (
+        "rosrun localization_analysis loc_results_plotter.py "
+        + args.output_bagfile
+        + " --output-file "
+        + args.loc_output_file
+        + " --results-csv-file "
+        + args.loc_results_csv_file
+    )
+    if args.groundtruth_bagfile:
+        plot_loc_results_command += " -g " + args.groundtruth_bagfile
+    lu.run_command_and_save_output(plot_loc_results_command, "plot_loc_results_command.txt")
