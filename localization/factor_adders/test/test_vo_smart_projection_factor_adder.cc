@@ -40,7 +40,7 @@ namespace vc = vision_common;
 // Key values are calculated using the integer timestamps passed.
 class SimplePoseNodeAdder : public na::NodeAdder {
  public:
-  SimplePoseNodeAdder() : values_(std::shared_ptr<no::Values>()), nodes_(values_) {}
+  SimplePoseNodeAdder() : values_(std::make_shared<no::Values>()), nodes_(values_) {}
   void AddInitialNodesAndPriors(gtsam::NonlinearFactorGraph& graph) final{};
 
   bool AddNode(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final { return true; }

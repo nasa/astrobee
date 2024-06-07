@@ -40,12 +40,13 @@ namespace no = nodes;
 // Key values are calculated using the integer timestamps passed.
 class SimplePoseNodeAdder : public na::NodeAdder {
  public:
-  SimplePoseNodeAdder() : values_(std::shared_ptr<no::Values>()), nodes_(values_) {}
+  SimplePoseNodeAdder() : values_(std::make_shared<no::Values>()), nodes_(values_) {}
 
   void AddInitialNodesAndPriors(gtsam::NonlinearFactorGraph& graph) final{};
 
   bool AddNode(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final {
     if (!CanAddNode(timestamp)) return false;
+    if (!values_) std::cout << "no values!" << std::endl;
     values().Add(gtsam::Pose3::identity());
     return true;
   }
