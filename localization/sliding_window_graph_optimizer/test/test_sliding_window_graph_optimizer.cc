@@ -101,6 +101,11 @@ class SlidingWindowGraphOptimizerTest : public ::testing::Test {
       new no::TimestampedNodes<gtsam::Pose3>(sliding_window_graph_optimizer_->values()));
     pose_node_adder_.reset(
       new na::PoseNodeAdder(DefaultPoseNodeAdderParams(), DefaultPoseNodeAdderModelParams(), timestamped_pose_nodes));
+    // Add initial measurement to pose node adder
+    const lm::PoseWithCovarianceMeasurement pose_measurement(gtsam::Pose3::identity(),
+                                                             Eigen::Matrix<double, 6, 6>::Identity(), 0);
+    pose_node_adder_->AddMeasurement(pose_measurement);
+
     dummy_node_adder_.reset(new DummySlidingWindowNodeAdder());
     loc_factor_adder_params_ = DefaultLocFactorAdderParams();
     loc_factor_adder_.reset(new fa::LocFactorAdder<na::PoseNodeAdder>(loc_factor_adder_params_, pose_node_adder_));
