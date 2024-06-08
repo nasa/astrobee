@@ -256,6 +256,8 @@ DepthOdometryWrapperParams DefaultDepthOdometryWrapperParams() {
   params.haz_cam_A_haz_depth = Eigen::Affine3d::Identity();
   params.icp = DefaultPointToPlaneICPDepthOdometryParams();
   params.image_features = DefaultImageFeaturesWithKnownCorrespondencesAlignerDepthOdometryParams();
+  params.max_buffer_size = 10;
+  params.max_depth_images = 10;
   return params;
 }
 }  // namespace depth_odometry
