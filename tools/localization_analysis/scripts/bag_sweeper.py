@@ -31,11 +31,11 @@ import sys
 import matplotlib
 
 matplotlib.use("pdf")
+import bag_sweep_results_plotter
 import matplotlib.pyplot as plt
 import pandas as pd
 from matplotlib.backends.backend_pdf import PdfPages
 
-import bag_sweep_results_plotter
 import localization_common.utilities as lu
 import plotters
 import results_averager

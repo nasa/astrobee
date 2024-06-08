@@ -72,16 +72,16 @@ if __name__ == "__main__":
         print("Map file " + args.map_file + " does not exist.")
         sys.exit()
     if os.path.isfile(args.vio_output_file):
-        print("VIO output file " + args.vio_output_file + " already exist.")
+        print("VIO output file " + args.vio_output_file + " already exists.")
         sys.exit()
     if os.path.isfile(args.loc_output_file):
-        print("Loc output file " + args.loc_output_file + " already exist.")
+        print("Loc output file " + args.loc_output_file + " already exists.")
         sys.exit()
     if os.path.isfile(args.vio_results_csv_file):
-        print("VIO results csv file " + args.vio_results_csv_file + " already exist.")
+        print("VIO results csv file " + args.vio_results_csv_file + " already exists.")
         sys.exit()
     if os.path.isfile(args.loc_results_csv_file):
-        print("Loc results csv file " + args.loc_results_csv_file + " already exist.")
+        print("Loc results csv file " + args.loc_results_csv_file + " already exists.")
         sys.exit()
     if args.groundtruth_bagfile and not os.path.isfile(args.groundtruth_bagfile):
         print("Groundtruth bag " + args.groundtruth_bagfile + " does not exist.")
