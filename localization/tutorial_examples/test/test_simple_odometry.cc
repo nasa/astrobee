@@ -39,25 +39,17 @@ TEST(SimpleOdometryTest, Interface) {
   // Normally the initial velocity and biases estimates come
   // from some initialization method.
   const gtsam::Vector3 start_velocity = Eigen::Vector3d(1, 2, 3);
-  const gtsam::Vector3 start_accel_bias =
-    Eigen::Vector3d(0.01, 0.02, 0.03);
-  const gtsam::Vector3 start_gyro_bias =
-    Eigen::Vector3d(0.04, 0.05, 0.06);
+  const gtsam::Vector3 start_accel_bias = Eigen::Vector3d(0.01, 0.02, 0.03);
+  const gtsam::Vector3 start_gyro_bias = Eigen::Vector3d(0.04, 0.05, 0.06);
   params.combined_nav_state_node_adder.starting_time = 0.0;
-  params.combined_nav_state_node_adder.start_node =
-    lc::CombinedNavState(start_pose, start_velocity,
-                         gtsam::imuBias::ConstantBias(
-                           start_accel_bias, start_gyro_bias),
-                         0.0);
+  params.combined_nav_state_node_adder.start_node = lc::CombinedNavState(
+    start_pose, start_velocity, gtsam::imuBias::ConstantBias(start_accel_bias, start_gyro_bias), 0.0);
   // Noise model ordering matching node insertion order,
   // which is pose, velocity, biases for the
   // combined nav state node adder.
-  params.combined_nav_state_node_adder.start_noise_models
-    .emplace_back(gtsam::noiseModel::Isotropic::Sigma(6, 0.1));
-  params.combined_nav_state_node_adder.start_noise_models
-    .emplace_back(gtsam::noiseModel::Isotropic::Sigma(3, 0.2));
-  params.combined_nav_state_node_adder.start_noise_models
-    .emplace_back(gtsam::noiseModel::Isotropic::Sigma(6, 0.3));
+  params.combined_nav_state_node_adder.start_noise_models.emplace_back(gtsam::noiseModel::Isotropic::Sigma(6, 0.1));
+  params.combined_nav_state_node_adder.start_noise_models.emplace_back(gtsam::noiseModel::Isotropic::Sigma(3, 0.2));
+  params.combined_nav_state_node_adder.start_noise_models.emplace_back(gtsam::noiseModel::Isotropic::Sigma(6, 0.3));
   te::SimpleOdometry odometry(params);
 
   // Adds initial nodes and priors since no relative pose
@@ -78,72 +70,49 @@ TEST(SimpleOdometryTest, Interface) {
   // Factors: Initial Priors: 3, Relative Pose Measurement: 0,
   // Combined Nav State Between: 0
   EXPECT_EQ(odometry.timestamped_nodes().size(), 1);
-  EXPECT_EQ(lc::NumFactors<gtsam::PriorFactor<gtsam::Pose3>>(
-              odometry.factors()),
-            1);
-  EXPECT_EQ(lc::NumFactors<gtsam::PriorFactor<gtsam::Velocity3>>(
-              odometry.factors()),
-            1);
-  EXPECT_EQ(lc::NumFactors<
-              gtsam::PriorFactor<gtsam::imuBias::ConstantBias>>(
-              odometry.factors()),
-            1);
-  EXPECT_EQ(lc::NumFactors<gtsam::BetweenFactor<gtsam::Pose3>>(
-              odometry.factors()),
-            0);
-  EXPECT_EQ(
-    lc::NumFactors<gtsam::CombinedImuFactor>(odometry.factors()),
-    0);
+  EXPECT_EQ(lc::NumFactors<gtsam::PriorFactor<gtsam::Pose3>>(odometry.factors()), 1);
+  EXPECT_EQ(lc::NumFactors<gtsam::PriorFactor<gtsam::Velocity3>>(odometry.factors()), 1);
+  EXPECT_EQ(lc::NumFactors<gtsam::PriorFactor<gtsam::imuBias::ConstantBias>>(odometry.factors()), 1);
+  EXPECT_EQ(lc::NumFactors<gtsam::BetweenFactor<gtsam::Pose3>>(odometry.factors()), 0);
+  EXPECT_EQ(lc::NumFactors<gtsam::CombinedImuFactor>(odometry.factors()), 0);
   // First node should match start node.
-  EXPECT_MATRIX_NEAR(
-    odometry.timestamped_nodes().Node(0)->pose(),
-    params.combined_nav_state_node_adder.start_node.pose(),
-    1e-6);
-  EXPECT_MATRIX_NEAR(
-    odometry.timestamped_nodes().Node(0)->velocity(),
-    params.combined_nav_state_node_adder.start_node.velocity(),
-    1e-6);
-  EXPECT_MATRIX_NEAR(
-    odometry.timestamped_nodes().Node(0)->bias().vector(),
-    params.combined_nav_state_node_adder.start_node.bias()
-      .vector(),
-    1e-6);
+  EXPECT_MATRIX_NEAR(odometry.timestamped_nodes().Node(0)->pose(),
+                     params.combined_nav_state_node_adder.start_node.pose(), 1e-6);
+  EXPECT_MATRIX_NEAR(odometry.timestamped_nodes().Node(0)->velocity(),
+                     params.combined_nav_state_node_adder.start_node.velocity(), 1e-6);
+  EXPECT_MATRIX_NEAR(odometry.timestamped_nodes().Node(0)->bias().vector(),
+                     params.combined_nav_state_node_adder.start_node.bias().vector(), 1e-6);
 
   // Create relative pose and IMU measurements for timestamps 0
   // - 9. Use constant acceleration and zero angular velocity
   // motion model.
   const Eigen::Vector3d acceleration(0.5, 0.6, 0.7);
-  const Eigen::Vector3d angular_velocity =
-    Eigen::Vector3d::Zero();
+  const Eigen::Vector3d angular_velocity = Eigen::Vector3d::Zero();
   // Initialize measured biases and velocities to start values.
   // Since in this test we assume biases don't change over time
   // make these constant.
   const Eigen::Vector3d accel_bias = start_accel_bias;
   const Eigen::Vector3d gyro_bias = start_gyro_bias;
   Eigen::Vector3d velocity = start_velocity;
-  std::vector<lm::RelativePoseWithCovarianceMeasurement>
-    relative_pose_measurements;
+  std::vector<lm::RelativePoseWithCovarianceMeasurement> relative_pose_measurements;
   std::vector<lm::ImuMeasurement> imu_measurements;
+  // Add initial zero acceleration measurement
+  odometry.AddImuMeasurement(lm::ImuMeasurement(accel_bias, gyro_bias, 0));
   for (int i = 1; i < 3; ++i) {
-    const lm::ImuMeasurement imu_measurement(
-      acceleration + accel_bias, angular_velocity + gyro_bias,
-      i);
+    const lm::ImuMeasurement imu_measurement(acceleration + accel_bias, angular_velocity + gyro_bias, i);
     imu_measurements.emplace_back(imu_measurement);
     // Motion model for dt = 1.0 sec.
-    const gtsam::Pose3 relative_pose = gtsam::Pose3(
-      gtsam::Rot3::identity(), 0.5*acceleration + velocity);
+    const gtsam::Pose3 relative_pose = gtsam::Pose3(gtsam::Rot3::identity(), 0.5 * acceleration + velocity);
     velocity += acceleration;
     relative_pose_measurements.emplace_back(
-      lm::RelativePoseWithCovarianceMeasurement(
-        relative_pose, lc::RandomPoseCovariance(), i - 1, i));
+      lm::RelativePoseWithCovarianceMeasurement(relative_pose, lc::RandomPoseCovariance(), i - 1, i));
   }
 
   // Add 2 IMU and relative pose measurements to the odometry
   // graph
   for (int i = 0; i < 2; ++i) {
     odometry.AddImuMeasurement(imu_measurements[i]);
-    odometry.AddRelativePoseMeasurement(
-      relative_pose_measurements[i]);
+    odometry.AddRelativePoseMeasurement(relative_pose_measurements[i]);
   }
 
   // Adds relative pose factors and CombinedNavState nodes for
@@ -160,73 +129,39 @@ TEST(SimpleOdometryTest, Interface) {
   // measurements. Indices i and j represent timestamps. Nodes: 3
   // Factors: Initial Priors: 3, Relative Pose: 2, CombinedIMU: 2
   EXPECT_EQ(odometry.timestamped_nodes().size(), 3);
-  EXPECT_EQ(lc::NumFactors<gtsam::PriorFactor<gtsam::Pose3>>(
-              odometry.factors()),
-            1);
-  EXPECT_EQ(lc::NumFactors<gtsam::PriorFactor<gtsam::Velocity3>>(
-              odometry.factors()),
-            1);
-  EXPECT_EQ(lc::NumFactors<
-              gtsam::PriorFactor<gtsam::imuBias::ConstantBias>>(
-              odometry.factors()),
-            1);
-  EXPECT_EQ(lc::NumFactors<gtsam::BetweenFactor<gtsam::Pose3>>(
-              odometry.factors()),
-            2);
-  EXPECT_EQ(
-    lc::NumFactors<gtsam::CombinedImuFactor>(odometry.factors()),
-    2);
+  EXPECT_EQ(lc::NumFactors<gtsam::PriorFactor<gtsam::Pose3>>(odometry.factors()), 1);
+  EXPECT_EQ(lc::NumFactors<gtsam::PriorFactor<gtsam::Velocity3>>(odometry.factors()), 1);
+  EXPECT_EQ(lc::NumFactors<gtsam::PriorFactor<gtsam::imuBias::ConstantBias>>(odometry.factors()), 1);
+  EXPECT_EQ(lc::NumFactors<gtsam::BetweenFactor<gtsam::Pose3>>(odometry.factors()), 2);
+  EXPECT_EQ(lc::NumFactors<gtsam::CombinedImuFactor>(odometry.factors()), 2);
   // Check optimized pose nodes
   // First node should match start node.
-  EXPECT_MATRIX_NEAR(
-    odometry.timestamped_nodes().Node(0)->pose(),
-    params.combined_nav_state_node_adder.start_node.pose(),
-    1e-6);
-  EXPECT_MATRIX_NEAR(
-    odometry.timestamped_nodes().Node(0)->velocity(),
-    params.combined_nav_state_node_adder.start_node.velocity(),
-    1e-6);
-  EXPECT_MATRIX_NEAR(
-    odometry.timestamped_nodes().Node(0)->bias().vector(),
-    params.combined_nav_state_node_adder.start_node.bias()
-      .vector(),
-    1e-6);
+  EXPECT_MATRIX_NEAR(odometry.timestamped_nodes().Node(0)->pose(),
+                     params.combined_nav_state_node_adder.start_node.pose(), 1e-6);
+  EXPECT_MATRIX_NEAR(odometry.timestamped_nodes().Node(0)->velocity(),
+                     params.combined_nav_state_node_adder.start_node.velocity(), 1e-6);
+  EXPECT_MATRIX_NEAR(odometry.timestamped_nodes().Node(0)->bias().vector(),
+                     params.combined_nav_state_node_adder.start_node.bias().vector(), 1e-6);
   // Second node
   EXPECT_MATRIX_NEAR(
     odometry.timestamped_nodes().Node(1)->pose(),
-    gtsam::Pose3(
-      params.combined_nav_state_node_adder.start_node.pose() *
-      relative_pose_measurements[0].relative_pose),
+    gtsam::Pose3(params.combined_nav_state_node_adder.start_node.pose() * relative_pose_measurements[0].relative_pose),
     1e-6);
-  EXPECT_MATRIX_NEAR(
-    odometry.timestamped_nodes().Node(1)->velocity(),
-    params.combined_nav_state_node_adder.start_node.velocity() +
-      acceleration,
-    1e-6);
-  EXPECT_MATRIX_NEAR(
-    odometry.timestamped_nodes().Node(1)->bias().vector(),
-    params.combined_nav_state_node_adder.start_node.bias()
-      .vector(),
-    1e-6);
+  EXPECT_MATRIX_NEAR(odometry.timestamped_nodes().Node(1)->velocity(),
+                     params.combined_nav_state_node_adder.start_node.velocity() + acceleration, 1e-6);
+  EXPECT_MATRIX_NEAR(odometry.timestamped_nodes().Node(1)->bias().vector(),
+                     params.combined_nav_state_node_adder.start_node.bias().vector(), 1e-6);
   // Third node
   EXPECT_MATRIX_NEAR(
     odometry.timestamped_nodes().Node(2)->pose(),
-    gtsam::Pose3(
-      params.combined_nav_state_node_adder.start_node.pose() *
-      relative_pose_measurements[0].relative_pose *
-      relative_pose_measurements[1].relative_pose),
+    gtsam::Pose3(params.combined_nav_state_node_adder.start_node.pose() * relative_pose_measurements[0].relative_pose *
+                 relative_pose_measurements[1].relative_pose),
     1e-6);
-  EXPECT_MATRIX_NEAR(
-    odometry.timestamped_nodes().Node(2)->velocity(),
-    gtsam::Velocity3(params.combined_nav_state_node_adder
-                       .start_node.velocity() +
-                     acceleration * 2),
-    1e-6);
-  EXPECT_MATRIX_NEAR(
-    odometry.timestamped_nodes().Node(2)->bias().vector(),
-    params.combined_nav_state_node_adder.start_node.bias()
-      .vector(),
-    1e-6);
+  EXPECT_MATRIX_NEAR(odometry.timestamped_nodes().Node(2)->velocity(),
+                     gtsam::Velocity3(params.combined_nav_state_node_adder.start_node.velocity() + acceleration * 2),
+                     1e-6);
+  EXPECT_MATRIX_NEAR(odometry.timestamped_nodes().Node(2)->bias().vector(),
+                     params.combined_nav_state_node_adder.start_node.bias().vector(), 1e-6);
 }
 
 // Run all the tests that were declared with TEST()
