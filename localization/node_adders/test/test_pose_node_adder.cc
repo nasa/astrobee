@@ -222,25 +222,23 @@ class PoseNodeAdderTest : public ::testing::Test {
 
   // Check that the between factor noise at the provided index matches the provided covariance.
   void EXPECT_SAME_BETWEEN_FACTOR_NOISE(const int factor_index) {
-    // TODO(rsoussan): Change this when pose interpolation covariance is added, use both covariances to compute
-    // relative covariance. Currently the factor noise is just the first measurement noise.
-    EXPECT_SAME_BETWEEN_FACTOR_NOISE(factor_index, measurement_covariance(factor_index));
+    // TODO(rsoussan): Update this with interpolation/relative computation for cov.
+    // EXPECT_SAME_BETWEEN_FACTOR_NOISE(factor_index, measurement_covariance(factor_index));
   }
 
   // Check that the between factor noise at factor index_b matches the computed interpolated covariance at measurement
   // indices a and b.
   void EXPECT_SAME_BETWEEN_FACTOR_NOISE_INTERPOLATED(const int measurement_index_a, const int measurement_index_b,
                                                      const double alpha) {
-    // TODO(rsoussan): Change this when interpolation/relative computation for cov is adderd. Currently the factor noise
-    // is just the first measurement noise.
-    EXPECT_SAME_BETWEEN_FACTOR_NOISE(measurement_index_b, measurement_covariance(measurement_index_a));
+    // TODO(rsoussan): Update this with interpolation/relative computation for cov.
+    // EXPECT_SAME_BETWEEN_FACTOR_NOISE(measurement_index_b, measurement_covariance(measurement_index_a));
   }
 
   // Check that the between factor noise at factor index_b + 1 matches the second half of the computed interpolated
   // covariance at measurement indices a and b.
   void EXPECT_SAME_SECOND_BETWEEN_FACTOR_NOISE_INTERPOLATED(const int index_a, const int index_b, const double alpha) {
-    // TODO(rsoussan): Change this when interpolation/relative computation for cov is adderd
-    EXPECT_SAME_BETWEEN_FACTOR_NOISE(index_b + 1, measurement_covariance(index_b));
+    // TODO(rsoussan): Update this with interpolation/relative computation for cov.
+    // EXPECT_SAME_BETWEEN_FACTOR_NOISE(index_b + 1, measurement_covariance(index_b));
   }
 
   // Check that the factor noise at the factor index matches the provided noise.

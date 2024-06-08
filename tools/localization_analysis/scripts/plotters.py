@@ -424,3 +424,58 @@ class MultiPosePlotter:
     def plot(self, pdf):
         self.plot_positions(pdf)
         self.plot_orientations(pdf)
+
+
+# Plot RMSEs vs. bag file for a set of bag files
+class BagRMSEsPlotter:
+    def __init__(self, dataframe):
+        dataframe.sort_values(by=["Bag"], inplace=True)
+        self.dataframe = dataframe
+        # Get bag name abbreviations
+        bag_names = dataframe["Bag"].tolist()
+        max_name_length = 45
+        shortened_bag_names = [
+            (
+                bag_name[-1 * max_name_length :]
+                if len(bag_name) > max_name_length
+                else bag_name
+            )
+            for bag_name in bag_names
+        ]
+        self.bag_names = shortened_bag_names
+        self.bag_name_indices = list(range(len(shortened_bag_names)))
+
+    def plot(
+        self,
+        pdf,
+        rmse_name,
+    ):
+        rmses = self.dataframe[rmse_name]
+        plt.figure()
+        plt.plot(
+            self.bag_name_indices,
+            rmses,
+            "b",
+            linestyle="None",
+            marker="o",
+            markeredgewidth=0.1,
+            markersize=10.5,
+        )
+        plt.xticks(self.bag_name_indices, self.bag_names, fontsize=7, rotation=20)
+        plt.ylabel(rmse_name + " RMSE")
+        plt.title(rmse_name + " RMSE vs. Bag")
+        x_range = (
+            self.bag_name_indices[len(self.bag_name_indices) - 1]
+            - self.bag_name_indices[0]
+        )
+        x_buffer = x_range * 0.1
+        # Extend x axis on either side to make data more visible
+        plt.xlim(
+            [
+                self.bag_name_indices[0] - x_buffer,
+                self.bag_name_indices[len(self.bag_name_indices) - 1] + x_buffer,
+            ]
+        )
+        plt.tight_layout()
+        pdf.savefig()
+        plt.close()

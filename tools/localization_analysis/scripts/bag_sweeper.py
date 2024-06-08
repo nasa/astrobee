@@ -28,8 +28,16 @@ import multiprocessing
 import os
 import sys
 
+import matplotlib
+
+matplotlib.use("pdf")
+import matplotlib.pyplot as plt
+import pandas as pd
+from matplotlib.backends.backend_pdf import PdfPages
+
 import bag_sweep_results_plotter
 import localization_common.utilities as lu
+import plotters
 import results_averager
 
 
@@ -69,7 +77,7 @@ def load_params(param_file):
 
 
 # Combine results in a single csv file for plotting later
-def combine_results_in_csv_file(offline_replay_params, output_dir):
+def combine_results_in_csv_file(offline_replay_params, output_dir, prefix):
     # Don't save this as *stats.csv otherwise it will be including when averaging bag results in average_results.py
     combined_results_csv_file = os.path.join(output_dir, "bag_sweep_stats_combined.csv")
     output_csv_files = []
@@ -77,7 +85,9 @@ def combine_results_in_csv_file(offline_replay_params, output_dir):
     for params in offline_replay_params:
         bag_name = os.path.splitext(os.path.basename(params.bagfile))[0]
         bag_names.append(bag_name)
-        output_csv_files.append(os.path.join(output_dir, bag_name + "_stats.csv"))
+        output_csv_files.append(
+            os.path.join(output_dir, bag_name + "_" + prefix + "_results.csv")
+        )
     combined_dataframe = results_averager.combined_results(output_csv_files)
     combined_dataframe.insert(0, "Bag", bag_names)
     combined_dataframe.to_csv(combined_results_csv_file, index=False)
@@ -108,6 +118,8 @@ def run_offline_replay(params, output_dir):
     output_csv_file = os.path.join(output_dir, bag_name + "_stats.csv")
     vio_output_file = os.path.join(output_dir, bag_name + "_vio_output.pdf")
     loc_output_file = os.path.join(output_dir, bag_name + "_loc_output.pdf")
+    vio_results_csv_file = os.path.join(output_dir, bag_name + "_vio_results.csv")
+    loc_results_csv_file = os.path.join(output_dir, bag_name + "_loc_results.csv")
     run_command = (
         "rosrun localization_analysis run_offline_replay_and_plot_results.py "
         + params.bagfile
@@ -127,6 +139,10 @@ def run_offline_replay(params, output_dir):
         + vio_output_file
         + " --loc-output-file "
         + loc_output_file
+        + " --vio-results-csv-file "
+        + vio_results_csv_file
+        + " --loc-results-csv-file "
+        + loc_results_csv_file
         + " -g "
         + params.groundtruth_bagfile
     )
@@ -153,11 +169,36 @@ def bag_sweep(config_file, output_dir):
         run_offline_replay_helper,
         list(zip(offline_replay_params_list, itertools.repeat(output_dir))),
     )
-    combined_results_csv_file = combine_results_in_csv_file(
-        offline_replay_params_list, output_dir
+    # Plot Loc results
+    loc_combined_results_csv_file = combine_results_in_csv_file(
+        offline_replay_params_list, output_dir, "loc"
     )
-    output_file = os.path.join(output_dir, "bag_sweep_results.pdf")
-    bag_sweep_results_plotter.create_plot(output_file, combined_results_csv_file)
+    loc_output_file = os.path.join(output_dir, "loc_bag_sweep_results.pdf")
+    loc_dataframe = pd.read_csv(loc_combined_results_csv_file)
+    loc_rmse_plotter = plotters.BagRMSEsPlotter(loc_dataframe)
+    with PdfPages(loc_output_file) as pdf:
+        loc_rmse_plotter.plot(pdf, "Graph Loc Poses rmse")
+        loc_rmse_plotter.plot(pdf, "Graph Loc Poses Orientation rmse")
+        loc_rmse_plotter.plot(pdf, "Extrapolated Loc Poses rmse")
+        loc_rmse_plotter.plot(pdf, "Extrapolated Loc Poses Orientation rmse")
+        loc_rmse_plotter.plot(pdf, "Extrapolated Integrated Velocity Poses rmse")
+        loc_rmse_plotter.plot(
+            pdf, "Extrapolated Integrated Velocity Poses Orientation rmse"
+        )
+    # Plot VIO results
+    vio_combined_results_csv_file = combine_results_in_csv_file(
+        offline_replay_params_list, output_dir, "vio"
+    )
+    vio_output_file = os.path.join(output_dir, "vio_bag_sweep_results.pdf")
+    vio_dataframe = pd.read_csv(vio_combined_results_csv_file)
+    vio_rmse_plotter = plotters.BagRMSEsPlotter(vio_dataframe)
+    with PdfPages(vio_output_file) as pdf:
+        vio_rmse_plotter.plot(pdf, "Graph VIO Poses rmse")
+        vio_rmse_plotter.plot(pdf, "Graph VIO Poses Orientation rmse")
+        vio_rmse_plotter.plot(pdf, "Graph VIO Integrated Velocity Poses rmse")
+        vio_rmse_plotter.plot(
+            pdf, "Graph VIO Integrated Velocity Poses Orientation rmse"
+        )
 
 
 if __name__ == "__main__":
