@@ -453,12 +453,11 @@ TEST_F(VoSmartProjectionFactorAdderTest, InvalidMiddleMeasurementFactor) {
   EXPECT_SAME_FACTOR(0, {1, 2, 4}, measurements, {0, 1, 3});
 }
 
-// TODO(rsoussan): Fix this
-/*TEST_F(VoSmartProjectionFactorAdderTest, InvalidLastTwoMeasurementsFactor) {
+TEST_F(VoSmartProjectionFactorAdderTest, InvalidLastTwoMeasurementsFactor) {
   auto params = DefaultParams();
   params.fix_invalid_factors = true;
   params.min_avg_distance_from_mean = 0;
-  params.max_num_points_per_factor = 4;
+  params.max_num_points_per_factor = 5;
   Initialize(params);
   const int track_id = 0;
   const int times = 5;
@@ -496,7 +495,7 @@ TEST_F(VoSmartProjectionFactorAdderTest, InvalidMiddleMeasurementFactor) {
   // Middle measurement should be removed.
   // Keys 1,2,3 should match to measurements 0,1,2
   EXPECT_SAME_FACTOR(0, {1, 2, 3}, measurements, {0, 1, 2});
-}*/
+}
 
 TEST_F(VoSmartProjectionFactorAdderTest, InvalidFirstTwoMeasurementsFactor) {
   auto params = DefaultParams();
