@@ -71,18 +71,16 @@ add_library(${PROJECT_NAME}
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 
-# Disabled until resolve_resource call for imu_bias.config file 
-# fixed for github test
-#if(CATKIN_ENABLE_TESTING)
-#  find_package(rostest REQUIRED)
-#  add_rostest_gtest(test_ros_graph_vio_parameter_reader
-#    test/test_ros_graph_vio_parameter_reader.test
-#    test/test_ros_graph_vio_parameter_reader.cc
-#  )
-#  target_link_libraries(test_ros_graph_vio_parameter_reader
-#    ${PROJECT_NAME} ${catkin_LIBRARIES}
-#  )
-#endif() 
+if(CATKIN_ENABLE_TESTING)
+  find_package(rostest REQUIRED)
+  add_rostest_gtest(test_ros_graph_vio_parameter_reader
+    test/test_ros_graph_vio_parameter_reader.test
+    test/test_ros_graph_vio_parameter_reader.cc
+  )
+  target_link_libraries(test_ros_graph_vio_parameter_reader
+    ${PROJECT_NAME} ${catkin_LIBRARIES}
+  )
+endif() 
 
 #############
 ## Install ##

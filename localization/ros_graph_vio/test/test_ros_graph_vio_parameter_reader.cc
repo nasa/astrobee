@@ -36,7 +36,6 @@ class RosGraphVIOParameterReaderTest : public ::testing::Test {
   void SetUp() final {
     lc::SetEnvironmentConfigs();
     config_reader::ConfigReader config;
-    //  resolve_resources call seems to fail in github test
     config.AddFile("localization/imu_bias_initializer.config");
     config.AddFile("localization/imu_filter.config");
     config.AddFile("localization/ros_graph_vio.config");
@@ -51,7 +50,6 @@ class RosGraphVIOParameterReaderTest : public ::testing::Test {
 };
 
 TEST_F(RosGraphVIOParameterReaderTest, ImuBiasInitializerParams) {
-  // This passes locally but fails in github
   const std::string astrobee_configs_path = ros::package::getPath("astrobee");
   EXPECT_EQ(imu_params_.imu_bias_filename, astrobee_configs_path + "/resources/imu_bias.config");
   EXPECT_EQ(imu_params_.num_bias_estimation_measurements, 100);

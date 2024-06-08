@@ -16,5 +16,5 @@
 <!-- permissions and limitations under the License.                          -->
 
 <launch>
-  <test pkg="parameter_reader" type="test_ros_pose_extrapolator_parameter_reader" test-name="test_ros_pose_extrapolator_parameter_reader" />
+  <test pkg="ros_pose_extrapolator" type="test_ros_pose_extrapolator_parameter_reader" test-name="test_ros_pose_extrapolator_parameter_reader" />
 </launch>
