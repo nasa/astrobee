@@ -18,12 +18,18 @@
 #ifndef VISION_COMMON_UTILITIES_H_
 #define VISION_COMMON_UTILITIES_H_
 
+#include <localization_common/timestamped_set.h>
+#include <vision_common/feature_point.h>
+#include <vision_common/standstill_params.h>
+
 #include <Eigen/Geometry>
 
 #include <gtsam/base/Matrix.h>
 
 #include <opencv2/core/eigen.hpp>
 #include <opencv2/opencv.hpp>
+
+#include <vector>
 
 namespace vision_common {
 template <typename T>
@@ -48,6 +54,16 @@ Eigen::Vector2d ProjectWithDistortion(const Eigen::Vector3d& cam_t_point, const 
                                       const Eigen::VectorXd& distortion_params);
 
 Eigen::Isometry3d Isometry3d(const cv::Mat& rodrigues_rotation_cv, const cv::Mat& translation_cv);
+
+double AverageDistanceFromMean(const std::vector<FeaturePoint>& points);
+
+double AverageDistanceFromMean(
+  const std::vector<localization_common::TimestampedValue<FeaturePoint>>& timestamped_points);
+
+// Detect standstill using average distance from mean for a history of points
+// in feature tracks as determined by params.
+template <typename FeatureTracksMapType>
+bool Standstill(const FeatureTracksMapType& feature_tracks, const StandstillParams& params);
 
 // Implementation
 template <typename T>
@@ -81,6 +97,33 @@ Eigen::Vector2d ProjectWithDistortion(const Eigen::Vector3d& cam_t_point, const 
   const Eigen::Vector2d undistorted_image_point = Project(cam_t_point, intrinsics);
   const DISTORTER distorter;
   return distorter.Distort(distortion_params, intrinsics, undistorted_image_point);
+}
+
+template <typename FeatureTracksMapType>
+bool Standstill(const FeatureTracksMapType& feature_tracks, const StandstillParams& params) {
+  if (feature_tracks.empty()) return false;
+  const auto& latest = feature_tracks.cbegin()->second.Latest();
+  if (!latest) return false;
+  const localization_common::Time oldest_allowed_time = latest->timestamp - params.duration;
+  // Check for standstill via low disparity for all feature tracks
+  double total_average_distance_from_mean = 0;
+  int num_valid_feature_tracks = 0;
+  for (const auto& feature_track : feature_tracks) {
+    // Only use recent values
+    const double average_distance_from_mean =
+      AverageDistanceFromMean(feature_track.second.LatestValues(oldest_allowed_time));
+    // Only consider long enough feature tracks for standstill candidates
+    if (static_cast<int>(feature_track.second.size()) >= params.min_num_points_per_track) {
+      total_average_distance_from_mean += average_distance_from_mean;
+      ++num_valid_feature_tracks;
+    }
+  }
+
+  double average_distance_from_mean = 0;
+  if (num_valid_feature_tracks > 0)
+    average_distance_from_mean = total_average_distance_from_mean / num_valid_feature_tracks;
+
+  return (num_valid_feature_tracks >= 5 && average_distance_from_mean <= params.max_avg_distance_from_mean);
 }
 }  // namespace vision_common
 

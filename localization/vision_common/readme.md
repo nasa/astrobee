@@ -11,3 +11,5 @@ Brisk, surf, and lucas kanade optical flow feature detector and matchers are pro
 ### Utilities
 The utilities files provide helper functions for the distortion models and templated implementations based on the distortion type of image space projections, ransac pnp, and a reprojection pose estimate function that utilities ransac pnp to find an initial pose estimate for a set of 3d and corresponding image points before performing nonliner optimization to refine this pose estimate.
 
+### FeatureTracker
+The FeatureTracker maintains feature tracks for image based measurements.  Feature tracks can be queried using feature ids or by returning the N longest feature tracks.  The feature tracker also slides the window for feature tracks to remove old measurements if necessary.

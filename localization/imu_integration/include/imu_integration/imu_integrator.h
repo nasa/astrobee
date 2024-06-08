@@ -24,6 +24,7 @@
 
 #include <localization_common/combined_nav_state.h>
 #include <localization_common/time.h>
+#include <localization_common/timestamped_set.h>
 #include <localization_measurements/fan_speed_mode.h>
 #include <localization_measurements/imu_measurement.h>
 
@@ -36,51 +37,40 @@ namespace imu_integration {
 // Integrates imu measurements and propagates uncertainties.
 // Maintains a window of measurements so that any interval of measurements in
 // that window can be integrated into a pim.
-class ImuIntegrator {
+class ImuIntegrator : public localization_common::TimestampedSet<localization_measurements::ImuMeasurement> {
  public:
   explicit ImuIntegrator(const ImuIntegratorParams& params = ImuIntegratorParams());
 
-  // Buffers imu measurement so they can be integrated when needed.
-  // Delayed integration useful so imu integation does not advance
-  // past latest sensor measurement timestamps.
-  void BufferImuMeasurement(const localization_measurements::ImuMeasurement& imu_measurement);
+  // Buffers an imu measurement.
+  void AddImuMeasurement(const localization_measurements::ImuMeasurement& imu_measurement);
 
-  // Returns last integrated measurement timestamp.
-  boost::optional<localization_common::Time> IntegrateImuMeasurements(
-    const localization_common::Time start_time, const localization_common::Time end_time,
-    gtsam::PreintegratedCombinedMeasurements& pim) const;
-
+  // Creates an integrated GTSAM Pim using the provided bias and imu measurements
+  // between the provided start and end times.
   boost::optional<gtsam::PreintegratedCombinedMeasurements> IntegratedPim(
     const gtsam::imuBias::ConstantBias& bias, const localization_common::Time start_time,
-    const localization_common::Time end_time,
-    boost::shared_ptr<gtsam::PreintegratedCombinedMeasurements::Params> params) const;
+    const localization_common::Time end_time) const;
 
-  void RemoveOldMeasurements(const localization_common::Time new_start_time);
+  // Extrapolates the provided combined nav state using imu measurements up to the provided
+  // end time.
+  boost::optional<localization_common::CombinedNavState> Extrapolate(
+    const localization_common::CombinedNavState& combined_nav_state, const localization_common::Time end_time) const;
 
-  boost::optional<localization_common::Time> OldestTime() const;
-
-  boost::optional<localization_common::Time> LatestTime() const;
-
-  boost::optional<localization_measurements::ImuMeasurement> LatestMeasurement() const;
-
-  bool Empty() const;
-
-  int Size() const;
+  // Extrapolates using all IMU measurements more recent than the combined nav state
+  boost::optional<localization_common::CombinedNavState> ExtrapolateLatest(
+    const localization_common::CombinedNavState& combined_nav_state) const;
 
   void SetFanSpeedMode(const localization_measurements::FanSpeedMode fan_speed_mode);
 
   localization_measurements::FanSpeedMode fan_speed_mode() const;
 
-  boost::shared_ptr<gtsam::PreintegratedCombinedMeasurements::Params> pim_params() const;
-
-  bool WithinBounds(const localization_common::Time timestamp);
-
-  const std::map<localization_common::Time, localization_measurements::ImuMeasurement>& measurements() const;
-
  private:
+  // Returns last integrated measurement timestamp.
+  boost::optional<localization_common::Time> IntegrateImuMeasurements(
+    const localization_common::Time start_time, const localization_common::Time end_time,
+    gtsam::PreintegratedCombinedMeasurements& pim) const;
+
   ImuIntegratorParams params_;
   boost::shared_ptr<gtsam::PreintegratedCombinedMeasurements::Params> pim_params_;
-  std::map<localization_common::Time, localization_measurements::ImuMeasurement> measurements_;
   std::unique_ptr<DynamicImuFilter> imu_filter_;
 };
 }  // namespace imu_integration

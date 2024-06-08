@@ -17,7 +17,6 @@
  */
 
 #include <ff_common/ff_names.h>
-#include <graph_localizer/utilities.h>
 #include <localization_analysis/map_matcher.h>
 #include <localization_analysis/utilities.h>
 #include <localization_common/utilities.h>
@@ -86,11 +85,10 @@ void MapMatcher::AddMapMatches() {
         feature_averager_.Update(vl_msg.landmarks.size());
         const ros::Time timestamp = lc::RosTimeFromHeader(image_msg->header);
         output_bag_.write(std::string("/") + TOPIC_LOCALIZATION_ML_FEATURES, timestamp, vl_msg);
-        if (graph_localizer::ValidVLMsg(vl_msg, sparse_mapping_min_num_landmarks_)) {
+        if (static_cast<int>(vl_msg.landmarks.size()) >= 5) {
           const gtsam::Pose3 sparse_mapping_global_T_body =
             lc::PoseFromMsgWithExtrinsics(vl_msg.pose, body_T_nav_cam_.inverse());
-          const auto pose_msg =
-            graph_localizer::PoseMsg(lc::EigenPose(sparse_mapping_global_T_body), lc::TimeFromHeader(vl_msg.header));
+          const auto pose_msg = PoseMsg(lc::EigenPose(sparse_mapping_global_T_body), lc::TimeFromHeader(vl_msg.header));
           output_bag_.write(std::string("/") + TOPIC_SPARSE_MAPPING_POSE, timestamp, pose_msg);
         }
       } else if (nonloc_bag_.isOpen()) {

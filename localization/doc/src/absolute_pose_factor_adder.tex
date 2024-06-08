@@ -1,0 +1,45 @@
+\begin{minted}[]{c++}
+#include <factor_adders/absolute_pose_factor_adder_params.h>
+#include <factor_adders/single_measurement_based_factor_adder.h>
+#include <localization_common/time.h>
+#include <localization_measurements/timestamped_pose_with_covariance.h>
+
+class AbsolutePoseFactorAdder
+    : public SingleMeasurementBasedFactorAdder<
+        localization_measurements::
+          TimestampedPoseWithCovariance> {
+ public:
+  AbsolutePoseFactorAdder(
+    const AbsolutePoseFactorAdderParams& params,
+    const std::shared_ptr<RelativePoseNodeAdder> node_adder)
+      : SingleMeasurementBasedFactorAdder<
+          localization_measurements::
+            TimestampedPoseWithCovariance>(params),
+        params_(params),
+        node_adder_(node_adder) {}
+
+ private:
+  int AddFactorsForSingleMeasurement(
+    const localization_measurements::
+      TimestampedPoseWithCovariance& measurement,
+    gtsam::NonlinearFactorGraph& factors) final {
+    node_adder_->AddNode(measurement.timestamp, factors);
+    const auto keys = node_adder_->Keys(measurement.timestamp);
+    // First key is pose key
+    const auto& pose_key = keys[0];
+    const auto pose_noise =
+      gtsam::Prior<gtsam::Pose3>::shared_ptr pose_prior_factor(
+        new gtsam::Prior<gtsam::Pose3>(
+          pose_key, measurement.pose.pose, pose_noise));
+    factors.push_back(pose_prior_factor);
+  }
+
+  bool CanAddFactor(
+    const localization_common::Time time) const final {
+    return node_adder_->CanAddNode(time);
+  }
+
+  std::shared_ptr<PoseNodeAdderType> node_adder_;
+  AbsolutePoseFactorAdderParams params_;
+};
+\end{minted}

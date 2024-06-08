@@ -18,11 +18,15 @@
 
 #include <depth_odometry/parameter_reader.h>
 #include <localization_common/logger.h>
+#include <localization_common/utilities.h>
 #include <msg_conversions/msg_conversions.h>
 #include <point_cloud_common/parameter_reader.h>
 #include <vision_common/parameter_reader.h>
 
+#include <opencv2/calib3d.hpp>
+
 namespace depth_odometry {
+namespace lc = localization_common;
 namespace mc = msg_conversions;
 namespace pc = point_cloud_common;
 namespace vc = vision_common;
@@ -34,6 +38,8 @@ void LoadDepthOdometryWrapperParams(config_reader::ConfigReader& config, DepthOd
   params.haz_cam_A_haz_depth = Eigen::Affine3d::Identity();
   LoadPointToPlaneICPDepthOdometryParams(config, params.icp);
   LoadImageFeaturesWithKnownCorrespondencesAlignerDepthOdometryParams(config, params.image_features);
+  params.max_buffer_size = mc::LoadDouble(config, "max_buffer_size");
+  params.max_depth_images = mc::LoadDouble(config, "max_depth_images");
 }
 
 void LoadDepthOdometryParams(config_reader::ConfigReader& config, DepthOdometryParams& params) {
@@ -83,8 +89,23 @@ void LoadImageFeaturesWithKnownCorrespondencesAlignerDepthOdometryParams(
   params.clahe_clip_limit = mc::LoadDouble(config, "clahe_clip_limit");
   params.min_x_distance_to_border = mc::LoadDouble(config, "min_x_distance_to_border");
   params.min_y_distance_to_border = mc::LoadDouble(config, "min_y_distance_to_border");
-  params.min_num_inliers = mc::LoadInt(config, "min_num_inliers");
+  params.min_num_correspondences = mc::LoadInt(config, "min_num_correspondences");
+  params.only_correspondences = mc::LoadBool(config, "only_correspondences");
   params.refine_estimate = mc::LoadBool(config, "refine_estimate");
+  params.cam_intrinsics = lc::LoadCameraIntrinsicsMatrix(config, "haz_cam");
+  params.cam_params.reset(new camera::CameraParameters(&config, "haz_cam"));
+  params.filter_outliers = mc::LoadBool(config, "filter_outliers");
+  const std::string method = mc::LoadString(config, "filter_method");
+  if (method == "ransac")
+    params.filter_method = cv::RANSAC;
+  else if (method == "lmeds")
+    params.filter_method = cv::LMEDS;
+  else if (method == "rho")
+    params.filter_method = cv::RHO;
+  else
+    LogFatal("Invalid outlier filter method used");
+  params.inlier_threshold = mc::LoadDouble(config, "inlier_threshold");
+  params.inlier_probability = mc::LoadDouble(config, "inlier_probability");
   if (params.refine_estimate) LoadPointToPlaneICPDepthOdometryParams(config, params.point_to_plane_icp);
   LoadDepthOdometryParams(config, params);
 }

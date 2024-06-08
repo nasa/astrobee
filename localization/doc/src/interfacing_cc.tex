@@ -1,0 +1,27 @@
+\begin{minted}[]{c++}
+#include "localizer.h"
+
+int main() {
+  Localizer localizer(LocalizerParams());
+  // Add relative and absolute pose measurements at successive
+  // timestamps
+  for (int i = 0; i < 10; ++i) {
+    localizer.AddRelativePoseMeasurement(
+      RandomPoseMeasurement(i));
+    localizer.AddAbsolutePoseMeasurement(
+      RandomPoseMeasurement(i));
+  }
+
+  localizer.Update();
+
+  // Access optimized timestamped nodes
+  const auto& timestamped_nodes = localizer.timestamped_nodes();
+  // Access optimized GTSAM values
+  const auto& values = localizer.values();
+  // Access GTSAM factors
+  const auto& factors = localizer.factors();
+  // Compute covariance for a node at timestamp 1
+  const auto keys = timestamped_nodes.Keys(1);
+  const auto covariance = localizer.Covariance(keys[0]);
+}
+\end{minted}

@@ -16,6 +16,7 @@
 # under the License.
 #
 
+# Deprecated, kept for backwards compatability
 std_msgs/Header header # header with timestamp
 string child_frame_id # frame ID
 # State Estimates

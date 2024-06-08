@@ -19,44 +19,41 @@
 #ifndef LOCALIZATION_ANALYSIS_GRAPH_LOCALIZER_SIMULATOR_H_
 #define LOCALIZATION_ANALYSIS_GRAPH_LOCALIZER_SIMULATOR_H_
 
-#include <ff_msgs/Feature2dArray.h>
-#include <ff_msgs/FlightMode.h>
+#include <ff_msgs/GraphVIOState.h>
 #include <ff_msgs/VisualLandmarks.h>
 #include <localization_analysis/graph_localizer_simulator_params.h>
-#include <graph_localizer/graph_localizer_wrapper.h>
 #include <localization_common/time.h>
-
-#include <sensor_msgs/Imu.h>
+#include <ros_graph_localizer/ros_graph_localizer_wrapper.h>
 
 #include <string>
 #include <vector>
 
 namespace localization_analysis {
-class GraphLocalizerSimulator : public graph_localizer::GraphLocalizerWrapper {
+// Buffers msgs and passes these to the graph localizer after a simluated
+// optimization time occurs (as set in the params). Enables a set optimization time
+// to be simulated regardless of the hardware used for offline replay.
+class GraphLocalizerSimulator : public ros_graph_localizer::RosGraphLocalizerWrapper {
  public:
   GraphLocalizerSimulator(const GraphLocalizerSimulatorParams& params, const std::string& graph_config_path_prefix);
-
-  void BufferOpticalFlowMsg(const ff_msgs::Feature2dArray& feature_array_msg);
-
-  void BufferVLVisualLandmarksMsg(const ff_msgs::VisualLandmarks& visual_landmarks_msg);
-
-  void BufferARVisualLandmarksMsg(const ff_msgs::VisualLandmarks& visual_landmarks_msg);
 
   void BufferImuMsg(const sensor_msgs::Imu& imu_msg);
 
   void BufferFlightModeMsg(const ff_msgs::FlightMode& flight_mode_msg);
 
-  void BufferDepthOdometryMsg(const ff_msgs::DepthOdometry& depth_odometry_msg);
+  void BufferGraphVIOStateMsg(const ff_msgs::GraphVIOState& graph_vio_state_msg);
+
+  void BufferVLVisualLandmarksMsg(const ff_msgs::VisualLandmarks& visual_landmarks_msg);
+
+  void BufferARVisualLandmarksMsg(const ff_msgs::VisualLandmarks& visual_landmarks_msg);
 
   bool AddMeasurementsAndUpdateIfReady(const localization_common::Time& current_time);
 
  private:
-  std::vector<ff_msgs::Feature2dArray> of_msg_buffer_;
-  std::vector<ff_msgs::DepthOdometry> depth_odometry_msg_buffer_;
-  std::vector<ff_msgs::VisualLandmarks> vl_msg_buffer_;
-  std::vector<ff_msgs::VisualLandmarks> ar_msg_buffer_;
   std::vector<sensor_msgs::Imu> imu_msg_buffer_;
   std::vector<ff_msgs::FlightMode> flight_mode_msg_buffer_;
+  std::vector<ff_msgs::GraphVIOState> vio_msg_buffer_;
+  std::vector<ff_msgs::VisualLandmarks> vl_msg_buffer_;
+  std::vector<ff_msgs::VisualLandmarks> ar_msg_buffer_;
   boost::optional<localization_common::Time> last_update_time_;
   GraphLocalizerSimulatorParams params_;
 };

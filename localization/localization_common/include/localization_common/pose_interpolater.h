@@ -19,26 +19,19 @@
 #ifndef LOCALIZATION_COMMON_POSE_INTERPOLATER_H_
 #define LOCALIZATION_COMMON_POSE_INTERPOLATER_H_
 
-#include <ff_common/eigen_vectors.h>
-#include <localization_common/time.h>
-#include <localization_common/timestamped_set.h>
+#include <localization_common/timestamped_interpolater.h>
 
 #include <Eigen/Geometry>
 
-#include <boost/optional.hpp>
-
-#include <vector>
-
 namespace localization_common {
-class PoseInterpolater : public TimestampedSet<Eigen::Isometry3d> {
- public:
-  PoseInterpolater(const std::vector<Time>& timestamps, const std::vector<Eigen::Isometry3d>& poses);
+using PoseInterpolater = TimestampedInterpolater<Eigen::Isometry3d>;
 
-  boost::optional<Eigen::Isometry3d> Interpolate(const Time timestamp) const;
+template <>
+Eigen::Isometry3d PoseInterpolater::Interpolate(const Eigen::Isometry3d& a, const Eigen::Isometry3d& b,
+                                                const double alpha) const;
 
- private:
-  TimestampedSet timestamped_poses_;
-};
+template <>
+Eigen::Isometry3d PoseInterpolater::Relative(const Eigen::Isometry3d& a, const Eigen::Isometry3d& b) const;
 }  // namespace localization_common
 
 #endif  // LOCALIZATION_COMMON_POSE_INTERPOLATER_H_

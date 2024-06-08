@@ -23,6 +23,7 @@ add_compile_options(-std=c++14)
 
 ## Find catkin macros and libraries
 find_package(catkin2 REQUIRED COMPONENTS
+  astrobee
 	camera
 	config_reader
 	msg_conversions
@@ -42,6 +43,7 @@ catkin_package(
   INCLUDE_DIRS include 
   LIBRARIES ${PROJECT_NAME} ${GTSAM_LIBRARIES} gtsam
   CATKIN_DEPENDS
+    astrobee
     camera
     config_reader
     msg_conversions
@@ -65,9 +67,13 @@ add_library(${PROJECT_NAME}
   src/averager.cc
   src/combined_nav_state.cc
   src/combined_nav_state_covariances.cc
+  src/distance_scaled_pose_covariance_interpolater.cc
+  src/pose_covariance_interpolater.cc
   src/pose_interpolater.cc
+  src/pose_with_covariance_interpolater.cc
   src/rate_timer.cc
   src/ros_timer.cc
+  src/stats_logger.cc
   src/time.cc
   src/timer.cc
   src/test_utilities.cc
@@ -94,6 +100,14 @@ if(CATKIN_ENABLE_TESTING)
     test/test_pose_interpolater.cc
   )
   target_link_libraries(test_pose_interpolater
+    ${PROJECT_NAME}  
+  )
+
+  add_rostest_gtest(test_pose_with_covariance_interpolater
+    test/test_pose_with_covariance_interpolater.test
+    test/test_pose_with_covariance_interpolater.cc
+  )
+  target_link_libraries(test_pose_with_covariance_interpolater
     ${PROJECT_NAME}  
   )
 

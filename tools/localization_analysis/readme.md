@@ -26,7 +26,7 @@ The filtered data is saved to a bagfile and can be plotted and analyzed using th
 ## `run_depth_odometry_adder`
 Generates depth odometry relative poses using recorded depth camera data and saves these to a bag file.
 
-## `run_graph_bag`
+## `run_offline_replay`
 Runs graph localization on a bagfile and saves the results to a new bagfile. The results can be plotted using the `plot_results.py` script.
 
 ## `run_imu_bias_tester_adder`
@@ -84,6 +84,6 @@ Plots localization information for a bagfile to a pdf. Uses either sparse mappin
 from the input bagfile or a seperate bagfile containing groundtruth poses for comparison
 with the localization estimates.
 
-## `run_graph_bag_and_plot_results`
+## `run_offline_replay_and_plot_results`
 Generates localization estimates and plots results for a provided bagfile.
 

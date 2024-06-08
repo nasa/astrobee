@@ -77,23 +77,12 @@ def list_images_in_map(mapfile):
 def parse_args():
 
     parser = argparse.ArgumentParser(description="Generates/updates hugin files.")
+    parser.add_argument("-map_name", type=str, required=True, help="Input surf map.")
     parser.add_argument(
-        "-map_name",
-        type=str,
-        required=True,
-        help="Input surf map.",
+        "-input_hugin", type=str, required=False, help="Input Hugin pto file."
     )
     parser.add_argument(
-        "-input_hugin",
-        type=str,
-        required=False,
-        help="Input Hugin pto file.",
-    )
-    parser.add_argument(
-        "-output_hugin",
-        type=str,
-        required=False,
-        help="Output Hugin pto file.",
+        "-output_hugin", type=str, required=False, help="Output Hugin pto file."
     )
     parser.add_argument(
         "-work_dir",
