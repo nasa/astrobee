@@ -27,7 +27,7 @@ void PolyCost::init_constants() {
   cost_n_ = Eigen::Matrix<int, Eigen::Dynamic, Eigen::Dynamic>::Zero(8, 8);
   cost_v_ = MatD::Zero(8, 8);
 
-  // LOL, I guess I should document these. In the mean time, enjoy decyphering
+  // LOL, I guess I should document these. In the meantime, enjoy decyphering
   // them :P
   cost_n_ << -5, -5, -4, -4, -3, -3, -2, -2, -5, -5, -4, -4, -3, -3, -2, -2, -4,
       -4, -3, -3, -2, -2, -1, -1, -4, -4, -3, -3, -2, -2, -1, -1, -3, -3, -2,
@@ -285,7 +285,7 @@ class BallConstraint : public IneqConstraint {
                           traj->beads.at(traj->dim_).at(j), traj_->times.at(j),
                           0, -1.0));
   }
-  // constructor for keeping the ball outisde the points
+  // constructor for keeping the ball outside the points
   // j is the segment
   BallConstraint(NonlinearTrajectory *traj, int j_, const Vec3 &point,
                  decimal_t robot_r)
