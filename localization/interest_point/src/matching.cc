@@ -16,8 +16,10 @@
  * under the License.
  */
 
-#include <interest_point/matching.h>
+#include <interest_point/BAD.h>
 #include <interest_point/brisk.h>
+#include <interest_point/HashSIFT.h>
+#include <interest_point/matching.h>
 #include <opencv2/xfeatures2d.hpp>
 
 #include <Eigen/Core>
@@ -175,6 +177,45 @@ namespace interest_point {
     cv::Ptr<cv::xfeatures2d::SURF> surf_;
   };
 
+  class HashSIFTDynamicDetector : public DynamicDetector {
+   public:
+    HashSIFTDynamicDetector(int min_features, int max_features, int max_retries,
+                        double min_thresh, double default_thresh, double max_thresh)
+      : DynamicDetector(min_features, max_features, max_retries,
+                        min_thresh, default_thresh, max_thresh) {
+      // 6.25 when paired with surf detector
+      // smaller values for binary detectors (see opencv TEBLID docs)
+      // TODO: test 512 detector! test w/ and w/o hist equalization! test w/ clahe!
+      hash_sift_ = upm::HashSIFT::create(6.25, upm::HashSIFT::SIZE_256_BITS);  // dynamic_thresh_);
+      surf_ = cv::xfeatures2d::SURF::create(dynamic_thresh_);
+    }
+
+    virtual void DetectImpl(const cv::Mat& image, std::vector<cv::KeyPoint>* keypoints) {
+      surf_->detect(image, *keypoints);
+    }
+    virtual void ComputeImpl(const cv::Mat& image, std::vector<cv::KeyPoint>* keypoints,
+                             cv::Mat* keypoints_description) {
+      hash_sift_->compute(image, *keypoints, *keypoints_description);
+    }
+    virtual void TooMany(void) {
+      dynamic_thresh_ *= 1.1;
+      if (dynamic_thresh_ > max_thresh_)
+        dynamic_thresh_ = max_thresh_;
+      surf_->setHessianThreshold(static_cast<float>(dynamic_thresh_));
+    }
+    virtual void TooFew(void) {
+      dynamic_thresh_ *= 0.9;
+      if (dynamic_thresh_ < min_thresh_)
+        dynamic_thresh_ = min_thresh_;
+      surf_->setHessianThreshold(static_cast<float>(dynamic_thresh_));
+    }
+
+   private:
+    cv::Ptr<cv::Feature2D> hash_sift_;
+    cv::Ptr<cv::xfeatures2d::SURF> surf_;
+  };
+
+
   FeatureDetector::FeatureDetector(std::string const& detector_name,
                                    int min_features, int max_features, int retries,
                                    double min_thresh, double default_thresh, double max_thresh) {
@@ -211,7 +252,8 @@ namespace interest_point {
 
     // Populate the defaults
     if (max_features <= 0) {
-      if (detector_name == "SURF") {
+      // SURF and HASHSIFT both use SURF to detect features
+      if (detector_name == "SURF" || detector_name == "HASHSIFT") {
         min_features   = FLAGS_min_surf_features;
         max_features   = FLAGS_max_surf_features;
         retries        = FLAGS_detection_retries;
@@ -237,8 +279,13 @@ namespace interest_point {
     else if (detector_name == "SURF")
       detector_ = new SurfDynamicDetector(min_features, max_features, retries,
                                           min_thresh, default_thresh, max_thresh);
+    else if (detector_name == "HASHSIFT")
+      detector_ = new HashSIFTDynamicDetector(min_features, max_features, retries,
+                                          min_thresh, default_thresh, max_thresh);
     else
       LOG(FATAL) << "Unimplemented feature detector: " << detector_name;
+
+    LOG(INFO) << "Using descriptor: " << detector_name;
   }
 
   void FeatureDetector::Detect(const cv::Mat& image,
