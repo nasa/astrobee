@@ -1,3 +1,9 @@
+astrobee (0.19.0) testing; urgency=medium
+
+  * New split localizer
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Mon, 10 Jun 2024 09:54:26 -0700
+
 astrobee (0.18.0) testing; urgency=medium
 
   * Astrobee now using OpenCV 4! Please see install updates in INSTALL.md

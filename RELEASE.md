@@ -1,5 +1,9 @@
 # Releases
 
+## Release 0.19.0
+
+  * New split localizer
+
 ## Release 0.18.0
 
   * Astrobee now using OpenCV 4! Please see install updates in INSTALL.md
