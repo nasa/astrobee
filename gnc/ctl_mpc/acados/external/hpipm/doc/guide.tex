@@ -1,0 +1,176 @@
+\documentclass[a4paper]{report}
+
+\usepackage[margin=3.0cm]{geometry}
+\usepackage{amsmath}
+\usepackage[pdftex]{graphicx}
+%\usepackage{graphics}
+\usepackage{subfig}
+\setlength\parindent{0pt}
+%\usepackage{natbib}           % required for bibliography
+
+
+\title{HPIPM reference guide}
+\author{Gianluca Frison}
+
+
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Introduction}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+HPIPM, which stands for High-Performance Interior Point Method, is a library providing a collection of quadratic programs (QP) and routines to manage them.
+Aim of the library is to provide both stand-alone IPM solvers for the QPs and the building blocks for more complex optimization algorithms.
+
+At the moment, three QPs types are provided: dense QPs, optimal control problem (OCP) QPs, and tree-structured OCP QPs.
+These QPs are defined using C structures.
+HPIPM provides routines to manage the QPs, and to convert between them.
+
+HPIPM is written entirely in C, and it builds on top of BLASFEO~\cite{Frison2018}, that provides high-performance implementations of basic linear algebra (LA) routines, optimized for matrices of moderate size (as common in embedded optimization).
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Dense QP}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+The dense QP is a QP in the form
+\begin{align*}
+\min_{v,s} & \quad \frac 1 2 \begin{bmatrix} v \\ 1 \end{bmatrix}^T \begin{bmatrix} H & g \\ g^T & 0 \end{bmatrix} \begin{bmatrix} v \\ 1 \end{bmatrix} + \frac 1 2 \begin{bmatrix} s^l \\ s^u \\ 1 \end{bmatrix}^T \begin{bmatrix} Z^l & 0 & z^l \\ 0 & Z^u & z^u \\ (z^l)^T & (z^u)^T & 0 \end{bmatrix} \begin{bmatrix} s^l \\ s^u \\ 1 \end{bmatrix} \\
+\text{s.t.} & \quad A v = b, \\
+& \quad \begin{bmatrix} \underline v \\ \underline d \end{bmatrix} \leq \begin{bmatrix} J_{b,v} \\ C \end{bmatrix} v + \begin{bmatrix} J_{s,v} \\ J_{s,g} \end{bmatrix} s^l, \\
+& \quad \begin{bmatrix} J_{b,v} \\ C \end{bmatrix} v - \begin{bmatrix} J_{s,v} \\ J_{s,g} \end{bmatrix} s^u \leq \begin{bmatrix} \overline v \\ \overline d \end{bmatrix}, \\
+& \quad s^l\geq \underline s^l, \\
+& \quad s^u\geq \underline s^u,
+\end{align*}
+where $v$ are the primal variables, $s^l$ ($s^u$) are the slack variables of the soft lower (upper) constraints.
+The matrices $J_{\dots}$ are made of rows from identity matrices.
+Furthermore, note that the constraint matrix with respect to $v$ is the same for the upper and the lower constraints.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{OCP QP}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+The OCP QP is a QP in the form
+\begin{align*}
+\min_{x,u,s} & \quad \sum_{n=0}^N \frac 1 2 \begin{bmatrix} u_n \\ x_n \\ 1 \end{bmatrix}^T \begin{bmatrix} R_n & S_n & r_n \\ S_n^T & Q_n & q_n \\ r_n^T & q_n^T & 0 \end{bmatrix} \begin{bmatrix} u_n \\ x_n \\ 1 \end{bmatrix} + \frac 1 2 \begin{bmatrix} s^l_n \\ s^u_n \\ 1 \end{bmatrix}^T \begin{bmatrix} Z^l_n & 0 & z^l_n \\ 0 & Z^u_n & z^u_n \\ (z^l_n)^T & (z^u_n)^T & 0 \end{bmatrix} \begin{bmatrix} s^l_n \\ s^u_n \\ 1 \end{bmatrix} \\
+\text{s.t}  & & \\
+     & \quad x_{n+1} = A_n x_n + B_n u_n + b_n, \qquad \qquad \qquad \qquad \qquad \qquad n=0,\dots,N-1, &\\
+     & \quad \begin{bmatrix} \underline u_n \\ \underline x_n \\ \underline d_n \end{bmatrix} \leq \begin{bmatrix} J_{b,u,n} & 0 \\ 0 & J_{b,x,n} \\ D_n & C_n \end{bmatrix} \begin{bmatrix} u_n \\ x_n \end{bmatrix} + \begin{bmatrix} J_{s,u,n} \\ J_{s,x,n} \\ J_{s,g,n} \end{bmatrix} s^l_n, \quad \qquad \quad \,n=0,\dots,N, &\\
+& \quad \begin{bmatrix} J_{b,u,n} & 0 \\ 0 & J_{b,x,n} \\ D_n & C_n \end{bmatrix} \begin{bmatrix} u_n \\ x_n \end{bmatrix} - \begin{bmatrix} J_{s,u,n} \\ J_{s,x,n} \\ J_{s,g,n} \end{bmatrix} s^u_n \leq \begin{bmatrix} \overline u_n \\ \overline x_n \\ \overline d_n \end{bmatrix} , \qquad \qquad n=0,\dots,N, & & \\
+& \quad s^l_n\geq \underline{s}^l_n, \qquad \qquad \qquad \qquad \qquad \qquad \qquad \qquad \qquad \qquad \,\,\,  n=0,\dots,N, & &\\
+& \quad s^u_n\geq \underline{s}^u_n, \qquad \qquad \qquad \qquad \qquad \qquad \qquad \qquad \qquad \qquad \,\,\,  n=0,\dots,N, & &\\
+\end{align*}
+where $u_n$ are the control inputs, $x_n$ are the states, $s^l_n$ ($s^u_n$) are the slack variables of the soft lower (upper) constraints
+and $\underline{s}^l_n$ and $\underline{s}^u_n$ are the lower bounds on lower and upper slacks, respectively.
+The matrices $J_{\dots,n}$ are made of rows from identity matrices.
+Note that all quantities can vary stage-wise.
+Furthermore, note that the constraint matrix with respect to $u$ and $x$ is the same for the upper and the lower constraints.
+
+%%%%%%%%%%%%%%%%
+\section{QP dimensions structure}
+%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%
+\subsection{Create structure}
+%%%%%%%%%%%%%%%%
+
+\begin{verbatim}
+int d_ocp_qp_dim_memsize(int N);
+\end{verbatim}
+
+\begin{verbatim}
+void d_ocp_qp_dim_create(int N, struct d_ocp_qp *qp, void *memory);
+\end{verbatim}
+
+%%%%%%%%%%%%%%%%
+\subsection{Populate structure}
+%%%%%%%%%%%%%%%%
+
+Once created, an OCP QP dimmensions structure can be populated using the global setter routine
+\begin{verbatim}
+void d_ocp_qp_dim_set_all(int *nx, int *nu,
+    int *nbx, int *nbu, int *ng,
+    int *nsbx, int *nsbu, int *nsg,
+    struct d_ocp_qp_dim *dim);
+\end{verbatim}
+which is useful when all structure fields have to be populated at onece.
+
+Alternatively, it is possible to set the individual structure fields with the setter routine
+\begin{verbatim}
+void d_ocp_qp_dim_set(char *field, int *stage, int value,
+    struct d_ocp_qp_dim *dim);
+\end{verbatim}
+where {\tt field} can be one of {\tt nx, nu, nbx, nbu, ng, nsbx, nsbu, nsg}.
+
+%%%%%%%%%%%%%%%%
+\section{QP structure}
+%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%
+\subsection{Create structure}
+%%%%%%%%%%%%%%%%
+
+\begin{verbatim}
+int d_ocp_qp_memsize(struct d_ocp_qp_dim *dim);
+\end{verbatim}
+
+\begin{verbatim}
+void d_ocp_qp_create(struct d_ocp_qp_dim *dim, struct d_ocp_qp *qp, void *memory);
+\end{verbatim}
+
+%%%%%%%%%%%%%%%%
+\subsection{Populate structure}
+%%%%%%%%%%%%%%%%
+
+Once created, an OCP QP structure can be populated using the global conversion routine
+\begin{verbatim}
+void d_ocp_qp_set_all(double **A, double **B, double **b, 
+    double **Q, double **S, double **R, double **q, double **r, 
+    int **idxbx, double **lbx, double **ubx, 
+    int **idxbu, double **lbu, double **ubu, 
+    double **C, double **D, double **lg, double **ug, 
+    double **Zl, double **Zu, double **zl, double **zu, 
+    int **idxs, double **lls, double **lus,
+    struct d_ocp_qp *qp);
+\end{verbatim}
+which is useful when all the structure fileds have to be populated at once.
+
+Alternatively, it is possible to set the individual structure fields with the setter routine
+\begin{verbatim}
+void d_ocp_qp_set(char *field, int *stage, void *value,
+    struct d_ocp_qp *qp);
+\end{verbatim}
+where {\tt filed} can be one of {\tt A, B, b, Q, S, R, q, r, idxb, lb, ub, Jbx, idxbx, lbx, ubx, Jbu, idxbu, lbu, ubu, C, D, lg, ug, Zl, Zu, zl, zu, idxs, lls, lus}.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \chapter{Tree OCP QP}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%\bibliographystyle{plain}
+%\bibliography{biblio}             % bib file to produce the bibliography
+
+\begin{thebibliography}{1}
+
+\bibitem{Frison2018}
+G.~Frison, D.~Kouzoupis, T.~Sartor, A.~Zanelli, and M.~Diehl.
+\newblock {BLASFEO}: Basic linear algebra subroutines for embedded
+  optimization.
+\newblock {\em ACM Transactions on Mathematical Software (TOMS)}, 2018.
+\newblock (accepted).
+
+\end{thebibliography}
+
+\end{document}

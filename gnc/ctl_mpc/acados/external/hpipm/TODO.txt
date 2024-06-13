@@ -1,0 +1,1 @@
+- on exit to IPM, change sign of upper inequality constraints (the core is one-sided, the interface is two-sided)

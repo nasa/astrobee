@@ -1,0 +1,54 @@
+{
+  "options":{
+    "rebuild": 1,
+    "silent": 1,
+    "continue": 0
+  },
+  "test_macros":
+  {
+    "VERBOSE": 3
+  },
+  "env_flags":{
+    "CC":"gcc",
+    "CFLAGS": "-Wuninitialized"
+  },
+  "blasfeo_flags":{
+    "BLASFEO_REF_API": 1,
+    "BLAS_API": 0,
+    "EXTERNAL_BLAS": "SYSTEM"
+  },
+  "precisions": [
+    "double"
+  ],
+  "apis": [
+    "blasfeo"
+  ],
+  "K_MAX_STACK":[
+    1000
+  ],
+  "PACKING_ALG":[
+    "ALG_0",
+    "ALG_M1",
+    "ALG_N1",
+    "ALG_2"
+  ],
+  "MF": [
+    "COLMAJ"
+  ],
+  "TARGET": [
+    "GENERIC",
+    "X64_INTEL_CORE",
+    "X64_INTEL_HASWELL",
+    "X64_INTEL_SANDY_BRIDGE"
+  ],
+  "LA": [
+    "HIGH_PERFORMANCE"
+  ],
+  "routines": [
+    "gemm_nn",
+    "gemm_nt",
+    "gemm_tn",
+    "gemm_tt"
+  ]
+}
+

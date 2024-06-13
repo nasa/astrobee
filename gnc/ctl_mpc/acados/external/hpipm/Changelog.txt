@@ -1,0 +1,120 @@
+HPIPM ChangeLog
+
+
+
+====================================================================
+Version 0.1.4-master
+3-Sep-2020
+
+dense_qp:
+	* update some setters/getters
+	* add t_lam_min flag to control min value of t and lam
+
+dense_qcqp:
+	* add t_lam_min flag to control min value of t and lam
+
+ocp_qp:
+	* add reduce/restore eq DOF for LHS/RHS alone
+	* add t_lam_min flag to control min value of t and lam
+
+ocp_qcqp:
+	* add t_lam_min flag to control min value of t and lam
+
+cond_qp:
+	* add condensing of LHS
+
+part_cond_qp:
+	* add condensing of LHS
+
+cond_qcqp:
+	* add condensing of LHS
+
+part_cond_qcqp:
+	* add condensing of LHS
+
+tree_ocp_qp:
+	* update to nearly all features of ocp qp
+
+tree_ocp_qcqp:
+	* add tree ocp qcqp solver
+
+Matlab/Octave interface:
+	* add basic interface for dense QP
+
+====================================================================
+Version 0.1.3
+13-Aug-2020
+
+cond_qp:
+	* add classic condensing algorithm (with diag hess flag) & optinos to select the cond alg
+
+sim:
+	* resume basic ERK integrator with forward sensitivities capabilities
+
+====================================================================
+Version 0.1.2
+07-Apr-2020
+
+dense_qp:
+	* add mask to disregard constraints (e.g. for one sided constr, or dynamic constr removal)
+	* replace idxs with idxs_rev
+
+dense_qcqp:
+	* add dense qcqp ipm solver built on top of dense qp ipm solver
+	* replace idxs with idxs_rev
+
+ocp_qp:
+	* add mask to disregard constraints (e.g. for one sided constr, or dynamic constr removal)
+	* replace idxs with idxs_rev
+	* add routines to reduce/restore equality-constrained degrees-of-freedom
+	* add routines to get riccati matrices (e.g. control gains / feedback matrix K)
+
+ocp_qcqp:
+	* add ocp qcqp ipm solver built on top of ocp qp ipm solver
+	* replace idxs with idxs_rev
+
+cond_qcqp:
+	* add condensing for qcqp
+
+part_cond_qcqp:
+	* add partial condensing for qcqp
+
+Matlab/Octave interface:
+	* add option to build QP data and args reading from codegen data files
+	* add ocp qcqp interface with same functionality as the ocp qp one
+
+simulink interface:
+	* add a simulink interface based on a basic s-function
+
+====================================================================
+Version 0.1.1
+01-Oct-2019
+
+common:
+	* change license to BSD-2
+
+dense_qp:
+	* general renaming of routines, e.g. d_create_dense_qp_dim => d_dense_qp_dim_create
+	* add functionality to compute predicted solution for a new RHS and sensitivity of solution
+
+ocp_qp:
+	* general renaming of routines, e.g. d_create_ocp_qp_dim => d_ocp_qp_dim_create
+	* add codegen functionality to export dims, qp and ipm_args as global variables in a C source file
+	* add functionality to compute predicted solution for a new RHS and sensitivity of solution
+
+cond_qp:
+	* general renaming of routines, e.g. d_create_cond_ocp2ocp => d_part_cond_qp_ws_create
+
+Matlab/Octave interface:
+	* reimplement an unified Matlab & Octave interface based on mex (and independent of the python interface)
+	* allow for codegen of dims, qp and ipm_args from Matlab/Octave
+
+python interface:
+	* allow for codegen of dims, qp and ipm_args from python
+
+====================================================================
+Version 0.1.0
+04-Jul-2019
+
+common:
+	* initial release
