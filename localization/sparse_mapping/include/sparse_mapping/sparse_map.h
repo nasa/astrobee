@@ -28,6 +28,7 @@
 
 #include <Eigen/Geometry>
 #include <opencv2/core/core.hpp>
+#include <opencv2/imgproc.hpp>
 
 #include <map>
 #include <mutex>
@@ -298,6 +299,7 @@ struct SparseMap {
   std::vector<Eigen::Matrix2Xd> user_cid_to_keypoint_map_;
   std::vector<std::map<int, int> > user_pid_to_cid_fid_;
   std::vector<Eigen::Vector3d> user_pid_to_xyz_;
+  cv::Ptr<cv::CLAHE> clahe_;
   std::mutex mutex_detector_;
 
  private:
