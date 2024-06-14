@@ -183,37 +183,84 @@ namespace interest_point {
                         double min_thresh, double default_thresh, double max_thresh)
       : DynamicDetector(min_features, max_features, max_retries,
                         min_thresh, default_thresh, max_thresh) {
-      // 6.25 when paired with surf detector
-      // smaller values for binary detectors (see opencv TEBLID docs)
-      // TODO: test 512 detector! test w/ and w/o hist equalization! test w/ clahe!
-      hash_sift_ = upm::HashSIFT::create(6.25, upm::HashSIFT::SIZE_256_BITS);  // dynamic_thresh_);
-      surf_ = cv::xfeatures2d::SURF::create(dynamic_thresh_);
+      Reset();
+    }
+
+    void Reset(void) {
+      hash_sift_ = upm::HashSIFT::create(5.0, upm::HashSIFT::SIZE_256_BITS);
+      brisk_ = interest_point::BRISK::create(dynamic_thresh_, FLAGS_orgbrisk_octaves,
+                                 FLAGS_orgbrisk_pattern_scale);
     }
 
     virtual void DetectImpl(const cv::Mat& image, std::vector<cv::KeyPoint>* keypoints) {
-      surf_->detect(image, *keypoints);
+      brisk_->detect(image, *keypoints);
     }
     virtual void ComputeImpl(const cv::Mat& image, std::vector<cv::KeyPoint>* keypoints,
                              cv::Mat* keypoints_description) {
       hash_sift_->compute(image, *keypoints, *keypoints_description);
     }
     virtual void TooMany(void) {
-      dynamic_thresh_ *= 1.1;
+      dynamic_thresh_ *= 1.25;
+      dynamic_thresh_ = static_cast<int>(dynamic_thresh_);  // for backwards compatibility
       if (dynamic_thresh_ > max_thresh_)
         dynamic_thresh_ = max_thresh_;
-      surf_->setHessianThreshold(static_cast<float>(dynamic_thresh_));
+      brisk_->setThreshold(dynamic_thresh_);
     }
     virtual void TooFew(void) {
-      dynamic_thresh_ *= 0.9;
+      dynamic_thresh_ *= 0.8;
+      dynamic_thresh_ = static_cast<int>(dynamic_thresh_);  // for backwards compatibility
       if (dynamic_thresh_ < min_thresh_)
         dynamic_thresh_ = min_thresh_;
-      surf_->setHessianThreshold(static_cast<float>(dynamic_thresh_));
+      brisk_->setThreshold(dynamic_thresh_);
     }
 
    private:
     cv::Ptr<cv::Feature2D> hash_sift_;
-    cv::Ptr<cv::xfeatures2d::SURF> surf_;
+    cv::Ptr<interest_point::BRISK> brisk_;
   };
+
+  class BadDynamicDetector : public DynamicDetector {
+   public:
+    BadDynamicDetector(int min_features, int max_features, int max_retries,
+                        double min_thresh, double default_thresh, double max_thresh)
+      : DynamicDetector(min_features, max_features, max_retries,
+                        min_thresh, default_thresh, max_thresh) {
+      Reset();
+    }
+
+    void Reset(void) {
+      bad_ = upm::BAD::create(5.0, upm::BAD::SIZE_256_BITS);
+      brisk_ = interest_point::BRISK::create(dynamic_thresh_, FLAGS_orgbrisk_octaves,
+                                 FLAGS_orgbrisk_pattern_scale);
+    }
+
+    virtual void DetectImpl(const cv::Mat& image, std::vector<cv::KeyPoint>* keypoints) {
+      brisk_->detect(image, *keypoints);
+    }
+    virtual void ComputeImpl(const cv::Mat& image, std::vector<cv::KeyPoint>* keypoints,
+                             cv::Mat* keypoints_description) {
+      bad_->compute(image, *keypoints, *keypoints_description);
+    }
+    virtual void TooMany(void) {
+      dynamic_thresh_ *= 1.25;
+      dynamic_thresh_ = static_cast<int>(dynamic_thresh_);  // for backwards compatibility
+      if (dynamic_thresh_ > max_thresh_)
+        dynamic_thresh_ = max_thresh_;
+      brisk_->setThreshold(dynamic_thresh_);
+    }
+    virtual void TooFew(void) {
+      dynamic_thresh_ *= 0.8;
+      dynamic_thresh_ = static_cast<int>(dynamic_thresh_);  // for backwards compatibility
+      if (dynamic_thresh_ < min_thresh_)
+        dynamic_thresh_ = min_thresh_;
+      brisk_->setThreshold(dynamic_thresh_);
+    }
+
+   private:
+    cv::Ptr<cv::Feature2D> bad_;
+    cv::Ptr<interest_point::BRISK> brisk_;
+  };
+
 
 
   FeatureDetector::FeatureDetector(std::string const& detector_name,
@@ -281,6 +328,9 @@ namespace interest_point {
                                           min_thresh, default_thresh, max_thresh);
     else if (detector_name == "HASHSIFT")
       detector_ = new HashSIFTDynamicDetector(min_features, max_features, retries,
+                                          min_thresh, default_thresh, max_thresh);
+    else if (detector_name == "BAD")
+      detector_ = new BadDynamicDetector(min_features, max_features, retries,
                                           min_thresh, default_thresh, max_thresh);
     else
       LOG(FATAL) << "Unimplemented feature detector: " << detector_name;
