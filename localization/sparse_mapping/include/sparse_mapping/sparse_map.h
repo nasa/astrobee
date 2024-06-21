@@ -53,30 +53,6 @@ void InitializeCidFidToPid(int num_cid,
                            std::vector<std::map<int, int> > * cid_fid_to_pid);
 
 /**
- * Estimate the camera pose for a set of image descriptors and keypoints.
- * Non-member function. We will invoke it both from within
- * the SparseMap class and from outside of it.
- **/
-bool Localize(cv::Mat const& test_descriptors,
-              Eigen::Matrix2Xd const& test_keypoints,
-              camera::CameraParameters const& camera_params,
-              camera::CameraModel* pose,
-              std::vector<Eigen::Vector3d>* inlier_landmarks,
-              std::vector<Eigen::Vector2d>* inlier_observations,
-              int num_cid,
-              std::string const& detector_name,
-              sparse_mapping::VocabDB * vocab_db,
-              int num_similar,
-              std::vector<std::string> const& cid_to_filename,
-              std::vector<cv::Mat> const& cid_to_descriptor_map,
-              std::vector<Eigen::Matrix2Xd > const& cid_to_keypoint_map,
-              std::vector<std::map<int, int> > const& cid_fid_to_pid,
-              std::vector<Eigen::Vector3d> const& pid_to_xyz,
-              int num_ransac_iterations, int ransac_inlier_tolerance,
-              int early_break_landmarks, int histogram_equalization,
-              std::vector<int> * cid_list);
-
-/**
  * A class representing a sparse map, which consists of a collection
  * of keyframes and detected features. To localize, an image's features
  * are matched to the keyframes in the map. They keyframe features have known
@@ -142,6 +118,25 @@ struct SparseMap {
                 std::vector<Eigen::Vector3d>* inlier_landmarks,
                 std::vector<Eigen::Vector2d>* inlier_observations,
                 std::vector<int> * cid_list = NULL);
+bool Localize(cv::Mat const& test_descriptors,
+              Eigen::Matrix2Xd const& test_keypoints,
+              camera::CameraParameters const& camera_params,
+              camera::CameraModel* pose,
+              std::vector<Eigen::Vector3d>* inlier_landmarks,
+              std::vector<Eigen::Vector2d>* inlier_observations,
+              int num_cid,
+              std::string const& detector_name,
+              sparse_mapping::VocabDB * vocab_db,
+              int num_similar,
+              std::vector<std::string> const& cid_to_filename,
+              std::vector<cv::Mat> const& cid_to_descriptor_map,
+              std::vector<Eigen::Matrix2Xd > const& cid_to_keypoint_map,
+              std::vector<std::map<int, int> > const& cid_fid_to_pid,
+              std::vector<Eigen::Vector3d> const& pid_to_xyz,
+              int num_ransac_iterations, int ransac_inlier_tolerance,
+              int early_break_landmarks, int histogram_equalization,
+              std::vector<int> * cid_list);
+
   // access map frames
   /**
    * Get the number of keyframes in the map.

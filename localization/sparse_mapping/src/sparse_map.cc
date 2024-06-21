@@ -650,9 +650,7 @@ void SparseMap::DetectFeatures(const cv::Mat& image,
   }
 }
 
-// A non-member Localize() function that can be invoked for a non-fully
-// formed map.
-bool Localize(cv::Mat const& test_descriptors,
+bool SparseMap::Localize(cv::Mat const& test_descriptors,
               Eigen::Matrix2Xd const& test_keypoints,
               camera::CameraParameters const& camera_params,
               camera::CameraModel* pose,
@@ -771,7 +769,7 @@ bool SparseMap::Localize(std::string const& img_file,
   Eigen::Matrix2Xd test_keypoints;
   bool multithreaded = false;
   DetectFeaturesFromFile(img_file, multithreaded, &test_descriptors, &test_keypoints);
-  return sparse_mapping::Localize(test_descriptors, test_keypoints,
+  return Localize(test_descriptors, test_keypoints,
                                   std::cref(camera_params_),
                                   pose,
                                   inlier_landmarks, inlier_observations,
@@ -963,7 +961,7 @@ bool SparseMap::Localize(const cv::Mat & image, camera::CameraModel* pose,
   cv::Mat test_descriptors;
   Eigen::Matrix2Xd test_keypoints;
   DetectFeatures(image, multithreaded, &test_descriptors, &test_keypoints);
-  return sparse_mapping::Localize(test_descriptors, test_keypoints,
+  return Localize(test_descriptors, test_keypoints,
                                   std::cref(camera_params_),
                                   pose,
                                   inlier_landmarks, inlier_observations,
@@ -988,7 +986,7 @@ bool SparseMap::Localize(const cv::Mat & test_descriptors, const Eigen::Matrix2X
                          std::vector<Eigen::Vector3d>* inlier_landmarks,
                          std::vector<Eigen::Vector2d>* inlier_observations,
                          std::vector<int> * cid_list) {
-  return sparse_mapping::Localize(test_descriptors, test_keypoints,
+  return Localize(test_descriptors, test_keypoints,
                                   std::cref(camera_params_),
                                   pose,
                                   inlier_landmarks, inlier_observations,

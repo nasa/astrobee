@@ -18,7 +18,6 @@
 
 #include <interest_point/BAD.h>
 #include <interest_point/brisk.h>
-#include <interest_point/HashSIFT.h>
 #include <interest_point/matching.h>
 #include <opencv2/xfeatures2d.hpp>
 
@@ -177,9 +176,9 @@ namespace interest_point {
     cv::Ptr<cv::xfeatures2d::SURF> surf_;
   };
 
-  class HashSIFTDynamicDetector : public DynamicDetector {
+  class TeblidDynamicDetector : public DynamicDetector {
    public:
-    HashSIFTDynamicDetector(int min_features, int max_features, int max_retries,
+    TeblidDynamicDetector(int min_features, int max_features, int max_retries,
                         double min_thresh, double default_thresh, double max_thresh)
       : DynamicDetector(min_features, max_features, max_retries,
                         min_thresh, default_thresh, max_thresh) {
@@ -187,7 +186,7 @@ namespace interest_point {
     }
 
     void Reset(void) {
-      hash_sift_ = upm::HashSIFT::create(5.0, upm::HashSIFT::SIZE_256_BITS);
+      teblid_ = upm::BAD::create(5.0, upm::BAD::SIZE_512_BITS);
       brisk_ = interest_point::BRISK::create(dynamic_thresh_, FLAGS_orgbrisk_octaves,
                                  FLAGS_orgbrisk_pattern_scale);
     }
@@ -197,7 +196,7 @@ namespace interest_point {
     }
     virtual void ComputeImpl(const cv::Mat& image, std::vector<cv::KeyPoint>* keypoints,
                              cv::Mat* keypoints_description) {
-      hash_sift_->compute(image, *keypoints, *keypoints_description);
+      teblid_->compute(image, *keypoints, *keypoints_description);
     }
     virtual void TooMany(void) {
       dynamic_thresh_ *= 1.25;
@@ -215,49 +214,7 @@ namespace interest_point {
     }
 
    private:
-    cv::Ptr<cv::Feature2D> hash_sift_;
-    cv::Ptr<interest_point::BRISK> brisk_;
-  };
-
-  class BadDynamicDetector : public DynamicDetector {
-   public:
-    BadDynamicDetector(int min_features, int max_features, int max_retries,
-                        double min_thresh, double default_thresh, double max_thresh)
-      : DynamicDetector(min_features, max_features, max_retries,
-                        min_thresh, default_thresh, max_thresh) {
-      Reset();
-    }
-
-    void Reset(void) {
-      bad_ = upm::BAD::create(5.0, upm::BAD::SIZE_256_BITS);
-      brisk_ = interest_point::BRISK::create(dynamic_thresh_, FLAGS_orgbrisk_octaves,
-                                 FLAGS_orgbrisk_pattern_scale);
-    }
-
-    virtual void DetectImpl(const cv::Mat& image, std::vector<cv::KeyPoint>* keypoints) {
-      brisk_->detect(image, *keypoints);
-    }
-    virtual void ComputeImpl(const cv::Mat& image, std::vector<cv::KeyPoint>* keypoints,
-                             cv::Mat* keypoints_description) {
-      bad_->compute(image, *keypoints, *keypoints_description);
-    }
-    virtual void TooMany(void) {
-      dynamic_thresh_ *= 1.25;
-      dynamic_thresh_ = static_cast<int>(dynamic_thresh_);  // for backwards compatibility
-      if (dynamic_thresh_ > max_thresh_)
-        dynamic_thresh_ = max_thresh_;
-      brisk_->setThreshold(dynamic_thresh_);
-    }
-    virtual void TooFew(void) {
-      dynamic_thresh_ *= 0.8;
-      dynamic_thresh_ = static_cast<int>(dynamic_thresh_);  // for backwards compatibility
-      if (dynamic_thresh_ < min_thresh_)
-        dynamic_thresh_ = min_thresh_;
-      brisk_->setThreshold(dynamic_thresh_);
-    }
-
-   private:
-    cv::Ptr<cv::Feature2D> bad_;
+    cv::Ptr<cv::Feature2D> teblid_;
     cv::Ptr<interest_point::BRISK> brisk_;
   };
 
@@ -299,15 +256,14 @@ namespace interest_point {
 
     // Populate the defaults
     if (max_features <= 0) {
-      // SURF and HASHSIFT both use SURF to detect features
-      if (detector_name == "SURF" || detector_name == "HASHSIFT") {
+      if (detector_name == "SURF") {
         min_features   = FLAGS_min_surf_features;
         max_features   = FLAGS_max_surf_features;
         retries        = FLAGS_detection_retries;
         min_thresh     = FLAGS_min_surf_threshold;
         default_thresh = FLAGS_default_surf_threshold;
         max_thresh     = FLAGS_max_surf_threshold;
-      } else if (detector_name == "ORGBRISK") {
+      } else if (detector_name == "ORGBRISK" || detector_name == "TEBLID") {
         min_features   = FLAGS_min_brisk_features;
         max_features   = FLAGS_max_brisk_features;
         retries        = FLAGS_detection_retries;
@@ -326,11 +282,8 @@ namespace interest_point {
     else if (detector_name == "SURF")
       detector_ = new SurfDynamicDetector(min_features, max_features, retries,
                                           min_thresh, default_thresh, max_thresh);
-    else if (detector_name == "HASHSIFT")
-      detector_ = new HashSIFTDynamicDetector(min_features, max_features, retries,
-                                          min_thresh, default_thresh, max_thresh);
-    else if (detector_name == "BAD")
-      detector_ = new BadDynamicDetector(min_features, max_features, retries,
+    else if (detector_name == "TEBLID")
+      detector_ = new TeblidDynamicDetector(min_features, max_features, retries,
                                           min_thresh, default_thresh, max_thresh);
     else
       LOG(FATAL) << "Unimplemented feature detector: " << detector_name;
