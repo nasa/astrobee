@@ -113,29 +113,12 @@ struct SparseMap {
       camera::CameraModel* pose, std::vector<Eigen::Vector3d>* inlier_landmarks = NULL,
                 std::vector<Eigen::Vector2d>* inlier_observations = NULL,
                 std::vector<int> * cid_list = NULL);
-  bool Localize(const cv::Mat & test_descriptors, const Eigen::Matrix2Xd & test_keypoints,
-                camera::CameraModel* pose,
-                std::vector<Eigen::Vector3d>* inlier_landmarks,
-                std::vector<Eigen::Vector2d>* inlier_observations,
-                std::vector<int> * cid_list = NULL);
 bool Localize(cv::Mat const& test_descriptors,
               Eigen::Matrix2Xd const& test_keypoints,
-              camera::CameraParameters const& camera_params,
               camera::CameraModel* pose,
               std::vector<Eigen::Vector3d>* inlier_landmarks,
               std::vector<Eigen::Vector2d>* inlier_observations,
-              int num_cid,
-              std::string const& detector_name,
-              sparse_mapping::VocabDB * vocab_db,
-              int num_similar,
-              std::vector<std::string> const& cid_to_filename,
-              std::vector<cv::Mat> const& cid_to_descriptor_map,
-              std::vector<Eigen::Matrix2Xd > const& cid_to_keypoint_map,
-              std::vector<std::map<int, int> > const& cid_fid_to_pid,
-              std::vector<Eigen::Vector3d> const& pid_to_xyz,
-              int num_ransac_iterations, int ransac_inlier_tolerance,
-              int early_break_landmarks, int histogram_equalization,
-              std::vector<int> * cid_list);
+              std::vector<int> * cid_list = NULL);
 
   // access map frames
   /**
