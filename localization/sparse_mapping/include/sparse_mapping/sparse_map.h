@@ -191,6 +191,8 @@ bool Localize(cv::Mat const& test_descriptors,
   void SetEarlyBreakLandmarks(int early_break_landmarks) {early_break_landmarks_ = early_break_landmarks;}
   void SetHistogramEqualization(int histogram_equalization) {histogram_equalization_ = histogram_equalization;}
   int GetHistogramEqualization() {return histogram_equalization_;}
+  void SetCLAHE(bool use_clahe) {use_clahe_ = use_clahe;}
+  bool GetCLAHE() {return use_clahe_;}
   /**
    * Return the parameters of the camera used to construct the map.
    **/
@@ -260,6 +262,7 @@ bool Localize(cv::Mat const& test_descriptors,
   int ransac_inlier_tolerance_;
   int early_break_landmarks_;
   int histogram_equalization_;
+  bool use_clahe_;
 
   // e.g, 10th db image is 3rd image in cid_to_filename_
   std::map<int, int> db_to_cid_map_;

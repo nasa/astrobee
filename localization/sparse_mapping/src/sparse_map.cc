@@ -57,6 +57,8 @@ DEFINE_int32(early_break_landmarks, 100,
              "Break early when we have this many landmarks during localization.");
 DEFINE_bool(histogram_equalization, false,
             "If true, equalize the histogram for images to improve robustness to illumination conditions.");
+DEFINE_bool(use_clahe, false,
+            "If true, use CLAHE if histogram equalization enabled.");
 DEFINE_int32(num_extra_localization_db_images, 0,
              "Match this many extra images from the Vocab DB, only keep num_similar.");
 DEFINE_bool(verbose_localization, false,
@@ -64,30 +66,31 @@ DEFINE_bool(verbose_localization, false,
 
 namespace sparse_mapping {
 
-SparseMap::SparseMap(const std::vector<std::string> & filenames,
-                     const std::string & detector,
-                     const camera::CameraParameters & params):
-        cid_to_filename_(filenames),
-        detector_(detector), camera_params_(params),
-        num_similar_(FLAGS_num_similar),
-        num_ransac_iterations_(FLAGS_num_ransac_iterations),
-        ransac_inlier_tolerance_(FLAGS_ransac_inlier_tolerance),
-        early_break_landmarks_(FLAGS_early_break_landmarks),
-        histogram_equalization_(FLAGS_histogram_equalization) {
+SparseMap::SparseMap(const std::vector<std::string>& filenames, const std::string& detector,
+                     const camera::CameraParameters& params)
+    : cid_to_filename_(filenames),
+      detector_(detector),
+      camera_params_(params),
+      num_similar_(FLAGS_num_similar),
+      num_ransac_iterations_(FLAGS_num_ransac_iterations),
+      ransac_inlier_tolerance_(FLAGS_ransac_inlier_tolerance),
+      early_break_landmarks_(FLAGS_early_break_landmarks),
+      histogram_equalization_(FLAGS_histogram_equalization),
+      use_clahe_(FLAGS_use_clahe) {
   clahe_ = cv::createCLAHE(2, cv::Size(8, 8));
   cid_to_descriptor_map_.resize(cid_to_filename_.size());
   // TODO(bcoltin): only record scale and orientation for opensift?
   cid_to_keypoint_map_.resize(cid_to_filename_.size());
 }
 
-SparseMap::SparseMap(const std::string & protobuf_file, bool localization) :
-  camera_params_(Eigen::Vector2i(-1, -1), Eigen::Vector2d::Constant(-1),
-                 Eigen::Vector2d(-1, -1)),
-  num_similar_(FLAGS_num_similar),
-  num_ransac_iterations_(FLAGS_num_ransac_iterations),
-  ransac_inlier_tolerance_(FLAGS_ransac_inlier_tolerance),
-  early_break_landmarks_(FLAGS_early_break_landmarks),
-  histogram_equalization_(FLAGS_histogram_equalization) {
+SparseMap::SparseMap(const std::string& protobuf_file, bool localization)
+    : camera_params_(Eigen::Vector2i(-1, -1), Eigen::Vector2d::Constant(-1), Eigen::Vector2d(-1, -1)),
+      num_similar_(FLAGS_num_similar),
+      num_ransac_iterations_(FLAGS_num_ransac_iterations),
+      ransac_inlier_tolerance_(FLAGS_ransac_inlier_tolerance),
+      early_break_landmarks_(FLAGS_early_break_landmarks),
+      histogram_equalization_(FLAGS_histogram_equalization),
+      use_clahe_(FLAGS_use_clahe) {
   clahe_ = cv::createCLAHE(2, cv::Size(8, 8));
   // The above camera params used bad values because we are expected to reload
   // later.
@@ -95,16 +98,16 @@ SparseMap::SparseMap(const std::string & protobuf_file, bool localization) :
 }
 
 // Form a sparse map with given cameras/images, and no features
-SparseMap::SparseMap(const std::vector<Eigen::Affine3d>& cid_to_cam_t,
-                     const std::vector<std::string> & filenames,
-                     const std::string & detector,
-                     const camera::CameraParameters & params):
-  detector_(detector), camera_params_(params),
-  num_similar_(FLAGS_num_similar),
-  num_ransac_iterations_(FLAGS_num_ransac_iterations),
-  ransac_inlier_tolerance_(FLAGS_ransac_inlier_tolerance),
-  early_break_landmarks_(FLAGS_early_break_landmarks),
-  histogram_equalization_(FLAGS_histogram_equalization) {
+SparseMap::SparseMap(const std::vector<Eigen::Affine3d>& cid_to_cam_t, const std::vector<std::string>& filenames,
+                     const std::string& detector, const camera::CameraParameters& params)
+    : detector_(detector),
+      camera_params_(params),
+      num_similar_(FLAGS_num_similar),
+      num_ransac_iterations_(FLAGS_num_ransac_iterations),
+      ransac_inlier_tolerance_(FLAGS_ransac_inlier_tolerance),
+      early_break_landmarks_(FLAGS_early_break_landmarks),
+      histogram_equalization_(FLAGS_histogram_equalization),
+      use_clahe_(FLAGS_use_clahe) {
   clahe_ = cv::createCLAHE(2, cv::Size(8, 8));
   if (filenames.size() != cid_to_cam_t.size())
     LOG(FATAL) << "Expecting as many images as cameras";
@@ -126,15 +129,15 @@ SparseMap::SparseMap(const std::vector<Eigen::Affine3d>& cid_to_cam_t,
 
 // Form a sparse map by reading a text file from disk. This is for comparing
 // bundler, nvm or theia maps.
-SparseMap::SparseMap(bool bundler_format, std::string const& filename,
-                     std::vector<std::string> const& all_image_files):
-  camera_params_(Eigen::Vector2i(640, 480), Eigen::Vector2d::Constant(300),
-                 Eigen::Vector2d(320, 240)),  // these are placeholders and must be changed
-  num_similar_(FLAGS_num_similar),
-  num_ransac_iterations_(FLAGS_num_ransac_iterations),
-  ransac_inlier_tolerance_(FLAGS_ransac_inlier_tolerance),
-  early_break_landmarks_(FLAGS_early_break_landmarks),
-  histogram_equalization_(FLAGS_histogram_equalization) {
+SparseMap::SparseMap(bool bundler_format, std::string const& filename, std::vector<std::string> const& all_image_files)
+    : camera_params_(Eigen::Vector2i(640, 480), Eigen::Vector2d::Constant(300),
+                     Eigen::Vector2d(320, 240)),  // these are placeholders and must be changed
+      num_similar_(FLAGS_num_similar),
+      num_ransac_iterations_(FLAGS_num_ransac_iterations),
+      ransac_inlier_tolerance_(FLAGS_ransac_inlier_tolerance),
+      early_break_landmarks_(FLAGS_early_break_landmarks),
+      histogram_equalization_(FLAGS_histogram_equalization),
+      use_clahe_(FLAGS_use_clahe) {
   clahe_ = cv::createCLAHE(2, cv::Size(8, 8));
   std::string ext = ff_common::file_extension(filename);
   boost::to_lower(ext);
@@ -412,9 +415,10 @@ void SparseMap::Load(const std::string & protobuf_file, bool localization) {
 
   histogram_equalization_ = map.histogram_equalization();
 
-  assert(histogram_equalization_ == 0 ||
-         histogram_equalization_ == 1 ||
-         histogram_equalization_ == 2);
+  assert(histogram_equalization_ == 0 || histogram_equalization_ == 1 || histogram_equalization_ == 2 ||
+         histogram_equalization_ == 3);
+
+  use_clahe_ = histogram_equalization_ == 3 ? true : false;
 
   // For backward compatibility with old maps, allow a map to have its
   // histogram_equalization flag unspecified, but it is best to avoid
@@ -601,7 +605,11 @@ void SparseMap::DetectFeatures(const cv::Mat& image,
   cv::Mat * image_ptr = const_cast<cv::Mat*>(&image);
   cv::Mat hist_image;
   if (histogram_equalization_) {
-    clahe_->apply(image, hist_image);
+    if (use_clahe_) {
+      clahe_->apply(image, hist_image);
+    } else {
+      cv::equalizeHist(image, hist_image);
+    }
     image_ptr = &hist_image;
   }
 
