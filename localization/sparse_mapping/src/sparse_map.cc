@@ -24,6 +24,7 @@
 #include <sparse_mapping/reprojection.h>
 #include <sparse_mapping/sparse_mapping.h>
 #include <sparse_mapping/tensor.h>
+#include <sparse_mapping/visualization_utilities.h>
 
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <opencv2/highgui/highgui.hpp>
@@ -63,6 +64,8 @@ DEFINE_int32(num_extra_localization_db_images, 0,
              "Match this many extra images from the Vocab DB, only keep num_similar.");
 DEFINE_bool(verbose_localization, false,
             "If true, list the images most similar to the one being localized.");
+DEFINE_bool(visualize_localization_matches, false,
+            "If true, visualized matches between input image and each available map image during localization.");
 
 namespace sparse_mapping {
 
@@ -658,12 +661,10 @@ void SparseMap::DetectFeatures(const cv::Mat& image,
   }
 }
 
-bool SparseMap::Localize(cv::Mat const& test_descriptors,
-              Eigen::Matrix2Xd const& test_keypoints,
-              camera::CameraModel* pose,
-              std::vector<Eigen::Vector3d>* inlier_landmarks,
-              std::vector<Eigen::Vector2d>* inlier_observations,
-              std::vector<int> * cid_list) {
+bool SparseMap::Localize(cv::Mat const& test_descriptors, Eigen::Matrix2Xd const& test_keypoints,
+                         camera::CameraModel* pose, std::vector<Eigen::Vector3d>* inlier_landmarks,
+                         std::vector<Eigen::Vector2d>* inlier_observations, std::vector<int>* cid_list,
+                         const cv::Mat& image) {
   std::vector<int> indices;
   // Query the vocab tree.
   if (cid_list == NULL)
@@ -704,6 +705,16 @@ bool SparseMap::Localize(cv::Mat const& test_descriptors,
     interest_point::FindMatches(test_descriptors,
                                 cid_to_descriptor_map_[cid],
                                 &all_matches[i]);
+
+    if (FLAGS_visualize_localization_matches && !image.empty()) {
+      const auto map_filename = cid_to_filename_[cid];
+      const auto map_image = cv::imread(map_filename, cv::IMREAD_GRAYSCALE);
+      if (map_image.empty()) {
+          LOG(ERROR) << "Failed to load map image: " << map_filename;
+      } else {
+        ViewMatches(test_keypoints, cid_to_keypoint_map_[cid], all_matches[i], camera_params_, image, map_image);
+      }
+    }
 
     for (size_t j = 0; j < all_matches[i].size(); j++) {
       if (cid_fid_to_pid_[cid].count(all_matches[i][j].trainIdx) == 0)
@@ -947,6 +958,6 @@ bool SparseMap::Localize(const cv::Mat & image, camera::CameraModel* pose,
   return Localize(test_descriptors, test_keypoints,
                                   pose,
                                   inlier_landmarks, inlier_observations,
-                                  cid_list);
+                                  cid_list, image);
 }
 }  // namespace sparse_mapping

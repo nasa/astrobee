@@ -113,12 +113,9 @@ struct SparseMap {
       camera::CameraModel* pose, std::vector<Eigen::Vector3d>* inlier_landmarks = NULL,
                 std::vector<Eigen::Vector2d>* inlier_observations = NULL,
                 std::vector<int> * cid_list = NULL);
-bool Localize(cv::Mat const& test_descriptors,
-              Eigen::Matrix2Xd const& test_keypoints,
-              camera::CameraModel* pose,
-              std::vector<Eigen::Vector3d>* inlier_landmarks,
-              std::vector<Eigen::Vector2d>* inlier_observations,
-              std::vector<int> * cid_list = NULL);
+  bool Localize(cv::Mat const& test_descriptors, Eigen::Matrix2Xd const& test_keypoints, camera::CameraModel* pose,
+                std::vector<Eigen::Vector3d>* inlier_landmarks, std::vector<Eigen::Vector2d>* inlier_observations,
+                std::vector<int>* cid_list = NULL, const cv::Mat& image = cv::Mat());
 
   // access map frames
   /**
