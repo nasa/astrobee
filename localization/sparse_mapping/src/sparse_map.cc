@@ -725,6 +725,7 @@ bool SparseMap::Localize(cv::Mat const& test_descriptors, Eigen::Matrix2Xd const
         Eigen::Matrix3d essential_matrix;
         FindEssentialAndInliers(test_keypoints, cid_to_keypoint_map_[cid], all_matches[i], camera_params_,
                                 &inlier_matches, &vec_inliers, &essential_matrix);
+        all_matches[i] = inlier_matches;
     }
 
     for (size_t j = 0; j < all_matches[i].size(); j++) {
