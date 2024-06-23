@@ -32,8 +32,10 @@
 // same settings!
 // TODO(oalexan1): Ideally the settings used here must be saved in the
 // map file, for the localize executable to read them from there.
-DEFINE_int32(hamming_distance, 90,
+DEFINE_int32(hamming_distance, 70,
              "A smaller value keeps fewer but more reliable binary descriptor matches.");
+DEFINE_double(binary_goodness_ratio, 0.8,
+              "A smaller value keeps fewer but more reliable binary descriptor matches.");
 DEFINE_double(goodness_ratio, 0.8,
               "A smaller value keeps fewer but more reliable float descriptor matches.");
 DEFINE_int32(orgbrisk_octaves, 4,
@@ -55,14 +57,14 @@ DEFINE_double(default_surf_threshold, 10,
               "Default threshold for feature detection using SURF.");
 DEFINE_double(max_surf_threshold, 1000,
               "Maximum threshold for feature detection using SURF.");
-// ORGBRISK detector
+// Binary detector
 DEFINE_int32(min_brisk_features, 400,
              "Minimum number of features to be computed using ORGBRISK.");
-DEFINE_int32(max_brisk_features, 800,
+DEFINE_int32(max_brisk_features, 3000,
              "Maximum number of features to be computed using ORGBRISK.");
 DEFINE_double(min_brisk_threshold, 20,
               "Minimum threshold for feature detection using ORGBRISK.");
-DEFINE_double(default_brisk_threshold, 90,
+DEFINE_double(default_brisk_threshold, 20,
               "Default threshold for feature detection using ORGBRISK.");
 DEFINE_double(max_brisk_threshold, 110,
               "Maximum threshold for feature detection using ORGBRISK.");
@@ -320,22 +322,23 @@ namespace interest_point {
 
     if (img1_descriptor_map.depth() == CV_8U) {
       // Binary descriptor
-
-      // cv::BFMatcher matcher(cv::NORM_HAMMING, true  /* Forward & Backward matching */);
       cv::FlannBasedMatcher matcher(cv::makePtr<cv::flann::LshIndexParams>(3, 18, 2));
-      matcher.match(img1_descriptor_map, img2_descriptor_map, *matches);
-
-      // Select only inlier matches that meet a BRISK threshold of
-      // of FLAGS_hamming_distance.
-      // TODO(oalexan1) This needs further study.
-      std::vector<cv::DMatch> inlier_matches;
-      inlier_matches.reserve(matches->size());  // This saves time in allocation
-      for (cv::DMatch const& dmatch : *matches) {
-        if (dmatch.distance < FLAGS_hamming_distance) {
-          inlier_matches.push_back(dmatch);
+      std::vector<std::vector<cv::DMatch> > possible_matches;
+      matcher.knnMatch(img1_descriptor_map, img2_descriptor_map, possible_matches, 2);
+      matches->clear();
+      matches->reserve(possible_matches.size());
+      for (std::vector<cv::DMatch> const& best_pair : possible_matches) {
+        if (best_pair.size() == 0 || best_pair.at(0).distance > FLAGS_hamming_distance) continue;
+        if (best_pair.size() == 1) {
+          // This was the only best match, push it.
+          matches->push_back(best_pair.at(0));
+        } else {
+          // Push back a match only if it is a certain percent better than the next best.
+          if (best_pair.at(0).distance < FLAGS_binary_goodness_ratio * best_pair.at(1).distance) {
+            matches->push_back(best_pair[0]);
+          }
         }
       }
-      matches->swap(inlier_matches);  // Doesn't invoke a copy of all elements.
     } else {
       // Traditional floating point descriptor
       cv::FlannBasedMatcher matcher;
