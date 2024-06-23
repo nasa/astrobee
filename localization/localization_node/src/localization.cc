@@ -102,7 +102,7 @@ bool Localizer::Localize(cv_bridge::CvImageConstPtr image_ptr, ff_msgs::VisualLa
   std::vector<Eigen::Vector3d> landmarks;
   std::vector<Eigen::Vector2d> observations;
   if (!map_->Localize(image_descriptors, *image_keypoints,
-                               &camera, &landmarks, &observations)) {
+                               &camera, &landmarks, &observations, nullptr, image_ptr->image)) {
     // LOG(INFO) << "Failed to localize image.";
     return false;
   }
