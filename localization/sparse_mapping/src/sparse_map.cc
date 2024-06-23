@@ -64,12 +64,12 @@ DEFINE_int32(num_extra_localization_db_images, 0,
              "Match this many extra images from the Vocab DB, only keep num_similar.");
 DEFINE_bool(verbose_localization, false,
             "If true, list the images most similar to the one being localized.");
-DEFINE_bool(visualize_localization_matches, false,
+DEFINE_bool(visualize_localization_matches, true,
             "If true, visualized matches between input image and each available map image during localization.");
-DEFINE_bool(localization_check_essential_matrix, true,
+DEFINE_bool(localization_check_essential_matrix, false,
             "If true, verify a valid essential matrix can be calculated between the input image and each potential map "
             "match image before adding map matches.");
-DEFINE_bool(localization_add_similar_images, true,
+DEFINE_bool(localization_add_similar_images, false,
             "If true, for each cid matched to, also attempt to match to any cid with at least 5 of the same features "
             "as the matched cid.");
 
@@ -325,10 +325,8 @@ void SparseMap::Load(const std::string & protobuf_file, bool localization) {
 
   cid_to_filename_.resize(num_frames);
   cid_to_descriptor_map_.resize(num_frames);
-  if (!localization) {
-    cid_to_keypoint_map_.resize(num_frames);
-    cid_to_cam_t_global_.resize(num_frames);
-  }
+  cid_to_keypoint_map_.resize(num_frames);
+  cid_to_cam_t_global_.resize(num_frames);
 
   // load each frame
   for (int cid = 0; cid < num_frames; cid++) {
@@ -342,8 +340,7 @@ void SparseMap::Load(const std::string & protobuf_file, bool localization) {
       cid_to_filename_[cid] = "";
 
     // load keypoints
-    if (!localization)
-      cid_to_keypoint_map_[cid].resize(Eigen::NoChange_t(), frame.feature_size());
+    cid_to_keypoint_map_[cid].resize(Eigen::NoChange_t(), frame.feature_size());
 
     // Poke the first frame's first descriptor to see how long the
     // descriptor is.
@@ -361,8 +358,7 @@ void SparseMap::Load(const std::string & protobuf_file, bool localization) {
       sparse_mapping_protobuf::Feature feature = frame.feature(fid);
 
       // Copy the features
-      if (!localization)
-        cid_to_keypoint_map_[cid].col(fid) << feature.x(), feature.y();
+      cid_to_keypoint_map_[cid].col(fid) << feature.x(), feature.y();
 
       // Copy the descriptors
       memcpy(cid_to_descriptor_map_[cid].ptr<uint8_t>(fid),  // Destination
@@ -371,7 +367,7 @@ void SparseMap::Load(const std::string & protobuf_file, bool localization) {
     }
 
     // Load pose
-    if (frame.has_pose() && !localization) {
+    if (frame.has_pose()) {
       sparse_mapping_protobuf::Affine3d pose = frame.pose();
       cid_to_cam_t_global_[cid].translation()
         << pose.t0(), pose.t1(), pose.t2();
