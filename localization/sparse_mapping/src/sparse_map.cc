@@ -66,6 +66,9 @@ DEFINE_bool(verbose_localization, false,
             "If true, list the images most similar to the one being localized.");
 DEFINE_bool(visualize_localization_matches, false,
             "If true, visualized matches between input image and each available map image during localization.");
+DEFINE_bool(localization_check_essential_matrix, true,
+            "If true, verify a valid essential matrix can be calculated between the input image and each potential map "
+            "match image before adding map matches.");
 
 namespace sparse_mapping {
 
@@ -714,6 +717,14 @@ bool SparseMap::Localize(cv::Mat const& test_descriptors, Eigen::Matrix2Xd const
       } else {
         ViewMatches(test_keypoints, cid_to_keypoint_map_[cid], all_matches[i], camera_params_, image, map_image);
       }
+    }
+
+    if (FLAGS_localization_check_essential_matrix) {
+        std::vector<cv::DMatch> inlier_matches;
+        std::vector<size_t> vec_inliers;
+        Eigen::Matrix3d essential_matrix;
+        FindEssentialAndInliers(test_keypoints, cid_to_keypoint_map_[cid], all_matches[i], camera_params_,
+                                &inlier_matches, &vec_inliers, &essential_matrix);
     }
 
     for (size_t j = 0; j < all_matches[i].size(); j++) {
