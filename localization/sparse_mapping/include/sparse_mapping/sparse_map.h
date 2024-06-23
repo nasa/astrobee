@@ -250,6 +250,7 @@ struct SparseMap {
   std::vector<cv::Mat> cid_to_descriptor_map_;
   // generated on load
   std::vector<std::map<int, int> > cid_fid_to_pid_;
+  std::vector<std::map<int, int>> cid_to_matching_cid_counts_;
 
   interest_point::FeatureDetector detector_;
   camera::CameraParameters camera_params_;

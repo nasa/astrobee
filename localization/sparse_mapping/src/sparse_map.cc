@@ -69,6 +69,9 @@ DEFINE_bool(visualize_localization_matches, false,
 DEFINE_bool(localization_check_essential_matrix, true,
             "If true, verify a valid essential matrix can be calculated between the input image and each potential map "
             "match image before adding map matches.");
+DEFINE_bool(localization_add_similar_images, true,
+            "If true, for each cid matched to, also attempt to match to any cid with at least 5 of the same features "
+            "as the matched cid.");
 
 namespace sparse_mapping {
 
@@ -399,12 +402,24 @@ void SparseMap::Load(const std::string & protobuf_file, bool localization) {
       }
       Eigen::Vector3d pos(l.loc().x(), l.loc().y(), l.loc().z());
       pid_to_xyz_[i] = pos;
+      std::unordered_set<int> cids;
       for (int j = 0; j < l.match_size(); j++) {
         sparse_mapping_protobuf::Matching m = l.match(j);
-        if (!localization)
+        if (!localization) {
           pid_to_cid_fid_[i][m.camera_id()] = m.feature_id();
-        else
+        } else {
           cid_fid_to_pid_[m.camera_id()][m.feature_id()] = i;
+          cids.emplace(m.camera_id());
+        }
+      }
+      if (localization) {
+        // Update matching cid counts
+        for (int cid : cids) {
+          for (int matching_cid : cids) {
+            if (cid == matching_cid) continue;
+            cid_to_matching_cid_counts_[cid][matching_cid]++;
+          }
+        }
       }
     }
 
@@ -699,12 +714,14 @@ bool SparseMap::Localize(cv::Mat const& test_descriptors, Eigen::Matrix2Xd const
   // We will not localize using all images having matches, there are too
   // many false positives that way. Instead, limit ourselves to the images
   // which have most observations in common with the current one.
-  std::vector<int> similarity_rank(indices.size(), 0);
-  std::vector<std::vector<cv::DMatch> > all_matches(indices.size());
+  std::vector<int> similarity_rank;
+  std::vector<std::vector<cv::DMatch>> all_matches;
   int total = 0;
   // TODO(oalexan1): Use multiple threads here?
   for (size_t i = 0; i < indices.size(); i++) {
     int cid = indices[i];
+    similarity_rank.emplace_back(0);
+    all_matches.emplace_back(std::vector<cv::DMatch>());
     interest_point::FindMatches(test_descriptors,
                                 cid_to_descriptor_map_[cid],
                                 &all_matches[i]);
@@ -729,6 +746,24 @@ bool SparseMap::Localize(cv::Mat const& test_descriptors, Eigen::Matrix2Xd const
         FindEssentialAndInliers(test_keypoints, cid_to_keypoint_map_[cid], all_matches[i], camera_params_,
                                 &inlier_matches, &vec_inliers, &essential_matrix);
         all_matches[i] = inlier_matches;
+    }
+
+    if (FLAGS_localization_add_similar_images) {
+      // Add cids with more than 5 of the same features as the current cid to the list of cids to match to.
+      for (auto matching_cid_it = cid_to_matching_cid_counts_[cid].rbegin();
+           matching_cid_it != cid_to_matching_cid_counts_[cid].rend() && matching_cid_it->second > 5;
+           ++matching_cid_it) {
+        const int matching_cid = matching_cid_it->first;
+        bool add_cid = true;
+        // Make sure new matching cid isn't already in indices list
+        for (const auto already_added_cid : indices) {
+          if (already_added_cid == matching_cid) {
+            add_cid = false;
+            break;
+          }
+        }
+        if (add_cid) indices.emplace_back(matching_cid);
+      }
     }
 
     for (size_t j = 0; j < all_matches[i].size(); j++) {
