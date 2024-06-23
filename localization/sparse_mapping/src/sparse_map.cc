@@ -393,6 +393,8 @@ void SparseMap::Load(const std::string & protobuf_file, bool localization) {
       // Create directly cid_fid_to_pid
       cid_fid_to_pid_.clear();
       cid_fid_to_pid_.resize(cid_to_filename_.size(), std::map<int, int>());
+      cid_to_matching_cid_counts_.clear();
+      cid_to_matching_cid_counts_.resize(cid_to_filename_.size(), std::map<int, int>());
     }
 
     for (int i = 0; i < num_landmarks; i++) {

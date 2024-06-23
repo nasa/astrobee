@@ -93,6 +93,9 @@ bool Localizer::Localize(cv_bridge::CvImageConstPtr image_ptr, ff_msgs::VisualLa
   vl->header.frame_id = "world";
 
   map_->DetectFeatures(image_ptr->image, multithreaded, &image_descriptors, image_keypoints);
+
+  // TODO(rsoussan): store last stamp, if less than certain time passed, add previous
+  // localization estimate as prior!!!
   camera::CameraModel camera(Eigen::Vector3d(),
                              Eigen::Matrix3d::Identity(),
                              map_->GetCameraParameters());

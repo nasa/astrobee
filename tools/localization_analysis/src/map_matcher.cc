@@ -47,7 +47,6 @@ MapMatcher::MapMatcher(const std::string& input_bag_name, const std::string& map
     LogFatal("Failed to read config files.");
   }
   body_T_nav_cam_ = lc::LoadTransform(config, "nav_cam_transform");
-  sparse_mapping_min_num_landmarks_ = mc::LoadInt(config, "loc_adder_min_num_matches");
   if (!save_noloc_imgs.empty()) {
     nonloc_bag_.open(save_noloc_imgs, rosbag::bagmode::Write);
   }
