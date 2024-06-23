@@ -719,10 +719,13 @@ bool SparseMap::Localize(cv::Mat const& test_descriptors, Eigen::Matrix2Xd const
       }
     }
 
+    if (all_matches[i].size() < 5) continue;
+
     if (FLAGS_localization_check_essential_matrix) {
         std::vector<cv::DMatch> inlier_matches;
         std::vector<size_t> vec_inliers;
         Eigen::Matrix3d essential_matrix;
+        // TODO(rsoussan): Add param for num ransac iterations? Time this? (uses 4096 its...)
         FindEssentialAndInliers(test_keypoints, cid_to_keypoint_map_[cid], all_matches[i], camera_params_,
                                 &inlier_matches, &vec_inliers, &essential_matrix);
         all_matches[i] = inlier_matches;
