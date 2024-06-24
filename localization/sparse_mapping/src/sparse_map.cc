@@ -340,8 +340,10 @@ void SparseMap::Load(const std::string & protobuf_file, bool localization) {
 
   cid_to_filename_.resize(num_frames);
   cid_to_descriptor_map_.resize(num_frames);
-  cid_to_keypoint_map_.resize(num_frames);
-  cid_to_cam_t_global_.resize(num_frames);
+  if (!localization || FLAGS_visualize_localization_matches) {
+    cid_to_keypoint_map_.resize(num_frames);
+    cid_to_cam_t_global_.resize(num_frames);
+  }
 
   // load each frame
   for (int cid = 0; cid < num_frames; cid++) {
@@ -354,8 +356,11 @@ void SparseMap::Load(const std::string & protobuf_file, bool localization) {
     else
       cid_to_filename_[cid] = "";
 
-    // load keypoints
-    cid_to_keypoint_map_[cid].resize(Eigen::NoChange_t(), frame.feature_size());
+
+    if (!localization || FLAGS_visualize_localization_matches) {
+      // load keypoints
+      cid_to_keypoint_map_[cid].resize(Eigen::NoChange_t(), frame.feature_size());
+    }
 
     // Poke the first frame's first descriptor to see how long the
     // descriptor is.
@@ -372,8 +377,11 @@ void SparseMap::Load(const std::string & protobuf_file, bool localization) {
     for (int fid = 0; fid < frame.feature_size(); fid++) {
       sparse_mapping_protobuf::Feature feature = frame.feature(fid);
 
-      // Copy the features
-      cid_to_keypoint_map_[cid].col(fid) << feature.x(), feature.y();
+
+      if (!localization || FLAGS_visualize_localization_matches) {
+        // Copy the features
+        cid_to_keypoint_map_[cid].col(fid) << feature.x(), feature.y();
+      }
 
       // Copy the descriptors
       memcpy(cid_to_descriptor_map_[cid].ptr<uint8_t>(fid),  // Destination
@@ -382,7 +390,7 @@ void SparseMap::Load(const std::string & protobuf_file, bool localization) {
     }
 
     // Load pose
-    if (frame.has_pose()) {
+    if (frame.has_pose() && !localization) {
       sparse_mapping_protobuf::Affine3d pose = frame.pose();
       cid_to_cam_t_global_[cid].translation()
         << pose.t0(), pose.t1(), pose.t2();
