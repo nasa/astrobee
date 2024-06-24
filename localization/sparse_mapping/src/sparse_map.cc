@@ -72,6 +72,9 @@ DEFINE_bool(localization_check_essential_matrix, true,
 DEFINE_bool(localization_add_similar_images, true,
             "If true, for each cid matched to, also attempt to match to any cid with at least 5 of the same features "
             "as the matched cid.");
+DEFINE_bool(localization_add_best_previous_cid, true,
+            "If true, add previous cid with the most matches to list of cids to check for"
+            "matches with.");
 
 namespace sparse_mapping {
 
@@ -715,6 +718,20 @@ bool SparseMap::Localize(cv::Mat const& test_descriptors, Eigen::Matrix2Xd const
       indices.push_back(cid);
   }
 
+  if (FLAGS_localization_add_best_previous_cid && best_previous_cid_) {
+    bool add_cid = true;
+    for (const auto cid : indices) {
+      if (cid == *best_previous_cid_) {
+        add_cid = false;
+        break;
+      }
+    }
+    if (add_cid) {
+      indices.insert(indices.begin(), *best_previous_cid_);
+    }
+    best_previous_cid_ = boost::none;
+  }
+
   // To turn on verbose localization for debugging
   // google::SetCommandLineOption("verbose_localization", "true");
 
@@ -777,6 +794,7 @@ bool SparseMap::Localize(cv::Mat const& test_descriptors, Eigen::Matrix2Xd const
         if (FLAGS_verbose_localization)
           std::cout << "Num indices before adding similar images: " << indices.size() << std::endl;
       // Add cids with more than 5 of the same features as the current cid to the list of cids to match to.
+      int index = i + 1;
       for (auto matching_cid_it = cid_to_matching_cid_counts_[cid].rbegin();
            matching_cid_it != cid_to_matching_cid_counts_[cid].rend() && matching_cid_it->second > 5;
            ++matching_cid_it) {
@@ -789,7 +807,11 @@ bool SparseMap::Localize(cv::Mat const& test_descriptors, Eigen::Matrix2Xd const
             break;
           }
         }
-        if (add_cid) indices.emplace_back(matching_cid);
+        // Make new matching cid the next cid to match to
+        if (add_cid) {
+          indices.insert(indices.begin() + index, matching_cid);
+          ++index;
+        }
       }
       if (FLAGS_verbose_localization)
         std::cout << "Num indices after adding similar images: " << indices.size() << std::endl;
@@ -815,6 +837,18 @@ bool SparseMap::Localize(cv::Mat const& test_descriptors, Eigen::Matrix2Xd const
     if (FLAGS_verbose_localization)
       std::cout << "Too few matches: " << total << std::endl;
     return false;
+  }
+
+  // Update best previous cid if there were enough matches in total
+  if (FLAGS_localization_add_best_previous_cid) {
+    // Make sure to only add best previous cid if it has at least 5 matches
+    int most_matches = 5;
+    for (int i = 0; i < indices.size(); ++i) {
+      if (all_matches[i].size() > most_matches) {
+        best_previous_cid_ = indices[i];
+        most_matches = all_matches[i].size();
+      }
+    }
   }
 
   std::vector<Eigen::Vector2d> observations;
