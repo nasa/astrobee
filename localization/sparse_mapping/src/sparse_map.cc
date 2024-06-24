@@ -62,14 +62,14 @@ DEFINE_bool(use_clahe, false,
             "If true, use CLAHE if histogram equalization enabled.");
 DEFINE_int32(num_extra_localization_db_images, 0,
              "Match this many extra images from the Vocab DB, only keep num_similar.");
-DEFINE_bool(verbose_localization, false,
+DEFINE_bool(verbose_localization, true,
             "If true, list the images most similar to the one being localized.");
-DEFINE_bool(visualize_localization_matches, true,
+DEFINE_bool(visualize_localization_matches, false,
             "If true, visualized matches between input image and each available map image during localization.");
-DEFINE_bool(localization_check_essential_matrix, false,
+DEFINE_bool(localization_check_essential_matrix, true,
             "If true, verify a valid essential matrix can be calculated between the input image and each potential map "
             "match image before adding map matches.");
-DEFINE_bool(localization_add_similar_images, false,
+DEFINE_bool(localization_add_similar_images, true,
             "If true, for each cid matched to, also attempt to match to any cid with at least 5 of the same features "
             "as the matched cid.");
 
@@ -728,17 +728,25 @@ bool SparseMap::Localize(cv::Mat const& test_descriptors, Eigen::Matrix2Xd const
   std::vector<int> similarity_rank;
   std::vector<std::vector<cv::DMatch>> all_matches;
   int total = 0;
+  if (FLAGS_verbose_localization) {
+    for (size_t i = 0; i < indices.size(); i++) {
+      std::cout << "Potential matching cid: " << indices[i] << std::endl;
+    }
+  }
   // TODO(oalexan1): Use multiple threads here?
   for (size_t i = 0; i < indices.size(); i++) {
     int cid = indices[i];
+    if (FLAGS_verbose_localization) std::cout << "Checking index: " << i << ", cid: " << cid << std::endl;
     similarity_rank.emplace_back(0);
     all_matches.emplace_back(std::vector<cv::DMatch>());
     interest_point::FindMatches(test_descriptors,
                                 cid_to_descriptor_map_[cid],
                                 &all_matches[i]);
 
+
     if (FLAGS_visualize_localization_matches && !image.empty()) {
       const auto map_filename = cid_to_filename_[cid];
+      std::cout << "CID: " << cid << ", filename: " << map_filename << std::endl;
       const auto map_image = cv::imread(map_filename, cv::IMREAD_GRAYSCALE);
       if (map_image.empty()) {
           LOG(ERROR) << "Failed to load map image: " << map_filename;
@@ -750,6 +758,8 @@ bool SparseMap::Localize(cv::Mat const& test_descriptors, Eigen::Matrix2Xd const
     if (all_matches[i].size() < 5) continue;
 
     if (FLAGS_localization_check_essential_matrix) {
+        if (FLAGS_verbose_localization)
+          std::cout << "Matches before essential filtering: " << all_matches[i].size() << std::endl;
         std::vector<cv::DMatch> inlier_matches;
         std::vector<size_t> vec_inliers;
         Eigen::Matrix3d essential_matrix;
@@ -757,9 +767,13 @@ bool SparseMap::Localize(cv::Mat const& test_descriptors, Eigen::Matrix2Xd const
         FindEssentialAndInliers(test_keypoints, cid_to_keypoint_map_[cid], all_matches[i], camera_params_,
                                 &inlier_matches, &vec_inliers, &essential_matrix);
         all_matches[i] = inlier_matches;
+        if (FLAGS_verbose_localization)
+          std::cout << "Matches after essential filtering: " << all_matches[i].size() << std::endl;
     }
 
     if (FLAGS_localization_add_similar_images) {
+        if (FLAGS_verbose_localization)
+          std::cout << "Num indices before adding similar images: " << indices.size() << std::endl;
       // Add cids with more than 5 of the same features as the current cid to the list of cids to match to.
       for (auto matching_cid_it = cid_to_matching_cid_counts_[cid].rbegin();
            matching_cid_it != cid_to_matching_cid_counts_[cid].rend() && matching_cid_it->second > 5;
@@ -775,6 +789,8 @@ bool SparseMap::Localize(cv::Mat const& test_descriptors, Eigen::Matrix2Xd const
         }
         if (add_cid) indices.emplace_back(matching_cid);
       }
+      if (FLAGS_verbose_localization)
+        std::cout << "Num indices after adding similar images: " << indices.size() << std::endl;
     }
 
     for (size_t j = 0; j < all_matches[i].size(); j++) {
@@ -790,6 +806,13 @@ bool SparseMap::Localize(cv::Mat const& test_descriptors, Eigen::Matrix2Xd const
     total += similarity_rank[i];
     if (total >= early_break_landmarks_)
       break;
+  }
+
+  // Check if enough matches found for estimating pose
+  if (total < 5) {
+    if (FLAGS_verbose_localization)
+      std::cout << "Too few matches: " << total << std::endl;
+    return false;
   }
 
   std::vector<Eigen::Vector2d> observations;
