@@ -32,7 +32,7 @@
 // same settings!
 // TODO(oalexan1): Ideally the settings used here must be saved in the
 // map file, for the localize executable to read them from there.
-DEFINE_int32(hamming_distance, 110,
+DEFINE_int32(hamming_distance, 85,
              "A smaller value keeps fewer but more reliable binary descriptor matches.");
 DEFINE_double(binary_goodness_ratio, 0.8,
               "A smaller value keeps fewer but more reliable binary descriptor matches.");
@@ -60,7 +60,7 @@ DEFINE_double(max_surf_threshold, 1000,
 // Binary detector
 DEFINE_int32(min_brisk_features, 1000,
              "Minimum number of features to be computed using ORGBRISK.");
-DEFINE_int32(max_brisk_features, 3000,
+DEFINE_int32(max_brisk_features, 5000,
              "Maximum number of features to be computed using ORGBRISK.");
 DEFINE_double(min_brisk_threshold, 10,
               "Minimum threshold for feature detection using ORGBRISK.");
