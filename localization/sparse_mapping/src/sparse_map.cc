@@ -843,7 +843,7 @@ bool SparseMap::Localize(cv::Mat const& test_descriptors, Eigen::Matrix2Xd const
   if (FLAGS_localization_add_best_previous_cid) {
     // Make sure to only add best previous cid if it has at least 5 matches
     int most_matches = 5;
-    for (int i = 0; i < indices.size(); ++i) {
+    for (int i = 0; i < all_matches.size(); ++i) {
       if (all_matches[i].size() > most_matches) {
         best_previous_cid_ = indices[i];
         most_matches = all_matches[i].size();
