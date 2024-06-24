@@ -62,7 +62,7 @@ DEFINE_bool(use_clahe, false,
             "If true, use CLAHE if histogram equalization enabled.");
 DEFINE_int32(num_extra_localization_db_images, 0,
              "Match this many extra images from the Vocab DB, only keep num_similar.");
-DEFINE_bool(verbose_localization, true,
+DEFINE_bool(verbose_localization, false,
             "If true, list the images most similar to the one being localized.");
 DEFINE_bool(visualize_localization_matches, false,
             "If true, visualized matches between input image and each available map image during localization.");
@@ -770,6 +770,8 @@ bool SparseMap::Localize(cv::Mat const& test_descriptors, Eigen::Matrix2Xd const
         if (FLAGS_verbose_localization)
           std::cout << "Matches after essential filtering: " << all_matches[i].size() << std::endl;
     }
+
+    if (all_matches[i].size() < 5) continue;
 
     if (FLAGS_localization_add_similar_images) {
         if (FLAGS_verbose_localization)
