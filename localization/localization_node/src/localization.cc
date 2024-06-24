@@ -56,9 +56,9 @@ void Localizer::ReadParams(config_reader::ConfigReader* config) {
 
   // For the brisk thresholds and other values, quietly assume some defaults
   if (!config->GetReal("min_brisk_threshold", &min_brisk_threshold))
-    min_brisk_threshold = 20.0;
+    min_brisk_threshold = 10.0;
   if (!config->GetReal("default_brisk_threshold", &default_brisk_threshold))
-    default_brisk_threshold = 90.0;
+    default_brisk_threshold = 20.0;
   if (!config->GetReal("max_brisk_threshold", &max_brisk_threshold))
     max_brisk_threshold = 110.0;
   if (!config->GetInt("early_break_landmarks", &early_break_landmarks))

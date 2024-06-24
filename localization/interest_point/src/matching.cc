@@ -62,7 +62,7 @@ DEFINE_int32(min_brisk_features, 400,
              "Minimum number of features to be computed using ORGBRISK.");
 DEFINE_int32(max_brisk_features, 3000,
              "Maximum number of features to be computed using ORGBRISK.");
-DEFINE_double(min_brisk_threshold, 20,
+DEFINE_double(min_brisk_threshold, 10,
               "Minimum threshold for feature detection using ORGBRISK.");
 DEFINE_double(default_brisk_threshold, 20,
               "Default threshold for feature detection using ORGBRISK.");
