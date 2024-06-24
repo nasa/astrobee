@@ -86,7 +86,10 @@ SparseMap::SparseMap(const std::vector<std::string>& filenames, const std::strin
       early_break_landmarks_(FLAGS_early_break_landmarks),
       histogram_equalization_(FLAGS_histogram_equalization),
       use_clahe_(FLAGS_use_clahe) {
-  clahe_ = cv::createCLAHE(2, cv::Size(8, 8));
+  if (histogram_equalization_ && use_clahe_) {
+    clahe_ = cv::createCLAHE(2, cv::Size(8, 8));
+    histogram_equalization_ = 3;
+  }
   cid_to_descriptor_map_.resize(cid_to_filename_.size());
   // TODO(bcoltin): only record scale and orientation for opensift?
   cid_to_keypoint_map_.resize(cid_to_filename_.size());
@@ -100,7 +103,10 @@ SparseMap::SparseMap(const std::string& protobuf_file, bool localization)
       early_break_landmarks_(FLAGS_early_break_landmarks),
       histogram_equalization_(FLAGS_histogram_equalization),
       use_clahe_(FLAGS_use_clahe) {
-  clahe_ = cv::createCLAHE(2, cv::Size(8, 8));
+  if (histogram_equalization_ && use_clahe_) {
+    clahe_ = cv::createCLAHE(2, cv::Size(8, 8));
+    histogram_equalization_ = 3;
+  }
   // The above camera params used bad values because we are expected to reload
   // later.
   Load(protobuf_file, localization);
@@ -117,7 +123,10 @@ SparseMap::SparseMap(const std::vector<Eigen::Affine3d>& cid_to_cam_t, const std
       early_break_landmarks_(FLAGS_early_break_landmarks),
       histogram_equalization_(FLAGS_histogram_equalization),
       use_clahe_(FLAGS_use_clahe) {
-  clahe_ = cv::createCLAHE(2, cv::Size(8, 8));
+  if (histogram_equalization_ && use_clahe_) {
+    clahe_ = cv::createCLAHE(2, cv::Size(8, 8));
+    histogram_equalization_ = 3;
+  }
   if (filenames.size() != cid_to_cam_t.size())
     LOG(FATAL) << "Expecting as many images as cameras";
 
@@ -147,7 +156,10 @@ SparseMap::SparseMap(bool bundler_format, std::string const& filename, std::vect
       early_break_landmarks_(FLAGS_early_break_landmarks),
       histogram_equalization_(FLAGS_histogram_equalization),
       use_clahe_(FLAGS_use_clahe) {
-  clahe_ = cv::createCLAHE(2, cv::Size(8, 8));
+  if (histogram_equalization_ && use_clahe_) {
+    clahe_ = cv::createCLAHE(2, cv::Size(8, 8));
+    histogram_equalization_ = 3;
+  }
   std::string ext = ff_common::file_extension(filename);
   boost::to_lower(ext);
 
@@ -438,6 +450,7 @@ void SparseMap::Load(const std::string & protobuf_file, bool localization) {
          histogram_equalization_ == 3);
 
   use_clahe_ = histogram_equalization_ == 3 ? true : false;
+  if (use_clahe_) clahe_ = cv::createCLAHE(2, cv::Size(8, 8));
 
   // For backward compatibility with old maps, allow a map to have its
   // histogram_equalization flag unspecified, but it is best to avoid
