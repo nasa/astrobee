@@ -58,7 +58,7 @@ DEFINE_double(default_surf_threshold, 10,
 DEFINE_double(max_surf_threshold, 1000,
               "Maximum threshold for feature detection using SURF.");
 // Binary detector
-DEFINE_int32(min_brisk_features, 400,
+DEFINE_int32(min_brisk_features, 1000,
              "Minimum number of features to be computed using ORGBRISK.");
 DEFINE_int32(max_brisk_features, 3000,
              "Maximum number of features to be computed using ORGBRISK.");
@@ -194,6 +194,9 @@ namespace interest_point {
     }
 
     virtual void DetectImpl(const cv::Mat& image, std::vector<cv::KeyPoint>* keypoints) {
+      // std::cout << "detect max thresh: " << max_thresh_ << ", min: " << min_thresh_ << ", def: " << default_thresh_
+      // << ", min feat: " << min_features_ << ", max_feat: " << max_features_ << ", dyn thresh: " << dynamic_thresh_ <<
+      // std::endl;
       brisk_->detect(image, *keypoints);
     }
     virtual void ComputeImpl(const cv::Mat& image, std::vector<cv::KeyPoint>* keypoints,
