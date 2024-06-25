@@ -53,6 +53,7 @@ void Localizer::ReadParams(config_reader::ConfigReader& config) {
   LOAD_PARAM(loc_params.add_best_previous_image, config, prefix);
   LOAD_PARAM(loc_params.hamming_distance, config, prefix);
   LOAD_PARAM(loc_params.goodness_ratio, config, prefix);
+  LOAD_PARAM(loc_params.use_clahe, config, prefix);
   LOAD_PARAM(loc_params.num_extra_localization_db_images, config, prefix);
   LOAD_PARAM(loc_params.verbose_localization, config, "");
   LOAD_PARAM(loc_params.visualize_localization_matches, config, "");

@@ -747,10 +747,8 @@ bool SparseMap::Localize(cv::Mat const& test_descriptors, Eigen::Matrix2Xd const
     if (loc_params_.verbose_localization) std::cout << "Checking index: " << i << ", cid: " << cid << std::endl;
     similarity_rank.emplace_back(0);
     all_matches.emplace_back(std::vector<cv::DMatch>());
-    interest_point::FindMatches(test_descriptors,
-                                cid_to_descriptor_map_[cid],
-                                &all_matches[i]);
-
+    interest_point::FindMatches(test_descriptors, cid_to_descriptor_map_[cid], &all_matches[i],
+                                loc_params_.hamming_distance, loc_params_.goodness_ratio);
 
     if (loc_params_.visualize_localization_matches && !image.empty()) {
       const auto map_filename = cid_to_filename_[cid];
