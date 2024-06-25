@@ -222,7 +222,7 @@ void MatchFeatures(const std::string & essential_file,
                              / static_cast <float>(s->cid_to_keypoint_map_.size() - 1));
     std::vector<int> indices, queried_indices;
     sparse_mapping::QueryDB(s->detector_.GetDetectorName(),
-                            &s->vocab_db_, s->num_similar_,
+                            &s->vocab_db_, s->loc_params().num_similar,
                             s->cid_to_descriptor_map_[cid],
                             &queried_indices);
 

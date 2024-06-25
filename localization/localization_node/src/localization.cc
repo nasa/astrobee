@@ -27,55 +27,62 @@
 
 namespace localization_node {
 
-Localizer::Localizer(sparse_mapping::SparseMap* comp_map_ptr) :
-      map_(comp_map_ptr) {
-}
+Localizer::Localizer(sparse_mapping::SparseMap* map): map_(map) {}
 
-Localizer::~Localizer(void) {
-}
+void Localizer::ReadParams() {
+  config_reader::ConfigReader config;
+  config.AddFile("cameras.config");
+  config.AddFile("localization.config");
+  if (!config.ReadFiles()) {
+    ROS_ERROR("Failed to read config files.");
+    return;
+  }
 
-void Localizer::ReadParams(config_reader::ConfigReader* config) {
-  int num_similar, ransac_inlier_tolerance, ransac_iterations, early_break_landmarks, histogram_equalization;
+  camera::CameraParameters cam_params(&config, "nav_cam");
+  std::string prefix;
+  const auto detector_name = map_->GetDetectorName();
+  if (detector_name == "ORGBRISK") {
+    prefix = "brisk_";
+  } else if (detector_name == "TEBLID") {
+    prefix = "teblid_";
+  } else {
+    ROS_FATAL_STREAM("Invalid detector: " << detector_name);
+  }
+
+  // Loc params
+  sparse_mapping::LocalizationParameters loc_params;
+  LOAD_PARAM(loc_params.num_similar, config, prefix);
+  LOAD_PARAM(loc_params.ransac_inlier_tolerance, config, prefix);
+  LOAD_PARAM(loc_params.num_ransac_iterations, config, prefix);
+  LOAD_PARAM(loc_params.early_break_landmarks, config, prefix);
+  LOAD_PARAM(loc_params.histogram_equalization, config, prefix);
+  LOAD_PARAM(loc_params.check_essential_matrix, config, prefix);
+  LOAD_PARAM(loc_params.add_similar_images, config, prefix);
+  LOAD_PARAM(loc_params.add_best_previous_image, config, prefix);
+  LOAD_PARAM(loc_params.hamming_distance, config, prefix);
+  LOAD_PARAM(loc_params.goodness_ratio, config, prefix);
+  LOAD_PARAM(loc_params.num_extra_localization_db_images, config, prefix);
+  LOAD_PARAM(loc_params.verbose_localization, config, "");
+  LOAD_PARAM(loc_params.visualize_localization_matches, config, "");
+
+  // Detector Params
+  double min_threshold, default_threshold, max_threshold, goodness_ratio;
   int min_features, max_features, detection_retries;
-  double min_brisk_threshold, default_brisk_threshold, max_brisk_threshold;
-  camera::CameraParameters cam_params(config, "nav_cam");
-  if (!config->GetInt("num_similar", &num_similar))
-    ROS_FATAL("num_similar not specified in localization.");
-  if (!config->GetInt("ransac_inlier_tolerance", &ransac_inlier_tolerance))
-    ROS_FATAL("ransac_inlier_tolerance not specified in localization.");
-  if (!config->GetInt("ransac_iterations", &ransac_iterations))
-    ROS_FATAL("ransac_iterations not specified in localization.");
-  if (!config->GetInt("min_features", &min_features))
-    ROS_FATAL("min_features not specified in localization.");
-  if (!config->GetInt("max_features", &max_features))
-    ROS_FATAL("max_features not specified in localization.");
-  if (!config->GetInt("detection_retries", &detection_retries))
-    ROS_FATAL("detection_retries not specified in localization.");
-  if (!config->GetInt("histogram_equalization", &histogram_equalization))
-    ROS_FATAL("histogram_equalization not specified in localization.");
-
-  // For the brisk thresholds and other values, quietly assume some defaults
-  if (!config->GetReal("min_brisk_threshold", &min_brisk_threshold))
-    min_brisk_threshold = 10.0;
-  if (!config->GetReal("default_brisk_threshold", &default_brisk_threshold))
-    default_brisk_threshold = 20.0;
-  if (!config->GetReal("max_brisk_threshold", &max_brisk_threshold))
-    max_brisk_threshold = 110.0;
-  if (!config->GetInt("early_break_landmarks", &early_break_landmarks))
-    early_break_landmarks = 100;
+  LOAD_PARAM(min_threshold, config, prefix);
+  LOAD_PARAM(default_threshold, config, prefix);
+  LOAD_PARAM(max_threshold, config, prefix);
+  LOAD_PARAM(detection_retries, config, prefix);
+  LOAD_PARAM(min_features, config, prefix);
+  LOAD_PARAM(max_features, config, prefix);
 
   // This check must happen before the histogram_equalization flag is set into the map
   // to compare with what is there already.
   sparse_mapping::HistogramEqualizationCheck(map_->GetHistogramEqualization(),
-                                             histogram_equalization);
+                                             loc_params.histogram_equalization);
   map_->SetCameraParameters(cam_params);
-  map_->SetNumSimilar(num_similar);
-  map_->SetRansacInlierTolerance(ransac_inlier_tolerance);
-  map_->SetRansacIterations(ransac_iterations);
-  map_->SetEarlyBreakLandmarks(early_break_landmarks);
-  map_->SetHistogramEqualization(histogram_equalization);
+  map_->SetLocParams(loc_params);
   map_->SetDetectorParams(min_features, max_features, detection_retries,
-                          min_brisk_threshold, default_brisk_threshold, max_brisk_threshold);
+                          min_threshold, default_threshold, max_threshold);
 }
 
 bool Localizer::Localize(cv_bridge::CvImageConstPtr image_ptr, ff_msgs::VisualLandmarks* vl,
@@ -94,8 +101,6 @@ bool Localizer::Localize(cv_bridge::CvImageConstPtr image_ptr, ff_msgs::VisualLa
 
   map_->DetectFeatures(image_ptr->image, multithreaded, &image_descriptors, image_keypoints);
 
-  // TODO(rsoussan): store last stamp, if less than certain time passed, add previous
-  // localization estimate as prior!!!
   camera::CameraModel camera(Eigen::Vector3d(),
                              Eigen::Matrix3d::Identity(),
                              map_->GetCameraParameters());

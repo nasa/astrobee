@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -16,28 +16,26 @@
  * under the License.
  */
 
-#ifndef LOCALIZATION_NODE_LOCALIZATION_H_
-#define LOCALIZATION_NODE_LOCALIZATION_H_
+#ifndef SPARSE_MAPPING_LOCALIZATION_PARAMETERS_H_
+#define SPARSE_MAPPING_LOCALIZATION_PARAMETERS_H_
 
-#include <sparse_mapping/sparse_map.h>
-
-#include <config_reader/config_reader.h>
-#include <cv_bridge/cv_bridge.h>
-#include <ff_msgs/VisualLandmarks.h>
-#include <sensor_msgs/PointCloud2.h>
-
-namespace localization_node {
-
-class Localizer {
- public:
-  explicit Localizer(sparse_mapping::SparseMap* map);
-  void ReadParams();
-  bool Localize(cv_bridge::CvImageConstPtr image_ptr, ff_msgs::VisualLandmarks* vl,
-     Eigen::Matrix2Xd* image_keypoints = NULL);
- private:
-  sparse_mapping::SparseMap* map_;
+namespace sparse_mapping {
+struct LocalizationParameters {
+  int num_similar;
+  int ransac_inlier_tolerance;
+  int num_ransac_iterations;
+  int early_break_landmarks;
+  int histogram_equalization;
+  bool check_essential_matrix;
+  bool add_similar_images;
+  bool add_best_previous_image;
+  bool hamming_distance;
+  bool goodness_ratio;
+  bool use_clahe;
+  int num_extra_localization_db_images;
+  bool verbose_localization;
+  bool visualize_localization_matches;
 };
+}  // namespace sparse_mapping
 
-};  // namespace localization_node
-
-#endif  // LOCALIZATION_NODE_LOCALIZATION_H_
+#endif  // SPARSE_MAPPING_LOCALIZATION_PARAMETERS_H_

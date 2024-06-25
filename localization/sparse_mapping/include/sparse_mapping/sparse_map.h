@@ -23,6 +23,7 @@
 #include <interest_point/matching.h>
 #include <sparse_mapping/vocab_tree.h>
 #include <sparse_mapping/sparse_mapping.h>
+#include <sparse_mapping/localization_parameters.h>
 #include <camera/camera_model.h>
 #include <camera/camera_params.h>
 
@@ -89,6 +90,12 @@ struct SparseMap {
 
 
   SparseMap(bool bundler_format, std::string const& filename, std::vector<std::string> const& files);
+
+  // Set default loc params using FLAG values
+  void SetDefaultLocParams();
+
+  // Set loc params
+  void SetLocParams(const LocalizationParameters& loc_params) { loc_params_ = loc_params; }
 
   void SetDetectorParams(int min_features, int max_features, int retries,
                          double min_thresh, double default_thresh, double max_thresh);
@@ -166,32 +173,6 @@ struct SparseMap {
 
   // access and modify parameters
   /**
-   * Set the number of RANSAC iterations.
-   **/
-  void SetRansacIterations(int iterations) {num_ransac_iterations_ = iterations;}
-  /**
-   * Return the number of RANSAC iterations.
-   **/
-  int GetRansacIterations(void) const {return num_ransac_iterations_;}
-  /**
-   * Set the RANSAC inlier tolerance, the number of pixels an inlier
-   * feature is allowed to be off by.
-   **/
-  void SetRansacInlierTolerance(int tolerance) {ransac_inlier_tolerance_ = tolerance;}
-  /**
-   * Get the RANSAC inlier tolerance, the number of pixels an inlier
-   * feature is allowed to be off by.
-   **/
-  int GetRansacInlierTolerance(void) const {return ransac_inlier_tolerance_;}
-  /**
-   * Set the number of early break landmarks, when to stop in adding landmarks when localizing.
-   **/
-  void SetEarlyBreakLandmarks(int early_break_landmarks) {early_break_landmarks_ = early_break_landmarks;}
-  void SetHistogramEqualization(int histogram_equalization) {histogram_equalization_ = histogram_equalization;}
-  int GetHistogramEqualization() {return histogram_equalization_;}
-  void SetCLAHE(bool use_clahe) {use_clahe_ = use_clahe;}
-  bool GetCLAHE() {return use_clahe_;}
-  /**
    * Return the parameters of the camera used to construct the map.
    **/
   camera::CameraParameters GetCameraParameters(void) const {return camera_params_;}
@@ -234,12 +215,9 @@ struct SparseMap {
   // delete feature descriptors with no matching landmark
   void PruneMap(void);
 
-  /**
-   * Set the number of similar images queried by the VocabDB.
-   **/
-  void SetNumSimilar(int num_similar) {num_similar_ = num_similar;}
-
   std::string GetDetectorName() { return detector_.GetDetectorName(); }
+  int GetHistogramEqualization() {return loc_params_.histogram_equalization;}
+  const LocalizationParameters& loc_params() { return loc_params_; }
 
   // stored in map file
   std::vector<std::string> cid_to_filename_;
@@ -256,12 +234,7 @@ struct SparseMap {
   interest_point::FeatureDetector detector_;
   camera::CameraParameters camera_params_;
   mutable sparse_mapping::VocabDB vocab_db_;  // TODO(oalexan1): Mutable means someone is doing something wrong.
-  int num_similar_;
-  int num_ransac_iterations_;
-  int ransac_inlier_tolerance_;
-  int early_break_landmarks_;
-  int histogram_equalization_;
-  bool use_clahe_;
+  LocalizationParameters loc_params_;
 
   // e.g, 10th db image is 3rd image in cid_to_filename_
   std::map<int, int> db_to_cid_map_;

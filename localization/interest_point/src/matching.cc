@@ -34,10 +34,8 @@
 // map file, for the localize executable to read them from there.
 DEFINE_int32(hamming_distance, 85,
              "A smaller value keeps fewer but more reliable binary descriptor matches.");
-DEFINE_double(binary_goodness_ratio, 0.8,
-              "A smaller value keeps fewer but more reliable binary descriptor matches.");
 DEFINE_double(goodness_ratio, 0.8,
-              "A smaller value keeps fewer but more reliable float descriptor matches.");
+              "A smaller value keeps fewer but more reliable descriptor matches.");
 DEFINE_int32(orgbrisk_octaves, 4,
              "Number of octaves, or scale spaces, that BRISK will evaluate.");
 DEFINE_double(orgbrisk_pattern_scale, 1.0,
@@ -311,11 +309,15 @@ namespace interest_point {
     }
   }
 
-  void FindMatches(const cv::Mat & img1_descriptor_map,
-                   const cv::Mat & img2_descriptor_map, std::vector<cv::DMatch> * matches) {
+  void FindMatches(const cv::Mat& img1_descriptor_map, const cv::Mat& img2_descriptor_map,
+                   std::vector<cv::DMatch>* matches, boost::optional<int> hamming_distance,
+                   boost::optional<double> goodness_ratio) {
     CHECK(img1_descriptor_map.depth() ==
           img2_descriptor_map.depth())
       << "Mixed descriptor types. Did you mash BRISK with SIFT/SURF?";
+
+    if (!hamming_distance) hamming_distance = FLAGS_hamming_distance;
+    if (!goodness_ratio) goodness_ratio = FLAGS_goodness_ratio;
 
     // Check for early exit conditions
     matches->clear();
@@ -331,13 +333,13 @@ namespace interest_point {
       matches->clear();
       matches->reserve(possible_matches.size());
       for (std::vector<cv::DMatch> const& best_pair : possible_matches) {
-        if (best_pair.size() == 0 || best_pair.at(0).distance > FLAGS_hamming_distance) continue;
+        if (best_pair.size() == 0 || best_pair.at(0).distance > *hamming_distance) continue;
         if (best_pair.size() == 1) {
           // This was the only best match, push it.
           matches->push_back(best_pair.at(0));
         } else {
           // Push back a match only if it is a certain percent better than the next best.
-          if (best_pair.at(0).distance < FLAGS_binary_goodness_ratio * best_pair.at(1).distance) {
+          if (best_pair.at(0).distance < *goodness_ratio * best_pair.at(1).distance) {
             matches->push_back(best_pair[0]);
           }
         }
@@ -355,7 +357,7 @@ namespace interest_point {
           matches->push_back(best_pair.at(0));
         } else {
           // Push back a match only if it is 25% better than the next best.
-          if (best_pair.at(0).distance < FLAGS_goodness_ratio * best_pair.at(1).distance) {
+          if (best_pair.at(0).distance < *goodness_ratio * best_pair.at(1).distance) {
             matches->push_back(best_pair[0]);
           }
         }
