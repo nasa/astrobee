@@ -625,6 +625,7 @@ void SparseMap::DetectFeatures(const cv::Mat& image,
   cv::Mat * image_ptr = const_cast<cv::Mat*>(&image);
   cv::Mat hist_image;
   if (loc_params_.histogram_equalization) {
+    cv::setNumThreads(0);
     if (loc_params_.use_clahe) {
       clahe_->apply(image, hist_image);
     } else {
