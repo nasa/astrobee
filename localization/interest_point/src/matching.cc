@@ -179,14 +179,18 @@ namespace interest_point {
   class TeblidDynamicDetector : public DynamicDetector {
    public:
     TeblidDynamicDetector(int min_features, int max_features, int max_retries,
-                        double min_thresh, double default_thresh, double max_thresh)
+                        double min_thresh, double default_thresh, double max_thresh, bool use_512 = true)
       : DynamicDetector(min_features, max_features, max_retries,
                         min_thresh, default_thresh, max_thresh) {
+      if (use_512) {
+        teblid_ = upm::BAD::create(5.0, upm::BAD::SIZE_512_BITS);
+      } else {
+        teblid_ = upm::BAD::create(5.0, upm::BAD::SIZE_256_BITS);
+      }
       Reset();
     }
 
     void Reset(void) {
-      teblid_ = upm::BAD::create(5.0, upm::BAD::SIZE_512_BITS);
       brisk_ = interest_point::BRISK::create(dynamic_thresh_, FLAGS_orgbrisk_octaves,
                                  FLAGS_orgbrisk_pattern_scale);
     }
@@ -266,7 +270,8 @@ namespace interest_point {
         min_thresh     = FLAGS_min_surf_threshold;
         default_thresh = FLAGS_default_surf_threshold;
         max_thresh     = FLAGS_max_surf_threshold;
-      } else if (detector_name == "ORGBRISK" || detector_name == "TEBLID") {
+      } else if (detector_name == "ORGBRISK" || detector_name == "TEBLID512" ||
+                 detector_name == "TEBLID256") {
         min_features   = FLAGS_min_brisk_features;
         max_features   = FLAGS_max_brisk_features;
         retries        = FLAGS_detection_retries;
@@ -285,9 +290,12 @@ namespace interest_point {
     else if (detector_name == "SURF")
       detector_ = new SurfDynamicDetector(min_features, max_features, retries,
                                           min_thresh, default_thresh, max_thresh);
-    else if (detector_name == "TEBLID")
+    else if (detector_name == "TEBLID512")
       detector_ = new TeblidDynamicDetector(min_features, max_features, retries,
-                                          min_thresh, default_thresh, max_thresh);
+                                          min_thresh, default_thresh, max_thresh, true);
+    else if (detector_name == "TEBLID256")
+      detector_ = new TeblidDynamicDetector(min_features, max_features, retries,
+                                          min_thresh, default_thresh, max_thresh, false);
     else
       LOG(FATAL) << "Unimplemented feature detector: " << detector_name;
 

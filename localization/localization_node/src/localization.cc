@@ -35,8 +35,10 @@ void Localizer::ReadParams(config_reader::ConfigReader& config) {
   const auto detector_name = map_->GetDetectorName();
   if (detector_name == "ORGBRISK") {
     prefix = "brisk_";
-  } else if (detector_name == "TEBLID") {
-    prefix = "teblid_";
+  } else if (detector_name == "TEBLID512") {
+    prefix = "teblid512_";
+  } else if (detector_name == "TEBLID256") {
+    prefix = "teblid256_";
   } else {
     ROS_FATAL_STREAM("Invalid detector: " << detector_name);
   }
@@ -98,7 +100,6 @@ bool Localizer::Localize(cv_bridge::CvImageConstPtr image_ptr, ff_msgs::VisualLa
   vl->header.frame_id = "world";
 
   map_->DetectFeatures(image_ptr->image, multithreaded, &image_descriptors, image_keypoints);
-
   camera::CameraModel camera(Eigen::Vector3d(),
                              Eigen::Matrix3d::Identity(),
                              map_->GetCameraParameters());
