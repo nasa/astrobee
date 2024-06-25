@@ -29,8 +29,8 @@ struct LocalizationParameters {
   bool check_essential_matrix;
   bool add_similar_images;
   bool add_best_previous_image;
-  bool hamming_distance;
-  bool goodness_ratio;
+  int hamming_distance;
+  double  goodness_ratio;
   bool use_clahe;
   int num_extra_localization_db_images;
   bool verbose_localization;
