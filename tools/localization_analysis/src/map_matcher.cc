@@ -42,7 +42,7 @@ MapMatcher::MapMatcher(const std::string& input_bag_name, const std::string& map
       image_count_(0) {
   config_reader::ConfigReader config;
   config.AddFile("geometry.config");
-  config.AddFile("camera.config");
+  config.AddFile("cameras.config");
   config.AddFile("localization.config");
   lc::LoadGraphLocalizerConfig(config);
   if (!config.ReadFiles()) {
