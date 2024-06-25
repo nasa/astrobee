@@ -73,7 +73,7 @@ void Localizer::ReadParams(config_reader::ConfigReader& config) {
   sparse_mapping::HistogramEqualizationCheck(map_->GetHistogramEqualization(),
                                              loc_params.histogram_equalization);
   // Check consistency between clahe params
-  if (loc_params.use_clahe && (loc_params.histgram_equalization != 3 || map_->GetHistogramEqualization() != 3) {
+  if (loc_params.use_clahe && (loc_params.histogram_equalization != 3 || map_->GetHistogramEqualization() != 3)) {
     ROS_FATAL("Invalid clahe and histogram equalization settings.");
   }
 
