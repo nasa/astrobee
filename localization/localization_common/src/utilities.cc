@@ -17,13 +17,13 @@
  */
 
 #include <camera/camera_params.h>
-#include <ff_msgs/GraphState.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
 #include <msg_conversions/msg_conversions.h>
 
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/Quaternion.h>
+#include <ros/package.h>
 
 #include <cstdlib>
 #include <string>
@@ -31,20 +31,28 @@
 namespace localization_common {
 namespace mc = msg_conversions;
 
-gtsam::Pose3 LoadTransform(config_reader::ConfigReader& config, const std::string& transform_config_name) {
-  const auto body_T_sensor = mc::LoadEigenTransform(config, transform_config_name);
+gtsam::Pose3 LoadTransform(config_reader::ConfigReader& config, const std::string& transform_config_name,
+                           const std::string& prefix) {
+  const auto body_T_sensor = mc::LoadEigenTransform(config, transform_config_name, prefix);
   return GtPose(body_T_sensor);
 }
 
-gtsam::Vector3 LoadVector3(config_reader::ConfigReader& config, const std::string& config_name) {
+gtsam::Vector3 LoadVector3(config_reader::ConfigReader& config, const std::string& config_name,
+                           const std::string& prefix) {
   Eigen::Vector3d vec;
-  mc::config_read_vector(&config, config_name.c_str(), &vec);
+  mc::config_read_vector(&config, (prefix + config_name).c_str(), &vec);
   return vec;
 }
 
-gtsam::Cal3_S2 LoadCameraIntrinsics(config_reader::ConfigReader& config, const std::string& intrinsics_config_name) {
-  const camera::CameraParameters cam_params(&config, intrinsics_config_name.c_str());
-  const auto intrinsics = cam_params.GetIntrinsicMatrix<camera::UNDISTORTED_C>();
+Eigen::Matrix3d LoadCameraIntrinsicsMatrix(config_reader::ConfigReader& config,
+                                           const std::string& intrinsics_config_name, const std::string& prefix) {
+  const camera::CameraParameters cam_params(&config, (prefix + intrinsics_config_name).c_str());
+  return cam_params.GetIntrinsicMatrix<camera::UNDISTORTED_C>();
+}
+
+gtsam::Cal3_S2 LoadCameraIntrinsics(config_reader::ConfigReader& config, const std::string& intrinsics_config_name,
+                                    const std::string& prefix) {
+  const auto intrinsics = LoadCameraIntrinsicsMatrix(config, intrinsics_config_name, prefix);
   // Assumes zero skew
   return gtsam::Cal3_S2(intrinsics(0, 0), intrinsics(1, 1), 0, intrinsics(0, 2), intrinsics(1, 2));
 }
@@ -64,15 +72,35 @@ gtsam::Pose3 PoseFromMsgWithExtrinsics(const geometry_msgs::Pose& pose, const gt
 }
 
 void LoadGraphLocalizerConfig(config_reader::ConfigReader& config, const std::string& path_prefix) {
-  config.AddFile((path_prefix + "graph_localizer.config").c_str());
-  LogDebug("LoadGraphLocalizerconfig: Loaded graph localizer config.");
+  config.AddFile((path_prefix + "localization/graph_localizer.config").c_str());
+  config.AddFile("transforms.config");
+  config.AddFile("cameras.config");
+  config.AddFile("geometry.config");
+  if (!config.ReadFiles()) {
+    LogFatal("Failed to read config files.");
+  }
+  LogDebug("LoadGraphLocalizerConfig: Loaded graph localizer config.");
 }
 
-void SetEnvironmentConfigs(const std::string& astrobee_configs_path, const std::string& world,
-                           const std::string& robot_config_file) {
+void LoadGraphVIOConfig(config_reader::ConfigReader& config, const std::string& path_prefix) {
+  config.AddFile((path_prefix + "localization/graph_vio.config").c_str());
+  config.AddFile((path_prefix + "localization/imu_integrator.config").c_str());
+  config.AddFile((path_prefix + "localization/imu_filter.config").c_str());
+  config.AddFile("transforms.config");
+  config.AddFile("cameras.config");
+  config.AddFile("geometry.config");
+  if (!config.ReadFiles()) {
+    LogFatal("Failed to read config files.");
+  }
+  LogDebug("LoadGraphVIOConfig: Loaded graph VIO config.");
+}
+
+void SetEnvironmentConfigs(const std::string& world, const std::string& robot_config_file) {
+  const std::string astrobee_configs_path = ros::package::getPath("astrobee");
+  const std::string full_robot_config_file = "config/robots/" + robot_config_file;
   setenv("ASTROBEE_RESOURCE_DIR", (astrobee_configs_path + "/resources").c_str(), true);
   setenv("ASTROBEE_CONFIG_DIR", (astrobee_configs_path + "/config").c_str(), true);
-  setenv("ASTROBEE_ROBOT", (astrobee_configs_path + "/" + robot_config_file).c_str(), true);
+  setenv("ASTROBEE_ROBOT", (astrobee_configs_path + "/" + full_robot_config_file).c_str(), true);
   setenv("ASTROBEE_WORLD", world.c_str(), true);
 }
 
@@ -116,23 +144,29 @@ geometry_msgs::TransformStamped PoseToTF(const Eigen::Isometry3d& pose, const st
   return transform;
 }
 
-CombinedNavState CombinedNavStateFromMsg(const ff_msgs::GraphState& loc_msg) {
-  const auto pose = PoseFromMsg(loc_msg.pose);
-  const auto velocity = mc::VectorFromMsg<gtsam::Velocity3, geometry_msgs::Vector3>(loc_msg.velocity);
-  const auto accel_bias = mc::VectorFromMsg<gtsam::Vector3, geometry_msgs::Vector3>(loc_msg.accel_bias);
-  const auto gyro_bias = mc::VectorFromMsg<gtsam::Vector3, geometry_msgs::Vector3>(loc_msg.gyro_bias);
-  const auto timestamp = TimeFromHeader(loc_msg.header);
+CombinedNavState CombinedNavStateFromMsg(const ff_msgs::CombinedNavState& msg) {
+  const auto pose = PoseFromMsg(msg.pose.pose.pose);
+  const auto velocity = mc::VectorFromMsg<gtsam::Velocity3, geometry_msgs::Vector3>(msg.velocity.velocity);
+  const auto accel_bias = mc::VectorFromMsg<gtsam::Vector3, geometry_msgs::Vector3>(msg.imu_bias.accelerometer_bias);
+  const auto gyro_bias = mc::VectorFromMsg<gtsam::Vector3, geometry_msgs::Vector3>(msg.imu_bias.gyroscope_bias);
+  const auto timestamp = TimeFromHeader(msg.header);
   return CombinedNavState(pose, velocity, gtsam::imuBias::ConstantBias(accel_bias, gyro_bias), timestamp);
 }
 
-CombinedNavStateCovariances CombinedNavStateCovariancesFromMsg(const ff_msgs::GraphState& loc_msg) {
-  const Eigen::Vector3d orientation_variances = mc::CovDiagToVariances(&loc_msg.cov_diag[0]);
-  const Eigen::Vector3d gyro_bias_variances = mc::CovDiagToVariances(&loc_msg.cov_diag[3]);
-  const Eigen::Vector3d velocity_variances = mc::CovDiagToVariances(&loc_msg.cov_diag[6]);
-  const Eigen::Vector3d accelerometer_bias_variances = mc::CovDiagToVariances(&loc_msg.cov_diag[9]);
-  const Eigen::Vector3d position_variances = mc::CovDiagToVariances(&loc_msg.cov_diag[12]);
-  return CombinedNavStateCovariances(position_variances, orientation_variances, velocity_variances,
-                                     accelerometer_bias_variances, gyro_bias_variances);
+CombinedNavStateCovariances CombinedNavStateCovariancesFromMsg(const ff_msgs::CombinedNavState& msg) {
+  const auto pose_covariance = mc::EigenCovarianceFromMsg<6>(msg.pose.pose.covariance);
+  const auto velocity_covariance = mc::EigenCovarianceFromMsg<3>(msg.velocity.covariance);
+  const auto imu_bias_covariance = mc::EigenCovarianceFromMsg<6>(msg.imu_bias.covariance);
+  return CombinedNavStateCovariances(pose_covariance, velocity_covariance, imu_bias_covariance);
+}
+
+TimestampedSet<PoseCovariance> CorrelationCovariancesFromMsg(const ff_msgs::CombinedNavState& msg) {
+  TimestampedSet<PoseCovariance> correlation_covariances;
+  for (const auto& correlation_covariance : msg.correlation_covariances) {
+    correlation_covariances.Add(TimeFromRosTime(correlation_covariance.time),
+                                mc::EigenCovarianceFromMsg<6>(correlation_covariance.covariance));
+  }
+  return correlation_covariances;
 }
 
 gtsam::Vector3 RemoveGravityFromAccelerometerMeasurement(const gtsam::Vector3& global_F_gravity,
@@ -143,6 +177,34 @@ gtsam::Vector3 RemoveGravityFromAccelerometerMeasurement(const gtsam::Vector3& g
   const gtsam::Vector3 imu_F_gravity = global_R_imu.inverse() * global_F_gravity;
   // Add gravity correction to measurement to offset negatively measured gravity
   return (uncorrected_accelerometer_measurement + imu_F_gravity);
+}
+
+ff_msgs::CombinedNavState CombinedNavStateToMsg(const CombinedNavState& combined_nav_state,
+                                                const PoseCovariance& pose_covariance,
+                                                const Eigen::Matrix3d& velocity_covariance,
+                                                const Eigen::Matrix<double, 6, 6>& imu_bias_covariance,
+                                                const TimestampedSet<PoseCovariance>& correlation_covariances) {
+  ff_msgs::CombinedNavState msg;
+  TimeToHeader(combined_nav_state.timestamp(), msg.header);
+  // Write CombinedNavState
+  PoseToMsg(combined_nav_state.pose(), msg.pose.pose.pose);
+  mc::VectorToMsg(combined_nav_state.velocity(), msg.velocity.velocity);
+  mc::VectorToMsg(combined_nav_state.bias().accelerometer(), msg.imu_bias.accelerometer_bias);
+  mc::VectorToMsg(combined_nav_state.bias().gyroscope(), msg.imu_bias.gyroscope_bias);
+
+  // Write covariances
+  mc::EigenCovarianceToMsg(pose_covariance, msg.pose.pose.covariance);
+  mc::EigenCovarianceToMsg(velocity_covariance, msg.velocity.covariance);
+  mc::EigenCovarianceToMsg(imu_bias_covariance, msg.imu_bias.covariance);
+
+  // Write correlation pose covariances if available
+  for (const auto& correlation_covariance : correlation_covariances.set()) {
+    ff_msgs::PoseCovarianceStamped covariance_msg;
+    mc::EigenCovarianceToMsg(correlation_covariance.second, covariance_msg.covariance);
+    TimeToMsg(correlation_covariance.first, covariance_msg.time);
+    msg.correlation_covariances.push_back(covariance_msg);
+  }
+  return msg;
 }
 
 double Deg2Rad(const double degrees) { return M_PI / 180.0 * degrees; }
@@ -168,6 +230,31 @@ Eigen::Matrix3d RotationFromEulerAngles(const double yaw_degrees, const double p
   return rotation;
 }
 
+PoseCovariance RelativePoseCovariance(const PoseWithCovariance& a, const PoseWithCovariance& b,
+                                      const boost::optional<PoseCovariance> covariance_a_b) {
+  // Calculate covariance
+  // See https://gtsam.org/2021/02/23/uncertainties-part3.html
+  // Adjoints
+  // Uses convention w_T_a and w_T_b for poses, s.t. adj_w_a is the adjoint for the
+  // w_T_a pose.
+  const gtsam::Pose3 w_T_a = GtPose(a.pose);
+  const gtsam::Pose3 w_T_b = GtPose(b.pose);
+  const gtsam::Matrix6 adj_w_a = w_T_a.AdjointMap();
+  const gtsam::Matrix6 adj_b_w = w_T_b.inverse().AdjointMap();
+  // Helper terms
+  const gtsam::Matrix6 h = adj_b_w * adj_w_a;
+  const gtsam::Matrix6 h_t = h.transpose();
+  // Compute covariance without correlation terms
+  gtsam::Matrix6 relative_covariance = h * a.covariance * h_t + b.covariance;
+  // Add correlation terms if they exist
+  // Assumes correlation_covariances stores covariances a_b rather than b_a
+  // const auto covariance_a_b = b.correlation_covariances.Get(*(a.correlation_covariances.LatestTimestamp()));
+  if (covariance_a_b) {
+    relative_covariance = relative_covariance - h * (*covariance_a_b) - (*covariance_a_b).transpose() * h_t;
+  }
+  return relative_covariance;
+}
+
 Eigen::Isometry3d FrameChangeRelativePose(const Eigen::Isometry3d& a_F_relative_pose, const Eigen::Isometry3d& b_T_a) {
   // Consider for example a sensor odometry measurement, sensor_time_0_T_sensor_time_1.
   // To find the movement of the robot body given static body_T_sensor extrinsics,
@@ -177,9 +264,8 @@ Eigen::Isometry3d FrameChangeRelativePose(const Eigen::Isometry3d& a_F_relative_
 
 Eigen::Matrix<double, 6, 6> FrameChangeRelativeCovariance(
   const Eigen::Matrix<double, 6, 6>& a_F_relative_pose_covariance, const Eigen::Isometry3d& b_T_a) {
-  // TODO(rsoussan): This might be right for translation component (frame change is equivalent to single rotation),
-  // but might be wrong for rotation component
-  return gtsam::TransformCovariance<gtsam::Pose3>(GtPose(b_T_a))(a_F_relative_pose_covariance);
+  const gtsam::Pose3 b_R_a(gtsam::Rot3(b_T_a.linear()), Eigen::Vector3d::Zero());
+  return gtsam::TransformCovariance<gtsam::Pose3>(b_R_a)(a_F_relative_pose_covariance);
 }
 
 PoseWithCovariance FrameChangeRelativePoseWithCovariance(const PoseWithCovariance& a_F_relative_pose_with_covariance,
@@ -231,5 +317,21 @@ Eigen::Isometry3d Interpolate(const Eigen::Isometry3d& lower_bound_pose, const E
   const auto rotation =
     Eigen::Quaterniond(lower_bound_pose.linear()).slerp(alpha, Eigen::Quaterniond(upper_bound_pose.linear()));
   return Isometry3d(translation, rotation);
+}
+
+PoseWithCovariance Interpolate(const PoseWithCovariance& lower_bound_pose, const PoseWithCovariance& upper_bound_pose,
+                               const double alpha) {
+  const Eigen::Isometry3d interpolated_pose = Interpolate(lower_bound_pose.pose, upper_bound_pose.pose, alpha);
+  // TODO(rsoussan): Implement this properly
+  const PoseCovariance& interpolated_covariance =
+    alpha > 0.5 ? upper_bound_pose.covariance : lower_bound_pose.covariance;
+  const auto& correlation_covariances =
+    alpha > 0.5 ? upper_bound_pose.correlation_covariances : lower_bound_pose.correlation_covariances;
+
+  return PoseWithCovariance(interpolated_pose, interpolated_covariance, correlation_covariances);
+}
+
+gtsam::noiseModel::Robust::shared_ptr Robust(const gtsam::SharedNoiseModel& noise, const double huber_k) {
+  return gtsam::noiseModel::Robust::Create(gtsam::noiseModel::mEstimator::Huber::Create(huber_k), noise);
 }
 }  // namespace localization_common

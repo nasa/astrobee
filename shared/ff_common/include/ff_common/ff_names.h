@@ -116,17 +116,19 @@
 #define NODE_PERCH_CTL                              "perch_ctl"
 #define NODE_EKF                                    "ekf"
 #define NODE_GRAPH_LOC                              "graph_loc"
-#define NODE_IMU_AUG                                "imu_aug"
-#define NODE_IMU_BIAS_TESTER                        "imu_bias_tester"
+#define NODE_GRAPH_VIO                              "graph_vio"
+#define NODE_POSE_EXTR                              "pose_extr"
 #define NODE_SIM_LOC                                "sim_loc"
 #define NODE_FAM                                    "fam"
 
 #define TOPIC_GRAPH_LOC                             "graph_loc/graph"
+#define TOPIC_GRAPH_VIO                             "graph_vio/graph"
 #define TOPIC_GRAPH_LOC_STATE                       "graph_loc/state"
+#define TOPIC_GRAPH_VIO_STATE                       "graph_vio/state"
 #define TOPIC_AR_TAG_POSE                           "ar_tag/pose"
 #define TOPIC_SPARSE_MAPPING_POSE                   "sparse_mapping/pose"
-#define TOPIC_IMU_BIAS_TESTER_POSE                  "imu_bias_tester/pose"
-#define TOPIC_IMU_BIAS_TESTER_VELOCITY              "imu_bias_tester/velocity"
+#define TOPIC_IMU_BIAS_EXTRAPOLATOR_POSE            "imu_bias_extrapolator/pose"
+#define TOPIC_IMU_BIAS_EXTRAPOLATOR_VELOCITY        "imu_bias_extrapolator/velocity"
 
 #define ACTION_GNC_CTL_CONTROL                      "gnc/control"
 
@@ -284,6 +286,7 @@
 #define NODE_MAPPED_LANDMARKS                       "ml"
 #define NODE_VIVE_LOCALIZATION                      "vive_localization"
 
+#define TOPIC_VIO_POSE                              "vio/pose"
 #define TOPIC_LOCALIZATION_POSE                     "loc/pose"
 #define TOPIC_LOCALIZATION_TWIST                    "loc/twist"
 #define TOPIC_LOCALIZATION_TRUTH                    "loc/truth/pose"

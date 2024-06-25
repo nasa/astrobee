@@ -15,37 +15,41 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 #ifndef GRAPH_LOCALIZER_GRAPH_LOCALIZER_PARAMS_H_
 #define GRAPH_LOCALIZER_GRAPH_LOCALIZER_PARAMS_H_
 
-#include <graph_localizer/calibration_params.h>
-#include <graph_localizer/combined_nav_state_node_updater_params.h>
-#include <graph_localizer/factor_params.h>
-#include <graph_localizer/feature_point_node_updater_params.h>
-#include <graph_localizer/feature_tracker_params.h>
-#include <graph_localizer/handrail_params.h>
-#include <graph_localizer/graph_initializer_params.h>
-#include <graph_optimizer/graph_optimizer_params.h>
-#include <localization_measurements/fan_speed_mode.h>
+#include <factor_adders/loc_factor_adder_params.h>
+#include <node_adders/pose_node_adder_params.h>
+#include <node_adders/timestamped_node_adder_model_params.h>
+#include <optimizers/nonlinear_optimizer.h>
+#include <sliding_window_graph_optimizer/sliding_window_graph_optimizer_params.h>
 
-#include <string>
+#include <boost/serialization/serialization.hpp>
 
 namespace graph_localizer {
 struct GraphLocalizerParams {
-  CombinedNavStateNodeUpdaterParams combined_nav_state_node_updater;
-  CalibrationParams calibration;
-  FactorParams factor;
-  FeaturePointNodeUpdaterParams feature_point_node_updater;
-  FeatureTrackerParams feature_tracker;
-  graph_optimizer::GraphOptimizerParams graph_optimizer;
-  GraphInitializerParams graph_initializer;
-  HandrailParams handrail;
-  double max_standstill_feature_track_avg_distance_from_mean;
-  int standstill_min_num_points_per_track;
-  double huber_k;
-  bool estimate_world_T_dock_using_loc;
-  double standstill_feature_track_duration;
-  localization_measurements::FanSpeedMode initial_fan_speed_mode;
+  factor_adders::LocFactorAdderParams ar_tag_loc_factor_adder;
+  factor_adders::LocFactorAdderParams sparse_map_loc_factor_adder;
+  node_adders::PoseNodeAdderParams pose_node_adder;
+  node_adders::TimestampedNodeAdderModelParams pose_node_adder_model;
+  optimizers::NonlinearOptimizerParams nonlinear_optimizer;
+  sliding_window_graph_optimizer::SlidingWindowGraphOptimizerParams sliding_window_graph_optimizer;
+  // Max gap between vio measurements. If this is exceeded, graph localizer is reset.
+  double max_vio_measurement_gap;
+
+  // Serialization function
+  friend class boost::serialization::access;
+  template <class Archive>
+  void serialize(Archive& ar, const unsigned int file_version) {
+    ar& BOOST_SERIALIZATION_NVP(ar_tag_loc_factor_adder);
+    ar& BOOST_SERIALIZATION_NVP(sparse_map_loc_factor_adder);
+    ar& BOOST_SERIALIZATION_NVP(pose_node_adder);
+    ar& BOOST_SERIALIZATION_NVP(pose_node_adder_model);
+    ar& BOOST_SERIALIZATION_NVP(nonlinear_optimizer);
+    ar& BOOST_SERIALIZATION_NVP(sliding_window_graph_optimizer);
+    ar& BOOST_SERIALIZATION_NVP(max_vio_measurement_gap);
+  }
 };
 }  // namespace graph_localizer
 

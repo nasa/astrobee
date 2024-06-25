@@ -16,7 +16,7 @@ Depends: astrobee0 (= ${binary:Version}), ${misc:Depends}
   libace-dev, libqt4-dev | qtbase5-dev,
   protobuf-compiler, libv4l-dev, libeigen3-dev, libluajit-5.1-dev,
   libjsoncpp-dev, libtinyxml-dev, libyaml-cpp-dev, libusb-1.0-0-dev,
-  libalvar-dev, libdbow2-dev, libgtsam-dev, libopenmvg-dev, libroyale-dev, libceres-dev, rti-dev,
+  ros-noetic-ar-track-alvar, libdbow2-dev, libgtsam-dev, libopenmvg-dev, libroyale-dev, libceres-dev, rti-dev,
   libsoracore-dev, libmiro-dev, libdecomputil-dev, libjps3d-dev
 Description: Astrobee flight software development files.
  The Astrobee flight software development files.
@@ -49,7 +49,7 @@ Depends: ${misc:Depends}
   ${ros-python},
   astrobee-config (>= ${binary:Version}),
   astrobee-comms (>= ${binary:Version}),
-  libalvar2 (>=2.0), libdbow21 (>=0.1-6), libgtsam (>=4.0), libopenmvg1 (>=1.0), libroyale1 (>=1.0),
+  ros-noetic-ar-track-alvar, libdbow21 (>=0.1-6), libgtsam (>=4.0), libopenmvg1 (>=1.0), libroyale1 (>=1.0),
   libceres1 (>=1.0), rti (>=1.0), libmiro0 (>=0.1), libsoracore1 (>=1.0),
   libdecomputil0 (>=0.1), libjps3d0 (>=0.1),
   libluajit-5.1-2,
@@ -66,7 +66,7 @@ Depends: ${misc:Depends}
   ros-${ros-distro}-rosnode, ros-${ros-distro}-rosout, ros-${ros-distro}-rosparam,
   ros-${ros-distro}-rosservice, ros-${ros-distro}-rostopic, ros-${ros-distro}-roswtf,
   ros-${ros-distro}-std-srvs, ros-${ros-distro}-topic-tools, ros-${ros-distro}-xmlrpcpp,
-  libopencv-core, libopencv-calib3d, libopencv-highgui, libopencv-imgcodecs, libopencv-imgproc, libopencv-features2d, libopencv-xfeatures2d,
+  libopencv-core4.2, libopencv-calib3d4.2, libopencv-highgui4.2, libopencv-imgcodecs4.2, libopencv-imgproc4.2, libopencv-features2d4.2, libopencv-xfeatures2d,
   libjsoncpp1, libprotoc9v5 | libprotoc17, libgoogle-glog0v5,
   libtinyxml2.6.2v5, libyaml-cpp0.5v5 | libyaml-cpp0.6
 Description: Astrobee flight software.

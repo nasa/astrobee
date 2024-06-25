@@ -29,17 +29,12 @@ find_package(Eigen3 REQUIRED)
 
 ## Find catkin macros and libraries
 find_package(catkin2 REQUIRED COMPONENTS
-  nodelet
-  camera
-  config_reader
-  ff_util
-  ff_msgs
-  graph_optimizer
-  imu_integration
+  factor_adders
+  graph_factors
   localization_common
   localization_measurements
-  msg_conversions
-  vision_common
+  node_adders
+  sliding_window_graph_optimizer
 )
 
 # Find OpenCV
@@ -49,17 +44,12 @@ catkin_package(
   LIBRARIES ${PROJECT_NAME} ${GLOG_LIBRARIES} ${GTSAM_LIBRARIES} 
   INCLUDE_DIRS include ${GLOG_INCLUDE_DIRS} ${GTSAM_INCLUDE_DIR} 
   CATKIN_DEPENDS
-    nodelet
-    camera
-    config_reader
-    ff_util
-    ff_msgs
-    graph_optimizer
-    imu_integration
+    factor_adders
+    graph_factors
     localization_common
     localization_measurements
-    msg_conversions
-    vision_common
+    node_adders
+    sliding_window_graph_optimizer
 )
 
 ###########
@@ -83,88 +73,6 @@ add_library(${PROJECT_NAME}
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 
-
-if(CATKIN_ENABLE_TESTING)
-  find_package(rostest REQUIRED)
-  add_rostest_gtest(test_combined_nav_state_node_updater
-    test/test_combined_nav_state_node_updater.test
-    test/test_combined_nav_state_node_updater.cc
-  )
-  target_link_libraries(test_combined_nav_state_node_updater
-    graph_localizer ${catkin_LIBRARIES} 
-  )
-  add_rostest_gtest(test_depth_odometry_factor_adder
-    test/test_depth_odometry_factor_adder.test
-    test/test_depth_odometry_factor_adder.cc
-  )
-  target_link_libraries(test_depth_odometry_factor_adder
-    graph_localizer ${catkin_LIBRARIES} 
-  )
-  add_rostest_gtest(test_inverse_depth_projection_factor
-    test/test_inverse_depth_projection_factor.test
-    test/test_inverse_depth_projection_factor.cc
-  )
-  target_link_libraries(test_inverse_depth_projection_factor
-    graph_localizer ${catkin_LIBRARIES} 
-  )
-  add_rostest_gtest(test_point_to_line_factor
-    test/test_point_to_line_factor.test
-    test/test_point_to_line_factor.cc
-  )
-  target_link_libraries(test_point_to_line_factor
-    graph_localizer ${catkin_LIBRARIES}
-  )
-  add_rostest_gtest(test_point_to_line_segment_factor
-    test/test_point_to_line_segment_factor.test
-    test/test_point_to_line_segment_factor.cc
-  )
-  target_link_libraries(test_point_to_line_segment_factor
-    graph_localizer ${catkin_LIBRARIES}
-  )
-  add_rostest_gtest(test_point_to_plane_factor
-    test/test_point_to_plane_factor.test
-    test/test_point_to_plane_factor.cc
-  )
-  target_link_libraries(test_point_to_plane_factor
-    graph_localizer ${catkin_LIBRARIES}
-  )
-  add_rostest_gtest(test_point_to_point_between_factor
-    test/test_point_to_point_between_factor.test
-    test/test_point_to_point_between_factor.cc
-  )
-  target_link_libraries(test_point_to_point_between_factor
-    graph_localizer ${catkin_LIBRARIES} 
-  )
-  add_rostest_gtest(test_point_to_handrail_endpoint_factor
-    test/test_point_to_handrail_endpoint_factor.test
-    test/test_point_to_handrail_endpoint_factor.cc
-  )
-  target_link_libraries(test_point_to_handrail_endpoint_factor
-    graph_localizer ${catkin_LIBRARIES} 
-  )
-  add_rostest_gtest(test_rotation_factor_adder
-    test/test_rotation_factor_adder.test
-    test/test_rotation_factor_adder.cc
-  )
-  target_link_libraries(test_rotation_factor_adder
-    graph_localizer ${catkin_LIBRARIES}
-  )
-  add_rostest_gtest(test_rotation_factor
-    test/test_rotation_factor.test
-    test/test_rotation_factor.cc
-  )
-  target_link_libraries(test_rotation_factor
-    graph_localizer ${catkin_LIBRARIES}
-  )
-  add_rostest_gtest(test_silu
-    test/test_silu.test
-    test/test_silu.cc
-  )
-  target_link_libraries(test_silu
-    graph_localizer ${catkin_LIBRARIES}
-  )
-endif()
-
 #############
 ## Install ##
 #############
@@ -176,20 +84,9 @@ install(TARGETS ${PROJECT_NAME}
   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
 )
 
-# Mark nodelet_plugin for installation
-install(FILES nodelet_plugins.xml
-        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-)
-
 # Mark cpp header files for installation
 install(DIRECTORY include/${PROJECT_NAME}/
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
   FILES_MATCHING PATTERN "*.h"
   PATTERN ".svn" EXCLUDE
 )
-
-# Mark launch files for installation
-install(DIRECTORY launch/
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
-  PATTERN ".svn" EXCLUDE)
-

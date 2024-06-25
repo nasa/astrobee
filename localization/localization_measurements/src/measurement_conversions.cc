@@ -119,7 +119,7 @@ FeaturePointsMeasurement MakeFeaturePointsMeasurement(const ff_msgs::Feature2dAr
 
   for (const auto& feature : optical_flow_feature_points.feature_array) {
     feature_points_measurement.feature_points.emplace_back(
-      FeaturePoint(feature.x, feature.y, image_id, feature.id, timestamp));
+      vision_common::FeaturePoint(feature.x, feature.y, image_id, feature.id, timestamp));
   }
 
   return feature_points_measurement;

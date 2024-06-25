@@ -134,6 +134,17 @@ def select_splice_timestamps_and_splice_bag(bagfile, image_topic):
         window = "image"
         cv2.namedWindow(window)
         cv2.moveWindow(window, 40, 30)
+
+        # Define the legend text and its position
+        legend_text = "d: next | a: previous | w: next 10 | s: previous 10 | q: quit | p: print | space: split | u: remove splice| enter: splice"
+        position = (10, 30)  # Position (x, y) of the text on the image
+
+        # Define font, scale, color, and thickness
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        font_scale = 0.67
+        color = (255, 255, 255)  # White color in BGR
+        thickness = 2
+
         print_string = True
         while True:
             msg = (msg_tuples[i])[0]
@@ -155,6 +166,17 @@ def select_splice_timestamps_and_splice_bag(bagfile, image_topic):
                 image = bridge.imgmsg_to_cv2(msg, msg.encoding)
             except (CvBridgeError) as e:
                 print(e)
+            # Add the legend text to the image
+            cv2.putText(
+                image,
+                legend_text,
+                position,
+                font,
+                font_scale,
+                color,
+                thickness,
+                cv2.LINE_AA,
+            )
             cv2.imshow(window, image)
             cv2.setWindowTitle(window, msg_info_string)
             key = cv2.waitKey(0)

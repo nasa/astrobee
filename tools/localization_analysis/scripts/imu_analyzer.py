@@ -27,9 +27,9 @@ import argparse
 import os
 import sys
 
+import imu_measurements
 import matplotlib
 
-import imu_measurements
 import plot_helpers
 
 matplotlib.use("pdf")

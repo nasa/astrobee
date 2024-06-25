@@ -1,0 +1,42 @@
+\begin{minted}[]{c++}
+#include <localization_measurements/pose_measurement.h>
+#include <sliding_window_graph_optimizer/sliding_window_graph_optimizer.h>
+
+#include "absolute_pose_factor_adder.h"
+#include "localizer_params.h"
+#include "relative_pose_node_adder.h"
+
+class Localizer : public sliding_window_graph_optimizer::
+                    SlidingWindowGraphOptimizer {
+ public:
+  explicit Localizer(const LocalizerParams& params)
+      : params_(params) {
+    // Register factor and node adders
+    AddFactorAdder(factor_adder_);
+    AddSlidingWindowNodeAdder(node_adder_);
+  }
+
+  void AddRelativePoseMeasurement(
+    const localization_measurements::
+      TimestampedPoseWithCovariance& measurement) {
+    node_adder_->AddMeasurement(measurement);
+  }
+
+  void AddAbsolutePoseMeasurement(
+    const localization_measurements::
+      TimestampedPoseWithCovariance& measurement) {
+    factor_adder_->AddMeasurement(measurement);
+  }
+
+  const TimestampedNodes<gtsam::Pose3>& timestamped_nodes()
+    const {
+    return node_adder_->nodes();
+  }
+
+ private:
+  LocalizerParams params_;
+
+  std::shared_ptr<AbsolutePoseFactorAdder> factor_adder_;
+  std::shared_ptr<RelativePoseNodeAdder> node_adder_;
+};
+\end{minted}

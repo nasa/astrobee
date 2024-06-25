@@ -22,14 +22,16 @@ namespace localization_analysis {
 namespace lc = localization_common;
 GraphLocalizerSimulator::GraphLocalizerSimulator(const GraphLocalizerSimulatorParams& params,
                                                  const std::string& graph_config_path_prefix)
-    : GraphLocalizerWrapper(graph_config_path_prefix), params_(params) {}
+    : RosGraphLocalizerWrapper(graph_config_path_prefix), params_(params) {}
 
-void GraphLocalizerSimulator::BufferOpticalFlowMsg(const ff_msgs::Feature2dArray& feature_array_msg) {
-  of_msg_buffer_.emplace_back(feature_array_msg);
+void GraphLocalizerSimulator::BufferImuMsg(const sensor_msgs::Imu& imu_msg) { imu_msg_buffer_.emplace_back(imu_msg); }
+
+void GraphLocalizerSimulator::BufferFlightModeMsg(const ff_msgs::FlightMode& flight_mode_msg) {
+  flight_mode_msg_buffer_.emplace_back(flight_mode_msg);
 }
 
-void GraphLocalizerSimulator::BufferDepthOdometryMsg(const ff_msgs::DepthOdometry& depth_odometry_msg) {
-  depth_odometry_msg_buffer_.emplace_back(depth_odometry_msg);
+void GraphLocalizerSimulator::BufferGraphVIOStateMsg(const ff_msgs::GraphVIOState& graph_vio_state_msg) {
+  vio_msg_buffer_.emplace_back(graph_vio_state_msg);
 }
 
 void GraphLocalizerSimulator::BufferVLVisualLandmarksMsg(const ff_msgs::VisualLandmarks& visual_landmarks_msg) {
@@ -38,12 +40,6 @@ void GraphLocalizerSimulator::BufferVLVisualLandmarksMsg(const ff_msgs::VisualLa
 
 void GraphLocalizerSimulator::BufferARVisualLandmarksMsg(const ff_msgs::VisualLandmarks& visual_landmarks_msg) {
   ar_msg_buffer_.emplace_back(visual_landmarks_msg);
-}
-
-void GraphLocalizerSimulator::BufferImuMsg(const sensor_msgs::Imu& imu_msg) { imu_msg_buffer_.emplace_back(imu_msg); }
-
-void GraphLocalizerSimulator::BufferFlightModeMsg(const ff_msgs::FlightMode& flight_mode_msg) {
-  flight_mode_msg_buffer_.emplace_back(flight_mode_msg);
 }
 
 bool GraphLocalizerSimulator::AddMeasurementsAndUpdateIfReady(const lc::Time& current_time) {
@@ -65,17 +61,14 @@ bool GraphLocalizerSimulator::AddMeasurementsAndUpdateIfReady(const lc::Time& cu
     ImuCallback(imu_msg);
   }
   imu_msg_buffer_.clear();
-  for (const auto& depth_odometry_msg : depth_odometry_msg_buffer_) {
-    DepthOdometryCallback(depth_odometry_msg);
+
+  for (const auto& vio_msg : vio_msg_buffer_) {
+    GraphVIOStateCallback(vio_msg);
   }
-  depth_odometry_msg_buffer_.clear();
-  for (const auto& of_msg : of_msg_buffer_) {
-    OpticalFlowCallback(of_msg);
-  }
-  of_msg_buffer_.clear();
+  vio_msg_buffer_.clear();
 
   for (const auto& vl_msg : vl_msg_buffer_) {
-    VLVisualLandmarksCallback(vl_msg);
+    SparseMapVisualLandmarksCallback(vl_msg);
   }
   vl_msg_buffer_.clear();
 

@@ -55,12 +55,23 @@ add_library(${PROJECT_NAME}
   src/identity_filter.cc
   src/imu_filter.cc
   src/imu_integrator.cc
-  src/latest_imu_integrator.cc
+  src/parameter_reader.cc
+  src/test_utilities.cc
   src/utilities.cc
 )
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 
+if(CATKIN_ENABLE_TESTING)
+  find_package(rostest REQUIRED)
+  add_rostest_gtest(test_imu_integrator
+    test/test_imu_integrator.test
+    test/test_imu_integrator.cc
+  )
+  target_link_libraries(test_imu_integrator
+    ${PROJECT_NAME} ${catkin_LIBRARIES} 
+  )
+endif()
 
 #############
 ## Install ##

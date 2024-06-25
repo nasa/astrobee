@@ -28,7 +28,7 @@
 namespace localization_measurements {
 struct MatchedProjectionsMeasurement : public Measurement {
   MatchedProjections matched_projections;
-  // TODO(soussan): put this somewhere else?
+  // TODO(soussan): Make this optional? Move somewhere else?
   gtsam::Pose3 global_T_cam;
 };
 }  // namespace localization_measurements

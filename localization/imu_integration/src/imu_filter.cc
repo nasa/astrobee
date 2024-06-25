@@ -16,6 +16,7 @@
  * under the License.
  */
 #include <imu_integration/imu_filter.h>
+#include <imu_integration/parameter_reader.h>
 #include <imu_integration/utilities.h>
 #include <localization_common/logger.h>
 
@@ -40,7 +41,6 @@ boost::optional<lm::ImuMeasurement> ImuFilter::AddMeasurement(const lm::ImuMeasu
   const double filtered_angular_velocity_z = angular_velocity_z_filter_->AddValue(imu_measurement.angular_velocity.z());
 
   // Use original timestamp
-  // TODO(rsoussan): incorporate phase delay into timestamp?
   auto filtered_imu_measurement = imu_measurement;
   filtered_imu_measurement.acceleration << filtered_acceleration_x, filtered_acceleration_y, filtered_acceleration_z;
   filtered_imu_measurement.angular_velocity << filtered_angular_velocity_x, filtered_angular_velocity_y,
