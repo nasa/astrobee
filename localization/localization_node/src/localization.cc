@@ -29,15 +29,7 @@ namespace localization_node {
 
 Localizer::Localizer(sparse_mapping::SparseMap* map): map_(map) {}
 
-void Localizer::ReadParams() {
-  config_reader::ConfigReader config;
-  config.AddFile("cameras.config");
-  config.AddFile("localization.config");
-  if (!config.ReadFiles()) {
-    ROS_ERROR("Failed to read config files.");
-    return;
-  }
-
+void Localizer::ReadParams(config_reader::ConfigReader& config) {
   camera::CameraParameters cam_params(&config, "nav_cam");
   std::string prefix;
   const auto detector_name = map_->GetDetectorName();

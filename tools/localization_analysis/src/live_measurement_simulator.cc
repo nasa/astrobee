@@ -49,7 +49,7 @@ LiveMeasurementSimulator::LiveMeasurementSimulator(const LiveMeasurementSimulato
     exit(0);
   }
 
-  map_feature_matcher_.ReadParams();
+  map_feature_matcher_.ReadParams(config);
   optical_flow_tracker_.ReadParams(&config);
   std::vector<std::string> topics;
   topics.push_back(std::string("/") + TOPIC_HARDWARE_IMU);

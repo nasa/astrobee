@@ -31,7 +31,7 @@ namespace localization_node {
 class Localizer {
  public:
   explicit Localizer(sparse_mapping::SparseMap* map);
-  void ReadParams();
+  void ReadParams(config_reader::ConfigReader& config);
   bool Localize(cv_bridge::CvImageConstPtr image_ptr, ff_msgs::VisualLandmarks* vl,
      Eigen::Matrix2Xd* image_keypoints = NULL);
  private:

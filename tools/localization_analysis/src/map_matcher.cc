@@ -42,10 +42,13 @@ MapMatcher::MapMatcher(const std::string& input_bag_name, const std::string& map
       image_count_(0) {
   config_reader::ConfigReader config;
   config.AddFile("geometry.config");
+  config.AddFile("camera.config");
+  config.AddFile("localization.config");
   lc::LoadGraphLocalizerConfig(config);
   if (!config.ReadFiles()) {
     LogFatal("Failed to read config files.");
   }
+  map_feature_matcher_.ReadParams(config);
   body_T_nav_cam_ = lc::LoadTransform(config, "nav_cam_transform");
   if (!save_noloc_imgs.empty()) {
     nonloc_bag_.open(save_noloc_imgs, rosbag::bagmode::Write);
