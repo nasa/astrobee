@@ -85,7 +85,6 @@ SparseMap::SparseMap(const std::vector<std::string>& filenames, const std::strin
       camera_params_(params) {
   SetDefaultLocParams();
   cid_to_descriptor_map_.resize(cid_to_filename_.size());
-  // TODO(bcoltin): only record scale and orientation for opensift?
   cid_to_keypoint_map_.resize(cid_to_filename_.size());
 }
 
@@ -323,8 +322,8 @@ void SparseMap::Load(const std::string & protobuf_file, bool localization) {
 
   cid_to_filename_.resize(num_frames);
   cid_to_descriptor_map_.resize(num_frames);
-  if (!localization || loc_params_.visualize_localization_matches) {
-    cid_to_keypoint_map_.resize(num_frames);
+  cid_to_keypoint_map_.resize(num_frames);
+  if (!localization) {
     cid_to_cam_t_global_.resize(num_frames);
   }
 
@@ -340,10 +339,8 @@ void SparseMap::Load(const std::string & protobuf_file, bool localization) {
       cid_to_filename_[cid] = "";
 
 
-    if (!localization || loc_params_.visualize_localization_matches) {
-      // load keypoints
-      cid_to_keypoint_map_[cid].resize(Eigen::NoChange_t(), frame.feature_size());
-    }
+    // load keypoints
+    cid_to_keypoint_map_[cid].resize(Eigen::NoChange_t(), frame.feature_size());
 
     // Poke the first frame's first descriptor to see how long the
     // descriptor is.
@@ -361,10 +358,7 @@ void SparseMap::Load(const std::string & protobuf_file, bool localization) {
       sparse_mapping_protobuf::Feature feature = frame.feature(fid);
 
 
-      if (!localization || loc_params_.visualize_localization_matches) {
-        // Copy the features
-        cid_to_keypoint_map_[cid].col(fid) << feature.x(), feature.y();
-      }
+      cid_to_keypoint_map_[cid].col(fid) << feature.x(), feature.y();
 
       // Copy the descriptors
       memcpy(cid_to_descriptor_map_[cid].ptr<uint8_t>(fid),  // Destination
