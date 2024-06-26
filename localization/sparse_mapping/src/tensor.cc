@@ -1936,7 +1936,7 @@ void ReadAffineCSV(std::string const& input_filename,
 void FindEssentialAndInliers(Eigen::Matrix2Xd const& keypoints1, Eigen::Matrix2Xd const& keypoints2,
                              std::vector<cv::DMatch> const& matches, camera::CameraParameters const& camera_params,
                              std::vector<cv::DMatch>* inlier_matches, std::vector<size_t>* vec_inliers,
-                             Eigen::Matrix3d* essential_matrix) {
+                             Eigen::Matrix3d* essential_matrix, const int ransac_iterations) {
   // Initialize the outputs
   inlier_matches->clear();
 
@@ -1960,7 +1960,7 @@ void FindEssentialAndInliers(Eigen::Matrix2Xd const& keypoints1, Eigen::Matrix2X
                                        essential_matrix, vec_inliers,
                                        image_size, image_size,
                                        &error_max,
-                                       max_expected_error)) {
+                                       max_expected_error, ransac_iterations)) {
     VLOG(2) << " | Estimation of essential matrix failed!\n";
     return;
   }

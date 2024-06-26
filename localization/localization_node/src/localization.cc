@@ -51,6 +51,7 @@ void Localizer::ReadParams(config_reader::ConfigReader& config) {
   LOAD_PARAM(loc_params.early_break_landmarks, config, prefix);
   LOAD_PARAM(loc_params.histogram_equalization, config, prefix);
   LOAD_PARAM(loc_params.check_essential_matrix, config, prefix);
+  LOAD_PARAM(loc_params.essential_ransac_iterations, config, prefix);
   LOAD_PARAM(loc_params.add_similar_images, config, prefix);
   LOAD_PARAM(loc_params.add_best_previous_image, config, prefix);
   LOAD_PARAM(loc_params.hamming_distance, config, prefix);

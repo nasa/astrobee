@@ -809,9 +809,9 @@ bool SparseMap::Localize(cv::Mat const& test_descriptors, Eigen::Matrix2Xd const
         std::vector<cv::DMatch> inlier_matches;
         std::vector<size_t> vec_inliers;
         Eigen::Matrix3d essential_matrix;
-        // TODO(rsoussan): Add param for num ransac iterations? Time this? (uses 4096 its...)
         FindEssentialAndInliers(test_keypoints, cid_to_keypoint_map_[cid], all_matches[i], camera_params_,
-                                &inlier_matches, &vec_inliers, &essential_matrix);
+                                &inlier_matches, &vec_inliers, &essential_matrix,
+                                loc_params_.essential_ransac_iterations);
         all_matches[i] = inlier_matches;
         if (loc_params_.verbose_localization)
           std::cout << "Matches after essential filtering: " << all_matches[i].size() << std::endl;

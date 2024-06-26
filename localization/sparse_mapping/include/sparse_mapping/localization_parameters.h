@@ -27,6 +27,7 @@ struct LocalizationParameters {
   int early_break_landmarks;
   int histogram_equalization;
   bool check_essential_matrix;
+  int essential_ransac_iterations;
   bool add_similar_images;
   bool add_best_previous_image;
   int hamming_distance;
