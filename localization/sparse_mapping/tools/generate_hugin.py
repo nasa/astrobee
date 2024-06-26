@@ -112,7 +112,14 @@ def main():
 
     if args.input_hugin is not None:
         # read the pto file into the Panorama object
-        p.ReadPTOFile(args.input_hugin)
+        # Accomodate hugin changing API
+        try:
+            # Attempt the first method
+            ifs = ifstream(args.input_hugin)
+            p.readData(ifs)
+        except AttributeError:
+            # Fallback to the second method if the first method fails
+            p.ReadPTOFile(args.input_hugin)
         # don't need anymore
         del ifs
 
@@ -132,9 +139,14 @@ def main():
         p.addImage(srcImage)
 
     # write the modified panorama to that stream
-    p.WritePTOFile(output_hugin)
-    # done with it
-    del ofs
+    # Accomodate hugin changing API
+    try:
+        # Attempt the first method
+        ofs = ofstream(output_hugin)
+        p.writeData(ofs)
+    except AttributeError:
+        # Fallback to the second method if the first method fails
+        p.WritePTOFile(output_hugin)
 
 
 if __name__ == "__main__":
