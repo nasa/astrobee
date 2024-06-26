@@ -379,8 +379,9 @@ void MatDescrToVec(cv::Mat const& mat, DBoW2::BriefDescriptor * brief) {
 // at most num_similar such indices.
 void QueryDB(std::string const& descriptor, VocabDB * vocab_db,
              int num_similar, cv::Mat const& descriptors,
-             std::vector<int> * indices) {
+             std::vector<int> * indices, std::vector<double> * scores) {
   indices->clear();
+  scores->clear();
 
   if (vocab_db->binary_db != NULL) {
     assert(IsBinaryDescriptor(descriptor));
@@ -398,6 +399,7 @@ void QueryDB(std::string const& descriptor, VocabDB * vocab_db,
 
     for (size_t j = 0; j < ret.size(); j++) {
       indices->push_back(ret[j].Id);
+      scores->push_back(ret[j].Score);
     }
   } else {
     // no database specified

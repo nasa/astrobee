@@ -729,6 +729,7 @@ bool SparseMap::Localize(cv::Mat const& test_descriptors, Eigen::Matrix2Xd const
                          std::vector<Eigen::Vector2d>* inlier_observations, std::vector<int>* cid_list,
                          const cv::Mat& image) {
   std::vector<int> indices;
+  std::vector<double> query_scores;
   // Query the vocab tree.
   if (cid_list == NULL)
     sparse_mapping::QueryDB(detector_.GetDetectorName(),
@@ -738,7 +739,7 @@ bool SparseMap::Localize(cv::Mat const& test_descriptors, Eigen::Matrix2Xd const
                             // them below.
                             loc_params_.num_similar + loc_params_.num_extra_localization_db_images,
                             test_descriptors,
-                            &indices);
+                            &indices, &query_scores);
   else
     indices = *cid_list;
   if (indices.empty()) {

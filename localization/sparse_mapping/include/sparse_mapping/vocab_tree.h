@@ -94,11 +94,8 @@ namespace sparse_mapping {
   void ResetDB(VocabDB* db);
 
   // Query similar images from database
-  void QueryDB(std::string const& descriptor,
-               VocabDB * vocab_db,
-               int num_similar,
-               cv::Mat const& descriptors,
-               std::vector<int> * indices);
+  void QueryDB(std::string const& descriptor, VocabDB* vocab_db, int num_similar, cv::Mat const& descriptors,
+               std::vector<int>* indices, std::vector<double>* scores);
 
   void BuildDBforDBoW2(sparse_mapping::SparseMap* map,
                        std::string const& descriptor,
