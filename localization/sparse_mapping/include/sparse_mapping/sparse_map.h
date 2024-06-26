@@ -95,7 +95,7 @@ struct SparseMap {
   void SetDefaultLocParams();
 
   // Set loc params
-  void SetLocParams(const LocalizationParameters& loc_params) { loc_params_ = loc_params; }
+  void SetLocParams(const LocalizationParameters& loc_params);
 
   void SetDetectorParams(int min_features, int max_features, int retries,
                          double min_thresh, double default_thresh, double max_thresh);
@@ -200,6 +200,11 @@ struct SparseMap {
   // needed for localization.
   void Load(const std::string & protobuf_file, bool localization = false);
 
+  // Optionally load keypoints. Call this after loading the map, if for example
+  // the user needs to use the keypoints for visualization or essential matrix
+  // estimation and those params differ from the default FLAG values.
+  void LoadKeypoints(const std::string & protobuf_file);
+
   // construct from pid_to_cid_fid
   void InitializeCidFidToPid();
 
@@ -235,6 +240,7 @@ struct SparseMap {
   camera::CameraParameters camera_params_;
   mutable sparse_mapping::VocabDB vocab_db_;  // TODO(oalexan1): Mutable means someone is doing something wrong.
   LocalizationParameters loc_params_;
+  std::string protobuf_file_;
 
   // e.g, 10th db image is 3rd image in cid_to_filename_
   std::map<int, int> db_to_cid_map_;

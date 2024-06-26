@@ -89,7 +89,8 @@ SparseMap::SparseMap(const std::vector<std::string>& filenames, const std::strin
 }
 
 SparseMap::SparseMap(const std::string& protobuf_file, bool localization)
-    : camera_params_(Eigen::Vector2i(-1, -1), Eigen::Vector2d::Constant(-1), Eigen::Vector2d(-1, -1)) {
+    : camera_params_(Eigen::Vector2i(-1, -1), Eigen::Vector2d::Constant(-1), Eigen::Vector2d(-1, -1)),
+      protobuf_file_(protobuf_file) {
   SetDefaultLocParams();
   // The above camera params used bad values because we are expected to reload
   // later.
@@ -248,6 +249,14 @@ void SparseMap::SetDefaultLocParams() {
   }
 }
 
+void SparseMap::SetLocParams(const LocalizationParameters& loc_params) {
+  loc_params_ = loc_params;
+  // Load keypoints if required since these aren't loaded by default for localization
+  if (!protobuf_file_.empty() && (loc_params_.check_essential_matrix || loc_params_.visualize_localization_matches)) {
+    LoadKeypoints(protobuf_file_);
+  }
+}
+
 // Detect features in given images
 void SparseMap::DetectFeatures() {
   ff_common::ThreadPool pool;
@@ -322,8 +331,8 @@ void SparseMap::Load(const std::string & protobuf_file, bool localization) {
 
   cid_to_filename_.resize(num_frames);
   cid_to_descriptor_map_.resize(num_frames);
-  cid_to_keypoint_map_.resize(num_frames);
   if (!localization) {
+    cid_to_keypoint_map_.resize(num_frames);
     cid_to_cam_t_global_.resize(num_frames);
   }
 
@@ -340,7 +349,8 @@ void SparseMap::Load(const std::string & protobuf_file, bool localization) {
 
 
     // load keypoints
-    cid_to_keypoint_map_[cid].resize(Eigen::NoChange_t(), frame.feature_size());
+    if (!localization)
+      cid_to_keypoint_map_[cid].resize(Eigen::NoChange_t(), frame.feature_size());
 
     // Poke the first frame's first descriptor to see how long the
     // descriptor is.
@@ -357,8 +367,8 @@ void SparseMap::Load(const std::string & protobuf_file, bool localization) {
     for (int fid = 0; fid < frame.feature_size(); fid++) {
       sparse_mapping_protobuf::Feature feature = frame.feature(fid);
 
-
-      cid_to_keypoint_map_[cid].col(fid) << feature.x(), feature.y();
+      if (!localization)
+        cid_to_keypoint_map_[cid].col(fid) << feature.x(), feature.y();
 
       // Copy the descriptors
       memcpy(cid_to_descriptor_map_[cid].ptr<uint8_t>(fid),  // Destination
@@ -447,6 +457,41 @@ void SparseMap::Load(const std::string & protobuf_file, bool localization) {
     std::cout << "Warning: Unknown value of histogram_equalization! "
               << "It is strongly suggested to rebuild this map to avoid "
               << "poor quality results." << std::endl;
+
+  delete input;
+  close(input_fd);
+}
+
+void SparseMap::LoadKeypoints(const std::string & protobuf_file) {
+  sparse_mapping_protobuf::Map map;
+  int input_fd = open(protobuf_file.c_str(), O_RDONLY);
+  if (input_fd < 0)
+    LOG(FATAL) << "Failed to open map file: " << protobuf_file;
+
+  google::protobuf::io::ZeroCopyInputStream* input =
+    new google::protobuf::io::FileInputStream(input_fd);
+  if (!ReadProtobufFrom(input, &map)) {
+    LOG(FATAL) << "Failed to parse map file.";
+  }
+
+  int num_frames = map.num_frames();
+  cid_to_keypoint_map_.resize(num_frames);
+
+  // load each frame
+  for (int cid = 0; cid < num_frames; cid++) {
+    sparse_mapping_protobuf::Frame frame;
+    if (!ReadProtobufFrom(input, &frame)) {
+      LOG(FATAL) << "Failed to parse frame.";
+    }
+
+    // load keypoints
+    cid_to_keypoint_map_[cid].resize(Eigen::NoChange_t(), frame.feature_size());
+
+    for (int fid = 0; fid < frame.feature_size(); fid++) {
+      sparse_mapping_protobuf::Feature feature = frame.feature(fid);
+      cid_to_keypoint_map_[cid].col(fid) << feature.x(), feature.y();
+    }
+  }
 
   delete input;
   close(input_fd);
