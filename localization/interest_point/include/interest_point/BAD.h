@@ -3,11 +3,13 @@
  * Constact: iago.suarez@thegraffter.com
  * Software developed in the PhD: Low-level vision for resource-limited devices
  */
-#ifndef EFFICIENT_DESCRIPTORS_BAD_H_
-#define EFFICIENT_DESCRIPTORS_BAD_H_
+#ifndef INTEREST_POINT_BAD_H_
+#define INTEREST_POINT_BAD_H_
+
+#include <opencv2/opencv.hpp>
 
 #include <vector>
-#include <opencv2/opencv.hpp>
+#include <string>
 
 namespace upm {
 
@@ -94,4 +96,4 @@ class BAD : public cv::Feature2D {
 };
 
 }  // namespace upm
-#endif  // EFFICIENT_DESCRIPTORS_BAD_H_
+#endif  // INTEREST_POINT_BAD_H_
