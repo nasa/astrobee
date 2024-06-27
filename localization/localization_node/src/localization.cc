@@ -76,6 +76,8 @@ void Localizer::ReadParams(config_reader::ConfigReader& config) {
   LOAD_PARAM(params_.success_history_size, config, prefix);
   LOAD_PARAM(params_.min_success_rate, config, prefix);
   LOAD_PARAM(params_.max_success_rate, config, prefix);
+  LOAD_PARAM(params_.min_features, config, prefix);
+  LOAD_PARAM(params_.max_features, config, prefix);
 
   // This check must happen before the histogram_equalization flag is set into the map
   // to compare with what is there already.
@@ -150,10 +152,11 @@ void Localizer::AdjustThresholds() {
   }
   const double average =
     std::accumulate(successes_.cbegin(), successes_.cend(), 0) / static_cast<double>(successes_.size());
-  if (average < params_.min_success_rate) {
+  const int last_keypoint_count = map_->detector().dynamic_detector().last_keypoint_count();
+  if (average < params_.min_success_rate && last_keypoint_count < params_.max_features) {
     map_->detector().dynamic_detector().TooFew();
   }
-  if (average > params_.max_success_rate) {
+  if (average > params_.max_success_rate && last_keypoint_count > params_.min_features) {
     map_->detector().dynamic_detector().TooMany();
   }
 }

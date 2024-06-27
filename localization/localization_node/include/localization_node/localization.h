@@ -34,6 +34,8 @@ struct ThresholdParams {
   int success_history_size;
   double min_success_rate;
   double max_success_rate;
+  int min_features;
+  int max_features;
 };
 
 class Localizer {

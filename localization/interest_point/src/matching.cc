@@ -73,7 +73,7 @@ namespace interest_point {
                                    double min_thresh, double default_thresh, double max_thresh):
     min_features_(min_features), max_features_(max_features), max_retries_(max_retries),
     min_thresh_(min_thresh), default_thresh_(default_thresh), max_thresh_(max_thresh),
-    dynamic_thresh_(default_thresh) {}
+    dynamic_thresh_(default_thresh), last_keypoint_count_(0) {}
 
   void DynamicDetector::GetDetectorParams(int & min_features, int & max_features, int & max_retries,
                                           double & min_thresh, double & default_thresh,
@@ -93,6 +93,7 @@ namespace interest_point {
     for (unsigned int i = 0; i < max_retries_; i++) {
       keypoints->clear();
       DetectImpl(image, keypoints);
+      last_keypoint_count_ = keypoints->size();
       if (keypoints->size() < min_features_)
         TooFew();
       else if (keypoints->size() > max_features_)

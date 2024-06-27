@@ -46,9 +46,12 @@ namespace interest_point {
     void GetDetectorParams(int & min_features, int & max_features, int & max_retries,
                            double & min_thresh, double & default_thresh, double & max_thresh);
 
+    int last_keypoint_count(void) { return last_keypoint_count_; }
+
    protected:
     unsigned int min_features_, max_features_, max_retries_;
     double min_thresh_, default_thresh_, max_thresh_, dynamic_thresh_;
+    int last_keypoint_count_;
   };
 
   class FeatureDetector {
