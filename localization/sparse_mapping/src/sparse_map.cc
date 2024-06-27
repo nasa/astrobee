@@ -760,6 +760,7 @@ bool SparseMap::Localize(cv::Mat const& test_descriptors, Eigen::Matrix2Xd const
     }
     if (add_cid) {
       indices.insert(indices.begin(), *best_previous_cid_);
+      query_scores.insert(query_scores.begin(), query_scores[0]);
     }
     best_previous_cid_ = boost::none;
   }
@@ -788,6 +789,12 @@ bool SparseMap::Localize(cv::Mat const& test_descriptors, Eigen::Matrix2Xd const
     if (loc_params_.verbose_localization) std::cout << "Checking index: " << i << ", cid: " << cid << std::endl;
     similarity_rank.emplace_back(0);
     all_matches.emplace_back(std::vector<cv::DMatch>());
+    if (query_scores[i]/ static_cast<double>(query_scores[0]) < loc_params_.min_query_score_ratio) {
+      if (loc_params_.verbose_localization)
+        std::cout << "Query score ratio too low: " << query_scores[i] / static_cast<double>(query_scores[0])
+                  << std::endl;
+      continue;
+    }
     interest_point::FindMatches(test_descriptors, cid_to_descriptor_map_[cid], &all_matches[i],
                                 loc_params_.hamming_distance, loc_params_.goodness_ratio);
 
@@ -840,6 +847,7 @@ bool SparseMap::Localize(cv::Mat const& test_descriptors, Eigen::Matrix2Xd const
         // Make new matching cid the next cid to match to
         if (add_cid) {
           indices.insert(indices.begin() + index, matching_cid);
+          query_scores.insert(query_scores.begin() + index, query_scores[0]);
           ++index;
         }
       }

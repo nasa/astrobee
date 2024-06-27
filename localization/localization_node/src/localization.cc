@@ -46,6 +46,7 @@ void Localizer::ReadParams(config_reader::ConfigReader& config) {
   // Loc params
   sparse_mapping::LocalizationParameters loc_params;
   LOAD_PARAM(loc_params.num_similar, config, prefix);
+  LOAD_PARAM(loc_params.min_query_score_ratio, config, prefix);
   LOAD_PARAM(loc_params.ransac_inlier_tolerance, config, prefix);
   LOAD_PARAM(loc_params.num_ransac_iterations, config, prefix);
   LOAD_PARAM(loc_params.early_break_landmarks, config, prefix);

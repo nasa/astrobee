@@ -22,6 +22,7 @@
 namespace sparse_mapping {
 struct LocalizationParameters {
   int num_similar;
+  double min_query_score_ratio;
   int ransac_inlier_tolerance;
   int num_ransac_iterations;
   int early_break_landmarks;
@@ -31,7 +32,7 @@ struct LocalizationParameters {
   bool add_similar_images;
   bool add_best_previous_image;
   int hamming_distance;
-  double  goodness_ratio;
+  double goodness_ratio;
   bool use_clahe;
   int num_extra_localization_db_images;
   bool verbose_localization;
