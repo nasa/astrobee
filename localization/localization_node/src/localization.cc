@@ -72,6 +72,11 @@ void Localizer::ReadParams(config_reader::ConfigReader& config) {
   LOAD_PARAM(min_features, config, prefix);
   LOAD_PARAM(max_features, config, prefix);
 
+  // Localizer threshold params
+  LOAD_PARAM(params_.success_history_size, config, prefix);
+  LOAD_PARAM(params_.min_success_rate, config, prefix);
+  LOAD_PARAM(params_.max_success_rate, config, prefix);
+
   // This check must happen before the histogram_equalization flag is set into the map
   // to compare with what is there already.
   sparse_mapping::HistogramEqualizationCheck(map_->GetHistogramEqualization(),
@@ -109,9 +114,13 @@ bool Localizer::Localize(cv_bridge::CvImageConstPtr image_ptr, ff_msgs::VisualLa
   std::vector<Eigen::Vector2d> observations;
   if (!map_->Localize(image_descriptors, *image_keypoints,
                                &camera, &landmarks, &observations, nullptr, image_ptr->image)) {
+    successes_.emplace_back(0);
+    AdjustThresholds();
     // LOG(INFO) << "Failed to localize image.";
     return false;
   }
+  successes_.emplace_back(1);
+  AdjustThresholds();
 
   Eigen::Affine3d global_pose = camera.GetTransform().inverse();
   Eigen::Quaterniond quat(global_pose.rotation());
@@ -134,4 +143,18 @@ bool Localizer::Localize(cv_bridge::CvImageConstPtr image_ptr, ff_msgs::VisualLa
   return true;
 }
 
-};  // namespace localization_node
+void Localizer::AdjustThresholds() {
+  if (successes_.size() < params_.success_history_size) return;
+  while (successes_.size() > params_.success_history_size) {
+    successes_.pop_front();
+  }
+  const double average =
+    std::accumulate(successes_.cbegin(), successes_.cend(), 0) / static_cast<double>(successes_.size());
+  if (average < params_.min_success_rate) {
+    map_->detector().dynamic_detector().TooFew();
+  }
+  if (average > params_.max_success_rate) {
+    map_->detector().dynamic_detector().TooMany();
+  }
+}
+}  // namespace localization_node

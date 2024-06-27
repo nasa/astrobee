@@ -26,7 +26,15 @@
 #include <ff_msgs/VisualLandmarks.h>
 #include <sensor_msgs/PointCloud2.h>
 
+#include <deque>
+
 namespace localization_node {
+
+struct ThresholdParams {
+  int success_history_size;
+  double min_success_rate;
+  double max_success_rate;
+};
 
 class Localizer {
  public:
@@ -35,7 +43,12 @@ class Localizer {
   bool Localize(cv_bridge::CvImageConstPtr image_ptr, ff_msgs::VisualLandmarks* vl,
      Eigen::Matrix2Xd* image_keypoints = NULL);
  private:
+  void AdjustThresholds();
+
   sparse_mapping::SparseMap* map_;
+  // Success params for adjusting keypoint thresholds
+  std::deque<int> successes_;
+  ThresholdParams params_;
 };
 
 };  // namespace localization_node

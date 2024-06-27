@@ -221,6 +221,7 @@ struct SparseMap {
   void PruneMap(void);
 
   std::string GetDetectorName() { return detector_.GetDetectorName(); }
+  interest_point::FeatureDetector& detector() { return detector_; }
   int GetHistogramEqualization() {return loc_params_.histogram_equalization;}
   const LocalizationParameters& loc_params() { return loc_params_; }
 

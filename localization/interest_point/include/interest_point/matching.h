@@ -82,6 +82,8 @@ namespace interest_point {
     friend bool operator== (FeatureDetector const& A, FeatureDetector const& B) {
       return (A.detector_name_ == B.detector_name_);
     }
+
+    DynamicDetector& dynamic_detector() { return *detector_; }
   };
 
   /**
