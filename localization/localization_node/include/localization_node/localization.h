@@ -36,6 +36,9 @@ struct ThresholdParams {
   double max_success_rate;
   int min_features;
   int max_features;
+  bool adjust_hamming_distance;
+  int min_hamming_distance;
+  int max_hamming_distance;
 };
 
 class Localizer {

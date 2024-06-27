@@ -78,6 +78,9 @@ void Localizer::ReadParams(config_reader::ConfigReader& config) {
   LOAD_PARAM(params_.max_success_rate, config, prefix);
   LOAD_PARAM(params_.min_features, config, prefix);
   LOAD_PARAM(params_.max_features, config, prefix);
+  LOAD_PARAM(params_.adjust_hamming_distance, config, prefix);
+  LOAD_PARAM(params_.min_hamming_distance, config, prefix);
+  LOAD_PARAM(params_.max_hamming_distance, config, prefix);
 
   // This check must happen before the histogram_equalization flag is set into the map
   // to compare with what is there already.
@@ -153,11 +156,27 @@ void Localizer::AdjustThresholds() {
   const double average =
     std::accumulate(successes_.cbegin(), successes_.cend(), 0) / static_cast<double>(successes_.size());
   const int last_keypoint_count = map_->detector().dynamic_detector().last_keypoint_count();
-  if (average < params_.min_success_rate && last_keypoint_count < params_.max_features) {
-    map_->detector().dynamic_detector().TooFew();
+  if (average < params_.min_success_rate) {
+    if (last_keypoint_count < params_.max_features) {
+      map_->detector().dynamic_detector().TooFew();
+    } else if (params_.adjust_hamming_distance) {
+      const int current_hamming_distance = map_->loc_params().hamming_distance;
+      const int new_hamming_distance = current_hamming_distance + 3;
+      if (new_hamming_distance <= params_.max_hamming_distance) {
+        map_->loc_params().hamming_distance = new_hamming_distance;
+      }
+    }
   }
-  if (average > params_.max_success_rate && last_keypoint_count > params_.min_features) {
-    map_->detector().dynamic_detector().TooMany();
+  if (average > params_.max_success_rate) {
+    if (last_keypoint_count > params_.min_features) {
+      map_->detector().dynamic_detector().TooMany();
+    } else if (params_.adjust_hamming_distance) {
+      const int current_hamming_distance = map_->loc_params().hamming_distance;
+      const int new_hamming_distance = current_hamming_distance - 3;
+      if (new_hamming_distance >= params_.min_hamming_distance) {
+        map_->loc_params().hamming_distance = new_hamming_distance;
+      }
+    }
   }
 }
 }  // namespace localization_node

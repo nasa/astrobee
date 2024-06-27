@@ -96,6 +96,8 @@ struct SparseMap {
 
   // Set loc params
   void SetLocParams(const LocalizationParameters& loc_params);
+  const LocalizationParameters& loc_params() const { return loc_params_; }
+  LocalizationParameters& loc_params() { return loc_params_; }
 
   void SetDetectorParams(int min_features, int max_features, int retries,
                          double min_thresh, double default_thresh, double max_thresh);
@@ -223,7 +225,6 @@ struct SparseMap {
   std::string GetDetectorName() { return detector_.GetDetectorName(); }
   interest_point::FeatureDetector& detector() { return detector_; }
   int GetHistogramEqualization() {return loc_params_.histogram_equalization;}
-  const LocalizationParameters& loc_params() { return loc_params_; }
 
   // stored in map file
   std::vector<std::string> cid_to_filename_;
