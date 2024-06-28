@@ -50,6 +50,10 @@
 DEFINE_int32(num_similar, 20,
              "Use in localization this many images which "
              "are most similar to the image to localize.");
+DEFINE_double(min_query_score_ratio, 0,
+             "Use in localization as a threshold for including "
+             "db images. Min ratio between best query and current query"
+             "db image scores for a map image to be matched with.");
 DEFINE_int32(num_ransac_iterations, 1000,
              "Use in localization this many ransac iterations.");
 DEFINE_int32(ransac_inlier_tolerance, 3,
@@ -58,6 +62,10 @@ DEFINE_int32(early_break_landmarks, 100,
              "Break early when we have this many landmarks during localization.");
 DEFINE_bool(histogram_equalization, false,
             "If true, equalize the histogram for images to improve robustness to illumination conditions.");
+DEFINE_int32(localization_hamming_distance, 85,
+             "Used for localization. A smaller value keeps fewer but more reliable binary descriptor matches.");
+DEFINE_double(localization_goodness_ratio, 0.8,
+             "Used for localization. A smaller value keeps fewer but more reliable descriptor matches.");
 DEFINE_bool(use_clahe, false,
             "If true, use CLAHE if histogram equalization enabled.");
 DEFINE_int32(num_extra_localization_db_images, 0,
@@ -232,6 +240,7 @@ SparseMap::SparseMap(bool bundler_format, std::string const& filename, std::vect
 
 void SparseMap::SetDefaultLocParams() {
   loc_params_.num_similar = FLAGS_num_similar;
+  loc_params_.min_query_score_ratio = FLAGS_min_query_score_ratio;
   loc_params_.num_ransac_iterations = FLAGS_num_ransac_iterations;
   loc_params_.ransac_inlier_tolerance = FLAGS_ransac_inlier_tolerance;
   loc_params_.early_break_landmarks = FLAGS_early_break_landmarks;
@@ -240,6 +249,8 @@ void SparseMap::SetDefaultLocParams() {
   loc_params_.check_essential_matrix = FLAGS_localization_check_essential_matrix;
   loc_params_.add_similar_images = FLAGS_localization_add_similar_images;
   loc_params_.add_best_previous_image = FLAGS_localization_add_best_previous_image;
+  loc_params_.hamming_distance = FLAGS_localization_hamming_distance;
+  loc_params_.goodness_ratio = FLAGS_localization_goodness_ratio;
   loc_params_.num_extra_localization_db_images = FLAGS_num_extra_localization_db_images;
   loc_params_.verbose_localization = FLAGS_verbose_localization;
   loc_params_.visualize_localization_matches = FLAGS_visualize_localization_matches;
@@ -750,7 +761,6 @@ bool SparseMap::Localize(cv::Mat const& test_descriptors, Eigen::Matrix2Xd const
       indices.push_back(cid);
   }
 
-    LOG(ERROR) << "Test!";
   if (loc_params_.add_best_previous_image && best_previous_cid_) {
     bool add_cid = true;
     for (const auto cid : indices) {
@@ -790,7 +800,8 @@ bool SparseMap::Localize(cv::Mat const& test_descriptors, Eigen::Matrix2Xd const
     if (loc_params_.verbose_localization) std::cout << "Checking index: " << i << ", cid: " << cid << std::endl;
     similarity_rank.emplace_back(0);
     all_matches.emplace_back(std::vector<cv::DMatch>());
-    if (query_scores[i]/ static_cast<double>(query_scores[0]) < loc_params_.min_query_score_ratio) {
+    if (!query_scores.empty() && query_scores[0] != 0 &&
+        query_scores[i] / static_cast<double>(query_scores[0]) < loc_params_.min_query_score_ratio) {
       if (loc_params_.verbose_localization)
         std::cout << "Query score ratio too low: " << query_scores[i] / static_cast<double>(query_scores[0])
                   << std::endl;
