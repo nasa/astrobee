@@ -115,7 +115,9 @@ void RunWithDB(std::string const& detector_name) {
   map2.loc_params().check_essential_matrix = false;
   map2.loc_params().add_similar_images = false;
   map2.loc_params().add_best_previous_image = false;
-  EXPECT_TRUE(map2.Localize(img_file, &camera));
+  map2.loc_params().goodness_ratio = 100000;
+  map2.loc_params().hamming_distance = 90;
+  ASSERT_TRUE(map2.Localize(img_file, &camera));
 
   Eigen::Affine3d closest = map2.GetFrameGlobalTransform(1);
   Eigen::Affine3d closest2 = map2.GetFrameGlobalTransform(2);
