@@ -172,7 +172,7 @@ TEST_P(SparseMapTest, MapBuilding) {
     }
   }
   EXPECT_GT(map_loopback.GetNumLandmarks(), 30u);
-  EXPECT_EQ(map_loopback.GetRansacInlierTolerance(), 3);
+  EXPECT_EQ(map_loopback.loc_params().ransac_inlier_tolerance, 3);
   EXPECT_NEAR(map_loopback.GetCameraParameters().GetFocalLength(), 258.5, 1e-5);
 
   // Test Map Consistency?

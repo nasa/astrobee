@@ -103,8 +103,8 @@ class SparseMapTest : public ::testing::Test {
     EXPECT_GT(surf_map->GetNumLandmarks(), 30u);
     // should probably do some sanity check on the landmarks...
 
-    EXPECT_EQ(surf_map->GetRansacIterations(), 1000);
-    EXPECT_EQ(surf_map->GetRansacInlierTolerance(), 3);
+    EXPECT_EQ(surf_map->loc_params().num_ransac_iterations, 1000);
+    EXPECT_EQ(surf_map->loc_params().ransac_inlier_tolerance, 3);
     EXPECT_NEAR(surf_map->GetCameraParameters().GetFocalLength(), 258.5, 1e-5);
   }
 
