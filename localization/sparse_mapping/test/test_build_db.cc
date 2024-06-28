@@ -110,7 +110,11 @@ void RunWithDB(std::string const& detector_name) {
   LOG(INFO) << "\nLocalizing using the database\n";
 
   camera::CameraModel camera(Eigen::Vector3d(), Eigen::Matrix3d::Identity(), camera_params);
+
   std::string img_file = data_dir + "/m0004033.jpg";
+  map2.loc_params().check_essential_matrix = false;
+  map2.loc_params().add_similar_images = false;
+  map2.loc_params().add_best_previous_image = false;
   EXPECT_TRUE(map2.Localize(img_file, &camera));
 
   Eigen::Affine3d closest = map2.GetFrameGlobalTransform(1);

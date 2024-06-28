@@ -750,6 +750,7 @@ bool SparseMap::Localize(cv::Mat const& test_descriptors, Eigen::Matrix2Xd const
       indices.push_back(cid);
   }
 
+    LOG(ERROR) << "Test!";
   if (loc_params_.add_best_previous_image && best_previous_cid_) {
     bool add_cid = true;
     for (const auto cid : indices) {
