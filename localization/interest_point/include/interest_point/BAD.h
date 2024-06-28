@@ -2,7 +2,12 @@
  * @copyright 2021 Xoan Iago Suarez Canosa. All rights reserved.
  * Constact: iago.suarez@thegraffter.com
  * Software developed in the PhD: Low-level vision for resource-limited devices
+ * Repo link: https://github.com/iago-suarez/efficient-descriptors
+ * License: Apache 2
+ * TODO(rsoussan): Remove this and BAD.cpp and switch to opencv TEBLID if opencv
+ * version upgraded.
  */
+
 #ifndef INTEREST_POINT_BAD_H_
 #define INTEREST_POINT_BAD_H_
 

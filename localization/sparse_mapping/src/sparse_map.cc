@@ -256,7 +256,7 @@ void SparseMap::SetDefaultLocParams() {
   loc_params_.visualize_localization_matches = FLAGS_visualize_localization_matches;
   if (loc_params_.histogram_equalization && loc_params_.use_clahe) {
     clahe_ = cv::createCLAHE(2, cv::Size(8, 8));
-    loc_params_.histogram_equalization = 3;
+    loc_params_.histogram_equalization = HistogramEqualizationType::kCLAHE;
   }
 }
 
@@ -455,16 +455,14 @@ void SparseMap::Load(const std::string & protobuf_file, bool localization) {
 
   loc_params_.histogram_equalization = map.histogram_equalization();
 
-  assert(loc_params_.histogram_equalization == 0 || loc_params_.histogram_equalization == 1 ||
-         loc_params_.histogram_equalization == 2 || loc_params_.histogram_equalization == 3);
-
-  loc_params_.use_clahe = loc_params_.histogram_equalization == 3 ? true : false;
+  assert(loc_params_.histogram_equalization >=0 && loc_params_.histogram_equalization <= 3);
+  loc_params_.use_clahe = loc_params_.histogram_equalization == HistogramEqualizationType::kCLAHE ? true : false;
   if (loc_params_.use_clahe) clahe_ = cv::createCLAHE(2, cv::Size(8, 8));
 
   // For backward compatibility with old maps, allow a map to have its
   // histogram_equalization flag unspecified, but it is best to avoid
   // that situation, and rebuild the map if necessary.
-  if (loc_params_.histogram_equalization == 2)
+  if (loc_params_.histogram_equalization == HistogramEqualizationType::kUnknown)
     std::cout << "Warning: Unknown value of histogram_equalization! "
               << "It is strongly suggested to rebuild this map to avoid "
               << "poor quality results." << std::endl;
@@ -520,7 +518,7 @@ void SparseMap::Save(const std::string & protobuf_file) const {
   // For backward compatibility with old maps, allow a map to have its
   // histogram_equalization flag unspecified, but it is best to avoid
   // that situation, and rebuild the map if necessary.
-  if (loc_params_.histogram_equalization == 2)
+  if (loc_params_.histogram_equalization == HistogramEqualizationType::kUnknown)
     std::cout << "Warning: Unknown value of histogram_equalization! "
               << "It is strongly suggested to rebuild this map to avoid "
               << "poor quality results." << std::endl;

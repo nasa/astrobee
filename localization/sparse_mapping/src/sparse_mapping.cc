@@ -118,7 +118,8 @@ namespace sparse_mapping {
 void sparse_mapping::HistogramEqualizationCheck(int histogram_equalization1,
                                                 int histogram_equalization2) {
   // Ignore if either has unknown equalization value
-  if (histogram_equalization1 == 2 || histogram_equalization2 == 2) {
+  if (histogram_equalization1 == HistogramEqualizationType::kUnknown ||
+      histogram_equalization2 == HistogramEqualizationType::kUnknown) {
     return;
   } else if (histogram_equalization1 != histogram_equalization2) {
     LOG(FATAL) << "Incompatible values of histogram equalization detected.";
