@@ -17,7 +17,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 """
-Generates a new brisk map with a vocab database using the provided surf map.
+Generates a new teblid512 map with a vocab database using the provided surf map.
 """
 
 import argparse
@@ -28,7 +28,7 @@ import sys
 import localization_common.utilities as lu
 
 
-def make_brisk_map(surf_map, world, robot_name, map_directory=None):
+def make_teblid512_map(surf_map, world, robot_name, map_directory=None):
     # Set environment variables
     home = os.path.expanduser("~")
     robot_config_file = os.path.join("config/robots", robot_name + ".config")
@@ -38,34 +38,36 @@ def make_brisk_map(surf_map, world, robot_name, map_directory=None):
     os.environ["ASTROBEE_ROBOT"] = os.path.join(astrobee_path, robot_config_file)
     os.environ["ASTROBEE_WORLD"] = world
 
-    # Convert SURF to BRISK map
+    # Convert SURF to TEBLID512 map
     # Get full path to output file to avoid permission errors when running
     # command in maps directory
     map_name = lu.basename(surf_map)
-    build_brisk_map_output_file = os.path.join(
-        os.getcwd(), "rebuild_map_as_brisk_map.txt"
+    build_teblid512_map_output_file = os.path.join(
+        os.getcwd(), "rebuild_map_as_teblid512_map.txt"
     )
-    brisk_map = map_name + ".brisk.map"
-    shutil.copyfile(surf_map, brisk_map)
-    brisk_map_full_path = os.path.abspath(brisk_map)
+    teblid512_map = map_name + ".teblid512.map"
+    shutil.copyfile(surf_map, teblid512_map)
+    teblid512_map_full_path = os.path.abspath(teblid512_map)
     path = os.getcwd()
     # Change to map directory so relative image locations are correct if necessary
     if map_directory:
         os.chdir(map_directory)
-    build_brisk_map_command = (
-        "rosrun sparse_mapping build_map -rebuild -histogram_equalization -output_map "
-        + brisk_map_full_path
+    build_teblid512_map_command = (
+        "rosrun sparse_mapping build_map -rebuild -histogram_equalization -use_clahe -output_map "
+        + teblid512_map_full_path
     )
-    lu.run_command_and_save_output(build_brisk_map_command, build_brisk_map_output_file)
+    lu.run_command_and_save_output(
+        build_teblid512_map_command, build_teblid512_map_output_file
+    )
     # Change back to original directory so final map is saved there
     if map_directory:
         os.chdir(path)
 
     # Create vocabdb
-    brisk_vocabdb_map = map_name + ".brisk.vocabdb.map"
-    shutil.copyfile(brisk_map, brisk_vocabdb_map)
+    teblid512_vocabdb_map = map_name + ".teblid512.vocabdb.map"
+    shutil.copyfile(teblid512_map, teblid512_vocabdb_map)
     add_vocabdb_command = (
-        "rosrun sparse_mapping build_map -vocab_db -output_map " + brisk_vocabdb_map
+        "rosrun sparse_mapping build_map -vocab_db -output_map " + teblid512_vocabdb_map
     )
     lu.run_command_and_save_output(add_vocabdb_command, "build_vocabdb.txt")
 
@@ -75,7 +77,7 @@ if __name__ == "__main__":
         description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument(
-        "surf_map", help="Input SURF map to generate the BRISK map for."
+        "surf_map", help="Input SURF map to generate the TEBLID512 map for."
     )
     parser.add_argument("-w", "--world", default="iss")
     parser.add_argument("-r", "--robot-name", default="bumble")
@@ -83,7 +85,7 @@ if __name__ == "__main__":
         "-d",
         "--map-directory",
         default=None,
-        help="Location where surf map was created, needed to load images for BRISK map building since relative paths are used during map creation for the image locations. Defaults to current working directory.",
+        help="Location where surf map was created, needed to load images for TEBLID512 map building since relative paths are used during map creation for the image locations. Defaults to current working directory.",
     )
 
     args = parser.parse_args()
@@ -98,4 +100,4 @@ if __name__ == "__main__":
     surf_map = os.path.abspath(args.surf_map)
     if args.map_directory:
         args.map_directory = os.path.abspath(args.map_directory)
-    make_brisk_map(surf_map, args.world, args.robot_name, args.map_directory)
+    make_teblid512_map(surf_map, args.world, args.robot_name, args.map_directory)
