@@ -16,8 +16,9 @@
  * under the License.
  */
 
-#include <interest_point/matching.h>
+#include <interest_point/BAD.h>
 #include <interest_point/brisk.h>
+#include <interest_point/matching.h>
 #include <opencv2/xfeatures2d.hpp>
 
 #include <Eigen/Core>
@@ -31,10 +32,10 @@
 // same settings!
 // TODO(oalexan1): Ideally the settings used here must be saved in the
 // map file, for the localize executable to read them from there.
-DEFINE_int32(hamming_distance, 90,
+DEFINE_int32(hamming_distance, 85,
              "A smaller value keeps fewer but more reliable binary descriptor matches.");
 DEFINE_double(goodness_ratio, 0.8,
-              "A smaller value keeps fewer but more reliable float descriptor matches.");
+              "A smaller value keeps fewer but more reliable descriptor matches.");
 DEFINE_int32(orgbrisk_octaves, 4,
              "Number of octaves, or scale spaces, that BRISK will evaluate.");
 DEFINE_double(orgbrisk_pattern_scale, 1.0,
@@ -54,14 +55,14 @@ DEFINE_double(default_surf_threshold, 10,
               "Default threshold for feature detection using SURF.");
 DEFINE_double(max_surf_threshold, 1000,
               "Maximum threshold for feature detection using SURF.");
-// ORGBRISK detector
-DEFINE_int32(min_brisk_features, 400,
+// Binary detector
+DEFINE_int32(min_brisk_features, 1000,
              "Minimum number of features to be computed using ORGBRISK.");
-DEFINE_int32(max_brisk_features, 800,
+DEFINE_int32(max_brisk_features, 5000,
              "Maximum number of features to be computed using ORGBRISK.");
-DEFINE_double(min_brisk_threshold, 20,
+DEFINE_double(min_brisk_threshold, 10,
               "Minimum threshold for feature detection using ORGBRISK.");
-DEFINE_double(default_brisk_threshold, 90,
+DEFINE_double(default_brisk_threshold, 20,
               "Default threshold for feature detection using ORGBRISK.");
 DEFINE_double(max_brisk_threshold, 110,
               "Maximum threshold for feature detection using ORGBRISK.");
@@ -72,7 +73,7 @@ namespace interest_point {
                                    double min_thresh, double default_thresh, double max_thresh):
     min_features_(min_features), max_features_(max_features), max_retries_(max_retries),
     min_thresh_(min_thresh), default_thresh_(default_thresh), max_thresh_(max_thresh),
-    dynamic_thresh_(default_thresh) {}
+    dynamic_thresh_(default_thresh), last_keypoint_count_(0) {}
 
   void DynamicDetector::GetDetectorParams(int & min_features, int & max_features, int & max_retries,
                                           double & min_thresh, double & default_thresh,
@@ -92,6 +93,7 @@ namespace interest_point {
     for (unsigned int i = 0; i < max_retries_; i++) {
       keypoints->clear();
       DetectImpl(image, keypoints);
+      last_keypoint_count_ = keypoints->size();
       if (keypoints->size() < min_features_)
         TooFew();
       else if (keypoints->size() > max_features_)
@@ -175,6 +177,57 @@ namespace interest_point {
     cv::Ptr<cv::xfeatures2d::SURF> surf_;
   };
 
+  class TeblidDynamicDetector : public DynamicDetector {
+   public:
+    TeblidDynamicDetector(int min_features, int max_features, int max_retries,
+                        double min_thresh, double default_thresh, double max_thresh, bool use_512 = true)
+      : DynamicDetector(min_features, max_features, max_retries,
+                        min_thresh, default_thresh, max_thresh) {
+      if (use_512) {
+        teblid_ = upm::BAD::create(5.0, upm::BAD::SIZE_512_BITS);
+      } else {
+        teblid_ = upm::BAD::create(5.0, upm::BAD::SIZE_256_BITS);
+      }
+      Reset();
+    }
+
+    void Reset(void) {
+      brisk_ = interest_point::BRISK::create(dynamic_thresh_, FLAGS_orgbrisk_octaves,
+                                 FLAGS_orgbrisk_pattern_scale);
+    }
+
+    virtual void DetectImpl(const cv::Mat& image, std::vector<cv::KeyPoint>* keypoints) {
+      // std::cout << "detect max thresh: " << max_thresh_ << ", min: " << min_thresh_ << ", def: " << default_thresh_
+      // << ", min feat: " << min_features_ << ", max_feat: " << max_features_ << ", dyn thresh: " << dynamic_thresh_ <<
+      // std::endl;
+      brisk_->detect(image, *keypoints);
+    }
+    virtual void ComputeImpl(const cv::Mat& image, std::vector<cv::KeyPoint>* keypoints,
+                             cv::Mat* keypoints_description) {
+      teblid_->compute(image, *keypoints, *keypoints_description);
+    }
+    virtual void TooMany(void) {
+      dynamic_thresh_ *= 1.1;
+      dynamic_thresh_ = static_cast<int>(dynamic_thresh_);  // for backwards compatibility
+      if (dynamic_thresh_ > max_thresh_)
+        dynamic_thresh_ = max_thresh_;
+      brisk_->setThreshold(dynamic_thresh_);
+    }
+    virtual void TooFew(void) {
+      dynamic_thresh_ *= 0.9;
+      dynamic_thresh_ = static_cast<int>(dynamic_thresh_);  // for backwards compatibility
+      if (dynamic_thresh_ < min_thresh_)
+        dynamic_thresh_ = min_thresh_;
+      brisk_->setThreshold(dynamic_thresh_);
+    }
+
+   private:
+    cv::Ptr<cv::Feature2D> teblid_;
+    cv::Ptr<interest_point::BRISK> brisk_;
+  };
+
+
+
   FeatureDetector::FeatureDetector(std::string const& detector_name,
                                    int min_features, int max_features, int retries,
                                    double min_thresh, double default_thresh, double max_thresh) {
@@ -218,7 +271,8 @@ namespace interest_point {
         min_thresh     = FLAGS_min_surf_threshold;
         default_thresh = FLAGS_default_surf_threshold;
         max_thresh     = FLAGS_max_surf_threshold;
-      } else if (detector_name == "ORGBRISK") {
+      } else if (detector_name == "ORGBRISK" || detector_name == "TEBLID512" ||
+                 detector_name == "TEBLID256") {
         min_features   = FLAGS_min_brisk_features;
         max_features   = FLAGS_max_brisk_features;
         retries        = FLAGS_detection_retries;
@@ -237,8 +291,16 @@ namespace interest_point {
     else if (detector_name == "SURF")
       detector_ = new SurfDynamicDetector(min_features, max_features, retries,
                                           min_thresh, default_thresh, max_thresh);
+    else if (detector_name == "TEBLID512")
+      detector_ = new TeblidDynamicDetector(min_features, max_features, retries,
+                                          min_thresh, default_thresh, max_thresh, true);
+    else if (detector_name == "TEBLID256")
+      detector_ = new TeblidDynamicDetector(min_features, max_features, retries,
+                                          min_thresh, default_thresh, max_thresh, false);
     else
       LOG(FATAL) << "Unimplemented feature detector: " << detector_name;
+
+    LOG(INFO) << "Using descriptor: " << detector_name;
   }
 
   void FeatureDetector::Detect(const cv::Mat& image,
@@ -256,11 +318,15 @@ namespace interest_point {
     }
   }
 
-  void FindMatches(const cv::Mat & img1_descriptor_map,
-                   const cv::Mat & img2_descriptor_map, std::vector<cv::DMatch> * matches) {
+  void FindMatches(const cv::Mat& img1_descriptor_map, const cv::Mat& img2_descriptor_map,
+                   std::vector<cv::DMatch>* matches, boost::optional<int> hamming_distance,
+                   boost::optional<double> goodness_ratio) {
     CHECK(img1_descriptor_map.depth() ==
           img2_descriptor_map.depth())
       << "Mixed descriptor types. Did you mash BRISK with SIFT/SURF?";
+
+    if (!hamming_distance) hamming_distance = FLAGS_hamming_distance;
+    if (!goodness_ratio) goodness_ratio = FLAGS_goodness_ratio;
 
     // Check for early exit conditions
     matches->clear();
@@ -270,22 +336,23 @@ namespace interest_point {
 
     if (img1_descriptor_map.depth() == CV_8U) {
       // Binary descriptor
-
-      // cv::BFMatcher matcher(cv::NORM_HAMMING, true  /* Forward & Backward matching */);
       cv::FlannBasedMatcher matcher(cv::makePtr<cv::flann::LshIndexParams>(3, 18, 2));
-      matcher.match(img1_descriptor_map, img2_descriptor_map, *matches);
-
-      // Select only inlier matches that meet a BRISK threshold of
-      // of FLAGS_hamming_distance.
-      // TODO(oalexan1) This needs further study.
-      std::vector<cv::DMatch> inlier_matches;
-      inlier_matches.reserve(matches->size());  // This saves time in allocation
-      for (cv::DMatch const& dmatch : *matches) {
-        if (dmatch.distance < FLAGS_hamming_distance) {
-          inlier_matches.push_back(dmatch);
+      std::vector<std::vector<cv::DMatch> > possible_matches;
+      matcher.knnMatch(img1_descriptor_map, img2_descriptor_map, possible_matches, 2);
+      matches->clear();
+      matches->reserve(possible_matches.size());
+      for (std::vector<cv::DMatch> const& best_pair : possible_matches) {
+        if (best_pair.size() == 0 || best_pair.at(0).distance > *hamming_distance) continue;
+        if (best_pair.size() == 1) {
+          // This was the only best match, push it.
+          matches->push_back(best_pair.at(0));
+        } else {
+          // Push back a match only if it is a certain percent better than the next best.
+          if (best_pair.at(0).distance < *goodness_ratio * best_pair.at(1).distance) {
+            matches->push_back(best_pair[0]);
+          }
         }
       }
-      matches->swap(inlier_matches);  // Doesn't invoke a copy of all elements.
     } else {
       // Traditional floating point descriptor
       cv::FlannBasedMatcher matcher;
@@ -299,7 +366,7 @@ namespace interest_point {
           matches->push_back(best_pair.at(0));
         } else {
           // Push back a match only if it is 25% better than the next best.
-          if (best_pair.at(0).distance < FLAGS_goodness_ratio * best_pair.at(1).distance) {
+          if (best_pair.at(0).distance < *goodness_ratio * best_pair.at(1).distance) {
             matches->push_back(best_pair[0]);
           }
         }

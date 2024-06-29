@@ -80,7 +80,7 @@ void RunWithDB(std::string const& detector_name) {
   int num_similar = 6;
   std::string out_nvm = "output.nvm";
   sparse_mapping::SparseMap map(features_out);
-  map.SetNumSimilar(num_similar);
+  map.loc_params().num_similar = num_similar;
   EXPECT_EQ(static_cast<int>(map.vocab_db_.m_num_nodes), 3);
   map.DetectFeatures();
   std::string essential_file = "essential.csv";
@@ -105,13 +105,19 @@ void RunWithDB(std::string const& detector_name) {
 
   // Localize features with database.
   sparse_mapping::SparseMap map2(out_nvm);
-  map2.SetNumSimilar(num_similar);
+  map2.loc_params().num_similar = num_similar;
   LOG(INFO) << "\n\n================================================\n";
   LOG(INFO) << "\nLocalizing using the database\n";
 
   camera::CameraModel camera(Eigen::Vector3d(), Eigen::Matrix3d::Identity(), camera_params);
+
   std::string img_file = data_dir + "/m0004033.jpg";
-  EXPECT_TRUE(map2.Localize(img_file, &camera));
+  map2.loc_params().check_essential_matrix = false;
+  map2.loc_params().add_similar_images = false;
+  map2.loc_params().add_best_previous_image = false;
+  map2.loc_params().goodness_ratio = 100000;
+  map2.loc_params().hamming_distance = 90;
+  ASSERT_TRUE(map2.Localize(img_file, &camera));
 
   Eigen::Affine3d closest = map2.GetFrameGlobalTransform(1);
   Eigen::Affine3d closest2 = map2.GetFrameGlobalTransform(2);

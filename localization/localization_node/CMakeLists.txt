@@ -32,6 +32,7 @@ find_package(catkin2 REQUIRED COMPONENTS
   ff_util
   sparse_mapping
   msg_conversions
+  localization_common
 )
 
 # System dependencies are found with CMake's conventions
@@ -59,6 +60,7 @@ catkin_package(
     msg_conversions
     ff_util
     nodelet
+    localization_common
 )
 
 

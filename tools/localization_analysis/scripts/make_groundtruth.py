@@ -116,7 +116,7 @@ if __name__ == "__main__":
     )
 
     groundtruth_bag = map_name + ".bag"
-    groundtruth_map_file = map_name + ".brisk.vocabdb.map"
+    groundtruth_map_file = map_name + ".teblid512.vocabdb.map"
     groundtruth_pdf = "groundtruth.pdf"
     groundtruth_csv = "groundtruth.csv"
     make_groundtruth_command = (

@@ -89,7 +89,7 @@ def make_map(
         lu.run_command_and_save_output(merge_map_command, "merge_map.txt")
         bag_surf_map = merged_surf_map
 
-        # Link maps directory since conversion to BRISK map needs
+        # Link maps directory since conversion to TEBLID512 map needs
         # image files to appear to be in correct relative path
         build_map_command = (
             "rosrun sparse_mapping build_map -info -output_map " + base_surf_map
@@ -122,32 +122,33 @@ def make_map(
             os.symlink(bag_images, merged_bag_images)
             linked_map_images = True
 
-    # Convert SURF to BRISK map
+    # Convert SURF to TEBLID512 map
     # Get full path to output file to avoid permission errors when running
     # command in maps directory
-    rebuild_output_file = os.path.join(os.getcwd(), "rebuild_map_as_brisk_map.txt")
-    bag_brisk_map = map_name + ".brisk.map"
-    shutil.copyfile(bag_surf_map, bag_brisk_map)
-    bag_brisk_map_full_path = os.path.abspath(bag_brisk_map)
+    rebuild_output_file = os.path.join(os.getcwd(), "rebuild_map_as_teblid512_map.txt")
+    bag_teblid512_map = map_name + ".teblid512.map"
+    shutil.copyfile(bag_surf_map, bag_teblid512_map)
+    bag_teblid512_map_full_path = os.path.abspath(bag_teblid512_map)
     bag_path = os.getcwd()
     if merge_with_base_map:
         os.chdir("maps")
     rebuild_map_command = (
-        "rosrun sparse_mapping build_map -rebuild -output_map "
-        + bag_brisk_map_full_path
+        "rosrun sparse_mapping build_map -rebuild -rebuild_detector TEBLID512 -output_map "
+        + bag_teblid512_map_full_path
     )
     if histogram_equalization:
-        rebuild_map_command += " -histogram_equalization"
+        rebuild_map_command += " -histogram_equalization -use_clahe "
     lu.run_command_and_save_output(rebuild_map_command, rebuild_output_file)
     # Use bag_path since relative commands would now be wrt maps directory simlink
     if merge_with_base_map:
         os.chdir(bag_path)
 
     # Create vocabdb
-    bag_brisk_vocabdb_map = map_name + ".brisk.vocabdb.map"
-    shutil.copyfile(bag_brisk_map, bag_brisk_vocabdb_map)
+    bag_teblid512_vocabdb_map = map_name + ".teblid512.vocabdb.map"
+    shutil.copyfile(bag_teblid512_map, bag_teblid512_vocabdb_map)
     add_vocabdb_command = (
-        "rosrun sparse_mapping build_map -vocab_db -output_map " + bag_brisk_vocabdb_map
+        "rosrun sparse_mapping build_map -vocab_db -output_map "
+        + bag_teblid512_vocabdb_map
     )
     lu.run_command_and_save_output(add_vocabdb_command, "build_vocabdb.txt")
 
@@ -192,7 +193,7 @@ if __name__ == "__main__":
         "--no-histogram_equalization",
         dest="histogram_equalization",
         action="store_false",
-        help="Do not apply histrogram equalization during map creation.  Default behavior uses histogram equalization.",
+        help="Do not apply histrogram equalization during map creation.  Default behavior uses histogram equalization using CLAHE.",
     )
     parser.set_defaults(histogram_equalization=True)
 

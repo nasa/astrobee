@@ -144,6 +144,12 @@ namespace sparse_mapping {
   void PrintTrackStats(std::vector<std::map<int, int> >const& pid_to_cid_fid,
                        std::string const& step);
 
+  // Filter the matches by a geometric constraint. Compute the essential matrix.
+  void FindEssentialAndInliers(Eigen::Matrix2Xd const& keypoints1, Eigen::Matrix2Xd const& keypoints2,
+                               std::vector<cv::DMatch> const& matches, camera::CameraParameters const& camera_params,
+                               std::vector<cv::DMatch>* inlier_matches, std::vector<size_t>* vec_inliers,
+                               Eigen::Matrix3d* essential_matrix, const int ransac_iterations = 4096);
+
   void BuildMapFindEssentialAndInliers(const Eigen::Matrix2Xd & keypoints1,
                                        const Eigen::Matrix2Xd & keypoints2,
                                        const std::vector<cv::DMatch> & matches,

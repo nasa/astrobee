@@ -51,13 +51,13 @@ First copy the map that should be registered then run:
 
 The creation of registration points is detailed in `build_map.md`, images from the map are used to manually select feature locations and 3D points for these features are selected using a 3D model of the mapped environment provided externally.
 
-### 6. Build BRISK map for localization 
+### 6. Build TEBLID512 map for localization 
 Use:     
-`rosrun sparse_mapping make_brisk_map.py surf_map_name -r robot_name -w world_name -d map_directory`  
-to rebuild the SURF map with BRISK features for use with localization. 
+`rosrun sparse_mapping make_teblid512_map.py surf_map_name -r robot_name -w world_name -d map_directory`  
+to rebuild the SURF map with TEBLID512 features for use with localization. 
 
 
-### 7. Verify BRISK map using localization
+### 7. Verify TEBLID512 map using localization
 Use:     
 `rosrun sparse_mapping run_graph_bag_and_plot_results bag_name brisk_map_name config_path --generate-image-features -r robot_config -w world_name`  
 to test the map using localization. 

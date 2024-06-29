@@ -61,6 +61,7 @@ add_library(interest_point
   src/brisk.cc
   src/essential.cc
   src/matching.cc
+  src/BAD.cpp
 )
 add_dependencies(interest_point ${catkin_EXPORTED_TARGETS})
 target_link_libraries(interest_point ${OPENMVG_LIBRARIES} ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})

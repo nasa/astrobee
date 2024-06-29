@@ -38,7 +38,7 @@ bool interest_point::RobustEssential(Eigen::Matrix3d const& k1, Eigen::Matrix3d 
                                      std::pair<size_t, size_t> const& size1,
                                      std::pair<size_t, size_t> const& size2,
                                      double * error_max,
-                                     double precision) {
+                                     double precision, const int ransac_iterations) {
   CHECK(e) << "Missing e argument";
   CHECK(vec_inliers) << "Missing vec inliers argument";
 
@@ -53,7 +53,7 @@ bool interest_point::RobustEssential(Eigen::Matrix3d const& k1, Eigen::Matrix3d 
                     x2, size2.first, size2.second, k1, k2);
 
   std::pair<double, double> ransac_output =
-    openMVG::robust::ACRANSAC(kernel, *vec_inliers, 4096 /* iterations */,
+    openMVG::robust::ACRANSAC(kernel, *vec_inliers, ransac_iterations /* iterations */,
                               e, precision, false);
   *error_max = ransac_output.first;
 
