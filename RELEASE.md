@@ -1,5 +1,9 @@
 # Releases
 
+##Release 0.19.1
+
+  * Updated Map Matching with TEBLID and CLAHE
+
 ## Release 0.19.0
 
   * New split localizer
