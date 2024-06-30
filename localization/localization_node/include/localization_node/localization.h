@@ -24,6 +24,7 @@
 #include <config_reader/config_reader.h>
 #include <cv_bridge/cv_bridge.h>
 #include <ff_msgs/VisualLandmarks.h>
+#include <localization_common/timer.h>
 #include <sensor_msgs/PointCloud2.h>
 
 #include <deque>
@@ -54,6 +55,7 @@ class Localizer {
   // Success params for adjusting keypoint thresholds
   std::deque<int> successes_;
   ThresholdParams params_;
+  localization_common::Timer timer_ = localization_common::Timer("VL Runtime");
 };
 
 };  // namespace localization_node

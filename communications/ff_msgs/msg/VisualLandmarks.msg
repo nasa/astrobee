@@ -22,3 +22,4 @@ Header header # header with timestamp
 uint32 camera_id # image ID, associated with registration pulse
 geometry_msgs/Pose pose # estimated camera pose from features
 ff_msgs/VisualLandmark[] landmarks # list of all landmarks
+float32 runtime # Time it took to calculate the pose and matching landmarks

@@ -111,6 +111,7 @@ bool Localizer::Localize(cv_bridge::CvImageConstPtr image_ptr, ff_msgs::VisualLa
   vl->header.stamp = image_ptr->header.stamp;
   vl->header.frame_id = "world";
 
+  timer_.Start();
   map_->DetectFeatures(image_ptr->image, multithreaded, &image_descriptors, image_keypoints);
   camera::CameraModel camera(Eigen::Vector3d(),
                              Eigen::Matrix3d::Identity(),
@@ -122,14 +123,17 @@ bool Localizer::Localize(cv_bridge::CvImageConstPtr image_ptr, ff_msgs::VisualLa
     successes_.emplace_back(0);
     AdjustThresholds();
     // LOG(INFO) << "Failed to localize image.";
+    timer_.Stop();
     return false;
   }
   successes_.emplace_back(1);
   AdjustThresholds();
+  timer_.Stop();
 
   Eigen::Affine3d global_pose = camera.GetTransform().inverse();
   Eigen::Quaterniond quat(global_pose.rotation());
 
+  vl->runtime = timer_.last_value();
   vl->pose.position = msg_conversions::eigen_to_ros_point(global_pose.translation());
   vl->pose.orientation = msg_conversions::eigen_to_ros_quat(quat);
   assert(landmarks.size() == observations.size());
