@@ -1,0 +1,5 @@
+<map id="localization_common::PoseCovarianceInterpolater" name="localization_common::PoseCovarianceInterpolater">
+<area shape="rect" id="node1" title=" " alt="" coords="152,5,391,127"/>
+<area shape="rect" id="node2" href="$classlocalization__common_1_1DistanceScaledPoseCovarianceInterpolater.html" title=" " alt="" coords="5,175,247,311"/>
+<area shape="rect" id="node3" href="$classlocalization__common_1_1MarginalsPoseCovarianceInterpolater.html" title=" " alt="" coords="271,182,562,303"/>
+</map>

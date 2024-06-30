@@ -1,0 +1,5 @@
+<map id="vision_common::SpacedFeatureTrack" name="vision_common::SpacedFeatureTrack">
+<area shape="rect" id="node1" title=" " alt="" coords="17,491,247,656"/>
+<area shape="rect" id="node2" href="$classvision__common_1_1FeatureTrack.html" title=" " alt="" coords="24,321,240,443"/>
+<area shape="rect" id="node3" href="$classlocalization__common_1_1TimestampedSet.html" title=" " alt="" coords="5,5,259,273"/>
+</map>

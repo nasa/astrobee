@@ -1,0 +1,82 @@
+<map id="tools/localization_analysis/include/localization_analysis/feature_track_image_adder.h" name="tools/localization_analysis/include/localization_analysis/feature_track_image_adder.h">
+<area shape="rect" id="node1" title=" " alt="" coords="4061,5,4339,61"/>
+<area shape="rect" id="node2" href="$camera__params_8h.html" title=" " alt="" coords="1227,317,1419,344"/>
+<area shape="rect" id="node16" title=" " alt="" coords="3345,607,3407,634"/>
+<area shape="rect" id="node25" href="$vo__smart__projection__factor__adder_8h.html" title=" " alt="" coords="4036,109,4231,151"/>
+<area shape="rect" id="node69" href="$spaced__feature__tracker_8h.html" title=" " alt="" coords="4651,206,4826,247"/>
+<area shape="rect" id="node79" title=" " alt="" coords="4306,117,4473,143"/>
+<area shape="rect" id="node80" title=" " alt="" coords="4497,117,4661,143"/>
+<area shape="rect" id="node3" href="$config__reader_8h.html" title=" " alt="" coords="1457,407,1610,448"/>
+<area shape="rect" id="node15" title=" " alt="" coords="1497,697,1556,723"/>
+<area shape="rect" id="node23" title=" " alt="" coords="1341,414,1433,441"/>
+<area shape="rect" id="node24" title=" " alt="" coords="2088,607,2173,634"/>
+<area shape="rect" id="node4" title=" " alt="" coords="1821,511,1875,537"/>
+<area shape="rect" id="node5" title=" " alt="" coords="1899,511,1970,537"/>
+<area shape="rect" id="node6" title=" " alt="" coords="1270,511,1349,537"/>
+<area shape="rect" id="node7" title=" " alt="" coords="4560,697,4675,723"/>
+<area shape="rect" id="node8" title=" " alt="" coords="412,607,479,634"/>
+<area shape="rect" id="node9" title=" " alt="" coords="1373,511,1443,537"/>
+<area shape="rect" id="node10" title=" " alt="" coords="503,607,588,634"/>
+<area shape="rect" id="node11" title=" " alt="" coords="612,607,708,634"/>
+<area shape="rect" id="node12" title=" " alt="" coords="732,607,807,634"/>
+<area shape="rect" id="node13" title=" " alt="" coords="1623,511,1686,537"/>
+<area shape="rect" id="node14" title=" " alt="" coords="1710,511,1797,537"/>
+<area shape="rect" id="node17" href="$init_8h.html" title=" " alt="" coords="1467,511,1599,537"/>
+<area shape="rect" id="node18" href="$watch__files_8h.html" title=" " alt="" coords="789,503,942,545"/>
+<area shape="rect" id="node19" title=" " alt="" coords="1051,607,1119,634"/>
+<area shape="rect" id="node20" title=" " alt="" coords="1143,607,1206,634"/>
+<area shape="rect" id="node21" title=" " alt="" coords="831,607,929,634"/>
+<area shape="rect" id="node22" title=" " alt="" coords="954,607,1027,634"/>
+<area shape="rect" id="node26" href="$measurement__based__factor__adder_8h.html" title=" " alt="" coords="4461,407,4667,448"/>
+<area shape="rect" id="node38" href="$vo__smart__projection__factor__adder__params_8h.html" title=" " alt="" coords="4042,199,4225,255"/>
+<area shape="rect" id="node45" href="$robust__smart__projection__pose__factor_8h.html" title=" " alt="" coords="966,496,1143,552"/>
+<area shape="rect" id="node50" href="$localization_2localization__common_2include_2localization__common_2utilities_8h.html" title=" " alt="" coords="2685,206,2846,247"/>
+<area shape="rect" id="node66" href="$feature__points__measurement_8h.html" title=" " alt="" coords="5362,407,5593,448"/>
+<area shape="rect" id="node74" href="$localization_2vision__common_2include_2vision__common_2utilities_8h.html" title=" " alt="" coords="4133,414,4323,441"/>
+<area shape="rect" id="node27" href="$factor__adder_8h.html" title=" " alt="" coords="4482,503,4635,545"/>
+<area shape="rect" id="node32" href="$timestamped__set_8h.html" title=" " alt="" coords="4874,503,5035,545"/>
+<area shape="rect" id="node28" href="$factor__adder__params_8h.html" title=" " alt="" coords="4425,600,4578,641"/>
+<area shape="rect" id="node29" href="$time_8h.html" title=" " alt="" coords="5301,600,5462,641"/>
+<area shape="rect" id="node30" title=" " alt="" coords="3815,600,4009,641"/>
+<area shape="rect" id="node31" title=" " alt="" coords="4602,600,4745,641"/>
+<area shape="rect" id="node33" href="$logger_8h.html" title=" " alt="" coords="4769,600,4930,641"/>
+<area shape="rect" id="node34" title=" " alt="" coords="4954,607,5097,634"/>
+<area shape="rect" id="node35" title=" " alt="" coords="5121,600,5277,641"/>
+<area shape="rect" id="node36" title=" " alt="" coords="5611,607,5661,634"/>
+<area shape="rect" id="node37" title=" " alt="" coords="2003,607,2063,634"/>
+<area shape="rect" id="node39" href="$spaced__feature__tracker__params_8h.html" title=" " alt="" coords="4641,310,4837,351"/>
+<area shape="rect" id="node41" title=" " alt="" coords="3213,414,3398,441"/>
+<area shape="rect" id="node42" title=" " alt="" coords="3769,317,3967,344"/>
+<area shape="rect" id="node43" title=" " alt="" coords="3423,414,3620,441"/>
+<area shape="rect" id="node44" title=" " alt="" coords="4093,317,4334,344"/>
+<area shape="rect" id="node40" href="$feature__tracker__params_8h.html" title=" " alt="" coords="4793,407,4969,448"/>
+<area shape="rect" id="node46" href="$cumulative__factor_8h.html" title=" " alt="" coords="98,600,286,641"/>
+<area shape="rect" id="node49" title=" " alt="" coords="1282,600,1489,641"/>
+<area shape="rect" id="node47" title=" " alt="" coords="5,689,200,731"/>
+<area shape="rect" id="node48" title=" " alt="" coords="224,697,339,723"/>
+<area shape="rect" id="node51" title=" " alt="" coords="3026,317,3241,344"/>
+<area shape="rect" id="node52" title=" " alt="" coords="3265,317,3450,344"/>
+<area shape="rect" id="node53" title=" " alt="" coords="1595,317,1797,344"/>
+<area shape="rect" id="node54" href="$combined__nav__state_8h.html" title=" " alt="" coords="2828,310,3001,351"/>
+<area shape="rect" id="node58" href="$combined__nav__state__covariances_8h.html" title=" " alt="" coords="1873,303,2034,359"/>
+<area shape="rect" id="node60" href="$pose__with__covariance_8h.html" title=" " alt="" coords="3797,407,3979,448"/>
+<area shape="rect" id="node61" href="$msg__conversions_8h.html" title=" " alt="" coords="2058,310,2225,351"/>
+<area shape="rect" id="node62" title=" " alt="" coords="2031,414,2206,441"/>
+<area shape="rect" id="node63" title=" " alt="" coords="2281,414,2548,441"/>
+<area shape="rect" id="node64" title=" " alt="" coords="2300,317,2532,344"/>
+<area shape="rect" id="node65" title=" " alt="" coords="2556,317,2703,344"/>
+<area shape="rect" id="node55" title=" " alt="" coords="3033,414,3188,441"/>
+<area shape="rect" id="node56" title=" " alt="" coords="2573,407,2779,448"/>
+<area shape="rect" id="node57" title=" " alt="" coords="2804,414,3009,441"/>
+<area shape="rect" id="node59" title=" " alt="" coords="3465,511,3591,537"/>
+<area shape="rect" id="node67" href="$measurement_8h.html" title=" " alt="" coords="5412,503,5615,545"/>
+<area shape="rect" id="node68" href="$feature__point_8h.html" title=" " alt="" coords="5111,503,5287,545"/>
+<area shape="rect" id="node70" href="$feature__tracker_8h.html" title=" " alt="" coords="5060,310,5236,351"/>
+<area shape="rect" id="node72" href="$spaced__feature__track_8h.html" title=" " alt="" coords="4861,310,5035,351"/>
+<area shape="rect" id="node73" title=" " alt="" coords="5244,414,5287,441"/>
+<area shape="rect" id="node71" href="$feature__track_8h.html" title=" " alt="" coords="4993,407,5169,448"/>
+<area shape="rect" id="node75" href="$standstill__params_8h.html" title=" " alt="" coords="4660,503,4849,545"/>
+<area shape="rect" id="node76" title=" " alt="" coords="3769,511,3925,537"/>
+<area shape="rect" id="node77" title=" " alt="" coords="3949,511,4126,537"/>
+<area shape="rect" id="node78" title=" " alt="" coords="4151,511,4305,537"/>
+</map>

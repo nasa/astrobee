@@ -1,0 +1,47 @@
+<map id="localization/sparse_mapping/src/vocab_tree.cc" name="localization/sparse_mapping/src/vocab_tree.cc">
+<area shape="rect" id="node1" title=" " alt="" coords="2192,5,2395,47"/>
+<area shape="rect" id="node2" href="$vocab__tree_8h.html" title=" " alt="" coords="115,184,287,225"/>
+<area shape="rect" id="node4" title=" " alt="" coords="299,541,362,568"/>
+<area shape="rect" id="node5" title=" " alt="" coords="1937,541,1996,568"/>
+<area shape="rect" id="node7" href="$sparse__map_8h.html" title=" " alt="" coords="1027,95,1203,136"/>
+<area shape="rect" id="node14" href="$sparse__mapping_8h.html" title=" " alt="" coords="560,184,736,225"/>
+<area shape="rect" id="node20" title=" " alt="" coords="1815,459,1929,486"/>
+<area shape="rect" id="node42" title=" " alt="" coords="2356,102,2489,129"/>
+<area shape="rect" id="node43" title=" " alt="" coords="2514,102,2723,129"/>
+<area shape="rect" id="node44" href="$utils_8h.html" title=" " alt="" coords="1996,281,2135,307"/>
+<area shape="rect" id="node45" title=" " alt="" coords="2799,102,2934,129"/>
+<area shape="rect" id="node3" title=" " alt="" coords="94,273,287,315"/>
+<area shape="rect" id="node6" title=" " alt="" coords="413,281,464,307"/>
+<area shape="rect" id="node8" href="$eigen__vectors_8h.html" title=" " alt="" coords="589,281,792,307"/>
+<area shape="rect" id="node9" title=" " alt="" coords="353,370,479,397"/>
+<area shape="rect" id="node11" href="$matching_8h.html" title=" " alt="" coords="1328,191,1517,218"/>
+<area shape="rect" id="node15" href="$camera__params_8h.html" title=" " alt="" coords="1679,281,1871,307"/>
+<area shape="rect" id="node35" href="$camera__model_8h.html" title=" " alt="" coords="1551,191,1735,218"/>
+<area shape="rect" id="node36" title=" " alt="" coords="811,191,981,218"/>
+<area shape="rect" id="node37" title=" " alt="" coords="1005,191,1069,218"/>
+<area shape="rect" id="node38" title=" " alt="" coords="2156,370,2231,397"/>
+<area shape="rect" id="node39" title=" " alt="" coords="1093,191,1136,218"/>
+<area shape="rect" id="node40" title=" " alt="" coords="1161,191,1221,218"/>
+<area shape="rect" id="node41" title=" " alt="" coords="1245,191,1304,218"/>
+<area shape="rect" id="node10" title=" " alt="" coords="503,370,627,397"/>
+<area shape="rect" id="node12" title=" " alt="" coords="1453,273,1603,315"/>
+<area shape="rect" id="node13" title=" " alt="" coords="703,370,795,397"/>
+<area shape="rect" id="node16" href="$config__reader_8h.html" title=" " alt="" coords="1141,363,1294,404"/>
+<area shape="rect" id="node34" title=" " alt="" coords="1996,370,2081,397"/>
+<area shape="rect" id="node17" title=" " alt="" coords="1043,459,1098,486"/>
+<area shape="rect" id="node18" title=" " alt="" coords="1122,459,1193,486"/>
+<area shape="rect" id="node19" title=" " alt="" coords="1217,459,1295,486"/>
+<area shape="rect" id="node21" title=" " alt="" coords="787,541,853,568"/>
+<area shape="rect" id="node22" title=" " alt="" coords="1319,459,1390,486"/>
+<area shape="rect" id="node23" title=" " alt="" coords="877,541,963,568"/>
+<area shape="rect" id="node24" title=" " alt="" coords="987,541,1083,568"/>
+<area shape="rect" id="node25" title=" " alt="" coords="1348,541,1423,568"/>
+<area shape="rect" id="node26" title=" " alt="" coords="1414,459,1477,486"/>
+<area shape="rect" id="node27" title=" " alt="" coords="1501,459,1587,486"/>
+<area shape="rect" id="node28" href="$init_8h.html" title=" " alt="" coords="785,459,917,486"/>
+<area shape="rect" id="node29" href="$watch__files_8h.html" title=" " alt="" coords="555,452,709,493"/>
+<area shape="rect" id="node30" title=" " alt="" coords="386,541,454,568"/>
+<area shape="rect" id="node31" title=" " alt="" coords="478,541,541,568"/>
+<area shape="rect" id="node32" title=" " alt="" coords="565,541,664,568"/>
+<area shape="rect" id="node33" title=" " alt="" coords="689,541,762,568"/>
+</map>

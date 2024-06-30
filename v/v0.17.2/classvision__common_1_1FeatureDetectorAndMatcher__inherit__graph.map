@@ -1,0 +1,6 @@
+<map id="vision_common::FeatureDetectorAndMatcher" name="vision_common::FeatureDetectorAndMatcher">
+<area shape="rect" id="node1" title=" " alt="" coords="291,5,529,112"/>
+<area shape="rect" id="node2" href="$classvision__common_1_1BriskFeatureDetectorAndMatcher.html" title=" " alt="" coords="5,167,268,274"/>
+<area shape="rect" id="node3" href="$classvision__common_1_1LKOpticalFlowFeatureDetectorAndMatcher.html" title=" " alt="" coords="292,160,528,281"/>
+<area shape="rect" id="node4" href="$classvision__common_1_1SurfFeatureDetectorAndMatcher.html" title=" " alt="" coords="553,167,809,274"/>
+</map>

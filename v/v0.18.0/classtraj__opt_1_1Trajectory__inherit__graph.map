@@ -1,0 +1,6 @@
+<map id="traj_opt::Trajectory" name="traj_opt::Trajectory">
+<area shape="rect" id="node1" title=" " alt="" coords="243,5,395,215"/>
+<area shape="rect" id="node2" href="$classtraj__opt_1_1LegendreTrajectory.html" title=" " alt="" coords="5,380,209,633"/>
+<area shape="rect" id="node3" href="$classtraj__opt_1_1MsgTrajectory.html" title=" " alt="" coords="234,402,405,611"/>
+<area shape="rect" id="node4" href="$classtraj__opt_1_1NonlinearTrajectory.html" title=" " alt="" coords="429,263,636,751"/>
+</map>

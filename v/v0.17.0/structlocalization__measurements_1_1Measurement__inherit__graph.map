@@ -1,0 +1,11 @@
+<map id="localization_measurements::Measurement" name="localization_measurements::Measurement">
+<area shape="rect" id="node1" title=" " alt="" coords="869,5,1071,127"/>
+<area shape="rect" id="node2" href="$structlocalization__measurements_1_1DepthImageMeasurement.html" title=" " alt="" coords="5,211,223,303"/>
+<area shape="rect" id="node3" href="$structlocalization__measurements_1_1DepthOdometryMeasurement.html" title=" " alt="" coords="247,204,488,311"/>
+<area shape="rect" id="node4" href="$structlocalization__measurements_1_1FeaturePointsMeasurement.html" title=" " alt="" coords="512,211,721,303"/>
+<area shape="rect" id="node5" href="$structlocalization__measurements_1_1HandrailPointsMeasurement.html" title=" " alt="" coords="746,175,962,340"/>
+<area shape="rect" id="node6" href="$structlocalization__measurements_1_1ImageMeasurement.html" title=" " alt="" coords="986,211,1189,303"/>
+<area shape="rect" id="node7" href="$structlocalization__measurements_1_1ImuMeasurement.html" title=" " alt="" coords="1213,197,1415,318"/>
+<area shape="rect" id="node8" href="$structlocalization__measurements_1_1MatchedProjectionsMeasurement.html" title=" " alt="" coords="1439,204,1687,311"/>
+<area shape="rect" id="node9" href="$structlocalization__measurements_1_1PointCloudMeasurement.html" title=" " alt="" coords="1712,211,1919,303"/>
+</map>

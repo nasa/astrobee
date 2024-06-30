@@ -1,0 +1,5 @@
+<map id="depth_odometry::DepthOdometry" name="depth_odometry::DepthOdometry">
+<area shape="rect" id="node1" title=" " alt="" coords="205,5,445,83"/>
+<area shape="rect" id="node2" href="$classdepth__odometry_1_1ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometry.html" title=" " alt="" coords="5,131,325,281"/>
+<area shape="rect" id="node3" href="$classdepth__odometry_1_1PointToPlaneICPDepthOdometry.html" title=" " alt="" coords="350,138,621,274"/>
+</map>

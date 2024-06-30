@@ -1,0 +1,18 @@
+<map id="localization/vision_common/include/vision_common/spaced_feature_tracker.h" name="localization/vision_common/include/vision_common/spaced_feature_tracker.h">
+<area shape="rect" id="node1" title=" " alt="" coords="589,5,780,76"/>
+<area shape="rect" id="node2" href="$vo__smart__projection__factor__adder_8h.html" title=" " alt="" coords="437,124,647,195"/>
+<area shape="rect" id="node14" href="$feature__track__image__adder_8h.html" title=" " alt="" coords="546,243,823,299"/>
+<area shape="rect" id="node16" href="$spaced__feature__tracker_8cc.html" title=" " alt="" coords="722,131,935,187"/>
+<area shape="rect" id="node3" href="$graph__vio_2include_2graph__vio_2graph__vio_8h.html" title=" " alt="" coords="290,243,458,299"/>
+<area shape="rect" id="node4" href="$graph__vio_2src_2graph__vio_8cc.html" title=" " alt="" coords="84,354,243,395"/>
+<area shape="rect" id="node5" href="$ros__graph__vio__wrapper_8h.html" title=" " alt="" coords="267,347,481,403"/>
+<area shape="rect" id="node6" href="$ros__graph__localizer__nodelet_8h.html" title=" " alt="" coords="5,451,201,521"/>
+<area shape="rect" id="node8" href="$ros__graph__vio__wrapper_8cc.html" title=" " alt="" coords="225,458,392,514"/>
+<area shape="rect" id="node9" href="$graph__vio__simulator_8h.html" title=" " alt="" coords="416,458,647,514"/>
+<area shape="rect" id="node7" href="$ros__graph__localizer__nodelet_8cc.html" title=" " alt="" coords="16,569,191,625"/>
+<area shape="rect" id="node10" href="$offline__replay_8h.html" title=" " alt="" coords="263,569,477,625"/>
+<area shape="rect" id="node13" href="$graph__vio__simulator_8cc.html" title=" " alt="" coords="501,569,647,625"/>
+<area shape="rect" id="node11" href="$offline__replay_8cc.html" title=" " alt="" coords="537,673,688,729"/>
+<area shape="rect" id="node12" href="$run__offline__replay_8cc.html" title=" " alt="" coords="298,673,442,729"/>
+<area shape="rect" id="node15" href="$feature__track__image__adder_8cc.html" title=" " alt="" coords="722,347,893,403"/>
+</map>

@@ -1,0 +1,6 @@
+<map id="ff::GenericRapidSub" name="ff::GenericRapidSub">
+<area shape="rect" id="node1" title="base class for rapid subscriber to ros publisher" alt="" coords="252,5,425,171"/>
+<area shape="rect" id="node2" href="$classff_1_1RapidSubAdvertisementInfo.html" title=" " alt="" coords="5,219,235,311"/>
+<area shape="rect" id="node3" href="$classff_1_1RapidSubContent.html" title=" " alt="" coords="259,219,418,311"/>
+<area shape="rect" id="node4" href="$classff_1_1RapidSubRequest.html" title=" " alt="" coords="442,219,603,311"/>
+</map>

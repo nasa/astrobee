@@ -1,0 +1,15 @@
+<map id="localization/depth_odometry/include/depth_odometry/image_features_with_known_correspondences_aligner_depth_odometry_params.h" name="localization/depth_odometry/include/depth_odometry/image_features_with_known_correspondences_aligner_depth_odometry_params.h">
+<area shape="rect" id="node1" title=" " alt="" coords="484,5,740,91"/>
+<area shape="rect" id="node2" href="$depth__odometry__wrapper__params_8h.html" title=" " alt="" coords="441,146,644,217"/>
+<area shape="rect" id="node6" href="$depth__odometry__wrapper_8cc.html" title=" " alt="" coords="767,413,937,469"/>
+<area shape="rect" id="node10" href="$localization_2depth__odometry_2include_2depth__odometry_2parameter__reader_8h.html" title=" " alt="" coords="193,287,417,343"/>
+<area shape="rect" id="node12" href="$image__features__with__known__correspondences__aligner__depth__odometry_8h.html" title=" " alt="" coords="719,139,943,224"/>
+<area shape="rect" id="node3" href="$depth__odometry__wrapper_8h.html" title=" " alt="" coords="441,279,644,350"/>
+<area shape="rect" id="node4" href="$depth__odometry__nodelet_8h.html" title=" " alt="" coords="267,405,469,476"/>
+<area shape="rect" id="node7" href="$depth__odometry__adder_8h.html" title=" " alt="" coords="494,413,743,469"/>
+<area shape="rect" id="node5" href="$depth__odometry__nodelet_8cc.html" title=" " alt="" coords="215,524,382,580"/>
+<area shape="rect" id="node8" href="$depth__odometry__adder_8cc.html" title=" " alt="" coords="685,524,838,580"/>
+<area shape="rect" id="node9" href="$run__depth__odometry__adder_8cc.html" title=" " alt="" coords="463,524,660,580"/>
+<area shape="rect" id="node11" href="$localization_2depth__odometry_2src_2parameter__reader_8cc.html" title=" " alt="" coords="5,413,192,469"/>
+<area shape="rect" id="node13" href="$image__features__with__known__correspondences__aligner__depth__odometry_8cc.html" title=" " alt="" coords="719,272,910,357"/>
+</map>
