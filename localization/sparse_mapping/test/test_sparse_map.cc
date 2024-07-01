@@ -172,12 +172,15 @@ TEST_P(SparseMapTest, MapBuilding) {
     }
   }
   EXPECT_GT(map_loopback.GetNumLandmarks(), 30u);
-  EXPECT_EQ(map_loopback.GetRansacInlierTolerance(), 3);
+  EXPECT_EQ(map_loopback.loc_params().ransac_inlier_tolerance, 3);
   EXPECT_NEAR(map_loopback.GetCameraParameters().GetFocalLength(), 258.5, 1e-5);
 
   // Test Map Consistency?
   // check that each frame localizes to its own position
   camera::CameraModel guess(map_loopback.GetCameraParameters());
+  map_loopback.loc_params().check_essential_matrix = false;
+  map_loopback.loc_params().add_similar_images = false;
+  map_loopback.loc_params().add_best_previous_image = false;
   for (size_t i = 0; i < map_loopback.GetNumFrames(); i++) {
     Eigen::Affine3d transform = map_loopback.GetFrameGlobalTransform(i);
     EXPECT_TRUE(map_loopback.Localize(map_loopback.GetFrameFilename(i), &guess));

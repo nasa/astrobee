@@ -34,8 +34,7 @@ namespace localization_analysis {
 class MapMatcher {
  public:
   MapMatcher(const std::string& input_bag_name, const std::string& map_file, const std::string& image_topic,
-             const std::string& output_bag_name, const std::string& config_prefix = "",
-             const std::string& save_noloc_imgs = "");
+             const std::string& output_bag_name, const std::string& save_noloc_imgs = "");
   void AddMapMatches();
   void LogResults();
 
@@ -48,7 +47,6 @@ class MapMatcher {
   std::string image_topic_;
   sparse_mapping::SparseMap map_;
   localization_node::Localizer map_feature_matcher_;
-  std::string config_prefix_;
   gtsam::Pose3 body_T_nav_cam_;
   localization_common::Averager feature_averager_;
   int sparse_mapping_min_num_landmarks_;

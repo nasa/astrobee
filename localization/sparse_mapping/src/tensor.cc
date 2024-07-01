@@ -221,10 +221,11 @@ void MatchFeatures(const std::string & essential_file,
     ff_common::PrintProgressBar(stdout, static_cast<float>(cid)
                              / static_cast <float>(s->cid_to_keypoint_map_.size() - 1));
     std::vector<int> indices, queried_indices;
+    std::vector<double> scores;
     sparse_mapping::QueryDB(s->detector_.GetDetectorName(),
-                            &s->vocab_db_, s->num_similar_,
+                            &s->vocab_db_, s->loc_params().num_similar,
                             s->cid_to_descriptor_map_[cid],
-                            &queried_indices);
+                            &queried_indices, &scores);
 
     if (!queried_indices.empty()) {
       // always include the next three images
@@ -1933,21 +1934,12 @@ void ReadAffineCSV(std::string const& input_filename,
 }
 
 // Filter the matches by a geometric constraint. Compute the essential matrix.
-void BuildMapFindEssentialAndInliers(Eigen::Matrix2Xd const& keypoints1,
-                                     Eigen::Matrix2Xd const& keypoints2,
-                                     std::vector<cv::DMatch> const& matches,
-                                     camera::CameraParameters const& camera_params,
-                                     bool compute_inliers_only,
-                                     size_t cam_a_idx, size_t cam_b_idx,
-                                     std::mutex * match_mutex,
-                                     CIDPairAffineMap * relative_affines,
-                                     std::vector<cv::DMatch> * inlier_matches,
-                                     bool compute_rays_angle,
-                                     double * rays_angle) {
+void FindEssentialAndInliers(Eigen::Matrix2Xd const& keypoints1, Eigen::Matrix2Xd const& keypoints2,
+                             std::vector<cv::DMatch> const& matches, camera::CameraParameters const& camera_params,
+                             std::vector<cv::DMatch>* inlier_matches, std::vector<size_t>* vec_inliers,
+                             Eigen::Matrix3d* essential_matrix, const int ransac_iterations) {
   // Initialize the outputs
   inlier_matches->clear();
-  if (compute_rays_angle)
-    *rays_angle = 0.0;
 
   int pt_count = matches.size();
   Eigen::MatrixXd observationsa(2, pt_count);
@@ -1961,25 +1953,56 @@ void BuildMapFindEssentialAndInliers(Eigen::Matrix2Xd const& keypoints1,
                                        camera_params.GetUndistortedSize()[1]);
   Eigen::Matrix3d k = camera_params.GetIntrinsicMatrix<camera::UNDISTORTED_C>();
 
-  Eigen::Matrix3d e;
   // Calculate the essential matrix
-  std::vector<size_t> vec_inliers;
   double error_max = std::numeric_limits<double>::max();
   double max_expected_error = 2.5;
 
   if (!interest_point::RobustEssential(k, k, observationsa, observationsb,
-                                       &e, &vec_inliers,
+                                       essential_matrix, vec_inliers,
                                        image_size, image_size,
                                        &error_max,
-                                       max_expected_error)) {
+                                       max_expected_error, ransac_iterations)) {
+    VLOG(2) << " | Estimation of essential matrix failed!\n";
+    return;
+  }
+
+  int num_inliers = vec_inliers->size();
+  inlier_matches->clear();
+  inlier_matches->reserve(num_inliers);
+  for (int i = 0; i < num_inliers; i++) {
+    inlier_matches->push_back(matches[(*vec_inliers)[i]]);
+  }
+  return;
+}
+
+// Filter the matches by a geometric constraint. Compute the essential matrix.
+void BuildMapFindEssentialAndInliers(Eigen::Matrix2Xd const& keypoints1,
+                                     Eigen::Matrix2Xd const& keypoints2,
+                                     std::vector<cv::DMatch> const& matches,
+                                     camera::CameraParameters const& camera_params,
+                                     bool compute_inliers_only,
+                                     size_t cam_a_idx, size_t cam_b_idx,
+                                     std::mutex * match_mutex,
+                                     CIDPairAffineMap * relative_affines,
+                                     std::vector<cv::DMatch> * inlier_matches,
+                                     bool compute_rays_angle,
+                                     double * rays_angle) {
+  // Initialize the outputs
+  if (compute_rays_angle)
+    *rays_angle = 0.0;
+
+  std::vector<size_t> vec_inliers;
+  Eigen::Matrix3d e;
+  FindEssentialAndInliers(keypoints1, keypoints2, matches, camera_params, inlier_matches, &vec_inliers, &e);
+  if (!inlier_matches) {
     VLOG(2) << cam_a_idx << " " << cam_b_idx
             << " | Estimation of essential matrix failed!\n";
     return;
   }
 
-  if (vec_inliers.size() < static_cast<size_t>(FLAGS_min_valid)) {
+  if (inlier_matches->size() < static_cast<size_t>(FLAGS_min_valid)) {
     VLOG(2) << cam_a_idx << " " << cam_b_idx
-            << " | Failed to get enough inliers " << vec_inliers.size();
+            << " | Failed to get enough inliers " << inlier_matches->size();
     return;
   }
 
@@ -1989,7 +2012,6 @@ void BuildMapFindEssentialAndInliers(Eigen::Matrix2Xd const& keypoints1,
     int num_inliers = vec_inliers.size();
     inlier_matches->clear();
     inlier_matches->reserve(num_inliers);
-    std::vector<Eigen::Matrix2Xd> observations2(2, Eigen::Matrix2Xd(2, num_inliers));
     for (int i = 0; i < num_inliers; i++) {
       inlier_matches->push_back(matches[vec_inliers[i]]);
     }
@@ -1999,6 +2021,14 @@ void BuildMapFindEssentialAndInliers(Eigen::Matrix2Xd const& keypoints1,
   // Estimate the best possible R & T from the found Essential Matrix
   Eigen::Matrix3d r;
   Eigen::Vector3d t;
+  int pt_count = matches.size();
+  Eigen::MatrixXd observationsa(2, pt_count);
+  Eigen::MatrixXd observationsb(2, pt_count);
+  for (int i = 0; i < pt_count; i++) {
+    observationsa.col(i) = keypoints1.col(matches[i].queryIdx);
+    observationsb.col(i) = keypoints2.col(matches[i].trainIdx);
+  }
+  Eigen::Matrix3d k = camera_params.GetIntrinsicMatrix<camera::UNDISTORTED_C>();
   if (!interest_point::EstimateRTFromE(k, k, observationsa, observationsb,
                                        e, vec_inliers,
                                        &r, &t)) {

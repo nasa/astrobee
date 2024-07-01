@@ -30,26 +30,26 @@ namespace localization_analysis {
 namespace lc = localization_common;
 namespace mc = msg_conversions;
 MapMatcher::MapMatcher(const std::string& input_bag_name, const std::string& map_file, const std::string& image_topic,
-                       const std::string& output_bag_name, const std::string& config_prefix,
-                       const std::string& save_noloc_imgs)
+                       const std::string& output_bag_name, const std::string& save_noloc_imgs)
     : input_bag_(input_bag_name, rosbag::bagmode::Read),
       output_bag_(output_bag_name, rosbag::bagmode::Write),
       nonloc_bag_(),
       image_topic_(image_topic),
       map_(map_file, true),
       map_feature_matcher_(&map_),
-      config_prefix_(config_prefix),
       feature_averager_("Total number of features detected"),
       match_count_(0),
       image_count_(0) {
   config_reader::ConfigReader config;
   config.AddFile("geometry.config");
-  lc::LoadGraphLocalizerConfig(config, config_prefix);
+  config.AddFile("cameras.config");
+  config.AddFile("localization.config");
+  lc::LoadGraphLocalizerConfig(config);
   if (!config.ReadFiles()) {
     LogFatal("Failed to read config files.");
   }
+  map_feature_matcher_.ReadParams(config);
   body_T_nav_cam_ = lc::LoadTransform(config, "nav_cam_transform");
-  sparse_mapping_min_num_landmarks_ = mc::LoadInt(config, "loc_adder_min_num_matches");
   if (!save_noloc_imgs.empty()) {
     nonloc_bag_.open(save_noloc_imgs, rosbag::bagmode::Write);
   }

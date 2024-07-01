@@ -72,7 +72,9 @@ void LocalizationNodelet::Initialize(ros::NodeHandle* nh) {
 
   config_.AddFile("cameras.config");
   config_.AddFile("localization.config");
-  config_.ReadFiles();
+  if (!config_.ReadFiles()) {
+    ROS_FATAL("Failed to read config files.");
+  }
 
   // Resolve the full path to the AR tag file specified for the current world
   std::string map_file;
@@ -125,11 +127,7 @@ void LocalizationNodelet::Initialize(ros::NodeHandle* nh) {
 }
 
 void LocalizationNodelet::ReadParams(void) {
-  if (!config_.ReadFiles()) {
-    ROS_ERROR("Failed to read config files.");
-    return;
-  }
-  if (inst_) inst_->ReadParams(&config_);
+  if (inst_) inst_->ReadParams(config_);
 }
 
 bool LocalizationNodelet::EnableService(ff_msgs::SetBool::Request & req, ff_msgs::SetBool::Response & res) {

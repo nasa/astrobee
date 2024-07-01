@@ -51,9 +51,9 @@ DEFINE_bool(save_individual_maps, false,
 
 // output map parameters
 DEFINE_string(detector, "SURF",
-              "Feature detector to use. Options are: SURF, ORGBRISK.");
-DEFINE_string(rebuild_detector, "ORGBRISK",
-              "Feature detector to use. Options are: SURF, ORGBRISK.");
+              "Feature detector to use. Options are: SURF, ORGBRISK, TEBLID512, TEBLID256.");
+DEFINE_string(rebuild_detector, "TEBLID512",
+              "Feature detector to use. Options are: SURF, ORGBRISK, TEBLID512, TEBLID256.");
 
 // control options
 DEFINE_bool(feature_detection, false,
@@ -98,7 +98,7 @@ DEFINE_bool(fix_cameras, false,
             "Keep the cameras fixed during bundle adjustment.");
 DEFINE_bool(rebuild_refloat_cameras, false,
             "Optimize the cameras as well as part of rebuilding. Usually that is "
-            "avoided when rebuilding with ORGBRISK, but could be useful with SURF.");
+            "avoided when rebuilding with binary features, but could be useful with SURF.");
 
 DEFINE_int32(db_restarts, 1, "Number of restarts when building the tree.");
 DEFINE_int32(db_depth, 0, "Depth of the tree to build. Default: 4");

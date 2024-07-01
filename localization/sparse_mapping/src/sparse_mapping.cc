@@ -117,9 +117,13 @@ namespace sparse_mapping {
 // of unknown values, but intolerant when true and false are mixed.
 void sparse_mapping::HistogramEqualizationCheck(int histogram_equalization1,
                                                 int histogram_equalization2) {
-  if ( (histogram_equalization1 == 0 && histogram_equalization2 == 1) ||
-       (histogram_equalization1 == 1 && histogram_equalization2 == 0) )
+  // Ignore if either has unknown equalization value
+  if (histogram_equalization1 == HistogramEqualizationType::kUnknown ||
+      histogram_equalization2 == HistogramEqualizationType::kUnknown) {
+    return;
+  } else if (histogram_equalization1 != histogram_equalization2) {
     LOG(FATAL) << "Incompatible values of histogram equalization detected.";
+  }
 }
 
 bool sparse_mapping::IsBinaryDescriptor(std::string const& descriptor) {
