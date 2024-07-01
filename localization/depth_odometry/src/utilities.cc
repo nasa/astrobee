@@ -32,7 +32,7 @@ ff_msgs::DepthOdometry DepthOdometryMsg(const PoseWithCovarianceAndCorrespondenc
   depth_odometry_msg.correspondences = CorrespondencesMsg(sensor_F_source_T_target.depth_correspondences);
   depth_odometry_msg.valid_image_points = sensor_F_source_T_target.depth_correspondences.valid_image_points;
   depth_odometry_msg.valid_points_3d = sensor_F_source_T_target.depth_correspondences.valid_3d_points;
-  lc::TimeToHeader(sensor_F_source_T_target.target_time, depth_odometry_msg.header);
+  lc::TimeToHeader(sensor_F_source_T_target.source_time, depth_odometry_msg.header);
   lc::TimeToMsg(sensor_F_source_T_target.source_time, depth_odometry_msg.odometry.source_time);
   lc::TimeToMsg(sensor_F_source_T_target.target_time, depth_odometry_msg.odometry.target_time);
   depth_odometry_msg.runtime = runtime;

@@ -1,0 +1,63 @@
+\newcommand{\pluseq}{\mathrel{+}=}
+\newcommand{\timeseq}{\mathrel{*}=}
+\newcommand{\vect}[1]{\boldsymbol{#1}}
+\newcommand{\matr}[1]{\boldsymbol{#1}}
+\newcommand{\tra}[1]{{\textrm{Tr}}({#1})}
+\newcommand{\trafo}[2]{\substack{\scriptscriptstyle{{#1}} \\ \scriptscriptstyle{{#2}}}\textbf{T}}
+\newcommand{\rot}[2]{\substack{\scriptscriptstyle{{#1}} \\ \scriptscriptstyle{{#2}}}\textbf{R}}
+\newcommand{\trans}[2]{\substack{\scriptscriptstyle{{#1}} \\ \scriptscriptstyle{{#2}}}\textbf{t}}
+\newcommand{\rotlie}[2]{\substack{\scriptscriptstyle{{#1}} \\ \scriptscriptstyle{{#2}}}\boldsymbol{\phi}}
+\newcommand{\rotliepert}[0]{\rotlie{b}{\bar{b}}_{i}}
+\newcommand{\translie}[2]{\substack{\scriptscriptstyle{{#1}} \\ \scriptscriptstyle{{#2}}}\boldsymbol{\rho}}
+\newcommand{\transliepert}[0]{\translie{b}{\bar{b}}_{i}}
+\newcommand{\trafolie}[2]{\substack{\scriptscriptstyle{{#1}} \\ \scriptscriptstyle{{#2}}}\boldsymbol{\varphi}}
+\newcommand{\trafoliepert}[0]{\trafolie{b}{\bar{b}}_{i}}
+\newcommand{\trafolietrafo}[0]{\trafo{b}{\bar{b}}}
+
+%\newcommand{\trafo}[2]{\substack{\scriptscriptstyle{#1} \\ \scriptscriptstyle{#2}}T}
+%\newcommand{\rot}[2]{\substack{\scriptscriptstyle{#1} \\ \scriptscriptstyle{#2}}R}
+\newcommand{\expmap}[1]{\exp(#1)}
+%\newcommand{\Expmap}[1]{Exp(#1)}
+\newcommand{\logmap}[1]{\log(#1)}
+\newcommand{\Frame}[1]{\textbf{#1}}
+\newcommand{\NavState}[0]{S}
+\newcommand{\liealg}[2]{\substack{\scriptscriptstyle{\textbf{#1}} \\ \scriptscriptstyle{\textbf{#2}}}\vect{\phi}}
+\newcommand{\soIII}{so(3)}
+\newcommand{\SOIII}{SO(3)}
+\newcommand{\seIII}{se(3)}
+\newcommand{\SEIII}{SE(3)}
+\newcommand{\unitquat}[2]{\substack{\scriptscriptstyle{\textbf{#1}} \\ \scriptscriptstyle{\textbf{#2}}}\Phi}
+\newcommand{\Vee}[1]{{\left[#1\right]}^{\textrm{v}}}
+\newcommand{\skewhat}[1]{{{\left[#1\right]}^{\wedge}}}
+\newcommand{\Rn}[1]{\mathbb{R}^{#1}}
+\newcommand{\ith}{\textrm{i}^{\textrm{th}}}
+\newcommand{\inv}[1]{#1^{-1}}
+\newcommand{\ithindex}[1]{\begin{bmatrix}#1 \end{bmatrix}_{i}}
+\newcommand{\fourblock}[4]{\renewcommand\arraystretch{1.3}
+\mleft[
+\begin{array}{c|c}
+  #1 & #2 \\ \hline
+  #3 & #4
+\end{array}\mright]}
+\newcommand{\trafoblock}[2]{\fourblock{#1}{#2}{0}{1}}
+\newcommand{\vectortwodblock}[2]{\renewcommand\arraystretch{1.3}
+\mleft[
+\begin{array}{c}
+  #1 \\ \hline
+  #2
+\end{array}\mright]}
+\newcommand{\rowvectortwodblock}[2]{
+\mleft[
+\begin{array}{c|c}
+  #1&#2
+\end{array}\mright]}
+\newcommand{\blocklog}[1]{\log\left[#1\right]}
+\newcommand{\adjoint}[1]{\textrm{Ad}\left[#1\right]}
+\newcommand{\homonorm}[1]{h\left(\vect{#1}\right)}
+\newcommand{\projection}[1]{\pi\left({#1}\right)}
+\newcommand{\camintrinsics}{\matr{C}}
+
+
+
+%\newcommand{\boxplus}{\mathbin{\mathop\amssymbboxplus}}
+%\newcommand{\boxminus}{\mathbin{\mathop\amssymbboxminus}}

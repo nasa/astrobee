@@ -23,11 +23,14 @@
 #include <interest_point/matching.h>
 #include <sparse_mapping/vocab_tree.h>
 #include <sparse_mapping/sparse_mapping.h>
+#include <sparse_mapping/localization_parameters.h>
 #include <camera/camera_model.h>
 #include <camera/camera_params.h>
 
+#include <boost/optional.hpp>
 #include <Eigen/Geometry>
 #include <opencv2/core/core.hpp>
+#include <opencv2/imgproc.hpp>
 
 #include <map>
 #include <mutex>
@@ -50,30 +53,6 @@ namespace sparse_mapping {
 void InitializeCidFidToPid(int num_cid,
                            std::vector<std::map<int, int> > const& pid_to_cid_fid,
                            std::vector<std::map<int, int> > * cid_fid_to_pid);
-
-/**
- * Estimate the camera pose for a set of image descriptors and keypoints.
- * Non-member function. We will invoke it both from within
- * the SparseMap class and from outside of it.
- **/
-bool Localize(cv::Mat const& test_descriptors,
-              Eigen::Matrix2Xd const& test_keypoints,
-              camera::CameraParameters const& camera_params,
-              camera::CameraModel* pose,
-              std::vector<Eigen::Vector3d>* inlier_landmarks,
-              std::vector<Eigen::Vector2d>* inlier_observations,
-              int num_cid,
-              std::string const& detector_name,
-              sparse_mapping::VocabDB * vocab_db,
-              int num_similar,
-              std::vector<std::string> const& cid_to_filename,
-              std::vector<cv::Mat> const& cid_to_descriptor_map,
-              std::vector<Eigen::Matrix2Xd > const& cid_to_keypoint_map,
-              std::vector<std::map<int, int> > const& cid_fid_to_pid,
-              std::vector<Eigen::Vector3d> const& pid_to_xyz,
-              int num_ransac_iterations, int ransac_inlier_tolerance,
-              int early_break_landmarks, int histogram_equalization,
-              std::vector<int> * cid_list);
 
 /**
  * A class representing a sparse map, which consists of a collection
@@ -112,6 +91,14 @@ struct SparseMap {
 
   SparseMap(bool bundler_format, std::string const& filename, std::vector<std::string> const& files);
 
+  // Set default loc params using FLAG values
+  void SetDefaultLocParams();
+
+  // Set loc params
+  void SetLocParams(const LocalizationParameters& loc_params);
+  const LocalizationParameters& loc_params() const { return loc_params_; }
+  LocalizationParameters& loc_params() { return loc_params_; }
+
   void SetDetectorParams(int min_features, int max_features, int retries,
                          double min_thresh, double default_thresh, double max_thresh);
 
@@ -136,11 +123,10 @@ struct SparseMap {
       camera::CameraModel* pose, std::vector<Eigen::Vector3d>* inlier_landmarks = NULL,
                 std::vector<Eigen::Vector2d>* inlier_observations = NULL,
                 std::vector<int> * cid_list = NULL);
-  bool Localize(const cv::Mat & test_descriptors, const Eigen::Matrix2Xd & test_keypoints,
-                camera::CameraModel* pose,
-                std::vector<Eigen::Vector3d>* inlier_landmarks,
-                std::vector<Eigen::Vector2d>* inlier_observations,
-                std::vector<int> * cid_list = NULL);
+  bool Localize(cv::Mat const& test_descriptors, Eigen::Matrix2Xd const& test_keypoints, camera::CameraModel* pose,
+                std::vector<Eigen::Vector3d>* inlier_landmarks, std::vector<Eigen::Vector2d>* inlier_observations,
+                std::vector<int>* cid_list = NULL, const cv::Mat& image = cv::Mat());
+
   // access map frames
   /**
    * Get the number of keyframes in the map.
@@ -189,30 +175,6 @@ struct SparseMap {
 
   // access and modify parameters
   /**
-   * Set the number of RANSAC iterations.
-   **/
-  void SetRansacIterations(int iterations) {num_ransac_iterations_ = iterations;}
-  /**
-   * Return the number of RANSAC iterations.
-   **/
-  int GetRansacIterations(void) const {return num_ransac_iterations_;}
-  /**
-   * Set the RANSAC inlier tolerance, the number of pixels an inlier
-   * feature is allowed to be off by.
-   **/
-  void SetRansacInlierTolerance(int tolerance) {ransac_inlier_tolerance_ = tolerance;}
-  /**
-   * Get the RANSAC inlier tolerance, the number of pixels an inlier
-   * feature is allowed to be off by.
-   **/
-  int GetRansacInlierTolerance(void) const {return ransac_inlier_tolerance_;}
-  /**
-   * Set the number of early break landmarks, when to stop in adding landmarks when localizing.
-   **/
-  void SetEarlyBreakLandmarks(int early_break_landmarks) {early_break_landmarks_ = early_break_landmarks;}
-  void SetHistogramEqualization(int histogram_equalization) {histogram_equalization_ = histogram_equalization;}
-  int GetHistogramEqualization() {return histogram_equalization_;}
-  /**
    * Return the parameters of the camera used to construct the map.
    **/
   camera::CameraParameters GetCameraParameters(void) const {return camera_params_;}
@@ -240,6 +202,11 @@ struct SparseMap {
   // needed for localization.
   void Load(const std::string & protobuf_file, bool localization = false);
 
+  // Optionally load keypoints. Call this after loading the map, if for example
+  // the user needs to use the keypoints for visualization or essential matrix
+  // estimation and those params differ from the default FLAG values.
+  void LoadKeypoints(const std::string & protobuf_file);
+
   // construct from pid_to_cid_fid
   void InitializeCidFidToPid();
 
@@ -255,12 +222,9 @@ struct SparseMap {
   // delete feature descriptors with no matching landmark
   void PruneMap(void);
 
-  /**
-   * Set the number of similar images queried by the VocabDB.
-   **/
-  void SetNumSimilar(int num_similar) {num_similar_ = num_similar;}
-
   std::string GetDetectorName() { return detector_.GetDetectorName(); }
+  interest_point::FeatureDetector& detector() { return detector_; }
+  int GetHistogramEqualization() {return loc_params_.histogram_equalization;}
 
   // stored in map file
   std::vector<std::string> cid_to_filename_;
@@ -272,15 +236,13 @@ struct SparseMap {
   std::vector<cv::Mat> cid_to_descriptor_map_;
   // generated on load
   std::vector<std::map<int, int> > cid_fid_to_pid_;
+  std::vector<std::map<int, int>> cid_to_matching_cid_counts_;
 
   interest_point::FeatureDetector detector_;
   camera::CameraParameters camera_params_;
   mutable sparse_mapping::VocabDB vocab_db_;  // TODO(oalexan1): Mutable means someone is doing something wrong.
-  int num_similar_;
-  int num_ransac_iterations_;
-  int ransac_inlier_tolerance_;
-  int early_break_landmarks_;
-  int histogram_equalization_;
+  LocalizationParameters loc_params_;
+  std::string protobuf_file_;
 
   // e.g, 10th db image is 3rd image in cid_to_filename_
   std::map<int, int> db_to_cid_map_;
@@ -298,6 +260,9 @@ struct SparseMap {
   std::vector<Eigen::Matrix2Xd> user_cid_to_keypoint_map_;
   std::vector<std::map<int, int> > user_pid_to_cid_fid_;
   std::vector<Eigen::Vector3d> user_pid_to_xyz_;
+
+  cv::Ptr<cv::CLAHE> clahe_;
+  boost::optional<int> best_previous_cid_;
   std::mutex mutex_detector_;
 
  private:

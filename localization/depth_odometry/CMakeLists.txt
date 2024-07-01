@@ -36,7 +36,8 @@ find_package(catkin2 REQUIRED COMPONENTS
 )
 
 # Find OpenCV
-find_package(OpenCV 4.0 REQUIRED)
+LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
+find_package(OpenCV4WithXFeatures REQUIRED)
 
 find_package(Eigen3 REQUIRED)
 
@@ -90,28 +91,23 @@ if(CATKIN_ENABLE_TESTING)
     ${PROJECT_NAME} ${catkin_LIBRARIES} 
   )
 
-  # Ignore these tests if OpenCV 4 installed as cv_bridge will cause a runtime segfault
-  # since it uses opencv4 on newer ros versions and the rest of the code uses opencv3
-  find_package(OpenCV 4 QUIET)
-  if(NOT OpenCV_FOUND)
-    add_rostest_gtest(test_image_features_with_known_correspondences_aligner_depth_odometry
-      test/test_image_features_with_known_correspondences_aligner_depth_odometry.test
-      test/test_image_features_with_known_correspondences_aligner_depth_odometry.cc
-      test/test_utilities.cc
-    )
-    target_link_libraries(test_image_features_with_known_correspondences_aligner_depth_odometry
-      ${PROJECT_NAME} ${catkin_LIBRARIES} 
-    )
+  add_rostest_gtest(test_image_features_with_known_correspondences_aligner_depth_odometry
+    test/test_image_features_with_known_correspondences_aligner_depth_odometry.test
+    test/test_image_features_with_known_correspondences_aligner_depth_odometry.cc
+    test/test_utilities.cc
+  )
+  target_link_libraries(test_image_features_with_known_correspondences_aligner_depth_odometry
+    ${PROJECT_NAME} ${catkin_LIBRARIES} 
+  )
 
-    add_rostest_gtest(test_depth_odometry_wrapper
-      test/test_depth_odometry_wrapper.test
-      test/test_depth_odometry_wrapper.cc
-      test/test_utilities.cc
-    )
-    target_link_libraries(test_depth_odometry_wrapper
-      ${PROJECT_NAME} ${catkin_LIBRARIES} 
-    )
-  endif()
+  add_rostest_gtest(test_depth_odometry_wrapper
+    test/test_depth_odometry_wrapper.test
+    test/test_depth_odometry_wrapper.cc
+    test/test_utilities.cc
+  )
+  target_link_libraries(test_depth_odometry_wrapper
+    ${PROJECT_NAME} ${catkin_LIBRARIES} 
+  )
 
 endif()
 

@@ -17,7 +17,6 @@
  */
 
 #include <ff_common/ff_names.h>
-#include <graph_localizer/utilities.h>
 #include <localization_analysis/map_matcher.h>
 #include <localization_analysis/utilities.h>
 #include <localization_common/utilities.h>
@@ -31,26 +30,26 @@ namespace localization_analysis {
 namespace lc = localization_common;
 namespace mc = msg_conversions;
 MapMatcher::MapMatcher(const std::string& input_bag_name, const std::string& map_file, const std::string& image_topic,
-                       const std::string& output_bag_name, const std::string& config_prefix,
-                       const std::string& save_noloc_imgs)
+                       const std::string& output_bag_name, const std::string& save_noloc_imgs)
     : input_bag_(input_bag_name, rosbag::bagmode::Read),
       output_bag_(output_bag_name, rosbag::bagmode::Write),
       nonloc_bag_(),
       image_topic_(image_topic),
       map_(map_file, true),
       map_feature_matcher_(&map_),
-      config_prefix_(config_prefix),
       feature_averager_("Total number of features detected"),
       match_count_(0),
       image_count_(0) {
   config_reader::ConfigReader config;
   config.AddFile("geometry.config");
-  lc::LoadGraphLocalizerConfig(config, config_prefix);
+  config.AddFile("cameras.config");
+  config.AddFile("localization.config");
+  lc::LoadGraphLocalizerConfig(config);
   if (!config.ReadFiles()) {
     LogFatal("Failed to read config files.");
   }
+  map_feature_matcher_.ReadParams(config);
   body_T_nav_cam_ = lc::LoadTransform(config, "nav_cam_transform");
-  sparse_mapping_min_num_landmarks_ = mc::LoadInt(config, "loc_adder_min_num_matches");
   if (!save_noloc_imgs.empty()) {
     nonloc_bag_.open(save_noloc_imgs, rosbag::bagmode::Write);
   }
@@ -86,11 +85,10 @@ void MapMatcher::AddMapMatches() {
         feature_averager_.Update(vl_msg.landmarks.size());
         const ros::Time timestamp = lc::RosTimeFromHeader(image_msg->header);
         output_bag_.write(std::string("/") + TOPIC_LOCALIZATION_ML_FEATURES, timestamp, vl_msg);
-        if (graph_localizer::ValidVLMsg(vl_msg, sparse_mapping_min_num_landmarks_)) {
+        if (static_cast<int>(vl_msg.landmarks.size()) >= 5) {
           const gtsam::Pose3 sparse_mapping_global_T_body =
             lc::PoseFromMsgWithExtrinsics(vl_msg.pose, body_T_nav_cam_.inverse());
-          const auto pose_msg =
-            graph_localizer::PoseMsg(lc::EigenPose(sparse_mapping_global_T_body), lc::TimeFromHeader(vl_msg.header));
+          const auto pose_msg = PoseMsg(lc::EigenPose(sparse_mapping_global_T_body), lc::TimeFromHeader(vl_msg.header));
           output_bag_.write(std::string("/") + TOPIC_SPARSE_MAPPING_POSE, timestamp, pose_msg);
         }
       } else if (nonloc_bag_.isOpen()) {

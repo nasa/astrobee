@@ -69,9 +69,9 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--generate-image-features",
-        dest="use_image_features",
-        action="store_false",
-        help="Use image features msgs from bagfile or generate features from images.",
+        dest="generate_image_features",
+        action="store_true",
+        help="Generate image features instead of using image features msgs from bagfile.",
     )
     parser.add_argument(
         "--no-histogram-equalization",
@@ -116,11 +116,11 @@ if __name__ == "__main__":
     )
 
     groundtruth_bag = map_name + ".bag"
-    groundtruth_map_file = map_name + ".brisk.vocabdb.map"
+    groundtruth_map_file = map_name + ".teblid512.vocabdb.map"
     groundtruth_pdf = "groundtruth.pdf"
     groundtruth_csv = "groundtruth.csv"
     make_groundtruth_command = (
-        "rosrun localization_analysis run_graph_bag_and_plot_results.py "
+        "rosrun localization_analysis run_offline_replay_and_plot_results.py "
         + bagfile
         + " "
         + groundtruth_map_file
@@ -128,21 +128,31 @@ if __name__ == "__main__":
         + args.image_topic
         + " -o "
         + groundtruth_bag
-        + " --output-file "
+        + " --loc-output-file "
+        + "loc_"
         + groundtruth_pdf
-        + " --output-csv-file "
+        + " --vio-output-file "
+        + "vio_"
+        + groundtruth_pdf
+        + " --loc-results-csv-file "
+        + "loc_"
+        + groundtruth_csv
+        + " --vio-results-csv-file "
+        + "vio_"
         + groundtruth_csv
         + " --generate-image-features"
     )
     lu.run_command_and_save_output(make_groundtruth_command, "make_groundtruth.txt")
-    os.rename("run_graph_bag_command.txt", "groundtruth_run_graph_bag_command.txt")
+    os.rename(
+        "run_offline_replay_command.txt", "groundtruth_run_offline_replay_command.txt"
+    )
 
     if args.loc_map != "":
         loc_results_bag = bag_prefix + "_results.bag"
         loc_pdf = "loc_results.pdf"
         loc_csv = "loc_results.csv"
         get_loc_results_command = (
-            "rosrun localization_analysis run_graph_bag_and_plot_results.py "
+            "rosrun localization_analysis run_offline_replay_and_plot_results.py "
             + bagfile
             + " "
             + args.loc_map
@@ -150,14 +160,24 @@ if __name__ == "__main__":
             + args.image_topic
             + " -o "
             + loc_results_bag
-            + " --output-file "
+            + " --loc-output-file "
+            + "loc_"
             + loc_pdf
-            + " --output-csv-file "
+            + " --vio-output-file "
+            + "vio_"
+            + loc_pdf
+            + " --loc-results-csv-file "
+            + "loc_"
+            + loc_csv
+            + " --vio-results-csv-file "
+            + "vio_"
             + loc_csv
             + " -g "
             + groundtruth_bag
         )
-        if not args.use_image_features:
+        if args.generate_image_features:
             get_loc_results_command += " --generate-image-features"
         lu.run_command_and_save_output(get_loc_results_command, "get_loc_results.txt")
-        os.rename("run_graph_bag_command.txt", "loc_run_graph_bag_command.txt")
+        os.rename(
+            "run_offline_replay_command.txt", "loc_run_offline_replay_command.txt"
+        )

@@ -79,6 +79,7 @@ add_library(sparse_mapping
   src/sparse_map.cc
   src/sparse_mapping.cc
   src/tensor.cc
+  src/visualization_utilities.cc
   src/vocab_tree.cc
   ${PROTO_SRCS}
 )

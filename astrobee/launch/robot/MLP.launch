@@ -100,7 +100,7 @@
   <!-- Run ground_truth_localizer, otherwise run graph localizer -->
   <group unless="$(arg gtloc)">
     <include file="$(find ff_util)/launch/ff_nodelet.launch">
-      <arg name="class" value="graph_localizer/GraphLocalizerNodelet" />
+      <arg name="class" value="ros_graph_localizer/RosGraphLocalizerNodelet" />
       <arg name="name" value="graph_loc" />
       <arg name="manager" value="mlp_graph_localization" />
       <arg name="spurn" value="$(arg spurn)" />
@@ -109,6 +109,7 @@
       <arg name="debug" value="$(arg debug)" />
       <arg name="default" value="true" />
     </include>
+ 
   </group>
 
   <group if="$(arg gtloc)">

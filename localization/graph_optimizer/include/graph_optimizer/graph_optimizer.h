@@ -19,157 +19,190 @@
 #ifndef GRAPH_OPTIMIZER_GRAPH_OPTIMIZER_H_
 #define GRAPH_OPTIMIZER_GRAPH_OPTIMIZER_H_
 
-#include <graph_optimizer/factor_to_add.h>
-#include <graph_optimizer/graph_action_completer.h>
+#include <factor_adders/factor_adder.h>
 #include <graph_optimizer/graph_optimizer_params.h>
-#include <graph_optimizer/graph_stats.h>
-#include <graph_optimizer/key_info.h>
-#include <graph_optimizer/node_updater.h>
+#include <optimizers/optimizer.h>
+#include <node_adders/node_adder.h>
+#include <nodes/values.h>
+#include <localization_common/stats_logger.h>
 #include <localization_common/time.h>
 
-#include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
-#include <gtsam/nonlinear/Marginals.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
 #include <boost/serialization/serialization.hpp>
 
-#include <map>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
 namespace graph_optimizer {
+// Time-based factor graph optimizer that uses FactorAdders to generate and add factors for a given time range to the
+// graph and NodeAdders to provide corresponding nodes for these factors at required timestamps. Generally FactorAdders
+// are measurement-based and generate factors for a certain type of measurement at given timestamps. NodeAdders are also
+// typically measurement-based and create linked nodes using relative factors that span the graph. As an example, a
+// Visual-Inertial Odometry (VIO) graph may contain an image-based FactorAdder that generates visual-odometry factors
+// using image measurements. A VIO graph will solve for Pose/Velocity/IMU Bias (PVB) values at different timestamps, so
+// it will also contain a PVB NodeAdder that creates timestamped PVB nodes for the visual-odometry factors and links
+// these nodes using IMU measurements. See the FactorAdder and NodeAdder packages for more information and different
+// types of FactorAdders and NodeAdders. Maintains a set of values used for optimization. All NodeAdders added to the
+// GraphOptimizer should be constructed using the GraphOptimizer's values (accessable with the values() member
+// function). Acts as a base class for the SlidingWindowGraphOptimizer.
 class GraphOptimizer {
  public:
-  GraphOptimizer(const GraphOptimizerParams& params,
-                 std::unique_ptr<GraphStats> graph_stats = std::unique_ptr<GraphStats>(new GraphStats()));
-  // Default constructor/destructor for serialization only
+  // Construct GraphOptimizer with provided optimizer.
+  GraphOptimizer(const GraphOptimizerParams& params, std::unique_ptr<optimizers::Optimizer> optimizer);
+
+  // Default constructor for serialization only
   GraphOptimizer() {}
-  ~GraphOptimizer();
 
-  // Registers graph action completer.  Called after adding buffered factors and updating nodes
-  void AddGraphActionCompleter(std::shared_ptr<GraphActionCompleter> graph_action_completer);
-  // Registers node updater. Called when adding buffered factors
-  void AddNodeUpdater(std::shared_ptr<NodeUpdater> node_updater);
-  // Adds factors to buffered list which is sorted by time
-  void BufferFactors(const std::vector<FactorsToAdd>& factors_to_add_vec);
-  // Adds buffered factors and optimizes graph.  Calls DoPostOptimizeActions afterwards
-  bool Update();
-  // Checks whether a measurement is too old to be inserted into graph
-  virtual bool MeasurementRecentEnough(const localization_common::Time timestamp) const;
-  const gtsam::NonlinearFactorGraph& graph_factors() const;
-  gtsam::NonlinearFactorGraph& graph_factors();
+  virtual ~GraphOptimizer() = default;
+
+  // Adds node adder used for graph optimization.
+  // Initializes the nodes and priors for the node adder.
+  void AddNodeAdder(std::shared_ptr<node_adders::NodeAdder> node_adder);
+
+  // Adds factor adder used for graph optimization.
+  void AddFactorAdder(std::shared_ptr<factor_adders::FactorAdder> factor_adder);
+
+  // Adds factors for each factor in valid time range to the graph.
+  // Since factor adders are linked to the node adder they use, this also adds required
+  // nodes for these factors.
+  // Return the number of factors added by the factor adders, not including the relative factors added by the node
+  // adders.
+  // TODO(rsoussan): Return both?
+  int AddFactors(const localization_common::Time start_time, const localization_common::Time end_time);
+
+  // Wrapper for AddFactors passing a pair of timestamps.
+  int AddFactors(const std::pair<localization_common::Time, localization_common::Time>& start_and_end_time);
+
+  // Performs optimization on the factor graph.
+  bool Optimize();
+
+  // Calculates the covariance matrix for the provided node's key.
+  // Requires a successful round of optimization to have been performed.
+  boost::optional<gtsam::Matrix> Covariance(const gtsam::Key& key) const;
+
+  // Calculates the covariance matrix wrt two nodes for the provided keys.
+  // Requires a successful round of optimization to have been performed.
+  boost::optional<gtsam::Matrix> Covariance(const gtsam::Key& key_a, const gtsam::Key& key_b) const;
+
+  // Returns set of factors currently in the graph.
+  const gtsam::NonlinearFactorGraph& factors() const;
+
+  // Returns set of factors currently in the graph.
+  gtsam::NonlinearFactorGraph& factors();
+
+  // Returns set of factors of FactorType currently in the graph.
   template <typename FactorType>
-  const std::vector<boost::shared_ptr<const FactorType>> Factors() const;
-  const int num_factors() const;
-  void SaveGraphDotFile(const std::string& output_path = "graph.dot") const;
+  std::vector<boost::shared_ptr<const FactorType>> Factors() const;
+
+  // Returns number of factors currently in the graph.
+  int num_factors() const;
+
+  // Returns number of factors of provided FactorType currently in the graph.
+  template <typename FactorType>
+  int NumFactors() const;
+
+  // Returns number of values currently in the graph.
+  int num_values() const;
+
+  // Graph optimizer params.
   const GraphOptimizerParams& params() const;
-  void LogOnDestruction(const bool log_on_destruction);
-  const GraphStats* const graph_stats() const;
-  GraphStats* graph_stats();
-  const boost::optional<gtsam::Marginals>& marginals() const;
-  std::shared_ptr<gtsam::Values> shared_values();
-  const gtsam::Values& values() const;
 
- private:
-  gtsam::NonlinearFactorGraph MarginalFactors(const gtsam::NonlinearFactorGraph& old_factors,
-                                              const gtsam::KeyVector& old_keys,
-                                              const gtsam::GaussianFactorGraph::Eliminate& eliminate_function) const;
+  // Returns a shared pointer to the values used by the graph optimizer.
+  // All node adders added to the graph optimizer should be constructed
+  // with these values.
+  std::shared_ptr<nodes::Values> values();
 
-  // Removes Keys and Values outside of sliding window.
-  // Removes any factors depending on removed values
-  // Optionally adds marginalized factors encapsulating linearized error of removed factors
-  // Optionally adds priors using marginalized covariances for new oldest states
-  bool SlideWindow(const boost::optional<gtsam::Marginals>& marginals,
-                   const localization_common::Time last_latest_time);
+  // Returns a const reference to the gtsam Values used within the Values object.
+  const gtsam::Values& gtsam_values() const;
 
-  boost::optional<localization_common::Time> SlideWindowNewOldestTime() const;
+  // Returns a reference to the stats logger
+  localization_common::StatsLogger& stats_logger();
 
-  gtsam::KeyVector OldKeys(const localization_common::Time oldest_allowed_time) const;
+  // Returns a const reference to the optimization timer
+  const localization_common::Timer& optimization_timer() const;
 
-  std::pair<gtsam::KeyVector, gtsam::NonlinearFactorGraph> OldKeysAndFactors(
-    const localization_common::Time oldest_allowed_time);
+  // Returns a const reference to the optimization_iterations averager
+  const localization_common::Averager& optimization_iterations_averager() const;
 
-  // Called after SlideWindow
-  virtual void DoPostSlideWindowActions(const localization_common::Time oldest_allowed_time,
-                                        const boost::optional<gtsam::Marginals>& marginals);
+  // Sum of factor errors for each factor in the graph
+  double TotalGraphError() const;
 
-  // void UpdatePointPriors(const gtsam::Marginals& marginals);
-
-  // Creates factors for cumulative factor adders and adds them to buffered list
-  virtual void BufferCumulativeFactors();
-
-  // Removes old measurements from cumulative factors that do not fit in sliding window so cumulative factors are still
-  // valid after the SlideWindow call
-  virtual void RemoveOldMeasurementsFromCumulativeFactors(const gtsam::KeyVector& old_keys);
-
-  // Optional validity check for graph before optimizing
+  // Optional validity check for graph before optimizing.
+  // If this fails, no optimization is performed.
+  // Default behavior always returns true.
   virtual bool ValidGraph() const;
 
-  // Adds buffered factors to graph_factors for future optimization
-  // Only adds factors that pass ReadyToAddFactors(timestamp) check
-  int AddBufferedFactors();
+  // Prints factor graph information and logs stats.
+  virtual void Print() const;
 
-  // Calls Update for each registered NodeUpdater to create required nodes while inserting new factors
-  bool UpdateNodes(const KeyInfo& key_info);
+  // Saves the graph to a dot file, can be used to generate visual representation
+  // of the graph.
+  void SaveGraphDotFile(const std::string& output_path = "graph.dot") const;
 
-  // Calls DoAction for each registered GraphActionCompleter after inserting new factors
-  bool DoGraphAction(FactorsToAdd& factors_to_add);
+  // Returns marginals if they have been calculated.
+  boost::optional<const gtsam::Marginals&> marginals() const;
 
-  boost::optional<gtsam::Key> GetKey(KeyCreatorFunction key_creator_function,
-                                     const localization_common::Time timestamp) const;
+ private:
+  // Add averagers and timers for logging.
+  void AddAveragersAndTimers();
 
-  // Updates keys in factors after new nodes are created/updated as required by registered NodeUpdater
-  bool Rekey(FactorToAdd& factor_to_add);
-
-  // Checks whether the graph is ready for insertion of a factor with timestamp
-  virtual bool ReadyToAddFactors(const localization_common::Time timestamp) const;
-
-  boost::optional<localization_common::Time> OldestTimestamp() const;
-
-  boost::optional<localization_common::Time> LatestTimestamp() const;
-
-  // Removes buffered factors that are too old for insertion into graph
-  void RemoveOldBufferedFactors(const localization_common::Time oldest_allowed_timestamp);
-
-  virtual void PrintFactorDebugInfo() const;
-
-  // Called after optimizing graph
-  virtual bool DoPostOptimizeActions();
+  // Returns a reference to the gtsam Values used within the Values object.
+  gtsam::Values& gtsam_values();
 
   // Serialization function
   friend class boost::serialization::access;
   template <class Archive>
   void serialize(Archive& ar, const unsigned int file_version) {
-    ar& BOOST_SERIALIZATION_NVP(graph_);
+    ar& BOOST_SERIALIZATION_NVP(params_);
+    ar& BOOST_SERIALIZATION_NVP(optimizer_);
+    ar& BOOST_SERIALIZATION_NVP(factors_);
     ar& BOOST_SERIALIZATION_NVP(values_);
+    ar& BOOST_SERIALIZATION_NVP(factor_adders_);
+    ar& BOOST_SERIALIZATION_NVP(node_adders_);
+    ar& BOOST_SERIALIZATION_NVP(stats_logger_);
+    ar& BOOST_SERIALIZATION_NVP(optimization_timer_);
+    ar& BOOST_SERIALIZATION_NVP(optimization_timer_);
+    ar& BOOST_SERIALIZATION_NVP(optimization_iterations_averager_);
+    ar& BOOST_SERIALIZATION_NVP(total_error_averager_);
   }
 
-  std::unique_ptr<GraphStats> graph_stats_;
-  std::shared_ptr<gtsam::Values> values_;
-  bool log_on_destruction_;
   GraphOptimizerParams params_;
-  gtsam::LevenbergMarquardtParams levenberg_marquardt_params_;
-  gtsam::NonlinearFactorGraph graph_;
-  boost::optional<gtsam::Marginals> marginals_;
-  std::multimap<localization_common::Time, FactorsToAdd> buffered_factors_to_add_;
+  std::unique_ptr<optimizers::Optimizer> optimizer_;
+  gtsam::NonlinearFactorGraph factors_;
+  std::shared_ptr<nodes::Values> values_;
+  std::vector<std::shared_ptr<factor_adders::FactorAdder>> factor_adders_;
+  std::vector<std::shared_ptr<node_adders::NodeAdder>> node_adders_;
+  localization_common::StatsLogger stats_logger_;
 
-  std::vector<std::shared_ptr<NodeUpdater>> node_updaters_;
-  std::vector<std::shared_ptr<GraphActionCompleter>> graph_action_completers_;
-  gtsam::Marginals::Factorization marginals_factorization_;
-  boost::optional<localization_common::Time> last_latest_time_;
+  // Logging
+  localization_common::Timer optimization_timer_ = localization_common::Timer("Optimization");
+  localization_common::Averager optimization_iterations_averager_ =
+    localization_common::Averager("Optimization Iterations");
+  localization_common::Averager total_error_averager_ = localization_common::Averager("Total Factor Error");
 };
 
 // Implementation
 template <typename FactorType>
-const std::vector<boost::shared_ptr<const FactorType>> GraphOptimizer::Factors() const {
-  typename std::vector<boost::shared_ptr<const FactorType>> factors;
-  for (const auto& factor : graph_factors()) {
+std::vector<boost::shared_ptr<const FactorType>> GraphOptimizer::Factors() const {
+  std::vector<boost::shared_ptr<const FactorType>> factors_vector;
+  for (const auto& factor : factors()) {
     const auto casted_factor = boost::dynamic_pointer_cast<const FactorType>(factor);
-    if (casted_factor) factors.emplace_back(casted_factor);
+    if (casted_factor) factors_vector.emplace_back(casted_factor);
   }
-  return factors;
+  return factors_vector;
+}
+
+template <typename FactorType>
+int GraphOptimizer::NumFactors() const {
+  int num_factors = 0;
+  for (const auto& factor : factors()) {
+    const auto casted_factor = boost::dynamic_pointer_cast<const FactorType>(factor);
+    if (casted_factor) ++num_factors;
+  }
+  return num_factors;
 }
 }  // namespace graph_optimizer
 

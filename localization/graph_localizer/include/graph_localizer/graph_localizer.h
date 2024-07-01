@@ -19,168 +19,69 @@
 #ifndef GRAPH_LOCALIZER_GRAPH_LOCALIZER_H_
 #define GRAPH_LOCALIZER_GRAPH_LOCALIZER_H_
 
-#include <graph_localizer/combined_nav_state_node_updater.h>
-#include <graph_localizer/combined_nav_state_node_updater_params.h>
-#include <graph_localizer/feature_tracker.h>
-#include <graph_localizer/feature_point_node_updater.h>
-#include <graph_localizer/depth_odometry_factor_adder.h>
-#include <graph_localizer/handrail_factor_adder.h>
+#include <factor_adders/loc_factor_adder.h>
 #include <graph_localizer/graph_localizer_params.h>
-#include <graph_localizer/graph_localizer_stats.h>
-#include <graph_localizer/robust_smart_projection_pose_factor.h>
-#include <graph_localizer/loc_factor_adder.h>
-#include <graph_localizer/loc_graph_action_completer.h>
-#include <graph_localizer/projection_graph_action_completer.h>
-#include <graph_localizer/projection_factor_adder.h>
-#include <graph_localizer/rotation_factor_adder.h>
-#include <graph_localizer/smart_projection_cumulative_factor_adder.h>
-#include <graph_localizer/smart_projection_graph_action_completer.h>
-#include <graph_localizer/standstill_factor_adder.h>
-#include <graph_optimizer/graph_optimizer.h>
-#include <imu_integration/latest_imu_integrator.h>
-#include <localization_common/combined_nav_state.h>
-#include <localization_common/combined_nav_state_covariances.h>
-#include <localization_common/time.h>
-#include <localization_measurements/depth_odometry_measurement.h>
-#include <localization_measurements/fan_speed_mode.h>
-#include <localization_measurements/feature_points_measurement.h>
-#include <localization_measurements/handrail_points_measurement.h>
 #include <localization_measurements/matched_projections_measurement.h>
-
-#include <gtsam/geometry/Cal3_S2.h>
-#include <gtsam/geometry/PinholePose.h>
-#include <gtsam/inference/Symbol.h>
-#include <gtsam/navigation/CombinedImuFactor.h>
-#include <gtsam/navigation/ImuBias.h>
-#include <gtsam/navigation/NavState.h>
-#include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
-#include <gtsam/nonlinear/Marginals.h>
-#include <gtsam/nonlinear/NonlinearFactorGraph.h>
-#include <gtsam/slam/ProjectionFactor.h>
-#include <gtsam/slam/SmartFactorParams.h>
-#include <gtsam/slam/SmartProjectionPoseFactor.h>
+#include <localization_measurements/pose_measurement.h>
+#include <node_adders/pose_node_adder.h>
+#include <nodes/timestamped_nodes.h>
+#include <sliding_window_graph_optimizer/sliding_window_graph_optimizer.h>
 
 #include <boost/serialization/serialization.hpp>
 
-#include <map>
-#include <string>
-#include <utility>
-#include <vector>
-
 namespace graph_localizer {
-namespace sym = gtsam::symbol_shorthand;
-using Calibration = gtsam::Cal3_S2;
-using Camera = gtsam::PinholePose<Calibration>;
-using RobustSmartFactor = gtsam::RobustSmartProjectionPoseFactor<Calibration>;
-using SharedRobustSmartFactor = boost::shared_ptr<RobustSmartFactor>;
-using ProjectionFactor = gtsam::GenericProjectionFactor<gtsam::Pose3, gtsam::Point3>;
-
-class GraphLocalizer : public graph_optimizer::GraphOptimizer {
+// Siding window graph optimizer that uses matched projections and odomery poses to perform localization.
+// Uses the PoseNodeAdder to add relative odometry pose factors between graph nodes.
+// Matched projections typically come from matching images to a map of image
+// features.
+class GraphLocalizer : public sliding_window_graph_optimizer::SlidingWindowGraphOptimizer {
  public:
   explicit GraphLocalizer(const GraphLocalizerParams& params);
+
   // For Serialization Only
   GraphLocalizer() {}
-  ~GraphLocalizer() = default;
-  void AddImuMeasurement(const localization_measurements::ImuMeasurement& imu_measurement);
-  boost::optional<localization_common::CombinedNavState> LatestCombinedNavState() const;
-  boost::optional<localization_common::CombinedNavState> GetCombinedNavState(
-    const localization_common::Time time) const;
-  boost::optional<std::pair<localization_common::CombinedNavState, localization_common::CombinedNavStateCovariances>>
-  LatestCombinedNavStateAndCovariances() const;
-  bool AddOpticalFlowMeasurement(
-    const localization_measurements::FeaturePointsMeasurement& optical_flow_feature_points_measurement);
-  void CheckForStandstill();
-  void AddARTagMeasurement(
+
+  // Adds pose measurement to the pose node adder.
+  void AddPoseMeasurement(const localization_measurements::PoseWithCovarianceMeasurement& pose_measurement);
+
+  // Adds sparse map matched projections measurement to loc factor adder.
+  void AddSparseMapMatchedProjectionsMeasurement(
     const localization_measurements::MatchedProjectionsMeasurement& matched_projections_measurement);
-  void AddSparseMappingMeasurement(
+
+  // Adds AR tag matched projections measurement to loc factor adder.
+  void AddArTagMatchedProjectionsMeasurement(
     const localization_measurements::MatchedProjectionsMeasurement& matched_projections_measurement);
-  void AddHandrailMeasurement(const localization_measurements::HandrailPointsMeasurement& handrail_points_measurement);
-  void AddDepthOdometryMeasurement(
-    const localization_measurements::DepthOdometryMeasurement& depth_odometry_measurement);
-  bool DoPostOptimizeActions() final;
-  const FeatureTrackIdMap& feature_tracks() const { return feature_tracker_->feature_tracks(); }
 
-  boost::optional<std::pair<gtsam::imuBias::ConstantBias, localization_common::Time>> LatestBiases() const;
+  // Returns a const reference to pose nodes.
+  const nodes::TimestampedNodes<gtsam::Pose3>& pose_nodes() const;
 
-  boost::optional<localization_common::Time> LatestExtrapolatedPoseTime() const;
-
-  int NumFeatures() const;
-
-  int NumOFFactors(const bool check_valid = true) const;
-
-  int NumProjectionFactors(const bool check_valid = true) const;
-
-  bool standstill() const;
-
-  const GraphLocalizerParams& params() const;
-
-  const GraphLocalizerStats& graph_localizer_stats() const;
-
-  void SetFanSpeedMode(const localization_measurements::FanSpeedMode fan_speed_mode);
-
-  const localization_measurements::FanSpeedMode fan_speed_mode() const;
-
-  const CombinedNavStateGraphValues& combined_nav_state_graph_values() const;
-
-  const CombinedNavStateNodeUpdater& combined_nav_state_node_updater() const;
+  // Sets pose covariance interpolater for relative odometry pose node creation
+  void SetPoseCovarianceInterpolater(
+    const std::shared_ptr<localization_common::MarginalsPoseCovarianceInterpolater<nodes::CombinedNavStateNodes>>&
+      pose_covariance_interpolater);
 
  private:
-  void InitializeNodeUpdaters();
-  void InitializeFactorAdders();
-  void InitializeGraphActionCompleters();
-  void DoPostSlideWindowActions(const localization_common::Time oldest_allowed_time,
-                                const boost::optional<gtsam::Marginals>& marginals) final;
-
-  boost::optional<std::pair<localization_common::CombinedNavState, localization_common::CombinedNavStateCovariances>>
-  LatestCombinedNavStateAndCovariances(const gtsam::Marginals& marginals) const;
-
-  void BufferCumulativeFactors() final;
-
-  void RemoveOldMeasurementsFromCumulativeFactors(const gtsam::KeyVector& old_keys) final;
-
-  bool ValidGraph() const final;
-
-  bool ReadyToAddFactors(const localization_common::Time timestamp) const final;
-
-  bool MeasurementRecentEnough(const localization_common::Time timestamp) const final;
-
-  void PrintFactorDebugInfo() const final;
+  // bool ValidGraph() const final;
 
   // Serialization function
   friend class boost::serialization::access;
   template <class Archive>
   void serialize(Archive& ar, const unsigned int file_version) {
-    ar& BOOST_SERIALIZATION_BASE_OBJECT_NVP(graph_optimizer::GraphOptimizer);
-    ar& BOOST_SERIALIZATION_NVP(feature_tracker_);
-    ar& BOOST_SERIALIZATION_NVP(combined_nav_state_node_updater_);
+    ar& BOOST_SERIALIZATION_BASE_OBJECT_NVP(sliding_window_graph_optimizer::SlidingWindowGraphOptimizer);
+    ar& BOOST_SERIALIZATION_NVP(params_);
+    ar& BOOST_SERIALIZATION_NVP(sparse_map_loc_factor_adder_);
+    ar& BOOST_SERIALIZATION_NVP(ar_tag_loc_factor_adder_);
+    ar& BOOST_SERIALIZATION_NVP(pose_node_adder_);
   }
 
-  std::shared_ptr<FeatureTracker> feature_tracker_;
-  std::shared_ptr<imu_integration::LatestImuIntegrator> latest_imu_integrator_;
   GraphLocalizerParams params_;
-  boost::optional<localization_measurements::FeaturePointsMeasurement> last_optical_flow_measurement_;
 
   // Factor Adders
-  std::shared_ptr<LocFactorAdder> ar_tag_loc_factor_adder_;
-  std::shared_ptr<DepthOdometryFactorAdder> depth_odometry_factor_adder_;
-  std::shared_ptr<HandrailFactorAdder> handrail_factor_adder_;
-  std::shared_ptr<LocFactorAdder> loc_factor_adder_;
-  std::shared_ptr<ProjectionFactorAdder> projection_factor_adder_;
-  std::shared_ptr<RotationFactorAdder> rotation_factor_adder_;
-  std::shared_ptr<SmartProjectionCumulativeFactorAdder> smart_projection_cumulative_factor_adder_;
-  std::shared_ptr<StandstillFactorAdder> standstill_factor_adder_;
+  std::shared_ptr<factor_adders::LocFactorAdder<node_adders::PoseNodeAdder>> sparse_map_loc_factor_adder_;
+  std::shared_ptr<factor_adders::LocFactorAdder<node_adders::PoseNodeAdder>> ar_tag_loc_factor_adder_;
 
-  // Node Updaters
-  std::shared_ptr<CombinedNavStateNodeUpdater> combined_nav_state_node_updater_;
-  std::shared_ptr<FeaturePointNodeUpdater> feature_point_node_updater_;
-
-  // Graph Action Completers
-  std::shared_ptr<LocGraphActionCompleter> ar_tag_loc_graph_action_completer_;
-  std::shared_ptr<LocGraphActionCompleter> loc_graph_action_completer_;
-  std::shared_ptr<ProjectionGraphActionCompleter> projection_graph_action_completer_;
-  std::shared_ptr<SmartProjectionGraphActionCompleter> smart_projection_graph_action_completer_;
-
-  boost::optional<bool> standstill_;
+  // Node Adders
+  std::shared_ptr<node_adders::PoseNodeAdder> pose_node_adder_;
 };
 }  // namespace graph_localizer
 

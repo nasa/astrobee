@@ -34,6 +34,10 @@ struct DepthOdometryWrapperParams {
   Eigen::Affine3d haz_cam_A_haz_depth;
   PointToPlaneICPDepthOdometryParams icp;
   ImageFeaturesWithKnownCorrespondencesAlignerDepthOdometryParams image_features;
+  // Used for image and point cloud buffer
+  double max_buffer_size;
+  // Max number of depth images to generate per cycle
+  double max_depth_images;
 };
 }  // namespace depth_odometry
 

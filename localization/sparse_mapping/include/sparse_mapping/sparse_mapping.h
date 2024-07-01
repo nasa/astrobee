@@ -69,172 +69,135 @@ namespace sparse_mapping {
   // cid_to_camera_transform - Index on CID. Contains affine transform
   //    representing camera_t_global.
 
-  Eigen::Quaternion<double> slerp_n(std::vector<double> const& W,
-                                    std::vector<Eigen::Quaternion<double> > const& Q);
+enum HistogramEqualizationType { kNone = 0, kEqualizeHist = 1, kUnknown = 2, kCLAHE = 3 };
 
-  bool IsBinaryDescriptor(std::string const& descriptor);
+Eigen::Quaternion<double> slerp_n(std::vector<double> const& W, std::vector<Eigen::Quaternion<double> > const& Q);
 
-  // Logic for implementing if two histogram equalization flags are compatible
-  void HistogramEqualizationCheck(int histogram_equalization1, int histogram_equalization2);
+bool IsBinaryDescriptor(std::string const& descriptor);
 
-  // Writes the NVM control network format.
-  void WriteNVM(std::vector<Eigen::Matrix2Xd > const& cid_to_keypoint_map,
-                std::vector<std::string> const& cid_to_filename,
-                std::vector<std::map<int, int> > const& pid_to_cid_fid,
-                std::vector<Eigen::Vector3d> const& pid_to_xyz,
-                std::vector<Eigen::Affine3d> const& cid_to_cam_t_global,
-                double focal_length,
-                std::string const& output_filename);
-  // Reads the NVM control network format.
-  void ReadNVM(std::string const& input_filename,
-               std::vector<Eigen::Matrix2Xd > * cid_to_keypoint_map,
-               std::vector<std::string> * cid_to_filename,
-               std::vector<std::map<int, int> > * pid_to_cid_fid,
-               std::vector<Eigen::Vector3d> * pid_to_xyz,
-               std::vector<Eigen::Affine3d> * cid_to_cam_t_global);
+// Logic for implementing if two histogram equalization flags are compatible
+void HistogramEqualizationCheck(int histogram_equalization1, int histogram_equalization2);
 
-  // Adds yaml.gz or .txt extension, depending on descriptor
-  std::string ImageToFeatureFile(std::string const& image_file,
-                                 std::string const& detector_name);
+// Writes the NVM control network format.
+void WriteNVM(std::vector<Eigen::Matrix2Xd> const& cid_to_keypoint_map, std::vector<std::string> const& cid_to_filename,
+              std::vector<std::map<int, int> > const& pid_to_cid_fid, std::vector<Eigen::Vector3d> const& pid_to_xyz,
+              std::vector<Eigen::Affine3d> const& cid_to_cam_t_global, double focal_length,
+              std::string const& output_filename);
+// Reads the NVM control network format.
+void ReadNVM(std::string const& input_filename, std::vector<Eigen::Matrix2Xd>* cid_to_keypoint_map,
+             std::vector<std::string>* cid_to_filename, std::vector<std::map<int, int> >* pid_to_cid_fid,
+             std::vector<Eigen::Vector3d>* pid_to_xyz, std::vector<Eigen::Affine3d>* cid_to_cam_t_global);
 
-  // The name of the file storing the list of images
-  std::string DBImagesFile(std::string const& db_name);
+// Adds yaml.gz or .txt extension, depending on descriptor
+std::string ImageToFeatureFile(std::string const& image_file, std::string const& detector_name);
 
-  // The name of the matches file
-  std::string MatchesFile(std::string const& map_file);
+// The name of the file storing the list of images
+std::string DBImagesFile(std::string const& db_name);
 
-  // The name of the essential file
-  std::string EssentialFile(std::string const& map_file);
+// The name of the matches file
+std::string MatchesFile(std::string const& map_file);
 
-  // Write features yaml file
-  void WriteFeatures(std::string const& detector_name,
-                     std::vector<cv::KeyPoint> const& keypoints,
-                     cv::Mat const& descriptors,
-                     std::string const& output_filename);
+// The name of the essential file
+std::string EssentialFile(std::string const& map_file);
 
-  // Read features yaml file
-  bool ReadFeatures(std::string const& input_filename,
-                    std::string const& detector_name,
-                    std::vector<cv::KeyPoint> * keypoints,
-                    cv::Mat * descriptors);
+// Write features yaml file
+void WriteFeatures(std::string const& detector_name, std::vector<cv::KeyPoint> const& keypoints,
+                   cv::Mat const& descriptors, std::string const& output_filename);
 
-  // Read SIFT features in Lowe's format
-  int ReadFeaturesSIFT(std::string const& filename,
-                       cv::Mat * descriptors,
-                       std::vector<cv::KeyPoint> * keypoints);
+// Read features yaml file
+bool ReadFeatures(std::string const& input_filename, std::string const& detector_name,
+                  std::vector<cv::KeyPoint>* keypoints, cv::Mat* descriptors);
 
-  // Triangulate metric camera point
-  //     unnormalized point means that the point is:
-  //     [px (image loc) - cx (optical center), py - cy, f (f length in px)]
-  Eigen::Vector3d
-  TriangulatePoint(Eigen::Vector3d const& unnormalized_pt1,
-                   Eigen::Vector3d const& unnormalized_pt2,
-                   Eigen::Matrix3d const& cam2_r_cam1,
-                   Eigen::Vector3d const& cam2_t_cam1,
-                   double* error);
+// Read SIFT features in Lowe's format
+int ReadFeaturesSIFT(std::string const& filename, cv::Mat* descriptors, std::vector<cv::KeyPoint>* keypoints);
 
-  // Decompose Fundamental Matrix into Essential Matrix given known
-  // Intrinsics Matrix.
-  void DecomposeFMatIntoEMat(Eigen::Matrix3d const& fundamental,
-                             Eigen::Matrix3d const& intrinsics,
-                             Eigen::Matrix3d * essential);
+// Triangulate metric camera point
+//     unnormalized point means that the point is:
+//     [px (image loc) - cx (optical center), py - cy, f (f length in px)]
+Eigen::Vector3d TriangulatePoint(Eigen::Vector3d const& unnormalized_pt1, Eigen::Vector3d const& unnormalized_pt2,
+                                 Eigen::Matrix3d const& cam2_r_cam1, Eigen::Vector3d const& cam2_t_cam1, double* error);
 
-  // Decompose Essential Matrix into R and T
-  void DecomposeEMatIntoRT(Eigen::Matrix3d const& essential,
-                           Eigen::Matrix2Xd const& unnormalized_pts1,
-                           Eigen::Matrix2Xd const& unnormalized_pts2,
-                           std::vector<cv::DMatch> const& matches,
-                           double focal_length1,  // Camera 1
-                           double focal_length2,  // Camera 2
-                           Eigen::Matrix3d * cam2_r_cam1,
-                           Eigen::Vector3d * cam2_t_cam1);
+// Decompose Fundamental Matrix into Essential Matrix given known
+// Intrinsics Matrix.
+void DecomposeFMatIntoEMat(Eigen::Matrix3d const& fundamental, Eigen::Matrix3d const& intrinsics,
+                           Eigen::Matrix3d* essential);
 
-  // Utility to return the type of entries in a given matrix
-  std::string CvMatTypeStr(cv::Mat const& Mat);
+// Decompose Essential Matrix into R and T
+void DecomposeEMatIntoRT(Eigen::Matrix3d const& essential, Eigen::Matrix2Xd const& unnormalized_pts1,
+                         Eigen::Matrix2Xd const& unnormalized_pts2, std::vector<cv::DMatch> const& matches,
+                         double focal_length1,  // Camera 1
+                         double focal_length2,  // Camera 2
+                         Eigen::Matrix3d* cam2_r_cam1, Eigen::Vector3d* cam2_t_cam1);
 
-  void ListToListMap(std::vector<std::string> const& big_list,
-                     std::vector<std::string> const& small_list,
-                     std::map<int, int> * map);
+// Utility to return the type of entries in a given matrix
+std::string CvMatTypeStr(cv::Mat const& Mat);
 
-  void MergePids(int repeat_index, int num_unique,
-                 std::vector<std::map<int, int> > * pid_to_cid_fid);
+void ListToListMap(std::vector<std::string> const& big_list, std::vector<std::string> const& small_list,
+                   std::map<int, int>* map);
 
-  void PrintPidStats(std::vector<std::map<int, int> > const& pid_to_cid_fid);
+void MergePids(int repeat_index, int num_unique, std::vector<std::map<int, int> >* pid_to_cid_fid);
 
-  // Extract control points and the images they correspond to from
-  // a hugin project file
-  void ParseHuginControlPoints(std::string const& hugin_file,
-                               std::vector<std::string> * images,
-                               Eigen::MatrixXd * points);
+void PrintPidStats(std::vector<std::map<int, int> > const& pid_to_cid_fid);
 
-  // Parse a file having on each line xyz coordinates
-  void ParseXYZ(std::string const& xyz_file, Eigen::MatrixXd * xyz);
+// Extract control points and the images they correspond to from
+// a hugin project file
+void ParseHuginControlPoints(std::string const& hugin_file, std::vector<std::string>* images, Eigen::MatrixXd* points);
 
-  // Parse a CSV file, with the first line having column names. Return
-  // the results as columns in an std::map, with the column name being
-  // the key. We assume all values are numbers (non-numbers are set to
-  // 0).
-  void ParseCSV(std::string const& csv_file,
-                std::map< std::string, std::vector<double> > *cols);
+// Parse a file having on each line xyz coordinates
+void ParseXYZ(std::string const& xyz_file, Eigen::MatrixXd* xyz);
 
-  // save size before protbuf, to save multiple protobufs in one file
-  bool WriteProtobufTo(const google::protobuf::MessageLite& message,
+// Parse a CSV file, with the first line having column names. Return
+// the results as columns in an std::map, with the column name being
+// the key. We assume all values are numbers (non-numbers are set to
+// 0).
+void ParseCSV(std::string const& csv_file, std::map<std::string, std::vector<double> >* cols);
+
+// save size before protbuf, to save multiple protobufs in one file
+bool WriteProtobufTo(const google::protobuf::MessageLite& message,
                      google::protobuf::io::ZeroCopyOutputStream* rawOutput);
 
-  // save size before file, then write file into rawOutput
-  bool WriteFileTo(const char* filename,
-                     google::protobuf::io::ZeroCopyOutputStream* rawOutput);
+// save size before file, then write file into rawOutput
+bool WriteFileTo(const char* filename, google::protobuf::io::ZeroCopyOutputStream* rawOutput);
 
-  // read size before protbuf, to save multiple protobufs in one file
-  bool ReadProtobufFrom(google::protobuf::io::ZeroCopyInputStream* rawInput,
-                      google::protobuf::MessageLite* message);
+// read size before protbuf, to save multiple protobufs in one file
+bool ReadProtobufFrom(google::protobuf::io::ZeroCopyInputStream* rawInput, google::protobuf::MessageLite* message);
 
-  // read a size before protobuf, then read a file and write it to filename
-  bool ReadFileFrom(google::protobuf::io::ZeroCopyInputStream* rawInput, const char* filename);
+// read a size before protobuf, then read a file and write it to filename
+bool ReadFileFrom(google::protobuf::io::ZeroCopyInputStream* rawInput, const char* filename);
 
-  // Apply a given transform to the specified xyz points, and adjust
-  // accordingly the cameras for consistency.
-  void TransformCamerasAndPoints(Eigen::Affine3d const& A,
-                                 std::vector<Eigen::Affine3d> *cid_to_cam_t,
-                                 std::vector<Eigen::Vector3d> *xyz);
+// Apply a given transform to the specified xyz points, and adjust
+// accordingly the cameras for consistency.
+void TransformCamerasAndPoints(Eigen::Affine3d const& A, std::vector<Eigen::Affine3d>* cid_to_cam_t,
+                               std::vector<Eigen::Vector3d>* xyz);
 
-  // Get the error threshold based on a multiple of a percentile
-  double GetErrThresh(const std::vector<double> & errors, double factor);
+// Get the error threshold based on a multiple of a percentile
+double GetErrThresh(const std::vector<double>& errors, double factor);
 
-  // Find the maximum angle between n rays intersecting at given
-  // point. Must compute the camera centers in the global coordinate
-  // system before calling this function.
-  double ComputeRaysAngle(int pid,
-                          std::vector<std::map<int, int> > const& pid_to_cid_fid,
-                          std::vector<Eigen::Vector3d> const & cam_ctrs,
-                          std::vector<Eigen::Vector3d> const& pid_to_xyz);
+// Find the maximum angle between n rays intersecting at given
+// point. Must compute the camera centers in the global coordinate
+// system before calling this function.
+double ComputeRaysAngle(int pid, std::vector<std::map<int, int> > const& pid_to_cid_fid,
+                        std::vector<Eigen::Vector3d> const& cam_ctrs, std::vector<Eigen::Vector3d> const& pid_to_xyz);
 
-  // Filter points by reprojection error and other criteria
-  void FilterPID(double reproj_thresh,
-                 camera::CameraParameters const& camera_params,
-                 std::vector<Eigen::Affine3d > const& cid_to_cam_t_global,
-                 std::vector<Eigen::Matrix2Xd > const& cid_to_keypoint_map,
-                 std::vector<std::map<int, int> > * pid_to_cid_fid,
-                 std::vector<Eigen::Vector3d> * pid_to_xyz,
-                 bool print_stats = true, double multiple_of_median = 3.0);
+// Filter points by reprojection error and other criteria
+void FilterPID(double reproj_thresh, camera::CameraParameters const& camera_params,
+               std::vector<Eigen::Affine3d> const& cid_to_cam_t_global,
+               std::vector<Eigen::Matrix2Xd> const& cid_to_keypoint_map,
+               std::vector<std::map<int, int> >* pid_to_cid_fid, std::vector<Eigen::Vector3d>* pid_to_xyz,
+               bool print_stats = true, double multiple_of_median = 3.0);
 
-  // Write the BAL format.
-  bool WriteBAL(const std::string& filename,
-                camera::CameraParameters const& camera_params,
-                std::vector<std::map<int, int> > const& pid_to_cid_fid,
-                std::vector<Eigen::Vector3d> const& pid_to_xyz,
-                std::vector<Eigen::Affine3d> const& cid_to_cam_t_global,
-                std::vector<Eigen::Matrix2Xd > const& cid_to_keypoint_map);
+// Write the BAL format.
+bool WriteBAL(const std::string& filename, camera::CameraParameters const& camera_params,
+              std::vector<std::map<int, int> > const& pid_to_cid_fid, std::vector<Eigen::Vector3d> const& pid_to_xyz,
+              std::vector<Eigen::Affine3d> const& cid_to_cam_t_global,
+              std::vector<Eigen::Matrix2Xd> const& cid_to_keypoint_map);
 
-  // Given a data sequence having camera pose information for
-  // a set of timestamps, interpolate those poses at the timestamps
-  // given in out_time. We assume timestamps are always in increasing values.
-  void PoseInterpolation(std::vector<std::string> const& images,
-                         std::vector<double> const& out_time,
-                         std::map< std::string, std::vector<double> >
-                         const& data,
-                         std::vector<Eigen::Affine3d> * cid_to_cam_t,
-                         std::vector<std::string> * good_images);
+// Given a data sequence having camera pose information for
+// a set of timestamps, interpolate those poses at the timestamps
+// given in out_time. We assume timestamps are always in increasing values.
+void PoseInterpolation(std::vector<std::string> const& images, std::vector<double> const& out_time,
+                       std::map<std::string, std::vector<double> > const& data,
+                       std::vector<Eigen::Affine3d>* cid_to_cam_t, std::vector<std::string>* good_images);
 
 }  // namespace sparse_mapping
 

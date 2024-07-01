@@ -20,7 +20,8 @@
 #define LOCALIZATION_COMMON_UTILITIES_H_
 
 #include <config_reader/config_reader.h>
-#include <ff_msgs/GraphState.h>
+#include <ff_msgs/CombinedNavState.h>
+#include <ff_msgs/GraphVIOState.h>
 #include <ff_msgs/VisualLandmarks.h>
 #include <localization_common/combined_nav_state.h>
 #include <localization_common/combined_nav_state_covariances.h>
@@ -30,6 +31,8 @@
 
 #include <gtsam/geometry/Cal3_S2.h>
 #include <gtsam/geometry/Pose3.h>
+#include <gtsam/linear/NoiseModel.h>
+#include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
 #include <Eigen/Core>
 
@@ -43,11 +46,17 @@
 #include <vector>
 
 namespace localization_common {
-gtsam::Pose3 LoadTransform(config_reader::ConfigReader& config, const std::string& transform_config_name);
+gtsam::Pose3 LoadTransform(config_reader::ConfigReader& config, const std::string& transform_config_name,
+                           const std::string& prefix = "");
 
-gtsam::Vector3 LoadVector3(config_reader::ConfigReader& config, const std::string& config_name);
+gtsam::Vector3 LoadVector3(config_reader::ConfigReader& config, const std::string& config_name,
+                           const std::string& prefix = "");
 
-gtsam::Cal3_S2 LoadCameraIntrinsics(config_reader::ConfigReader& config, const std::string& intrinsics_config_name);
+Eigen::Matrix3d LoadCameraIntrinsicsMatrix(config_reader::ConfigReader& config,
+                                           const std::string& intrinsics_config_name, const std::string& prefix = "");
+
+gtsam::Cal3_S2 LoadCameraIntrinsics(config_reader::ConfigReader& config, const std::string& intrinsics_config_name,
+                                    const std::string& prefix = "");
 
 gtsam::Pose3 GtPose(const Eigen::Isometry3d& eigen_pose);
 
@@ -61,8 +70,9 @@ gtsam::Pose3 PoseFromMsgWithExtrinsics(const geometry_msgs::Pose& pose, const gt
 // Load either iss or granite graph localizer config depending on environment variable for ASTROBEE_WORLD
 void LoadGraphLocalizerConfig(config_reader::ConfigReader& config, const std::string& path_prefix = "");
 
-void SetEnvironmentConfigs(const std::string& astrobee_configs_path, const std::string& world,
-                           const std::string& robot_config_file);
+void LoadGraphVIOConfig(config_reader::ConfigReader& config, const std::string& path_prefix = "");
+
+void SetEnvironmentConfigs(const std::string& world = "iss", const std::string& robot_config_file = "bumble.config");
 
 ros::Time RosTimeFromHeader(const std_msgs::Header& header);
 
@@ -88,9 +98,11 @@ geometry_msgs::TransformStamped PoseToTF(const gtsam::Pose3& pose, const std::st
                                          const std::string& child_frame, const Time timestamp,
                                          const std::string& platform_name = "");
 
-CombinedNavState CombinedNavStateFromMsg(const ff_msgs::GraphState& loc_msg);
+CombinedNavState CombinedNavStateFromMsg(const ff_msgs::CombinedNavState& msg);
 
-CombinedNavStateCovariances CombinedNavStateCovariancesFromMsg(const ff_msgs::GraphState& loc_msg);
+CombinedNavStateCovariances CombinedNavStateCovariancesFromMsg(const ff_msgs::CombinedNavState& msg);
+
+TimestampedSet<PoseCovariance> CorrelationCovariancesFromMsg(const ff_msgs::CombinedNavState& msg);
 
 // Returns gravity corrected accelerometer measurement
 gtsam::Vector3 RemoveGravityFromAccelerometerMeasurement(const gtsam::Vector3& global_F_gravity,
@@ -98,11 +110,17 @@ gtsam::Vector3 RemoveGravityFromAccelerometerMeasurement(const gtsam::Vector3& g
                                                          const gtsam::Pose3& global_T_body,
                                                          const gtsam::Vector3& uncorrected_accelerometer_measurement);
 
-template <class LocMsgType>
-void CombinedNavStateToMsg(const CombinedNavState& combined_nav_state, LocMsgType& loc_msg);
+ff_msgs::CombinedNavState CombinedNavStateToMsg(const CombinedNavState& combined_nav_state,
+                                                const PoseCovariance& pose_covariance,
+                                                const Eigen::Matrix3d& velocity_covariance,
+                                                const Eigen::Matrix<double, 6, 6>& imu_bias_covariance,
+                                                const TimestampedSet<PoseCovariance>& correlation_covariances = {});
 
 template <class LocMsgType>
-void CombinedNavStateCovariancesToMsg(const CombinedNavStateCovariances& covariances, LocMsgType& loc_msg);
+void CombinedNavStateToLocMsg(const CombinedNavState& combined_nav_state, LocMsgType& loc_msg);
+
+template <class LocMsgType>
+void CombinedNavStateCovariancesToLocMsg(const CombinedNavStateCovariances& covariances, LocMsgType& loc_msg);
 
 template <typename MatrixType>
 double LogDeterminant(const MatrixType& matrix);
@@ -124,6 +142,11 @@ Eigen::Vector3d CylindricalToCartesian(const Eigen::Vector3d& cylindrical_coordi
 
 // Uses Euler Angles in intrinsic ypr representation in degrees
 Eigen::Matrix3d RotationFromEulerAngles(const double yaw, const double pitch, const double roll);
+
+// Returns the relative covariance between two pose with covariances.
+// Optionally uses the correlation covariance matrix covariance_a_b for a more accurate estimate if provided.
+PoseCovariance RelativePoseCovariance(const PoseWithCovariance& a, const PoseWithCovariance& b,
+                                      const boost::optional<PoseCovariance> covariance_a_b = boost::none);
 
 Eigen::Isometry3d FrameChangeRelativePose(const Eigen::Isometry3d& a_F_relative_pose, const Eigen::Isometry3d& b_T_a);
 
@@ -152,9 +175,23 @@ std::pair<std::vector<Eigen::Vector3d>, std::vector<Eigen::Vector3d>> TransformP
 Eigen::Isometry3d Interpolate(const Eigen::Isometry3d& lower_bound_pose, const Eigen::Isometry3d& upper_bound_pose,
                               const double alpha);
 
+PoseWithCovariance Interpolate(const PoseWithCovariance& lower_bound_pose, const PoseWithCovariance& upper_bound_pose,
+                               const double alpha);
+
+gtsam::noiseModel::Robust::shared_ptr Robust(const gtsam::SharedNoiseModel& noise, const double huber_k);
+
+template <typename FactorType>
+void DeleteFactors(gtsam::NonlinearFactorGraph& graph);
+
+template <typename FactorType>
+int NumFactors(const gtsam::NonlinearFactorGraph& graph);
+
+template <typename FactorType>
+std::vector<const FactorType*> Factors(const gtsam::NonlinearFactorGraph& graph);
+
 // Implementations
 template <class LocMsgType>
-void CombinedNavStateToMsg(const CombinedNavState& combined_nav_state, LocMsgType& loc_msg) {
+void CombinedNavStateToLocMsg(const CombinedNavState& combined_nav_state, LocMsgType& loc_msg) {
   PoseToMsg(combined_nav_state.pose(), loc_msg.pose);
   msg_conversions::VectorToMsg(combined_nav_state.velocity(), loc_msg.velocity);
   msg_conversions::VectorToMsg(combined_nav_state.bias().accelerometer(), loc_msg.accel_bias);
@@ -163,7 +200,7 @@ void CombinedNavStateToMsg(const CombinedNavState& combined_nav_state, LocMsgTyp
 }
 
 template <class LocMsgType>
-void CombinedNavStateCovariancesToMsg(const CombinedNavStateCovariances& covariances, LocMsgType& loc_msg) {
+void CombinedNavStateCovariancesToLocMsg(const CombinedNavStateCovariances& covariances, LocMsgType& loc_msg) {
   // Orientation (0-2)
   msg_conversions::VariancesToCovDiag(covariances.orientation_variances(), &loc_msg.cov_diag[0]);
 
@@ -227,6 +264,42 @@ std::vector<T> Rotate(const std::vector<T>& a_F_a_T_elements, const Eigen::Matri
     b_F_a_T_elements.emplace_back(b_R_a * a_F_a_T_element);
   }
   return b_F_a_T_elements;
+}
+
+template <typename FactorType>
+void DeleteFactors(gtsam::NonlinearFactorGraph& graph) {
+  int num_removed_factors = 0;
+  for (auto factor_it = graph.begin(); factor_it != graph.end();) {
+    if (dynamic_cast<FactorType*>(factor_it->get())) {
+      factor_it = graph.erase(factor_it);
+      ++num_removed_factors;
+      continue;
+    }
+    ++factor_it;
+  }
+}
+
+template <typename FactorType>
+int NumFactors(const gtsam::NonlinearFactorGraph& graph) {
+  int num_factors = 0;
+  for (const auto& factor : graph) {
+    if (dynamic_cast<const FactorType*>(factor.get())) {
+      ++num_factors;
+    }
+  }
+  return num_factors;
+}
+
+template <typename FactorType>
+std::vector<const FactorType*> Factors(const gtsam::NonlinearFactorGraph& graph) {
+  std::vector<const FactorType*> factors;
+  for (const auto& factor : graph) {
+    const FactorType* casted_factor = dynamic_cast<const FactorType*>(factor.get());
+    if (casted_factor) {
+      factors.emplace_back(casted_factor);
+    }
+  }
+  return factors;
 }
 }  // namespace localization_common
 

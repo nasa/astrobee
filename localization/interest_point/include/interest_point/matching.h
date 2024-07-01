@@ -18,6 +18,7 @@
 #ifndef INTEREST_POINT_MATCHING_H_
 #define INTEREST_POINT_MATCHING_H_
 
+#include <boost/optional.hpp>
 #include <opencv2/features2d/features2d.hpp>
 #include <Eigen/Core>
 
@@ -45,9 +46,12 @@ namespace interest_point {
     void GetDetectorParams(int & min_features, int & max_features, int & max_retries,
                            double & min_thresh, double & default_thresh, double & max_thresh);
 
+    int last_keypoint_count(void) { return last_keypoint_count_; }
+
    protected:
     unsigned int min_features_, max_features_, max_retries_;
     double min_thresh_, default_thresh_, max_thresh_, dynamic_thresh_;
+    int last_keypoint_count_;
   };
 
   class FeatureDetector {
@@ -81,16 +85,20 @@ namespace interest_point {
     friend bool operator== (FeatureDetector const& A, FeatureDetector const& B) {
       return (A.detector_name_ == B.detector_name_);
     }
+
+    DynamicDetector& dynamic_detector() { return *detector_; }
   };
 
   /**
    * descriptor is what opencv descriptor was used to make the descriptors
    * the descriptor maps are the features in the two images
    * matches is output to contain the matching features between the two images
+   * Optionally pass hamming distance and goodness ratio, otherwise flag
+   * values are used.
    **/
-  void FindMatches(const cv::Mat & img1_descriptor_map,
-                   const cv::Mat & img2_descriptor_map,
-                   std::vector<cv::DMatch> * matches);
+  void FindMatches(const cv::Mat& img1_descriptor_map, const cv::Mat& img2_descriptor_map,
+                   std::vector<cv::DMatch>* matches, boost::optional<int> hamming_distance = boost::none,
+                   boost::optional<double> goodness_ratio = boost::none);
 }  // namespace interest_point
 
 #endif  // INTEREST_POINT_MATCHING_H_

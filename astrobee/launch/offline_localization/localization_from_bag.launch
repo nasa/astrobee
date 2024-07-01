@@ -24,7 +24,7 @@
   <!-- Command line arguments -->
   <arg name="bagfile"/>             
   <arg name="record" default="false" />
-  <arg name="imu_augmentor" default="true" />
+  <arg name="pose_extrapolator" default="true" />
   <arg name="depth_odometry" default="false" />
   <arg name="robot" default="bumble" />
   <arg name="world" default="iss" />
@@ -46,51 +46,51 @@
   <group if="$(arg record)">
     <arg name="output_bagfile"/>             
     <include file="$(find astrobee)/launch/offline_localization/record_localization.launch">
-      <arg name="terminal" value="terminator -x"/>
+      <arg name="terminal" value="xterm -hold -e"/>
       <arg name="output_bagfile" value="$(arg output_bagfile)"/>
     </include>
   </group>
 
-  <!-- Run imu augmentor if required -->
-  <group if="$(arg imu_augmentor)">
-    <include file="$(find imu_augmentor)/launch/imu_augmentor.launch">
-      <arg name="terminal" value="terminator -x"/>
+  <!-- Run pose extrapolator if required -->
+  <group if="$(arg pose_extrapolator)">
+    <include file="$(find ros_pose_extrapolator)/launch/ros_pose_extrapolator.launch">
+      <arg name="terminal" value="xterm -hold -e"/>
     </include>
   </group>
 
-  <include file="$(find imu_bias_tester)/launch/imu_bias_tester.launch">
-    <arg name="terminal" value="terminator -x"/>
-  </include>
+  <!-- include file="$(find imu_bias_tester)/launch/imu_bias_tester.launch">
+    <arg name="terminal" value="xterm -hold -e"/>
+  </include -->
 
   <!-- Nodes to run -->
   <group unless="$(arg image_features)">
     <include file="$(find lk_optical_flow)/launch/lk_optical_flow.launch">
-      <arg name="terminal" value="terminator -x"/>
+      <arg name="terminal" value="xterm -hold -e"/>
     </include>
     <include file="$(find localization_node)/launch/localization_node.launch">
-      <arg name="terminal" value="terminator -x"/>
+      <arg name="terminal" value="xterm -hold -e"/>
     </include>
   </group>
-  <include file="$(find graph_localizer)/launch/graph_localizer.launch">
-    <arg name="terminal" value="terminator -x"/>
+  <include file="$(find ros_graph_localizer)/launch/ros_graph_localizer.launch">
+    <arg name="terminal" value="xterm -hold -e"/>
   </include>
   <group if="$(arg localization_manager)">
     <include file="$(find localization_manager)/launch/localization_manager.launch">
-      <arg name="terminal" value="terminator -x"/>
+      <arg name="terminal" value="xterm -hold -e"/>
     </include>
   </group>
 
  <!-- Run depth odometry if required -->
   <group if="$(arg depth_odometry)">
     <include file="$(find depth_odometry)/launch/depth_odometry.launch">
-      <arg name="terminal" value="terminator -x"/>
+      <arg name="terminal" value="xterm -hold -e"/>
     </include>
   </group>
 
   <!-- Play bagfile -->
   <include file="$(find astrobee)/launch/offline_localization/replay_localization.launch">
     <arg name="bagfile" value="$(arg bagfile)"/>
-    <arg name="terminal" value="terminator -x"/>
+    <arg name="terminal" value="xterm -hold -e"/>
     <arg name="image_features" value="$(arg image_features)"/>
   </include>
 

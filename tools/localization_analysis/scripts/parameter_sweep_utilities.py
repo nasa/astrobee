@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 # Copyright (c) 2017, United States Government, as represented by the
 # Administrator of the National Aeronautics and Space Administration.
@@ -21,16 +21,18 @@ import csv
 import itertools
 import os
 
-import average_results
+import results_averager
 
 
-def concat_results(job_ids, directory, stats_filename):
+def concat_results(job_ids, directory, stats_filename, prefix):
     results_csv_files = []
     for job_id in job_ids:
         results_csv_files.append(os.path.join(directory, str(job_id), stats_filename))
     # Results are written in job id order
-    combined_results = average_results.combined_results(results_csv_files)
-    combined_results_file = os.path.join(directory, "param_sweep_combined_results.csv")
+    combined_results = results_averager.combined_results(results_csv_files)
+    combined_results_file = os.path.join(
+        directory, prefix + "_param_sweep_combined_results.csv"
+    )
     combined_results.to_csv(combined_results_file, index=False)
 
 

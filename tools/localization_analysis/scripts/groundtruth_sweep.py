@@ -29,9 +29,9 @@ import multiprocessing
 import os
 import sys
 
-import localization_common.utilities as lu
 import multiprocessing_helpers
-import utilities
+
+import localization_common.utilities as lu
 
 
 class GroundtruthParams(object):
@@ -58,14 +58,7 @@ def load_params(param_file):
         reader = csv.reader(param_csvfile, delimiter=" ")
         for row in reader:
             groundtruth_params_list.append(
-                GroundtruthParams(
-                    row[0],
-                    row[1],
-                    row[2],
-                    row[3],
-                    row[4],
-                    row[5],
-                )
+                GroundtruthParams(row[0], row[1], row[2], row[3], row[4], row[5])
             )
 
     return groundtruth_params_list

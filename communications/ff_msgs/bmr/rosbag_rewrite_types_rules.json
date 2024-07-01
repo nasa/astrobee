@@ -8,6 +8,7 @@
         "/hw/cam_sci_info",
         "/mgt/disk_monitor/state",
         "/mgt/cpu_monitor/state",
-        "/signals"
+        "/signals",
+        "/cv/*"
     ]
 }

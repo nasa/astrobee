@@ -62,3 +62,25 @@ The native installation instructions below walk you through manually running the
 - If you are an external developer, see: \subpage install-nonNASA
 
 - If you have NASA internal access and need to cross-compile for the robot hardware, see: \subpage install-NASA
+
+### Important Notice: OpenCV 4 Upgrade
+
+Starting from version 0.18.0, our project uses exclusively OpenCV 4. If you have an earlier version of Astrobee natively build, please follow the steps below to uninstall the previous debians:
+
+    dpkg -r astrobee0
+    dpkg -r libalvar2
+    dpkg -r libopenmvg1
+    dpkg -r libdbow21
+    dpkg -r libdbowdlib1
+    dpkg -r libopencv3.3.1
+
+
+once this is done, please follow the external developer install instructions \ref install-nonNASA:
+
+    pushd $ASTROBEE_WS
+    cd src/scripts/setup/debians
+    sudo apt-get update
+    ./build_install_debians.sh
+    cd ../
+    ./install_desktop_packages.sh
+    popd

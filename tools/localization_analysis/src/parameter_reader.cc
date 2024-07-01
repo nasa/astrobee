@@ -25,36 +25,44 @@ namespace lc = localization_common;
 namespace mc = msg_conversions;
 
 void LoadMessageBufferParams(const std::string& message_type, config_reader::ConfigReader& config,
-                             MessageBufferParams& params) {
-  params.msg_delay = mc::LoadDouble(config, message_type + "_msg_delay");
-  params.min_msg_spacing = mc::LoadDouble(config, message_type + "_min_msg_spacing");
+                             MessageBufferParams& params, const std::string& prefix) {
+  LOAD_PARAM(params.msg_delay, config, prefix + message_type + "_");
+  LOAD_PARAM(params.min_msg_spacing, config, prefix + message_type + "_");
 }
 
 void LoadLiveMeasurementSimulatorParams(config_reader::ConfigReader& config, const std::string& bag_name,
                                         const std::string& map_file, const std::string& image_topic,
                                         LiveMeasurementSimulatorParams& params) {
-  LoadMessageBufferParams("imu", config, params.imu);
-  LoadMessageBufferParams("flight_mode", config, params.flight_mode);
-  LoadMessageBufferParams("depth_odometry", config, params.depth_odometry);
-  LoadMessageBufferParams("of", config, params.of);
-  LoadMessageBufferParams("vl", config, params.vl);
-  LoadMessageBufferParams("ar", config, params.ar);
-  params.save_optical_flow_images = mc::LoadBool(config, "save_optical_flow_images");
+  // Note using image features is set in the offline replay tool
+  LoadMessageBufferParams("imu", config, params.imu, "or_");
+  LoadMessageBufferParams("flight_mode", config, params.flight_mode, "or_");
+  LoadMessageBufferParams("depth_odometry", config, params.depth_odometry, "or_");
+  LoadMessageBufferParams("of", config, params.of, "or_");
+  LoadMessageBufferParams("vl", config, params.vl, "or_");
+  LoadMessageBufferParams("ar", config, params.ar, "or_");
+  LoadMessageBufferParams("vio", config, params.vio, "or_");
+  LOAD_PARAM(params.save_optical_flow_images, config, "or_");
+  LOAD_PARAM(params.use_bag_depth_odom_msgs, config, "or_");
   params.bag_name = bag_name;
   params.map_file = map_file;
   params.image_topic = image_topic;
 }
 
 void LoadGraphLocalizerSimulatorParams(config_reader::ConfigReader& config, GraphLocalizerSimulatorParams& params) {
-  params.optimization_time = mc::LoadDouble(config, "optimization_time");
+  LOAD_PARAM(params.optimization_time, config, "or_loc_");
 }
 
-void LoadGraphBagParams(config_reader::ConfigReader& config, GraphBagParams& params) {
-  params.save_optical_flow_images = mc::LoadBool(config, "save_optical_flow_images");
-  params.log_relative_time = mc::LoadBool(config, "log_relative_time");
+void LoadGraphVIOSimulatorParams(config_reader::ConfigReader& config, GraphVIOSimulatorParams& params) {
+  LOAD_PARAM(params.optimization_time, config, "or_vio_");
+}
+
+void LoadOfflineReplayParams(config_reader::ConfigReader& config, OfflineReplayParams& params) {
+  LOAD_PARAM(params.save_optical_flow_images, config, "or_");
+  LOAD_PARAM(params.log_relative_time, config, "or_");
+  LOAD_PARAM(params.sparse_mapping_min_num_landmarks, config, "or_");
+  LOAD_PARAM(params.ar_min_num_landmarks, config, "or_");
   params.nav_cam_params.reset(new camera::CameraParameters(&config, "nav_cam"));
   params.body_T_nav_cam = lc::LoadTransform(config, "nav_cam_transform");
-  params.sparse_mapping_min_num_landmarks = mc::LoadInt(config, "loc_adder_min_num_matches");
-  params.ar_min_num_landmarks = mc::LoadInt(config, "ar_tag_loc_adder_min_num_matches");
+  params.body_T_dock_cam = lc::LoadTransform(config, "dock_cam_transform");
 }
 }  // namespace localization_analysis

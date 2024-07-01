@@ -19,9 +19,6 @@
 
 import matplotlib
 
-import poses
-import vector3ds
-
 matplotlib.use("pdf")
 import matplotlib.pyplot as plt
 
