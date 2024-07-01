@@ -80,9 +80,9 @@ void Localizer::ReadParams(config_reader::ConfigReader& config) {
   LOAD_PARAM(params_.max_success_rate, config, prefix);
   LOAD_PARAM(params_.min_features, config, prefix);
   LOAD_PARAM(params_.max_features, config, prefix);
-  LOAD_PARAM(params_.adjust_hamming_distance, config, prefix);
-  LOAD_PARAM(params_.min_hamming_distance, config, prefix);
-  LOAD_PARAM(params_.max_hamming_distance, config, prefix);
+  LOAD_PARAM(params_.adjust_num_similar, config, prefix);
+  LOAD_PARAM(params_.min_num_similar, config, prefix);
+  LOAD_PARAM(params_.max_num_similar, config, prefix);
 
   // This check must happen before the histogram_equalization flag is set into the map
   // to compare with what is there already.
@@ -165,23 +165,19 @@ void Localizer::AdjustThresholds() {
   if (average < params_.min_success_rate) {
     if (last_keypoint_count < params_.max_features) {
       map_->detector().dynamic_detector().TooFew();
-    } else if (params_.adjust_hamming_distance) {
-      const int current_hamming_distance = map_->loc_params().hamming_distance;
-      const int new_hamming_distance = current_hamming_distance + 3;
-      if (new_hamming_distance <= params_.max_hamming_distance) {
-        map_->loc_params().hamming_distance = new_hamming_distance;
-      }
+    } else if (params_.adjust_num_similar) {
+      const int current_num_similar = map_->loc_params().num_similar;
+      const int new_num_similar = std::min(current_num_similar + 1, params_.max_num_similar);
+      map_->loc_params().num_similar = new_num_similar;
     }
   }
   if (average > params_.max_success_rate) {
     if (last_keypoint_count > params_.min_features) {
       map_->detector().dynamic_detector().TooMany();
-    } else if (params_.adjust_hamming_distance) {
-      const int current_hamming_distance = map_->loc_params().hamming_distance;
-      const int new_hamming_distance = current_hamming_distance - 3;
-      if (new_hamming_distance >= params_.min_hamming_distance) {
-        map_->loc_params().hamming_distance = new_hamming_distance;
-      }
+    } else if (params_.adjust_num_similar) {
+      const int current_num_similar = map_->loc_params().num_similar;
+      const int new_num_similar = std::max(current_num_similar - 1, params_.min_num_similar);
+      map_->loc_params().num_similar = new_num_similar;
     }
   }
 }
