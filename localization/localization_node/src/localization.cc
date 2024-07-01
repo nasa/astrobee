@@ -63,7 +63,7 @@ void Localizer::ReadParams(config_reader::ConfigReader& config) {
   LOAD_PARAM(loc_params.visualize_localization_matches, config, "");
 
   // Detector Params
-  double min_threshold, default_threshold, max_threshold, goodness_ratio;
+  double min_threshold, default_threshold, max_threshold, goodness_ratio, too_many_ratio, too_few_ratio;
   int min_features, max_features, detection_retries;
   LOAD_PARAM(min_threshold, config, prefix);
   LOAD_PARAM(default_threshold, config, prefix);
@@ -71,6 +71,8 @@ void Localizer::ReadParams(config_reader::ConfigReader& config) {
   LOAD_PARAM(detection_retries, config, prefix);
   LOAD_PARAM(min_features, config, prefix);
   LOAD_PARAM(max_features, config, prefix);
+  LOAD_PARAM(too_many_ratio, config, prefix);
+  LOAD_PARAM(too_few_ratio, config, prefix);
 
   // Localizer threshold params
   LOAD_PARAM(params_.success_history_size, config, prefix);
@@ -94,7 +96,7 @@ void Localizer::ReadParams(config_reader::ConfigReader& config) {
   map_->SetCameraParameters(cam_params);
   map_->SetLocParams(loc_params);
   map_->SetDetectorParams(min_features, max_features, detection_retries,
-                          min_threshold, default_threshold, max_threshold);
+                          min_threshold, default_threshold, max_threshold, too_many_ratio, too_few_ratio);
 }
 
 bool Localizer::Localize(cv_bridge::CvImageConstPtr image_ptr, ff_msgs::VisualLandmarks* vl,

@@ -55,6 +55,11 @@ DEFINE_double(default_surf_threshold, 10,
               "Default threshold for feature detection using SURF.");
 DEFINE_double(max_surf_threshold, 1000,
               "Maximum threshold for feature detection using SURF.");
+DEFINE_double(surf_too_many_ratio, 1.1,
+              "Ratio to increase the dynamic feature threshold by if too many features are detected.");
+DEFINE_double(surf_too_few_ratio, 0.9,
+              "Ratio to reduce the dynamic feature threshold by if too few features are detected.");
+
 // Binary detector
 DEFINE_int32(min_brisk_features, 1000,
              "Minimum number of features to be computed using ORGBRISK.");
@@ -66,20 +71,36 @@ DEFINE_double(default_brisk_threshold, 20,
               "Default threshold for feature detection using ORGBRISK.");
 DEFINE_double(max_brisk_threshold, 110,
               "Maximum threshold for feature detection using ORGBRISK.");
+DEFINE_double(brisk_too_many_ratio, 1.25,
+              "Ratio to increase the dynamic feature threshold by if too many features are detected.");
+DEFINE_double(brisk_too_few_ratio, 0.8,
+              "Ratio to reduce the dynamic feature threshold by if too few features are detected.");
+
+
 
 namespace interest_point {
 
-  DynamicDetector::DynamicDetector(int min_features, int max_features, int max_retries,
-                                   double min_thresh, double default_thresh, double max_thresh):
-    min_features_(min_features), max_features_(max_features), max_retries_(max_retries),
-    min_thresh_(min_thresh), default_thresh_(default_thresh), max_thresh_(max_thresh),
-    dynamic_thresh_(default_thresh), last_keypoint_count_(0) {}
+DynamicDetector::DynamicDetector(int min_features, int max_features, int max_retries, double min_thresh,
+                                 double default_thresh, double max_thresh, double too_many_ratio, double too_few_ratio)
+    : min_features_(min_features),
+      max_features_(max_features),
+      max_retries_(max_retries),
+      min_thresh_(min_thresh),
+      default_thresh_(default_thresh),
+      max_thresh_(max_thresh),
+      dynamic_thresh_(default_thresh),
+      too_many_ratio_(too_many_ratio),
+      too_few_ratio_(too_few_ratio),
+      last_keypoint_count_(0) {}
 
-  void DynamicDetector::GetDetectorParams(int & min_features, int & max_features, int & max_retries,
-                                          double & min_thresh, double & default_thresh,
-                                          double & max_thresh) {
-    min_features = min_features_; max_features = max_features_; max_retries = max_retries_;
-    min_thresh = min_thresh_; default_thresh = default_thresh_; max_thresh = max_thresh_;
+void DynamicDetector::GetDetectorParams(int& min_features, int& max_features, int& max_retries, double& min_thresh,
+                                        double& default_thresh, double& max_thresh) {
+  min_features = min_features_;
+  max_features = max_features_;
+  max_retries = max_retries_;
+  min_thresh = min_thresh_;
+  default_thresh = default_thresh_;
+  max_thresh = max_thresh_;
   }
 
   void DynamicDetector::Detect(const cv::Mat& image,
@@ -106,10 +127,10 @@ namespace interest_point {
 
   class BriskDynamicDetector : public DynamicDetector {
    public:
-    BriskDynamicDetector(int min_features, int max_features, int max_retries,
-                         double min_thresh, double default_thresh, double max_thresh)
-      : DynamicDetector(min_features, max_features, max_retries,
-                        min_thresh, default_thresh, max_thresh) {
+    BriskDynamicDetector(int min_features, int max_features, int max_retries, double min_thresh, double default_thresh,
+                         double max_thresh, double too_many_ratio, double too_few_ratio)
+        : DynamicDetector(min_features, max_features, max_retries, min_thresh, default_thresh, max_thresh,
+                          too_many_ratio, too_few_ratio) {
       Reset();
     }
 
@@ -126,14 +147,14 @@ namespace interest_point {
       brisk_->compute(image, *keypoints, *keypoints_description);
     }
     virtual void TooMany(void) {
-      dynamic_thresh_ *= 1.25;
+      dynamic_thresh_ *= too_many_ratio_;
       dynamic_thresh_ = static_cast<int>(dynamic_thresh_);  // for backwards compatibility
       if (dynamic_thresh_ > max_thresh_)
         dynamic_thresh_ = max_thresh_;
       brisk_->setThreshold(dynamic_thresh_);
     }
     virtual void TooFew(void) {
-      dynamic_thresh_ *= 0.8;
+      dynamic_thresh_ *= too_few_ratio_;
       dynamic_thresh_ = static_cast<int>(dynamic_thresh_);  // for backwards compatibility
       if (dynamic_thresh_ < min_thresh_)
         dynamic_thresh_ = min_thresh_;
@@ -146,10 +167,10 @@ namespace interest_point {
 
   class SurfDynamicDetector : public DynamicDetector {
    public:
-    SurfDynamicDetector(int min_features, int max_features, int max_retries,
-                        double min_thresh, double default_thresh, double max_thresh)
-      : DynamicDetector(min_features, max_features, max_retries,
-                        min_thresh, default_thresh, max_thresh) {
+    SurfDynamicDetector(int min_features, int max_features, int max_retries, double min_thresh, double default_thresh,
+                        double max_thresh, double too_many_ratio, double too_few_ratio)
+        : DynamicDetector(min_features, max_features, max_retries, min_thresh, default_thresh, max_thresh,
+                          too_many_ratio, too_few_ratio) {
       surf_ = cv::xfeatures2d::SURF::create(dynamic_thresh_);
     }
 
@@ -161,13 +182,13 @@ namespace interest_point {
       surf_->compute(image, *keypoints, *keypoints_description);
     }
     virtual void TooMany(void) {
-      dynamic_thresh_ *= 1.1;
+      dynamic_thresh_ *= too_many_ratio_;
       if (dynamic_thresh_ > max_thresh_)
         dynamic_thresh_ = max_thresh_;
       surf_->setHessianThreshold(static_cast<float>(dynamic_thresh_));
     }
     virtual void TooFew(void) {
-      dynamic_thresh_ *= 0.9;
+      dynamic_thresh_ *= too_few_ratio_;
       if (dynamic_thresh_ < min_thresh_)
         dynamic_thresh_ = min_thresh_;
       surf_->setHessianThreshold(static_cast<float>(dynamic_thresh_));
@@ -179,10 +200,10 @@ namespace interest_point {
 
   class TeblidDynamicDetector : public DynamicDetector {
    public:
-    TeblidDynamicDetector(int min_features, int max_features, int max_retries,
-                        double min_thresh, double default_thresh, double max_thresh, bool use_512 = true)
-      : DynamicDetector(min_features, max_features, max_retries,
-                        min_thresh, default_thresh, max_thresh) {
+    TeblidDynamicDetector(int min_features, int max_features, int max_retries, double min_thresh, double default_thresh,
+                          double max_thresh, double too_many_ratio, double too_few_ratio, bool use_512 = true)
+        : DynamicDetector(min_features, max_features, max_retries, min_thresh, default_thresh, max_thresh,
+                          too_many_ratio, too_few_ratio) {
       if (use_512) {
         teblid_ = upm::BAD::create(5.0, upm::BAD::SIZE_512_BITS);
       } else {
@@ -204,7 +225,7 @@ namespace interest_point {
       teblid_->compute(image, *keypoints, *keypoints_description);
     }
     virtual void TooMany(void) {
-      double threshold_ratio = 1.1;
+      double threshold_ratio = too_many_ratio_;
       const int keypoint_diff = std::abs(last_keypoint_count_ - min_features_);
       // Scale ratio as get close to edge of too few keypoints to avoid undershoot
       constexpr double kKeypointDiff = 500;
@@ -218,7 +239,7 @@ namespace interest_point {
       brisk_->setThreshold(dynamic_thresh_);
     }
     virtual void TooFew(void) {
-      double threshold_ratio = 0.9;
+      double threshold_ratio = too_few_ratio_;
       const int keypoint_diff = std::abs(last_keypoint_count_ - max_features_);
       // Scale ratio as get close to edge of too many keypoints to avoid overshoot
       constexpr double kKeypointDiff = 1000;
@@ -237,14 +258,12 @@ namespace interest_point {
     cv::Ptr<interest_point::BRISK> brisk_;
   };
 
-
-
-  FeatureDetector::FeatureDetector(std::string const& detector_name,
-                                   int min_features, int max_features, int retries,
-                                   double min_thresh, double default_thresh, double max_thresh) {
+  FeatureDetector::FeatureDetector(std::string const& detector_name, int min_features, int max_features, int retries,
+                                   double min_thresh, double default_thresh, double max_thresh, double too_many_ratio,
+                                   double too_few_ratio) {
     detector_ = NULL;
     Reset(detector_name, min_features, max_features, retries,
-          min_thresh, default_thresh, max_thresh);
+          min_thresh, default_thresh, max_thresh, too_many_ratio, too_few_ratio);
   }
 
   void FeatureDetector::GetDetectorParams(int & min_features, int & max_features, int & max_retries,
@@ -263,9 +282,9 @@ namespace interest_point {
     }
   }
 
-  void FeatureDetector::Reset(std::string const& detector_name,
-                              int min_features, int max_features, int retries,
-                              double min_thresh, double default_thresh, double max_thresh) {
+  void FeatureDetector::Reset(std::string const& detector_name, int min_features, int max_features, int retries,
+                              double min_thresh, double default_thresh, double max_thresh, double too_many_ratio,
+                              double too_few_ratio) {
     detector_name_ = detector_name;
 
     if (detector_ != NULL) {
@@ -282,6 +301,8 @@ namespace interest_point {
         min_thresh     = FLAGS_min_surf_threshold;
         default_thresh = FLAGS_default_surf_threshold;
         max_thresh     = FLAGS_max_surf_threshold;
+        too_many_ratio = FLAGS_surf_too_many_ratio;
+        too_few_ratio  = FLAGS_surf_too_few_ratio;
       } else if (detector_name == "ORGBRISK" || detector_name == "TEBLID512" ||
                  detector_name == "TEBLID256") {
         min_features   = FLAGS_min_brisk_features;
@@ -290,6 +311,8 @@ namespace interest_point {
         min_thresh     = FLAGS_min_brisk_threshold;
         default_thresh = FLAGS_default_brisk_threshold;
         max_thresh     = FLAGS_max_brisk_threshold;
+        too_many_ratio = FLAGS_brisk_too_many_ratio;
+        too_few_ratio  = FLAGS_brisk_too_few_ratio;
       } else {
         LOG(FATAL) << "Unimplemented feature detector: " << detector_name;
       }
@@ -298,16 +321,16 @@ namespace interest_point {
     // Loading the detector
     if (detector_name == "ORGBRISK")
       detector_ = new BriskDynamicDetector(min_features, max_features, retries,
-                                           min_thresh, default_thresh, max_thresh);
+                                           min_thresh, default_thresh, max_thresh, too_many_ratio, too_few_ratio);
     else if (detector_name == "SURF")
       detector_ = new SurfDynamicDetector(min_features, max_features, retries,
-                                          min_thresh, default_thresh, max_thresh);
+                                          min_thresh, default_thresh, max_thresh, too_many_ratio, too_few_ratio);
     else if (detector_name == "TEBLID512")
       detector_ = new TeblidDynamicDetector(min_features, max_features, retries,
-                                          min_thresh, default_thresh, max_thresh, true);
+                                          min_thresh, default_thresh, max_thresh, too_many_ratio, too_few_ratio, true);
     else if (detector_name == "TEBLID256")
       detector_ = new TeblidDynamicDetector(min_features, max_features, retries,
-                                          min_thresh, default_thresh, max_thresh, false);
+                                          min_thresh, default_thresh, max_thresh, too_many_ratio, too_few_ratio, false);
     else
       LOG(FATAL) << "Unimplemented feature detector: " << detector_name;
 
