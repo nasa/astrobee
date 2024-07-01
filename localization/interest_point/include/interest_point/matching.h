@@ -49,7 +49,7 @@ namespace interest_point {
     int last_keypoint_count(void) { return last_keypoint_count_; }
 
    protected:
-    unsigned int min_features_, max_features_, max_retries_;
+    int min_features_, max_features_, max_retries_;
     double min_thresh_, default_thresh_, max_thresh_, dynamic_thresh_;
     int last_keypoint_count_;
   };

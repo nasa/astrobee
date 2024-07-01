@@ -212,7 +212,7 @@ namespace interest_point {
         threshold_ratio += (1.0 - threshold_ratio)*(kKeypointDiff - keypoint_diff)/kKeypointDiff;
       }
       dynamic_thresh_ *= threshold_ratio;
-      dynamic_thresh_ = static_cast<int>(dynamic_thresh_);  // for backwards compatibility
+      dynamic_thresh_ = std::lround(dynamic_thresh_);  // for backwards compatibility
       if (dynamic_thresh_ > max_thresh_)
         dynamic_thresh_ = max_thresh_;
       brisk_->setThreshold(dynamic_thresh_);
@@ -226,7 +226,7 @@ namespace interest_point {
         threshold_ratio += (1.0 - threshold_ratio)*(kKeypointDiff - keypoint_diff)/kKeypointDiff;
       }
       dynamic_thresh_ *= threshold_ratio;
-      dynamic_thresh_ = static_cast<int>(dynamic_thresh_);  // for backwards compatibility
+      dynamic_thresh_ = std::lround(dynamic_thresh_);  // for backwards compatibility
       if (dynamic_thresh_ < min_thresh_)
         dynamic_thresh_ = min_thresh_;
       brisk_->setThreshold(dynamic_thresh_);
