@@ -197,9 +197,6 @@ namespace interest_point {
     }
 
     virtual void DetectImpl(const cv::Mat& image, std::vector<cv::KeyPoint>* keypoints) {
-      // std::cout << "detect max thresh: " << max_thresh_ << ", min: " << min_thresh_ << ", def: " << default_thresh_
-      // << ", min feat: " << min_features_ << ", max_feat: " << max_features_ << ", dyn thresh: " << dynamic_thresh_ <<
-      // std::endl;
       brisk_->detect(image, *keypoints);
     }
     virtual void ComputeImpl(const cv::Mat& image, std::vector<cv::KeyPoint>* keypoints,
@@ -207,14 +204,28 @@ namespace interest_point {
       teblid_->compute(image, *keypoints, *keypoints_description);
     }
     virtual void TooMany(void) {
-      dynamic_thresh_ *= 1.1;
+      double threshold_ratio = 1.1;
+      const int keypoint_diff = std::abs(last_keypoint_count_ - min_features_);
+      // Scale ratio as get close to edge of too few keypoints to avoid undershoot
+      constexpr double kKeypointDiff = 500;
+      if (keypoint_diff < kKeypointDiff) {
+        threshold_ratio += (1.0 - threshold_ratio)*(kKeypointDiff - keypoint_diff)/kKeypointDiff;
+      }
+      dynamic_thresh_ *= threshold_ratio;
       dynamic_thresh_ = static_cast<int>(dynamic_thresh_);  // for backwards compatibility
       if (dynamic_thresh_ > max_thresh_)
         dynamic_thresh_ = max_thresh_;
       brisk_->setThreshold(dynamic_thresh_);
     }
     virtual void TooFew(void) {
-      dynamic_thresh_ *= 0.9;
+      double threshold_ratio = 0.9;
+      const int keypoint_diff = std::abs(last_keypoint_count_ - max_features_);
+      // Scale ratio as get close to edge of too many keypoints to avoid overshoot
+      constexpr double kKeypointDiff = 1000;
+      if (keypoint_diff < kKeypointDiff) {
+        threshold_ratio += (1.0 - threshold_ratio)*(kKeypointDiff - keypoint_diff)/kKeypointDiff;
+      }
+      dynamic_thresh_ *= threshold_ratio;
       dynamic_thresh_ = static_cast<int>(dynamic_thresh_);  // for backwards compatibility
       if (dynamic_thresh_ < min_thresh_)
         dynamic_thresh_ = min_thresh_;
