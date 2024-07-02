@@ -67,7 +67,7 @@ DEFINE_int32(max_brisk_features, 5000,
              "Maximum number of features to be computed using ORGBRISK.");
 DEFINE_double(min_brisk_threshold, 10,
               "Minimum threshold for feature detection using ORGBRISK.");
-DEFINE_double(default_brisk_threshold, 20,
+DEFINE_double(default_brisk_threshold, 90,
               "Default threshold for feature detection using ORGBRISK.");
 DEFINE_double(max_brisk_threshold, 110,
               "Maximum threshold for feature detection using ORGBRISK.");
@@ -94,14 +94,17 @@ DynamicDetector::DynamicDetector(int min_features, int max_features, int max_ret
       last_keypoint_count_(0) {}
 
 void DynamicDetector::GetDetectorParams(int& min_features, int& max_features, int& max_retries, double& min_thresh,
-                                        double& default_thresh, double& max_thresh) {
+                                        double& default_thresh, double& max_thresh, double& too_many_ratio,
+                                        double& too_few_ratio) {
   min_features = min_features_;
   max_features = max_features_;
   max_retries = max_retries_;
   min_thresh = min_thresh_;
   default_thresh = default_thresh_;
   max_thresh = max_thresh_;
-  }
+  too_many_ratio = too_many_ratio_;
+  too_few_ratio = too_few_ratio_;
+}
 
   void DynamicDetector::Detect(const cv::Mat& image,
                                std::vector<cv::KeyPoint>* keypoints,
@@ -268,11 +271,11 @@ void DynamicDetector::GetDetectorParams(int& min_features, int& max_features, in
 
   void FeatureDetector::GetDetectorParams(int & min_features, int & max_features, int & max_retries,
                                           double & min_thresh, double & default_thresh,
-                                          double & max_thresh) {
+                                          double & max_thresh, double & too_many_ratio, double & too_few_ratio) {
     if (detector_ == NULL)
       LOG(FATAL) << "The detector was not set.";
     detector_->GetDetectorParams(min_features, max_features, max_retries,
-                                 min_thresh, default_thresh, max_thresh);
+                                 min_thresh, default_thresh, max_thresh, too_many_ratio, too_few_ratio);
   }
 
   FeatureDetector::~FeatureDetector(void) {

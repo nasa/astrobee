@@ -711,12 +711,12 @@ void SparseMap::DetectFeatures(const cv::Mat& image,
     // map-building, rather than in localization which is more
     // performance-sensitive.
     int min_features, max_features, max_retries;
-    double min_thresh, default_thresh, max_thresh;
+    double min_thresh, default_thresh, max_thresh, too_many_ratio, too_few_ratio;
     detector_.GetDetectorParams(min_features, max_features, max_retries,
-                                min_thresh, default_thresh, max_thresh);
-    interest_point::FeatureDetector local_detector(detector_.GetDetectorName(),
-                                                   min_features, max_features, max_retries,
-                                                   min_thresh, default_thresh, max_thresh);
+                                min_thresh, default_thresh, max_thresh, too_many_ratio, too_few_ratio);
+    interest_point::FeatureDetector local_detector(detector_.GetDetectorName(), min_features, max_features, max_retries,
+                                                   min_thresh, default_thresh, max_thresh, too_many_ratio,
+                                                   too_few_ratio);
     local_detector.Detect(*image_ptr, &storage, descriptors);
   }
   mutex_detector_.unlock();

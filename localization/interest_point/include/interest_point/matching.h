@@ -44,8 +44,8 @@ namespace interest_point {
                             cv::Mat* keypoints_description) = 0;
     virtual void TooFew(void) = 0;
     virtual void TooMany(void) = 0;
-    void GetDetectorParams(int & min_features, int & max_features, int & max_retries,
-                           double & min_thresh, double & default_thresh, double & max_thresh);
+    void GetDetectorParams(int& min_features, int& max_features, int& max_retries, double& min_thresh,
+                           double& default_thresh, double& max_thresh, double& too_many_ratio, double& too_few_ratio);
 
     int last_keypoint_count(void) { return last_keypoint_count_; }
 
@@ -80,8 +80,8 @@ namespace interest_point {
 
     std::string GetDetectorName() const {return detector_name_;}
 
-    void GetDetectorParams(int & min_features, int & max_features, int & max_retries,
-                           double & min_thresh, double & default_thresh, double & max_thresh);
+    void GetDetectorParams(int& min_features, int& max_features, int& max_retries, double& min_thresh,
+                           double& default_thresh, double& max_thresh, double& too_many_ratio, double& too_few_ratio);
 
     friend bool operator== (FeatureDetector const& A, FeatureDetector const& B) {
       return (A.detector_name_ == B.detector_name_);
