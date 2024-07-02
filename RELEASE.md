@@ -1,6 +1,6 @@
 # Releases
 
-##Release 0.19.1
+## Release 0.19.1
 
   * Updated Map Matching with TEBLID and CLAHE
 
@@ -12,23 +12,23 @@
 
   * Astrobee now using OpenCV 4! Please see install updates in INSTALL.md
 
-# Release 0.17.3
+## Release 0.17.3
 
   * Comms bridge added rate feature
   * Bug fixes
   * User feedback improvements
 
-# Release 0.17.2
+## Release 0.17.2
 
   * Adding Generic comms bridge
   * Multiple bug fixes
   * Ubuntu 20 only supported now
 
-# Release 0.17.1
+## Release 0.17.1
 
   * Multiple bug fixes
 
-# Release 0.17.0
+## Release 0.17.0
 
   * Full compatibility and debians built for Ubuntu 20
   * Deleted all simulink autocode for ctl and fam
