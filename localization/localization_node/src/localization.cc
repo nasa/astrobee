@@ -155,6 +155,7 @@ bool Localizer::Localize(cv_bridge::CvImageConstPtr image_ptr, ff_msgs::VisualLa
 }
 
 void Localizer::AdjustThresholds() {
+  if (successes_.size() == 0 || params_.success_history_size == 0) return;
   if (successes_.size() < params_.success_history_size) return;
   while (successes_.size() > params_.success_history_size) {
     successes_.pop_front();
