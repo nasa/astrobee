@@ -194,7 +194,7 @@ float32 v # feature image coordinate y
 		("geometry_msgs/Pose","geometry_msgs/Pose"),
 		("VisualLandmark","VisualLandmark"),]
 
-	valid = False
+	valid = True
 
 	def update(self, old_msg, new_msg):
 		self.migrate(old_msg.header, new_msg.header)
