@@ -165,7 +165,8 @@ void Localizer::AdjustThresholds() {
   if (average < params_.min_success_rate) {
     if (last_keypoint_count < params_.max_features) {
       map_->detector().dynamic_detector().TooFew();
-    } else if (params_.adjust_num_similar) {
+    }
+    if (params_.adjust_num_similar) {
       const int current_num_similar = map_->loc_params().num_similar;
       const int new_num_similar = std::min(current_num_similar + 1, params_.max_num_similar);
       map_->loc_params().num_similar = new_num_similar;
@@ -174,7 +175,8 @@ void Localizer::AdjustThresholds() {
   if (average > params_.max_success_rate) {
     if (last_keypoint_count > params_.min_features) {
       map_->detector().dynamic_detector().TooMany();
-    } else if (params_.adjust_num_similar) {
+    }
+    if (params_.adjust_num_similar) {
       const int current_num_similar = map_->loc_params().num_similar;
       const int new_num_similar = std::max(current_num_similar - 1, params_.min_num_similar);
       map_->loc_params().num_similar = new_num_similar;
