@@ -89,7 +89,7 @@ TEST_F(GraphLocalizerParameterReaderTest, PoseNodeAdderParams) {
   EXPECT_MATRIX_NEAR(na::Covariance(pose_noise), na::Covariance(params.start_noise_models[0]), 1e-6);
   EXPECT_NEAR(params.huber_k, 1.345, 1e-6);
   EXPECT_EQ(params.add_priors, true);
-  EXPECT_NEAR(params.ideal_duration, 4, 1e-6);
+  EXPECT_NEAR(params.ideal_duration, 15, 1e-6);
   EXPECT_EQ(params.min_num_states, 3);
   EXPECT_EQ(params.max_num_states, 5);
 }

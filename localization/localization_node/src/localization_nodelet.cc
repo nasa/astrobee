@@ -127,6 +127,10 @@ void LocalizationNodelet::Initialize(ros::NodeHandle* nh) {
 }
 
 void LocalizationNodelet::ReadParams(void) {
+  if (!config_.ReadFiles()) {
+    ROS_ERROR("Failed to read config files.");
+    return;
+  }
   if (inst_) inst_->ReadParams(config_);
 }
 

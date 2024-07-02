@@ -1,3 +1,9 @@
+astrobee (0.19.1) testing; urgency=medium
+
+  * Updated Map Matching with TEBLID and CLAHE
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Sun, 30 Jun 2024 15:20:46 -0700
+
 astrobee (0.19.0) testing; urgency=medium
 
   * New split localizer
