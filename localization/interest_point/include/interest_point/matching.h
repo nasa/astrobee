@@ -31,7 +31,8 @@ namespace interest_point {
   class DynamicDetector {
    public:
     DynamicDetector(int min_features, int max_features, int retries,
-                    double min_thresh, double default_thresh, double max_thresh);
+                    double min_thresh, double default_thresh, double max_thresh,
+                    double too_many_ratio, double too_few_ratio);
     virtual ~DynamicDetector(void) {}
     void Detect(const cv::Mat& image,
                         std::vector<cv::KeyPoint>* keypoints,
@@ -49,8 +50,8 @@ namespace interest_point {
     int last_keypoint_count(void) { return last_keypoint_count_; }
 
    protected:
-    unsigned int min_features_, max_features_, max_retries_;
-    double min_thresh_, default_thresh_, max_thresh_, dynamic_thresh_;
+    int min_features_, max_features_, max_retries_;
+    double min_thresh_, default_thresh_, max_thresh_, dynamic_thresh_, too_few_ratio_, too_many_ratio_;
     int last_keypoint_count_;
   };
 
@@ -65,14 +66,14 @@ namespace interest_point {
 
    public:
     // Here on purpose invalid values are set, so the user explicitly sets them.
-    FeatureDetector(std::string const& detector_name = "SURF",
-                    int min_features = 0, int max_features = 0, int retries = 0,
-                    double min_thresh = 0, double default_thresh = 0, double max_thresh = 0);
+    FeatureDetector(std::string const& detector_name = "SURF", int min_features = 0, int max_features = 0,
+                    int retries = 0, double min_thresh = 0, double default_thresh = 0, double max_thresh = 0,
+                    double too_many_ratio = 0, double too_few_ratio = 0);
     ~FeatureDetector(void);
 
-    void Reset(std::string const& detector_name,
-                    int min_features = 0, int max_features = 0, int retries = 0,
-                    double min_thresh = 0, double default_thresh = 0, double max_thresh = 0);
+    void Reset(std::string const& detector_name, int min_features = 0, int max_features = 0, int retries = 0,
+               double min_thresh = 0, double default_thresh = 0, double max_thresh = 0, double too_many_ratio = 0,
+               double too_few_ratio = 0);
 
     void Detect(const cv::Mat& image, std::vector<cv::KeyPoint>* keypoints,
                 cv::Mat* keypoints_description);
