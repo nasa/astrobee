@@ -63,7 +63,7 @@ void Localizer::ReadParams(config_reader::ConfigReader& config) {
   LOAD_PARAM(loc_params.visualize_localization_matches, config, "");
 
   // Detector Params
-  double min_threshold, default_threshold, max_threshold, goodness_ratio;
+  double min_threshold, default_threshold, max_threshold, goodness_ratio, too_many_ratio, too_few_ratio;
   int min_features, max_features, detection_retries;
   LOAD_PARAM(min_threshold, config, prefix);
   LOAD_PARAM(default_threshold, config, prefix);
@@ -71,6 +71,8 @@ void Localizer::ReadParams(config_reader::ConfigReader& config) {
   LOAD_PARAM(detection_retries, config, prefix);
   LOAD_PARAM(min_features, config, prefix);
   LOAD_PARAM(max_features, config, prefix);
+  LOAD_PARAM(too_many_ratio, config, prefix);
+  LOAD_PARAM(too_few_ratio, config, prefix);
 
   // Localizer threshold params
   LOAD_PARAM(params_.success_history_size, config, prefix);
@@ -78,9 +80,9 @@ void Localizer::ReadParams(config_reader::ConfigReader& config) {
   LOAD_PARAM(params_.max_success_rate, config, prefix);
   LOAD_PARAM(params_.min_features, config, prefix);
   LOAD_PARAM(params_.max_features, config, prefix);
-  LOAD_PARAM(params_.adjust_hamming_distance, config, prefix);
-  LOAD_PARAM(params_.min_hamming_distance, config, prefix);
-  LOAD_PARAM(params_.max_hamming_distance, config, prefix);
+  LOAD_PARAM(params_.adjust_num_similar, config, prefix);
+  LOAD_PARAM(params_.min_num_similar, config, prefix);
+  LOAD_PARAM(params_.max_num_similar, config, prefix);
 
   // This check must happen before the histogram_equalization flag is set into the map
   // to compare with what is there already.
@@ -94,7 +96,7 @@ void Localizer::ReadParams(config_reader::ConfigReader& config) {
   map_->SetCameraParameters(cam_params);
   map_->SetLocParams(loc_params);
   map_->SetDetectorParams(min_features, max_features, detection_retries,
-                          min_threshold, default_threshold, max_threshold);
+                          min_threshold, default_threshold, max_threshold, too_many_ratio, too_few_ratio);
 }
 
 bool Localizer::Localize(cv_bridge::CvImageConstPtr image_ptr, ff_msgs::VisualLandmarks* vl,
@@ -111,6 +113,7 @@ bool Localizer::Localize(cv_bridge::CvImageConstPtr image_ptr, ff_msgs::VisualLa
   vl->header.stamp = image_ptr->header.stamp;
   vl->header.frame_id = "world";
 
+  timer_.Start();
   map_->DetectFeatures(image_ptr->image, multithreaded, &image_descriptors, image_keypoints);
   camera::CameraModel camera(Eigen::Vector3d(),
                              Eigen::Matrix3d::Identity(),
@@ -122,14 +125,17 @@ bool Localizer::Localize(cv_bridge::CvImageConstPtr image_ptr, ff_msgs::VisualLa
     successes_.emplace_back(0);
     AdjustThresholds();
     // LOG(INFO) << "Failed to localize image.";
+    timer_.Stop();
     return false;
   }
   successes_.emplace_back(1);
   AdjustThresholds();
+  timer_.Stop();
 
   Eigen::Affine3d global_pose = camera.GetTransform().inverse();
   Eigen::Quaterniond quat(global_pose.rotation());
 
+  vl->runtime = timer_.last_value();
   vl->pose.position = msg_conversions::eigen_to_ros_point(global_pose.translation());
   vl->pose.orientation = msg_conversions::eigen_to_ros_quat(quat);
   assert(landmarks.size() == observations.size());
@@ -149,6 +155,7 @@ bool Localizer::Localize(cv_bridge::CvImageConstPtr image_ptr, ff_msgs::VisualLa
 }
 
 void Localizer::AdjustThresholds() {
+  if (successes_.size() == 0 || params_.success_history_size == 0) return;
   if (successes_.size() < params_.success_history_size) return;
   while (successes_.size() > params_.success_history_size) {
     successes_.pop_front();
@@ -159,23 +166,21 @@ void Localizer::AdjustThresholds() {
   if (average < params_.min_success_rate) {
     if (last_keypoint_count < params_.max_features) {
       map_->detector().dynamic_detector().TooFew();
-    } else if (params_.adjust_hamming_distance) {
-      const int current_hamming_distance = map_->loc_params().hamming_distance;
-      const int new_hamming_distance = current_hamming_distance + 3;
-      if (new_hamming_distance <= params_.max_hamming_distance) {
-        map_->loc_params().hamming_distance = new_hamming_distance;
-      }
+    }
+    if (params_.adjust_num_similar) {
+      const int current_num_similar = map_->loc_params().num_similar;
+      const int new_num_similar = std::min(current_num_similar + 1, params_.max_num_similar);
+      map_->loc_params().num_similar = new_num_similar;
     }
   }
   if (average > params_.max_success_rate) {
     if (last_keypoint_count > params_.min_features) {
       map_->detector().dynamic_detector().TooMany();
-    } else if (params_.adjust_hamming_distance) {
-      const int current_hamming_distance = map_->loc_params().hamming_distance;
-      const int new_hamming_distance = current_hamming_distance - 3;
-      if (new_hamming_distance >= params_.min_hamming_distance) {
-        map_->loc_params().hamming_distance = new_hamming_distance;
-      }
+    }
+    if (params_.adjust_num_similar) {
+      const int current_num_similar = map_->loc_params().num_similar;
+      const int new_num_similar = std::max(current_num_similar - 1, params_.min_num_similar);
+      map_->loc_params().num_similar = new_num_similar;
     }
   }
 }

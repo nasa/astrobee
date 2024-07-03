@@ -99,8 +99,8 @@ struct SparseMap {
   const LocalizationParameters& loc_params() const { return loc_params_; }
   LocalizationParameters& loc_params() { return loc_params_; }
 
-  void SetDetectorParams(int min_features, int max_features, int retries,
-                         double min_thresh, double default_thresh, double max_thresh);
+  void SetDetectorParams(int min_features, int max_features, int retries, double min_thresh, double default_thresh,
+                         double max_thresh, double too_many_ratio, double too_few_ratio);
 
   /**
    * Detect features in given images

@@ -506,11 +506,12 @@ void SparseMap::LoadKeypoints(const std::string & protobuf_file) {
   close(input_fd);
 }
 
-void SparseMap::SetDetectorParams(int min_features, int max_features, int retries,
-                                  double min_thresh, double default_thresh, double max_thresh) {
+void SparseMap::SetDetectorParams(int min_features, int max_features, int retries, double min_thresh,
+                                  double default_thresh, double max_thresh, double too_many_ratio,
+                                  double too_few_ratio) {
   mutex_detector_.lock();
   detector_.Reset(detector_.GetDetectorName(), min_features, max_features, retries,
-                  min_thresh, default_thresh, max_thresh);
+                  min_thresh, default_thresh, max_thresh, too_many_ratio, too_few_ratio);
   mutex_detector_.unlock();
 }
 
@@ -710,12 +711,12 @@ void SparseMap::DetectFeatures(const cv::Mat& image,
     // map-building, rather than in localization which is more
     // performance-sensitive.
     int min_features, max_features, max_retries;
-    double min_thresh, default_thresh, max_thresh;
+    double min_thresh, default_thresh, max_thresh, too_many_ratio, too_few_ratio;
     detector_.GetDetectorParams(min_features, max_features, max_retries,
-                                min_thresh, default_thresh, max_thresh);
-    interest_point::FeatureDetector local_detector(detector_.GetDetectorName(),
-                                                   min_features, max_features, max_retries,
-                                                   min_thresh, default_thresh, max_thresh);
+                                min_thresh, default_thresh, max_thresh, too_many_ratio, too_few_ratio);
+    interest_point::FeatureDetector local_detector(detector_.GetDetectorName(), min_features, max_features, max_retries,
+                                                   min_thresh, default_thresh, max_thresh, too_many_ratio,
+                                                   too_few_ratio);
     local_detector.Detect(*image_ptr, &storage, descriptors);
   }
   mutex_detector_.unlock();
