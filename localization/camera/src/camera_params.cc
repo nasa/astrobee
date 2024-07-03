@@ -229,6 +229,8 @@ void camera::CameraParameters::SetDistortion(Eigen::VectorXd const& distortion) 
     // Inside tangent function
     distortion_precalc2_ = 2 * tan(distortion[0] / 2);
     break;
+  case 2:
+    // Fall through intended.
   case 4:
     // Fall through intended.
   case 5:
@@ -266,6 +268,27 @@ void camera::CameraParameters::DistortCentered(Eigen::Vector2d const& undistorte
     }
     *distorted_c = (optical_offset_ - distorted_half_size_) +
       conv * norm.cwiseProduct(focal_length_);
+  } else if (distortion_coeffs_.size() == 2) {
+    // colmap radial fisheye model
+    double k1 = distortion_coeffs_[0];
+    double k2 = distortion_coeffs_[1];
+
+    // To relative coordinates
+    Eigen::Vector2d norm = undistorted_c.cwiseQuotient(focal_length_);
+    double r = norm.norm();
+    if (r > std::numeric_limits<double>::epsilon()) {
+      double theta = atan(r);
+      double theta2 = theta * theta;
+      double thetad = theta * (1 + k1 * theta2 + k2 * theta2 * theta);
+
+      *distorted_c = thetad / r * norm;
+    } else {
+      *distorted_c = 0.0 * norm;
+    }
+
+    // Back to absolute coordinates.
+    *distorted_c = distorted_c->cwiseProduct(focal_length_) +
+      (optical_offset_ - distorted_half_size_);
   } else if (distortion_coeffs_.size() == 4 ||
              distortion_coeffs_.size() == 5) {
     // Tsai lens distortion
@@ -317,7 +340,8 @@ void camera::CameraParameters::UndistortCentered(Eigen::Vector2d const& distorte
     if (rd > 1e-5)
       conv = ru / rd;
     *undistorted_c = conv * norm.cwiseProduct(focal_length_);
-  } else if (distortion_coeffs_.size() == 4 ||
+  } else if (distortion_coeffs_.size() == 2 ||
+             distortion_coeffs_.size() == 4 ||
              distortion_coeffs_.size() == 5) {
     // Tsai lens distortion
     cv::Mat src(1, 1, CV_64FC2);
@@ -330,7 +354,14 @@ void camera::CameraParameters::UndistortCentered(Eigen::Vector2d const& distorte
     cv::eigen2cv(GetIntrinsicMatrix<DISTORTED>(), dist_int_mat);
     cv::eigen2cv(GetIntrinsicMatrix<UNDISTORTED>(), undist_int_mat);
     src_map = distorted_c + distorted_half_size_;
-    cv::undistortPoints(src, dst, dist_int_mat, cvdist, cv::Mat(), undist_int_mat);
+    if (distortion_coeffs_.size() == 2) {
+      cvdist.resize(4);
+      cvdist.at<double>(2, 0) = 0.0;
+      cvdist.at<double>(3, 0) = 0.0;
+      cv::fisheye::undistortPoints(src, dst, dist_int_mat, cvdist, cv::Mat(), undist_int_mat);
+    } else {
+      cv::undistortPoints(src, dst, dist_int_mat, cvdist, cv::Mat(), undist_int_mat);
+    }
     *undistorted_c = dst_map - undistorted_half_size_;
   } else {
     LOG(ERROR) << "Unknown distortion vector size!";
