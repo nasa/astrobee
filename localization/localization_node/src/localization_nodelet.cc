@@ -59,7 +59,9 @@ bool LocalizationNodelet::ResetMap(const std::string& map_file) {
   while (processing_image_) {
     usleep(100000);
   }
-  map_.reset(new sparse_mapping::SparseMap(map_file, true));
+  // Reset map before creating new one to avoid storing two maps in memory at the same time
+  map_.reset();
+  map_ = std::make_shared<sparse_mapping::SparseMap>(map_file, true);
   inst_.reset(new Localizer(map_.get()));
   // Check to see if any params were changed when map was reset
   ReadParams();
@@ -83,7 +85,8 @@ void LocalizationNodelet::Initialize(ros::NodeHandle* nh) {
 
   // Reset all internal shared pointers
   it_.reset(new image_transport::ImageTransport(*nh));
-  map_.reset(new sparse_mapping::SparseMap(map_file, true));
+  map_.reset();
+  map_ = std::make_shared<sparse_mapping::SparseMap>(map_file, true);
   inst_.reset(new Localizer(map_.get()));
 
   registration_publisher_ = nh->advertise<ff_msgs::CameraRegistration>(
