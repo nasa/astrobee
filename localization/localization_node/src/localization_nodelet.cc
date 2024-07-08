@@ -63,6 +63,16 @@ bool LocalizationNodelet::ResetMap(const std::string& map_file) {
   map_.reset();
   map_ = std::make_shared<sparse_mapping::SparseMap>(map_file, true);
   inst_.reset(new Localizer(map_.get()));
+  // Sanity check that map contains a valid detector type
+  const auto detector_name = map_->GetDetectorName();
+  if (detector_name != "ORGBRISK"  || detector_name != "TEBLID512" || detector_name != "TEBLID256") {
+    ROS_ERROR_STREAM("Failed to switch to map file " << map_file
+                                                     << " due to invalid feature detector type: " << detector_name);
+    map_.reset();
+    inst_.reset();
+    return false;
+  }
+
   // Check to see if any params were changed when map was reset
   ReadParams();
   enabled_ = true;
@@ -87,6 +97,8 @@ void LocalizationNodelet::Initialize(ros::NodeHandle* nh) {
   it_.reset(new image_transport::ImageTransport(*nh));
   map_.reset();
   map_ = std::make_shared<sparse_mapping::SparseMap>(map_file, true);
+
+
   inst_.reset(new Localizer(map_.get()));
 
   registration_publisher_ = nh->advertise<ff_msgs::CameraRegistration>(
@@ -192,6 +204,7 @@ void LocalizationNodelet::ImageCallback(const sensor_msgs::ImageConstPtr& msg) {
 }
 
 void LocalizationNodelet::Localize(void) {
+  if (!inst_) return;
   ff_msgs::VisualLandmarks vl;
   Eigen::Matrix2Xd image_keypoints;
 
