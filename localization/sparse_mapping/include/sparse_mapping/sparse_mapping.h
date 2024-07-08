@@ -76,7 +76,7 @@ Eigen::Quaternion<double> slerp_n(std::vector<double> const& W, std::vector<Eige
 bool IsBinaryDescriptor(std::string const& descriptor);
 
 // Logic for implementing if two histogram equalization flags are compatible
-void HistogramEqualizationCheck(int histogram_equalization1, int histogram_equalization2);
+bool HistogramEqualizationCheck(int histogram_equalization1, int histogram_equalization2, bool fatal_failure = true);
 
 // Writes the NVM control network format.
 void WriteNVM(std::vector<Eigen::Matrix2Xd> const& cid_to_keypoint_map, std::vector<std::string> const& cid_to_filename,

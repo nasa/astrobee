@@ -29,7 +29,7 @@ namespace localization_node {
 
 Localizer::Localizer(sparse_mapping::SparseMap* map): map_(map) {}
 
-void Localizer::ReadParams(config_reader::ConfigReader& config) {
+bool Localizer::ReadParams(config_reader::ConfigReader& config, bool fatal_failure) {
   camera::CameraParameters cam_params(&config, "nav_cam");
   std::string prefix;
   const auto detector_name = map_->GetDetectorName();
@@ -40,7 +40,12 @@ void Localizer::ReadParams(config_reader::ConfigReader& config) {
   } else if (detector_name == "TEBLID256") {
     prefix = "teblid256_";
   } else {
-    ROS_FATAL_STREAM("Invalid detector: " << detector_name);
+    if (fatal_failure) {
+      ROS_FATAL_STREAM("Invalid detector: " << detector_name);
+    } else {
+      ROS_ERROR_STREAM("Invalid detector: " << detector_name);
+    }
+    return false;
   }
 
   // Loc params
@@ -86,17 +91,24 @@ void Localizer::ReadParams(config_reader::ConfigReader& config) {
 
   // This check must happen before the histogram_equalization flag is set into the map
   // to compare with what is there already.
-  sparse_mapping::HistogramEqualizationCheck(map_->GetHistogramEqualization(),
-                                             loc_params.histogram_equalization);
+  if (!sparse_mapping::HistogramEqualizationCheck(map_->GetHistogramEqualization(),
+                                             loc_params.histogram_equalization, fatal_failure)) return false;
+
   // Check consistency between clahe params
   if (loc_params.use_clahe && (loc_params.histogram_equalization != 3 || map_->GetHistogramEqualization() != 3)) {
-    ROS_FATAL("Invalid clahe and histogram equalization settings.");
+    if (fatal_failure) {
+      ROS_FATAL("Invalid clahe and histogram equalization settings.");
+    } else {
+      ROS_ERROR("Invalid clahe and histogram equalization settings.");
+    }
+    return false;
   }
 
   map_->SetCameraParameters(cam_params);
   map_->SetLocParams(loc_params);
   map_->SetDetectorParams(min_features, max_features, detection_retries,
                           min_threshold, default_threshold, max_threshold, too_many_ratio, too_few_ratio);
+  return true;
 }
 
 bool Localizer::Localize(cv_bridge::CvImageConstPtr image_ptr, ff_msgs::VisualLandmarks* vl,
