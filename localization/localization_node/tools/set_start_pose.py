@@ -34,10 +34,13 @@ def publish_pose(pose):
     # Init publisher
     pub = rospy.Publisher("/loc/ml/features", VisualLandmarks, queue_size=1)
     rospy.init_node("PosePublisher")
+    # Sleep so node can subscribe to /clock topic and produce a valid header time
+    rospy.sleep(5)
 
     msg = VisualLandmarks()
     msg.header = std_msgs.msg.Header()
     msg.header.stamp = rospy.Time.now()
+    msg.header.frame_id = "world"
     msg.camera_id = 0
     # Set pose values
     msg.pose.position.x = pose[0]
