@@ -18,7 +18,7 @@
 # under the License.
 """
 Initializes the localizer with a defined pose by sending a ff_msgs VisualLandmarks message 
-with the pose value.
+with the pose value. Note the pose is expected in the robot nav camera frame.
 """
 
 import argparse
@@ -40,6 +40,9 @@ def publish_pose(pose):
     msg = VisualLandmarks()
     msg.header = std_msgs.msg.Header()
     msg.header.stamp = rospy.Time.now()
+    # Subtract 2 seconds from stamp to simulate localization time,
+    # allows VIO messages to accrue that span before and after the vl message
+    msg.header.stamp.secs = msg.header.stamp.secs - 2
     msg.header.frame_id = "world"
     msg.camera_id = 0
     # Set pose values
