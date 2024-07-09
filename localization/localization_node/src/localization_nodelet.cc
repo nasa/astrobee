@@ -74,6 +74,7 @@ bool LocalizationNodelet::ResetMap(const std::string& map_file) {
       map_.reset();
       map_ = std::make_shared<sparse_mapping::SparseMap>(last_valid_map_file_, true);
       inst_.reset(new Localizer(map_.get()));
+      ReadParams();
       enabled_ = true;
     } else {
       ROS_ERROR_STREAM("No last valid map, please reset with a valid map. Not localizing.");
