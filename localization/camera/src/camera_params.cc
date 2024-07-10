@@ -279,7 +279,7 @@ void camera::CameraParameters::DistortCentered(Eigen::Vector2d const& undistorte
     if (r > std::numeric_limits<double>::epsilon()) {
       double theta = atan(r);
       double theta2 = theta * theta;
-      double thetad = theta * (1 + k1 * theta2 + k2 * theta2 * theta);
+      double thetad = theta * (1 + k1 * theta2 + k2 * theta2 * theta2);
 
       *distorted_c = thetad / r * norm;
     } else {
