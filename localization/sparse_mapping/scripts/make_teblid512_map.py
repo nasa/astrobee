@@ -53,7 +53,7 @@ def make_teblid512_map(surf_map, world, robot_name, map_directory=None):
     if map_directory:
         os.chdir(map_directory)
     build_teblid512_map_command = (
-        "rosrun sparse_mapping build_map -rebuild -histogram_equalization -use_clahe -output_map "
+        "rosrun sparse_mapping build_map -rebuild -histogram_equalization -use_clahe -min_brisk_features 3000 -output_map "
         + teblid512_map_full_path
     )
     lu.run_command_and_save_output(
