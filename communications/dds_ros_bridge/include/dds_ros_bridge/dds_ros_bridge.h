@@ -229,8 +229,8 @@ class DdsRosBridge : public ff_util::FreeFlyerNodelet {
   ros::Publisher robot_name_pub_;
   ros::ServiceServer srv_set_telem_rate_;
 
-  std::map<std::string, ff::RosSubRapidPubPtr> ros_sub_rapid_pubs_;
   std::shared_ptr<kn::DdsEntitiesFactorySvc> dds_entities_factory_;
+  std::map<std::string, ff::RosSubRapidPubPtr> ros_sub_rapid_pubs_;
   std::string agent_name_, participant_name_;
   std::vector<ff::RapidPubPtr> rapid_pubs_;
   std::vector<ff::RapidSubRosPubPtr> rapid_sub_ros_pubs_;
