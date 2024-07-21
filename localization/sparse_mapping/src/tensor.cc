@@ -657,7 +657,7 @@ void BundleAdjustment(sparse_mapping::SparseMap * s,
 
   // First do BA, and only afterwards remove outliers.
   if (!FLAGS_skip_filtering) {
-    FilterPID(FLAGS_reproj_thresh,  s->camera_params_, s->cid_to_cam_t_global_,
+    FilterPID(FLAGS_reproj_thresh, s->cid_to_camera_id_, s->camera_id_to_camera_params_, s->cid_to_cam_t_global_,
               s->cid_to_keypoint_map_, &(s->pid_to_cid_fid_), &(s->pid_to_xyz_));
     s->InitializeCidFidToPid();
   }
@@ -1206,6 +1206,7 @@ void MergeMaps(sparse_mapping::SparseMap * A_in,
   int num_acid = A.cid_to_filename_.size();
   int num_bcid = B.cid_to_filename_.size();
   int num_ccid = num_acid + num_bcid;
+  int num_A_camera_ids = A.camera_id_to_camera_params_.size();
   C.cid_to_filename_      .resize(num_ccid);
   C.cid_to_keypoint_map_  .resize(num_ccid);
   C.cid_to_cam_t_global_  .resize(num_ccid);
@@ -1216,7 +1217,13 @@ void MergeMaps(sparse_mapping::SparseMap * A_in,
     C.cid_to_filename_[c]       = B.cid_to_filename_[cid];
     C.cid_to_keypoint_map_[c]   = B.cid_to_keypoint_map_[cid];
     C.cid_to_descriptor_map_[c] = B.cid_to_descriptor_map_[cid];
+    C.cid_to_camera_id_[c]      = B.cid_to_camera_id_[cid] + num_A_camera_ids;
     // We will have to deal with cid_to_cam_t_global_ later
+  }
+  // Append B's camera params to A's.
+  // TODO(rsoussan): Check for equality of camera params and consolidate
+  for (const auto& camera_params : B.camera_ids_to_camera_params_) {
+    A.camera_ids_to_camera_params_.append(camera_params);
   }
 
   // Create cid_fid_to_pid_ for both maps, to be able to go from cid_fid to pid.
