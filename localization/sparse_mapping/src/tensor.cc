@@ -356,7 +356,8 @@ void BuildTracks(bool rm_invalid_xyz,
   // Triangulate. The results should be quite inaccurate, we'll redo this
   // later. This step is mostly for consistency.
   sparse_mapping::Triangulate(rm_invalid_xyz,
-                              s->camera_params_.GetFocalLength(),
+                              s->cid_to_camera_id_,
+                              s->camera_id_to_camera_params_,
                               s->cid_to_cam_t_global_,
                               s->cid_to_keypoint_map_,
                               &(s->pid_to_cid_fid_),
@@ -442,7 +443,8 @@ void IncrementalBA(std::string const& essential_file,
     pid_to_xyz_local.clear();
     std::vector<std::map<int, int> > cid_fid_to_pid_local;
     sparse_mapping::Triangulate(rm_invalid_xyz,
-                                s->camera_params_.GetFocalLength(),
+                                s->cid_to_camera_id_,
+                                s->camera_id_to_camera_params_,
                                 cid_to_cam_t_local,
                                 s->cid_to_keypoint_map_,
                                 &pid_to_cid_fid_local,
@@ -492,7 +494,8 @@ void IncrementalBA(std::string const& essential_file,
 
   // Triangulate all points
   sparse_mapping::Triangulate(rm_invalid_xyz,
-                              s->camera_params_.GetFocalLength(),
+                              s->cid_to_camera_id_,
+                              s->camera_id_to_camera_params_,
                               s->cid_to_cam_t_global_,
                               s->cid_to_keypoint_map_,
                               &(s->pid_to_cid_fid_),
@@ -604,7 +607,8 @@ void CloseLoop(sparse_mapping::SparseMap * s) {
   // sparse_mapping::PrintPidStats(s->pid_to_cid_fid_);
   bool rm_invalid_xyz = true;
   sparse_mapping::Triangulate(rm_invalid_xyz,
-                              s->camera_params_.GetFocalLength(),
+                              s->cid_to_camera_id_,
+                              s->camera_id_to_camera_params_,
                               s->cid_to_cam_t_global_,
                               s->cid_to_keypoint_map_,
                               &(s->pid_to_cid_fid_),
@@ -1422,7 +1426,8 @@ void MergeMaps(sparse_mapping::SparseMap * A_in,
     std::vector<std::map<int, int> > new_cid_fid_to_pid;
     bool rm_invalid_xyz = true;  // don't remove anything, as cameras are pretty unreliable now
     sparse_mapping::Triangulate(rm_invalid_xyz,
-                                C.camera_params_.GetFocalLength(),
+                                C.cid_to_camera_id_,
+                                C.camera_id_to_camera_params_,
                                 C.cid_to_cam_t_global_,
                                 C.cid_to_keypoint_map_,
                                 &new_pid_to_cid_fid,
@@ -1722,7 +1727,8 @@ double RegistrationOrVerification(std::vector<std::string> const& data_files,
   std::vector<std::map<int, int> > cid_fid_to_pid_local;
   bool rm_invalid_xyz = false;  // there should be nothing to remove hopefully
   sparse_mapping::Triangulate(rm_invalid_xyz,
-                              map->camera_params_.GetFocalLength(),
+                              map->cid_to_camera_id_,
+                              map->camera_id_to_camera_params_,
                               map->cid_to_cam_t_global_,
                               map->user_cid_to_keypoint_map_,
                               &(map->user_pid_to_cid_fid_),
@@ -2187,21 +2193,21 @@ void BuildMapFindEssentialAndInliers(Eigen::Matrix2Xd const& keypoints1,
   }
 }
 
-void Triangulate(bool rm_invalid_xyz, double focal_length,
+void Triangulate(bool rm_invalid_xyz, std::vector<int> const& cid_to_camera_id,
+                 std::vector<camera::CameraParameters> const& camera_id_to_camera_params,
                  std::vector<Eigen::Affine3d> const& cid_to_cam_t_global,
                  std::vector<Eigen::Matrix2Xd> const& cid_to_keypoint_map,
-                 std::vector<std::map<int, int> > * pid_to_cid_fid,
-                 std::vector<Eigen::Vector3d> * pid_to_xyz,
-                 std::vector<std::map<int, int> > * cid_fid_to_pid) {
-  Eigen::Matrix3d k;
-  k << focal_length, 0, 0,
-    0, focal_length, 0,
-    0, 0, 1;
-
+                 std::vector<std::map<int, int>>* pid_to_cid_fid, std::vector<Eigen::Vector3d>* pid_to_xyz,
+                 std::vector<std::map<int, int>>* cid_fid_to_pid) {
   // Build p matrices for all of the cameras. openMVG::Triangulation
   // will be holding pointers to all of the cameras.
   std::vector<openMVG::Mat34> cid_to_p(cid_to_cam_t_global.size());
   for (size_t cid = 0; cid < cid_to_p.size(); cid++) {
+    const double focal_length = camera_id_to_camera_params[cid_to_camera_id[cid]].GetFocalLength();
+    Eigen::Matrix3d k;
+    k << focal_length, 0, 0,
+      0, focal_length, 0,
+      0, 0, 1;
     openMVG::P_From_KRt(k, cid_to_cam_t_global[cid].linear(),
                         cid_to_cam_t_global[cid].translation(), &cid_to_p[cid]);
   }
