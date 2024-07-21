@@ -198,7 +198,7 @@ void BundleAdjust(std::vector<std::map<int, int> > const& pid_to_cid_fid,
 
 // This is a very specialized function
 void BundleAdjustSmallSet(std::vector<Eigen::Matrix2Xd> const& features_n,
-                          double focal_length,
+                          std::vector<double> focal_length_n,
                           std::vector<Eigen::Affine3d> * cam_t_global_n,
                           Eigen::Matrix3Xd * pid_to_xyz,
                           ceres::LossFunction * loss,
@@ -232,10 +232,10 @@ void BundleAdjustSmallSet(std::vector<Eigen::Matrix2Xd> const& features_n,
                                &cam_t_global_n->at(cid).translation()[0],
                                &aa.at(cid)[0],
                                &pid_to_xyz->col(pid)[0],
-                               &focal_length);
+                               &focal_length[cid]);
     }
   }
-  problem.SetParameterBlockConstant(&focal_length);
+  problem.SetParameterBlockConstant(&focal_length[cid]);
 
   // Solve the problem
   ceres::Solve(options, &problem, summary);
