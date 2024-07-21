@@ -177,8 +177,14 @@ struct SparseMap {
   /**
    * Return the parameters of the camera used to construct the map.
    **/
-  camera::CameraParameters GetCameraParameters(void) const {return camera_params_;}
-  void SetCameraParameters(camera::CameraParameters camera_params) {camera_params_ = camera_params;}
+  const camera::CameraParameters& camera_params(int cid) const {
+    return camera_id_to_camera_params_[cid_to_camera_id[cid]];
+  }
+  camera::CameraParameters GetCameraParameters(int cid) const {
+    return camera_id_to_camera_params_[cid_to_camera_id[cid]];
+  }
+  // void SetCameraParameters(int cid, camera::CameraParameters& camera_params) {cid_to_camera_params_[cid] =
+  // camera_params;}
   /**
    * Return the number of observations. Use this number to divide the final error to find the average pixel error.
    **/
@@ -239,7 +245,8 @@ struct SparseMap {
   std::vector<std::map<int, int>> cid_to_matching_cid_counts_;
 
   interest_point::FeatureDetector detector_;
-  camera::CameraParameters camera_params_;
+  std::vector<int> cid_to_camera_id_;
+  std::vector<camera::CameraParameters> camera_id_to_camera_params_;
   mutable sparse_mapping::VocabDB vocab_db_;  // TODO(oalexan1): Mutable means someone is doing something wrong.
   LocalizationParameters loc_params_;
   std::string protobuf_file_;

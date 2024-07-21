@@ -661,21 +661,17 @@ void SparseMap::InitializeCidFidToPid() {
                                         &cid_fid_to_pid_);
 }
 
-void SparseMap::DetectFeaturesFromFile(std::string const& filename,
-                                       bool multithreaded,
-                                       cv::Mat* descriptors,
-                                       Eigen::Matrix2Xd* keypoints) {
+void SparseMap::DetectFeaturesFromFile(std::string const& filename, const camera::CameraParameters& camera_params,
+                                       bool multithreaded, cv::Mat* descriptors, Eigen::Matrix2Xd* keypoints) {
   cv::Mat image = cv::imread(filename, cv::IMREAD_GRAYSCALE);
   if (image.rows == 0 || image.cols == 0)
     LOG(FATAL) << "Found empty image in file: " << filename;
 
-  DetectFeatures(image, multithreaded, descriptors, keypoints);
+  DetectFeatures(image, camera_params, multithreaded, descriptors, keypoints);
 }
 
-void SparseMap::DetectFeatures(const cv::Mat& image,
-                               bool multithreaded,
-                               cv::Mat* descriptors,
-                               Eigen::Matrix2Xd* keypoints) {
+void SparseMap::DetectFeatures(const cv::Mat& image, const camera::CameraParameters& camera_params, bool multithreaded,
+                               cv::Mat* descriptors, Eigen::Matrix2Xd* keypoints) {
   // If using histogram equalization, need an extra image to store it
   cv::Mat * image_ptr = const_cast<cv::Mat*>(&image);
   cv::Mat hist_image;
@@ -728,7 +724,7 @@ void SparseMap::DetectFeatures(const cv::Mat& image,
   Eigen::Vector2d output;
 
   for (size_t j = 0; j < storage.size(); j++) {
-    camera_params_.Convert<camera::DISTORTED_C, camera::UNDISTORTED_C>
+    camera_params.Convert<camera::DISTORTED_C, camera::UNDISTORTED_C>
       (Eigen::Vector2d(storage[j].pt.x, storage[j].pt.y), &output);
     keypoints->col(j) = output;
   }
@@ -816,7 +812,7 @@ bool SparseMap::Localize(cv::Mat const& test_descriptors, Eigen::Matrix2Xd const
       if (map_image.empty()) {
           LOG(ERROR) << "Failed to load map image: " << map_filename;
       } else {
-        ViewMatches(test_keypoints, cid_to_keypoint_map_[cid], all_matches[i], camera_params_, image, map_image);
+        ViewMatches(test_keypoints, cid_to_keypoint_map_[cid], all_matches[i], camera_params(cid), image, map_image);
       }
     }
 
@@ -828,7 +824,7 @@ bool SparseMap::Localize(cv::Mat const& test_descriptors, Eigen::Matrix2Xd const
         std::vector<cv::DMatch> inlier_matches;
         std::vector<size_t> vec_inliers;
         Eigen::Matrix3d essential_matrix;
-        FindEssentialAndInliers(test_keypoints, cid_to_keypoint_map_[cid], all_matches[i], camera_params_,
+        FindEssentialAndInliers(test_keypoints, cid_to_keypoint_map_[cid], all_matches[i], camera_params(cid),
                                 &inlier_matches, &vec_inliers, &essential_matrix,
                                 loc_params_.essential_ransac_iterations);
         all_matches[i] = inlier_matches;
