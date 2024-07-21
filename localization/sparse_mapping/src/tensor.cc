@@ -478,14 +478,10 @@ void IncrementalBA(std::string const& essential_file,
     LOG(INFO) << "Optimizing cameras from " << start << " to " << cid << " (total: "
         << cid-start+1 << ")";
 
-    sparse_mapping::BundleAdjust(pid_to_cid_fid_local, s->cid_to_keypoint_map_,
-                                 s->camera_params_.GetFocalLength(),
-                                 &cid_to_cam_t_local, &pid_to_xyz_local,
-                                 s->user_pid_to_cid_fid_,
-                                 s->user_cid_to_keypoint_map_,
-                                 &(s->user_pid_to_xyz_),
-                                 loss, options, &summary,
-                                 start, cid);
+    sparse_mapping::BundleAdjust(pid_to_cid_fid_local, s->cid_to_keypoint_map_, s->cid_to_camera_id_,
+                                 s->camera_id_to_camera_params_, &cid_to_cam_t_local, &pid_to_xyz_local,
+                                 s->user_pid_to_cid_fid_, s->user_cid_to_keypoint_map_, &(s->user_pid_to_xyz_), loss,
+                                 options, &summary, start, cid);
 
     // Copy back
     for (int c = 0; c <= cid; c++)
@@ -651,7 +647,8 @@ void BundleAdjustment(sparse_mapping::SparseMap * s,
                       int first, int last, bool fix_all_cameras,
                       std::set<int> const& fixed_cameras) {
   sparse_mapping::BundleAdjust(s->pid_to_cid_fid_, s->cid_to_keypoint_map_,
-                               s->camera_params_.GetFocalLength(), &(s->cid_to_cam_t_global_),
+                               s->cid_to_camera_id_, s->camera_id_to_camera_params_,
+                               &(s->cid_to_cam_t_global_),
                                &(s->pid_to_xyz_),
                                s->user_pid_to_cid_fid_, s->user_cid_to_keypoint_map_,
                                &(s->user_pid_to_xyz_),
@@ -1709,8 +1706,9 @@ double RegistrationOrVerification(std::vector<std::string> const& data_files,
   // Shift the keypoints. Undistort if necessary.
   Eigen::Vector2d output;
   for (size_t cid = 0; cid < map->user_cid_to_keypoint_map_.size(); cid++) {
+    const auto& camera_params = map->camera_params(cid);
     for (int i = 0; i < map->user_cid_to_keypoint_map_[cid].cols(); i++) {
-      map->camera_params_.Convert<camera::DISTORTED, camera::UNDISTORTED_C>
+      camera_params.Convert<camera::DISTORTED, camera::UNDISTORTED_C>
         (map->user_cid_to_keypoint_map_[cid].col(i), &output);
       map->user_cid_to_keypoint_map_[cid].col(i) = output;
     }
