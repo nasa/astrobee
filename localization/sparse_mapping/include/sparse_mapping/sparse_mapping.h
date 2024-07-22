@@ -180,8 +180,8 @@ double ComputeRaysAngle(int pid, std::vector<std::map<int, int> > const& pid_to_
                         std::vector<Eigen::Vector3d> const& cam_ctrs, std::vector<Eigen::Vector3d> const& pid_to_xyz);
 
 // Filter points by reprojection error and other criteria
-void FilterPID(double reproj_thresh,  std::vector<camera::CameraParameters> const& camera_id_to_camera_params,
-                               std::vector<Eigen::Affine3d > const& cid_to_cam_t_global,
+void FilterPID(double reproj_thresh, std::vector<int> const& cid_to_camera_id,
+               std::vector<camera::CameraParameters> const& camera_id_to_camera_params,
                std::vector<Eigen::Affine3d> const& cid_to_cam_t_global,
                std::vector<Eigen::Matrix2Xd> const& cid_to_keypoint_map,
                std::vector<std::map<int, int> >* pid_to_cid_fid, std::vector<Eigen::Vector3d>* pid_to_xyz,
