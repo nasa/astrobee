@@ -52,6 +52,7 @@ class Localizer {
   void AdjustThresholds();
 
   sparse_mapping::SparseMap* map_;
+  std::shared_ptr camera::CameraParameters cam_params_;
   // Success params for adjusting keypoint thresholds
   std::deque<int> successes_;
   ThresholdParams params_;

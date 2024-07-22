@@ -39,8 +39,9 @@ int main(int argc, char** argv) {
 
   // print results
   for (size_t i = 0; i < map.GetNumFrames() - 1; i++) {
-    camera::CameraModel m1(map.GetFrameGlobalTransform(i), map.GetCameraParameters());
-    camera::CameraModel m2(map.GetFrameGlobalTransform(i), map.GetCameraParameters());
+    // Assume first camera model
+    camera::CameraModel m1(map.GetFrameGlobalTransform(i), map.GetCameraParameters(0));
+    camera::CameraModel m2(map.GetFrameGlobalTransform(i), map.GetCameraParameters(0));
     std::string name1 = map.GetFrameFilename(i);
     std::string name2 = map.GetFrameFilename(i+1);
     std::string base = name1.substr(0, name1.length() - 11);

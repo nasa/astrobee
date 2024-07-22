@@ -54,8 +54,9 @@ int main(int argc, char** argv) {
                                              FLAGS_histogram_equalization);
 
   // localize frame
+  // Use first camera model in map
   camera::CameraModel camera(Eigen::Vector3d(), Eigen::Matrix3d::Identity(),
-                             map.GetCameraParameters());
+                             map.GetCameraParameters(0));
   if (!map.Localize(img_file, &camera)) {
     LOG(ERROR) << "Failed to localize image.";
     return 1;

@@ -38,7 +38,8 @@ boost::optional<vision_common::FeatureMatches> Matches(
   vision_common::LKOpticalFlowFeatureDetectorAndMatcher& detector_and_matcher);
 
 Eigen::Affine3d EstimateAffine3d(const vision_common::FeatureMatches& matches,
-                                 const camera::CameraParameters& camera_params, std::vector<cv::DMatch>& inliers);
+                                 const camera::CameraParameters& camera_params1,
+                                 const camera::CameraParameters& camera_params2, std::vector<cv::DMatch>& inliers);
 
 vision_common::FeatureImage LoadImage(const int index, const std::vector<std::string>& image_names,
                                       cv::Feature2D& detector);

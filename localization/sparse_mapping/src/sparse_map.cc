@@ -97,6 +97,18 @@ SparseMap::SparseMap(const std::vector<std::string>& filenames, const std::strin
   camera_id_to_camera_params_.emplace_back(params);
 }
 
+SparseMap::SparseMap(const std::vector<std::string>& filenames, const std::string& detector,
+                     const std::vector<int>& cid_to_camera_id,
+                     const std::vector<camera::CameraParameters>& camera_id_to_camera_params)
+    : cid_to_filename_(filenames),
+      detector_(detector),
+      cid_to_camera_id_(cid_to_camera_id),
+      camera_id_to_camera_params_(camera_id_to_camera_params) {
+  SetDefaultLocParams();
+  cid_to_descriptor_map_.resize(cid_to_filename_.size());
+  cid_to_keypoint_map_.resize(cid_to_filename_.size());
+}
+
 SparseMap::SparseMap(const std::string& protobuf_file, bool localization)
     : protobuf_file_(protobuf_file) {
   SetDefaultLocParams();
@@ -276,11 +288,8 @@ void SparseMap::DetectFeatures() {
   for (size_t cid = 0; cid < num_files; cid++) {
     ff_common::PrintProgressBar(stdout, static_cast<float>(cid) / static_cast<float>(num_files - 1));
 
-    pool.AddTask(&SparseMap::DetectFeaturesFromFile, this,
-                 std::ref(cid_to_filename_[cid]),
-                 multithreaded,
-                 &cid_to_descriptor_map_[cid],
-                 &cid_to_keypoint_map_[cid]);
+    pool.AddTask(&SparseMap::DetectFeaturesFromFile, this, std::ref(cid_to_filename_[cid]),
+                 std::ref(camera_params(cid)), multithreaded, &cid_to_descriptor_map_[cid], &cid_to_keypoint_map_[cid]);
   }
   pool.Join();
 
@@ -869,8 +878,8 @@ bool SparseMap::Localize(cv::Mat const& test_descriptors, Eigen::Matrix2Xd const
         std::vector<cv::DMatch> inlier_matches;
         std::vector<size_t> vec_inliers;
         Eigen::Matrix3d essential_matrix;
-        FindEssentialAndInliers(test_keypoints, cid_to_keypoint_map_[cid], all_matches[i], camera_params(cid),
-                                &inlier_matches, &vec_inliers, &essential_matrix,
+        FindEssentialAndInliers(test_keypoints, cid_to_keypoint_map_[cid], all_matches[i], pose->GetParameters(),
+                                camera_params(cid), &inlier_matches, &vec_inliers, &essential_matrix,
                                 loc_params_.essential_ransac_iterations);
         all_matches[i] = inlier_matches;
         if (loc_params_.verbose_localization)
@@ -986,7 +995,7 @@ bool SparseMap::Localize(std::string const& img_file,
   cv::Mat test_descriptors;
   Eigen::Matrix2Xd test_keypoints;
   bool multithreaded = false;
-  DetectFeaturesFromFile(img_file, multithreaded, &test_descriptors, &test_keypoints);
+  DetectFeaturesFromFile(img_file, pose->GetParameters(), multithreaded, &test_descriptors, &test_keypoints);
   return Localize(test_descriptors, test_keypoints,
                                   pose,
                                   inlier_landmarks, inlier_observations,
@@ -1164,7 +1173,7 @@ bool SparseMap::Localize(const cv::Mat & image, camera::CameraModel* pose,
   bool multithreaded = false;
   cv::Mat test_descriptors;
   Eigen::Matrix2Xd test_keypoints;
-  DetectFeatures(image, multithreaded, &test_descriptors, &test_keypoints);
+  DetectFeatures(image, pose->GetParameters(), multithreaded, &test_descriptors, &test_keypoints);
   return Localize(test_descriptors, test_keypoints,
                                   pose,
                                   inlier_landmarks, inlier_observations,

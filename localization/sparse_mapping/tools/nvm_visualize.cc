@@ -100,7 +100,7 @@ void Draw3DFrame(cv::viz::Viz3d* window, const sparse_mapping::SparseMap & map,
   int cols;
   int rows;
   if (!image.empty()) {
-    f = map.GetCameraParameters().GetFocalLength();
+    f = map.GetCameraParameters(cid).GetFocalLength();
     cols = image.cols;
     rows = image.rows;
   } else {
@@ -136,8 +136,9 @@ bool LocalizeFrame(MapViewerState* state, int frame) {
     cv::Mat image;
     // display localized images
     if (state->num_frames > 0) {
+      // Assume first camera model
       camera::CameraModel camera(Eigen::Vector3d(), Eigen::Matrix3d::Identity(),
-                                 state->map->GetCameraParameters());
+                                 state->map->GetCameraParameters(0));
       image = cv::imread(state->frames[frame], cv::IMREAD_GRAYSCALE);
       if (!state->map->Localize(state->frames[frame], &camera, &landmarks)) {
         LOG(ERROR) << "Failed to localize image.";
@@ -165,7 +166,8 @@ bool LocalizeFrame(MapViewerState* state, int frame) {
       state->window->setViewerPose(new_pose);  // state->window->getViewerPose().concatenate(
       // state->old_pose.inv()).concatenate(camera_pose));
     }
-    double f = state->map->GetCameraParameters().GetFocalLength();
+    // Assume first camera model
+    double f = state->map->GetCameraParameters(0).GetFocalLength();
     cv::viz::WCameraPosition im_pose(cv::Vec2f(2 * atan(image.cols * 0.5 / f), 2 * atan(image.rows * 0.5 / f)),
                                      image, 0.5, cv::viz::Color::red());
     im_pose.setRenderingProperty(cv::viz::LINE_WIDTH, 6.0);
@@ -378,7 +380,7 @@ static void onMouse(int event, int x, int y, int, void*) {
     return;
   }
 
-  camera::CameraParameters camera_param = map.GetCameraParameters();
+  camera::CameraParameters camera_param = map.GetCameraParameters(cid);
   const Eigen::Matrix2Xd & keypoint_map = map.GetFrameKeypoints(cid);
 
   // Locate that point in the image
@@ -529,7 +531,9 @@ int main(int argc, char** argv) {
   LOG(INFO) << "\t" << map.GetNumFrames() << " cameras and "
             << map.GetNumLandmarks() << " points";
 
-  camera::CameraParameters camera_param = map.GetCameraParameters();
+  // Assume first camera model
+  // TODO(rsoussan): Add option to use robot camera parameters or pass camera parameters manually
+  camera::CameraParameters camera_param = map.GetCameraParameters(0);
 
   int cid = FLAGS_first;
   int num_images = map.GetNumFrames();

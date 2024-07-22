@@ -65,13 +65,21 @@ struct SparseMap {
 
   /**
    * Constructs a new sparse map from a list of image files and their
-   * associate keypoint and descriptor files. If use_cached_features
-   * is set to false, it reads the image files and performs feature
-   * detection instead. Does not perform bundle adjustment.
+   * associate keypoint and descriptor files. Assumes a single camera model
+   * used for all the images. 
    **/
   SparseMap(const std::vector<std::string> & filenames,
             const std::string & detector,
             const camera::CameraParameters & params);
+
+  /**
+   * Constructs a new sparse map from a list of image files and their
+   * associate keypoint and descriptor files. Adds camera models 
+   * and a map associating each image  with its respective camera model.
+   **/
+  SparseMap(const std::vector<std::string>& filenames, const std::string& detector,
+            const std::vector<int>& cid_to_camera_id,
+            const std::vector<camera::CameraParameters>& camera_id_to_camera_params);
 
   /**
    * Constructs a new sparse map from a protobuf file, with specified
@@ -182,6 +190,10 @@ struct SparseMap {
   }
   camera::CameraParameters GetCameraParameters(int cid) const {
     return camera_id_to_camera_params_[cid_to_camera_id_[cid]];
+  }
+
+  void OverwriteCameraParameters(const camera::CameraParameters& camera_params, int camera_id = 0) {
+    camera_id_to_camera_params_[camera_id] = camera_params;
   }
 
   /**

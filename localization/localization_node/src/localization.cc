@@ -30,7 +30,7 @@ namespace localization_node {
 Localizer::Localizer(sparse_mapping::SparseMap* map): map_(map) {}
 
 bool Localizer::ReadParams(config_reader::ConfigReader& config, bool fatal_failure) {
-  camera::CameraParameters cam_params(&config, "nav_cam");
+  cam_params_.reset(camera::CameraParameters(&config, "nav_cam"));
   std::string prefix;
   const auto detector_name = map_->GetDetectorName();
   if (detector_name == "ORGBRISK") {
@@ -104,7 +104,6 @@ bool Localizer::ReadParams(config_reader::ConfigReader& config, bool fatal_failu
     return false;
   }
 
-  map_->SetCameraParameters(cam_params);
   map_->SetLocParams(loc_params);
   map_->SetDetectorParams(min_features, max_features, detection_retries,
                           min_threshold, default_threshold, max_threshold, too_many_ratio, too_few_ratio);
@@ -126,10 +125,10 @@ bool Localizer::Localize(cv_bridge::CvImageConstPtr image_ptr, ff_msgs::VisualLa
   vl->header.frame_id = "world";
 
   timer_.Start();
-  map_->DetectFeatures(image_ptr->image, multithreaded, &image_descriptors, image_keypoints);
+  map_->DetectFeatures(image_ptr->image, *cam_params_, multithreaded, &image_descriptors, image_keypoints);
   camera::CameraModel camera(Eigen::Vector3d(),
                              Eigen::Matrix3d::Identity(),
-                             map_->GetCameraParameters());
+                             *cam_params_);
   std::vector<Eigen::Vector3d> landmarks;
   std::vector<Eigen::Vector2d> observations;
   if (!map_->Localize(image_descriptors, *image_keypoints,
