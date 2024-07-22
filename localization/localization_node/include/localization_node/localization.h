@@ -48,11 +48,12 @@ class Localizer {
   bool ReadParams(config_reader::ConfigReader& config, bool fatal_failure = true);
   bool Localize(cv_bridge::CvImageConstPtr image_ptr, ff_msgs::VisualLandmarks* vl,
      Eigen::Matrix2Xd* image_keypoints = NULL);
+  const camera::CameraParameters& camera_params() const { return *cam_params_; }
  private:
   void AdjustThresholds();
 
   sparse_mapping::SparseMap* map_;
-  std::shared_ptr camera::CameraParameters cam_params_;
+  std::shared_ptr<camera::CameraParameters> cam_params_;
   // Success params for adjusting keypoint thresholds
   std::deque<int> successes_;
   ThresholdParams params_;

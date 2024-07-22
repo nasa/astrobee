@@ -30,7 +30,7 @@ namespace localization_node {
 Localizer::Localizer(sparse_mapping::SparseMap* map): map_(map) {}
 
 bool Localizer::ReadParams(config_reader::ConfigReader& config, bool fatal_failure) {
-  cam_params_.reset(camera::CameraParameters(&config, "nav_cam"));
+  cam_params_ = std::make_shared<camera::CameraParameters>(&config, "nav_cam");
   std::string prefix;
   const auto detector_name = map_->GetDetectorName();
   if (detector_name == "ORGBRISK") {
