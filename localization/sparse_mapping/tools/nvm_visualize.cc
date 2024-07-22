@@ -22,7 +22,6 @@
 #include <sparse_mapping/reprojection.h>
 #include <sparse_mapping/sparse_map.h>
 #include <sparse_mapping/sparse_mapping.h>
-#include <camera/camera_params.h>
 
 #include <Eigen/Geometry>
 #include <gflags/gflags.h>
