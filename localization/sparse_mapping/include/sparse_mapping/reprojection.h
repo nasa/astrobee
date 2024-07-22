@@ -60,7 +60,8 @@ namespace sparse_mapping {
  **/
 void BundleAdjust(std::vector<std::map<int, int> > const& pid_to_cid_fid,
                   std::vector<Eigen::Matrix2Xd > const& cid_to_keypoint_map,
-                  double focal_length,
+std::vector<int> const& cid_to_camera_id,
+                  std::vector<camera::CameraParameters> const& camera_id_to_camera_params,
                   std::vector<Eigen::Affine3d> * cid_to_cam_t_global,
                   std::vector<Eigen::Vector3d> * pid_to_xyz,
                   std::vector<std::map<int, int> > const& user_pid_to_cid_fid,

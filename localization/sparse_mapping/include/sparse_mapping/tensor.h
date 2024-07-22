@@ -176,7 +176,8 @@ namespace sparse_mapping {
 
   // Triangulates all points given camera positions. This is better
   // than what is in sparse map as it uses multiple view information.
-  void Triangulate(bool rm_invalid_xyz, double focal_length,
+  void Triangulate(bool rm_invalid_xyz,  std::vector<int> const& cid_to_camera_id,
+                             std::vector<camera::CameraParameters> const& camera_id_to_camera_params,
                    std::vector<Eigen::Affine3d> const& cid_to_cam_t_global,
                    std::vector<Eigen::Matrix2Xd> const& cid_to_keypoint_map,
                    std::vector<std::map<int, int> > * pid_to_cid_fid,
