@@ -166,7 +166,7 @@ void BundleAdjust(std::vector<std::map<int, int> > const& pid_to_cid_fid,
                                  &cid_to_cam_t_global->at(cid_fid.first).translation()[0],
                                  &camera_aa_storage[3 * cid_fid.first],
                                  &p_pid_to_xyz->at(pid)[0],
-                                 &focal_length[cid_fid.first]);
+                                 &focal_lengths[cid_fid.first]);
 
         if (fix_all_cameras || (cid_fid.first < first || cid_fid.first > last) ||
             fixed_cameras.find(cid_fid.first) != fixed_cameras.end()) {
@@ -182,7 +182,7 @@ void BundleAdjust(std::vector<std::map<int, int> > const& pid_to_cid_fid,
         problem.SetParameterBlockConstant(&p_pid_to_xyz->at(pid)[0]);
       }
     }
-    for (const auto& focal_length : focal_lengths) {
+    for (auto& focal_length : focal_lengths) {
       problem.SetParameterBlockConstant(&focal_length);
     }
   }
@@ -236,10 +236,12 @@ void BundleAdjustSmallSet(std::vector<Eigen::Matrix2Xd> const& features_n,
                                &cam_t_global_n->at(cid).translation()[0],
                                &aa.at(cid)[0],
                                &pid_to_xyz->col(pid)[0],
-                               &focal_length[cid]);
+                               &focal_length_n[cid]);
     }
   }
-  problem.SetParameterBlockConstant(&focal_length[cid]);
+  for (size_t cid = 0; cid < n_cameras; ++cid) {
+    problem.SetParameterBlockConstant(&focal_length_n[cid]);
+  }
 
   // Solve the problem
   ceres::Solve(options, &problem, summary);

@@ -178,13 +178,12 @@ struct SparseMap {
    * Return the parameters of the camera used to construct the map.
    **/
   const camera::CameraParameters& camera_params(int cid) const {
-    return camera_id_to_camera_params_[cid_to_camera_id[cid]];
+    return camera_id_to_camera_params_[cid_to_camera_id_[cid]];
   }
   camera::CameraParameters GetCameraParameters(int cid) const {
-    return camera_id_to_camera_params_[cid_to_camera_id[cid]];
+    return camera_id_to_camera_params_[cid_to_camera_id_[cid]];
   }
-  // void SetCameraParameters(int cid, camera::CameraParameters& camera_params) {cid_to_camera_params_[cid] =
-  // camera_params;}
+
   /**
    * Return the number of observations. Use this number to divide the final error to find the average pixel error.
    **/
@@ -218,10 +217,12 @@ struct SparseMap {
 
   // detect features with opencv
   void DetectFeaturesFromFile(std::string const& filename,
+                              const camera::CameraParameters& camera_params,
                               bool multithreaded,
                               cv::Mat* descriptors,
                               Eigen::Matrix2Xd* keypoints);
   void DetectFeatures(cv::Mat const& image,
+                      const camera::CameraParameters& camera_params,
                       bool multithreaded,
                       cv::Mat* descriptors,
                       Eigen::Matrix2Xd* keypoints);

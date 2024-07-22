@@ -1183,8 +1183,6 @@ void MergeMaps(sparse_mapping::SparseMap * A_in,
   sparse_mapping::SparseMap & C = *C_out;
 
   // Basic sanity checks (not exhaustive)
-  if ( !(A.GetCameraParameters() == B.GetCameraParameters()) )
-    LOG(FATAL) << "The input maps don't have the same camera parameters.";
   if ( !(A.detector_ == B.detector_) )
     LOG(FATAL) << "The input maps don't have the same detector and/or descriptor.";
 
@@ -1222,8 +1220,8 @@ void MergeMaps(sparse_mapping::SparseMap * A_in,
   }
   // Append B's camera params to A's.
   // TODO(rsoussan): Check for equality of camera params and consolidate
-  for (const auto& camera_params : B.camera_ids_to_camera_params_) {
-    A.camera_ids_to_camera_params_.append(camera_params);
+  for (const auto& camera_params : B.camera_id_to_camera_params_) {
+    A.camera_id_to_camera_params_.emplace_back(camera_params);
   }
 
   // Create cid_fid_to_pid_ for both maps, to be able to go from cid_fid to pid.
@@ -1965,8 +1963,10 @@ void FindEssentialAndInliers(Eigen::Matrix2Xd const& keypoints1, Eigen::Matrix2X
     observationsb.col(i) = keypoints2.col(matches[i].trainIdx);
   }
 
-  std::pair<size_t, size_t> image_size(camera_params.GetUndistortedSize()[0],
-                                       camera_params.GetUndistortedSize()[1]);
+  std::pair<size_t, size_t> image_size1(camera_params1.GetUndistortedSize()[0],
+                                       camera_params1.GetUndistortedSize()[1]);
+  std::pair<size_t, size_t> image_size2(camera_params2.GetUndistortedSize()[0],
+                                       camera_params2.GetUndistortedSize()[1]);
   Eigen::Matrix3d k1 = camera_params1.GetIntrinsicMatrix<camera::UNDISTORTED_C>();
   Eigen::Matrix3d k2 = camera_params2.GetIntrinsicMatrix<camera::UNDISTORTED_C>();
 
@@ -1976,7 +1976,7 @@ void FindEssentialAndInliers(Eigen::Matrix2Xd const& keypoints1, Eigen::Matrix2X
 
   if (!interest_point::RobustEssential(k1, k2, observationsa, observationsb,
                                        essential_matrix, vec_inliers,
-                                       image_size, image_size,
+                                       image_size1, image_size2,
                                        &error_max,
                                        max_expected_error, ransac_iterations)) {
     VLOG(2) << " | Estimation of essential matrix failed!\n";

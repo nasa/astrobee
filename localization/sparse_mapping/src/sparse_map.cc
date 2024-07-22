@@ -132,9 +132,8 @@ SparseMap::SparseMap(const std::vector<Eigen::Affine3d>& cid_to_cam_t, const std
 
 // Form a sparse map by reading a text file from disk. This is for comparing
 // bundler, nvm or theia maps.
-SparseMap::SparseMap(bool bundler_format, std::string const& filename, std::vector<std::string> const& all_image_files)
-    : camera_params_(Eigen::Vector2i(640, 480), Eigen::Vector2d::Constant(300),
-                     Eigen::Vector2d(320, 240))  /* these are placeholders and must be changed */ {
+SparseMap::SparseMap(bool bundler_format, std::string const& filename,
+                     std::vector<std::string> const& all_image_files) {
   SetDefaultLocParams();
   std::string ext = ff_common::file_extension(filename);
   boost::to_lower(ext);
@@ -325,50 +324,52 @@ void SparseMap::Load(const std::string & protobuf_file, bool localization) {
       if (!ReadProtobufFrom(input, &camera)) {
         LOG(FATAL) << "Failed to parse camera.";
       }
-      camera::CameraParams camera_params;
       assert(camera.focal_length_size() == 2);
       assert(camera.optical_offset_size() == 2);
       assert(camera.distorted_image_size_size() == 2);
       assert(camera.undistorted_image_size_size() == 2);
       typedef Eigen::Vector2d V2d;
       typedef Eigen::Vector2i V2i;
-      camera_params.SetFocalLength(V2d(camera.focal_length(0),
-                                        camera.focal_length(1)));
-      camera_params.SetOpticalOffset(V2d(camera.optical_offset(0),
-                                          camera.optical_offset(1)));
-      camera_params.SetDistortedSize(V2i(camera.distorted_image_size(0),
-                                          camera.distorted_image_size(1)));
-      camera_params.SetUndistortedSize(V2i(camera.undistorted_image_size(0),
-                                            camera.undistorted_image_size(1)));
+      const V2d focal_length(camera.focal_length(0),
+                                        camera.focal_length(1));
+      const V2d optical_center(camera.optical_offset(0),
+                                          camera.optical_offset(1));
+      const V2i distorted_image_size(camera.distorted_image_size(0),
+                                          camera.distorted_image_size(1));
       Eigen::VectorXd distortion(camera.distortion_size());
       for (int i = 0; i < camera.distortion_size(); i++) {
         distortion[i] = camera.distortion(i);
       }
-      camera_params.SetDistortion(distortion);
+      camera::CameraParameters camera_params(distorted_image_size, focal_length, optical_center, distortion);
+      camera_params.SetDistortedSize(V2i(camera.distorted_image_size(0),
+                                          camera.distorted_image_size(1)));
+      camera_params.SetUndistortedSize(V2i(camera.undistorted_image_size(0),
+                                            camera.undistorted_image_size(1)));
       camera_id_to_camera_params_.emplace_back(camera_params);
     }
   } else {
-    camera::CameraParams camera_params;
-    assert(map.camera().focal_length_size() == 2);
-    assert(map.camera().optical_offset_size() == 2);
-    assert(map.camera().distorted_image_size_size() == 2);
-    assert(map.camera().undistorted_image_size_size() == 2);
-    typedef Eigen::Vector2d V2d;
-    typedef Eigen::Vector2i V2i;
-    camera_params.SetFocalLength(V2d(map.camera().focal_length(0),
-                                      map.camera().focal_length(1)));
-    camera_params.SetOpticalOffset(V2d(map.camera().optical_offset(0),
-                                        map.camera().optical_offset(1)));
-    camera_params.SetDistortedSize(V2i(map.camera().distorted_image_size(0),
-                                        map.camera().distorted_image_size(1)));
-    camera_params.SetUndistortedSize(V2i(map.camera().undistorted_image_size(0),
-                                          map.camera().undistorted_image_size(1)));
-    Eigen::VectorXd distortion(map.camera().distortion_size());
-    for (int i = 0; i < map.camera().distortion_size(); i++) {
-      distortion[i] = map.camera().distortion(i);
-    }
-    camera_params.SetDistortion(distortion);
-    camera_id_to_camera_params_.emplace_back(camera_params);
+      assert(map.camera().focal_length_size() == 2);
+      assert(map.camera().optical_offset_size() == 2);
+      assert(map.camera().distorted_image_size_size() == 2);
+      assert(map.camera().undistorted_image_size_size() == 2);
+      typedef Eigen::Vector2d V2d;
+      typedef Eigen::Vector2i V2i;
+      const V2d focal_length(map.camera().focal_length(0),
+                                        map.camera().focal_length(1));
+      const V2d optical_center(map.camera().optical_offset(0),
+                                          map.camera().optical_offset(1));
+      const V2i distorted_image_size(map.camera().distorted_image_size(0),
+                                          map.camera().distorted_image_size(1));
+      Eigen::VectorXd distortion(map.camera().distortion_size());
+      for (int i = 0; i < map.camera().distortion_size(); i++) {
+        distortion[i] = map.camera().distortion(i);
+      }
+      camera::CameraParameters camera_params(distorted_image_size, focal_length, optical_center, distortion);
+      camera_params.SetDistortedSize(V2i(map.camera().distorted_image_size(0),
+                                          map.camera().distorted_image_size(1)));
+      camera_params.SetUndistortedSize(V2i(map.camera().undistorted_image_size(0),
+                                            map.camera().undistorted_image_size(1)));
+      camera_id_to_camera_params_.emplace_back(camera_params);
   }
 
   int num_frames = map.num_frames();
@@ -568,20 +569,6 @@ void SparseMap::Save(const std::string & protobuf_file) const {
     map.set_descriptor_depth(0);
 
   map.set_num_cameras(camera_id_to_camera_params_.size());
-  for (const auto& camera_params : camera_id_to_camera_params_) {
-    sparse_mapping_protobuf::CameraModel* camera = map.add_camera();
-    camera->add_focal_length(camera_params.GetFocalVector()[0]);
-    camera->add_focal_length(camera_params.GetFocalVector()[1]);
-    camera->add_optical_offset(camera_params.GetOpticalOffset()[0]);
-    camera->add_optical_offset(camera_params.GetOpticalOffset()[1]);
-    camera->add_distorted_image_size(camera_params.GetDistortedSize()[0]);
-    camera->add_distorted_image_size(camera_params.GetDistortedSize()[1]);
-    camera->add_undistorted_image_size(camera_params.GetUndistortedSize()[0]);
-    camera->add_undistorted_image_size(camera_params.GetUndistortedSize()[1]);
-    for (int i = 0; i < camera_params.GetDistortion().size(); i++) {
-      camera->add_distortion(camera_params.GetDistortion()[i]);
-    }
-  }
 
   CHECK(cid_to_filename_.size() == cid_to_keypoint_map_.size())
     << "Number of CIDs in filenames and keypoint map do not match";
@@ -604,6 +591,24 @@ void SparseMap::Save(const std::string & protobuf_file) const {
   google::protobuf::io::ZeroCopyOutputStream* output = new google::protobuf::io::FileOutputStream(output_fd);
   if (!WriteProtobufTo(map, output)) {
     LOG(FATAL) << "Failed to write map to file.";
+  }
+
+  for (const auto& camera_params : camera_id_to_camera_params_) {
+    sparse_mapping_protobuf::CameraModel camera;
+    camera.add_focal_length(camera_params.GetFocalVector()[0]);
+    camera.add_focal_length(camera_params.GetFocalVector()[1]);
+    camera.add_optical_offset(camera_params.GetOpticalOffset()[0]);
+    camera.add_optical_offset(camera_params.GetOpticalOffset()[1]);
+    camera.add_distorted_image_size(camera_params.GetDistortedSize()[0]);
+    camera.add_distorted_image_size(camera_params.GetDistortedSize()[1]);
+    camera.add_undistorted_image_size(camera_params.GetUndistortedSize()[0]);
+    camera.add_undistorted_image_size(camera_params.GetUndistortedSize()[1]);
+    for (int i = 0; i < camera_params.GetDistortion().size(); i++) {
+      camera.add_distortion(camera_params.GetDistortion()[i]);
+    }
+    if (!WriteProtobufTo(camera, output)) {
+      LOG(FATAL) << "Failed to write camera to file.";
+    }
   }
 
   // write the frames

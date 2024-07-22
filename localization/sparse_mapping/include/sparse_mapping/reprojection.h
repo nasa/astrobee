@@ -30,6 +30,7 @@
 
 namespace camera {
   class CameraModel;
+  class CameraParameters;
 }
 
 namespace cv {
@@ -83,7 +84,7 @@ void BundleAdjust(std::vector<std::map<int, int> > const& pid_to_cid_fid,
  *
  **/
 void BundleAdjustSmallSet(std::vector<Eigen::Matrix2Xd> const& features_n,
-                          double focal_length,
+                          std::vector<double> focal_length_n,
                           std::vector<Eigen::Affine3d> * cam_t_global_n,
                           Eigen::Matrix3Xd * pid_to_xyz,
                           ceres::LossFunction * loss,

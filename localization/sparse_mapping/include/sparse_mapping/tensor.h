@@ -146,14 +146,16 @@ namespace sparse_mapping {
 
   // Filter the matches by a geometric constraint. Compute the essential matrix.
   void FindEssentialAndInliers(Eigen::Matrix2Xd const& keypoints1, Eigen::Matrix2Xd const& keypoints2,
-                               std::vector<cv::DMatch> const& matches, camera::CameraParameters const& camera_params,
+                               std::vector<cv::DMatch> const& matches, camera::CameraParameters const& camera_params1,
+                               camera::CameraParameters const& camera_params2,
                                std::vector<cv::DMatch>* inlier_matches, std::vector<size_t>* vec_inliers,
                                Eigen::Matrix3d* essential_matrix, const int ransac_iterations = 4096);
 
   void BuildMapFindEssentialAndInliers(const Eigen::Matrix2Xd & keypoints1,
                                        const Eigen::Matrix2Xd & keypoints2,
                                        const std::vector<cv::DMatch> & matches,
-                                       camera::CameraParameters const& camera_params,
+                                       camera::CameraParameters const& camera_params1,
+                                       camera::CameraParameters const& camera_params2,
                                        bool compute_inliers_only,
                                        size_t cam_a_idx, size_t cam_b_idx,
                                        std::mutex * match_mutex,
