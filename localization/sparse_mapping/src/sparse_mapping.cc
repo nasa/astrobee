@@ -115,15 +115,21 @@ namespace sparse_mapping {
 // Logic for implementing if two histogram equalization flags are compatible.
 // This flag can be either 0 (false), 1 (true), or 2 (unknown). Be tolerant
 // of unknown values, but intolerant when true and false are mixed.
-void sparse_mapping::HistogramEqualizationCheck(int histogram_equalization1,
-                                                int histogram_equalization2) {
+bool sparse_mapping::HistogramEqualizationCheck(int histogram_equalization1,
+                                                int histogram_equalization2, bool fatal_failure) {
   // Ignore if either has unknown equalization value
   if (histogram_equalization1 == HistogramEqualizationType::kUnknown ||
       histogram_equalization2 == HistogramEqualizationType::kUnknown) {
-    return;
+    return true;
   } else if (histogram_equalization1 != histogram_equalization2) {
-    LOG(FATAL) << "Incompatible values of histogram equalization detected.";
+    if (fatal_failure) {
+      LOG(FATAL) << "Incompatible values of histogram equalization detected.";
+    } else {
+      LOG(ERROR) << "Incompatible values of histogram equalization detected.";
+    }
+    return false;
   }
+  return true;
 }
 
 bool sparse_mapping::IsBinaryDescriptor(std::string const& descriptor) {

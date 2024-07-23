@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 # Copyright (c) 2017, United States Government, as represented by the
 # Administrator of the National Aeronautics and Space Administration.
@@ -133,7 +133,7 @@ def make_map(
     if merge_with_base_map:
         os.chdir("maps")
     rebuild_map_command = (
-        "rosrun sparse_mapping build_map -rebuild -rebuild_detector TEBLID512 -output_map "
+        "rosrun sparse_mapping build_map -rebuild -rebuild_detector TEBLID512 -min_brisk_features 3000 -output_map "
         + bag_teblid512_map_full_path
     )
     if histogram_equalization:

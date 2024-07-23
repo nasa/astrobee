@@ -44,7 +44,10 @@ class LocalizationNodelet : public ff_util::FreeFlyerNodelet {
   virtual void Initialize(ros::NodeHandle* nh);
 
  private:
-  void ReadParams(void);
+  // Wrapper function that calls ReadParams but does not take a param,
+  // required for configuring with a config timer.
+  void ReadParamsWrapper();
+  bool ReadParams(bool fatal_failure = true);
   bool ResetMap(const std::string& map_file);
   void Run(void);
   void Localize(void);
@@ -56,6 +59,7 @@ class LocalizationNodelet : public ff_util::FreeFlyerNodelet {
   std::shared_ptr<sparse_mapping::SparseMap> map_;
   std::shared_ptr<std::thread> thread_;
   config_reader::ConfigReader config_;
+  std::string last_valid_map_file_;
   ros::Timer config_timer_;
 
   std::shared_ptr<image_transport::ImageTransport> it_;
