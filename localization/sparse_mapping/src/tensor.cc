@@ -1209,6 +1209,7 @@ void MergeMaps(sparse_mapping::SparseMap * A_in,
   C.cid_to_keypoint_map_  .resize(num_ccid);
   C.cid_to_cam_t_global_  .resize(num_ccid);
   C.cid_to_descriptor_map_.resize(num_ccid);
+  C.cid_to_camera_id_     .resize(num_ccid);
   for (int cid = 0; cid < num_bcid; cid++) {
     // C.cid_to_filename_ already contains A.cid_to_filename_, etc.
     int c = num_acid + cid;
@@ -1221,7 +1222,7 @@ void MergeMaps(sparse_mapping::SparseMap * A_in,
   // Append B's camera params to A's.
   // TODO(rsoussan): Check for equality of camera params and consolidate
   for (const auto& camera_params : B.camera_id_to_camera_params_) {
-    A.camera_id_to_camera_params_.emplace_back(camera_params);
+    C.camera_id_to_camera_params_.emplace_back(camera_params);
   }
 
   // Create cid_fid_to_pid_ for both maps, to be able to go from cid_fid to pid.
@@ -1962,7 +1963,6 @@ void FindEssentialAndInliers(Eigen::Matrix2Xd const& keypoints1, Eigen::Matrix2X
     observationsa.col(i) = keypoints1.col(matches[i].queryIdx);
     observationsb.col(i) = keypoints2.col(matches[i].trainIdx);
   }
-
   std::pair<size_t, size_t> image_size1(camera_params1.GetUndistortedSize()[0],
                                        camera_params1.GetUndistortedSize()[1]);
   std::pair<size_t, size_t> image_size2(camera_params2.GetUndistortedSize()[0],
