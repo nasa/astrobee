@@ -87,6 +87,11 @@ Verify correctness of a ROS bag, as output by rosbag_fix_all.py. This
 performs some simple checks that are not part of the standard "rosbag
 check".
 
+## rosbag_recover
+In case a bag recording is corrupted. This script will split the bag into topics,
+run the rosbag_fixall on each individual topic, and merge them. This way, the worst
+that can happen is partially losing one topic.
+
 # Utilities
 
 ## utilities/bmr_renumber_enum
