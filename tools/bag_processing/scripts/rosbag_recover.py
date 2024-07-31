@@ -70,7 +70,7 @@ def recover_bag(input_bag):
 
         # Check for errors
         if result.returncode != 0:
-            print(f"Error running rosbag info: {result.stderr}")
+            print(f"Error splitting bag into topics: {result.stderr}")
             return []
 
         command = ["rosrun", "bag_processing", "rosbag_fix_all.py", out_bag_topic]
@@ -79,7 +79,7 @@ def recover_bag(input_bag):
         )
         # Check for errors
         if result.returncode != 0:
-            print(f"Error running rosbag info: {result.stderr}")
+            print(f"Error running rosbag fixall on individual topics: {result.stderr}")
             return []
 
         topic_bags.append(base_name + "." + topic.replace("/", "_") + ".fix_all" + ext)
@@ -96,7 +96,7 @@ def recover_bag(input_bag):
 
     # Check for errors
     if result.returncode != 0:
-        print(f"Error running rosbag info: {result.stderr}")
+        print(f"Error merging bags: {result.stderr}")
         return []
 
     command = ["rosrun", "bag_processing", "rosbag_fix_all.py", out_bag]
@@ -106,7 +106,7 @@ def recover_bag(input_bag):
 
     # Check for errors
     if result.returncode != 0:
-        print(f"Error running rosbag info: {result.stderr}")
+        print(f"Error running rosbag fixall on merged bag: {result.stderr}")
         return []
 
 
