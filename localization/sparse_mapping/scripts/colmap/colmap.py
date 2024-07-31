@@ -1,17 +1,17 @@
 # This module contains helper functions to read colmap databases and models
 # as well as call colmap functions
 
+import argparse
+import collections
 import os
 import re
+import sqlite3
+import struct
+import subprocess
 import sys
 import tempfile
 
-import argparse
-import collections
-import sqlite3
 import numpy as np
-import struct
-import subprocess
 
 _MAX_IMAGE_ID = 2**31 - 1
 

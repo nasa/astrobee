@@ -1,9 +1,8 @@
 # Deletes a folder of images from an existing colmap model
+import argparse
 import os
 import sys
 import tempfile
-
-import argparse
 
 import colmap
 

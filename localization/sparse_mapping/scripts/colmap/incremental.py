@@ -1,11 +1,11 @@
+import argparse
+import heapq
 import os
 import re
 import shutil
 import sys
 import tempfile
 
-import argparse
-import heapq
 import numpy as np
 
 import colmap
