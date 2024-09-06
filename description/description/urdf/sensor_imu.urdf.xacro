@@ -20,7 +20,7 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
   <gazebo reference="${prefix}body">
     <sensor name="imu" type="imu">
-      <pose>0 0 0 0 0 0</pose>
+      <pose>0.0386 0.0247 -0.01016 0 0 1.5707963</pose>
       <always_on>true</always_on>
       <update_rate>62.5</update_rate>
       <visualize>0</visualize>
