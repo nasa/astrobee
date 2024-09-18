@@ -1,0 +1,40 @@
+name: Python CI
+
+on:
+  pull_request:
+    branches:
+      - master
+  push:
+    branches:
+      - master
+    tags: "*"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.7", "3.8", "3.9", "3.10"]
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Build
+        run: |
+          mkdir build
+          mkdir install
+          cd build/
+          cmake -DCMAKE_INSTALL_PREFIX:PATH=../install ..
+          cmake --build . --target install
+          echo "LD_LIBRARY_PATH=${GITHUB_WORKSPACE}/install/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+      - name: Install Python interface
+        run: |
+          cd interfaces/daqp-python
+          python -m pip install --upgrade pip
+          pip install numpy pytest
+          pip install .
+      - name: Run unit tests
+        run: python -m pytest interfaces/daqp-python/test/

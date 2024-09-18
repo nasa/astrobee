@@ -1,0 +1,24 @@
+*.sw[a-z]
+*.s
+*.o
+*.out
+include/blasfeo_target.h
+octave-workspace
+*.local
+*_local.json
+*.aux
+*.toc
+*.log
+figures/
+libblasfeo.a
+cpu_freq.h
+.vscode
+
+# test
+tests/build
+tests/reports
+tests/libblasfeo_ref.a
+
+# CMake
+build*
+Build*

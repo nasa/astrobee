@@ -1,0 +1,356 @@
+###################################################################################################
+#                                                                                                 #
+# This file is part of BLASFEO.                                                                   #
+#                                                                                                 #
+# BLASFEO -- BLAS for embedded optimization.                                                      #
+# Copyright (C) 2019 by Gianluca Frison.                                                          #
+# Developed at IMTEK (University of Freiburg) under the supervision of Moritz Diehl.              #
+# All rights reserved.                                                                            #
+#                                                                                                 #
+# The 2-Clause BSD License                                                                        #
+#                                                                                                 #
+# Redistribution and use in source and binary forms, with or without                              #
+# modification, are permitted provided that the following conditions are met:                     #
+#                                                                                                 #
+# 1. Redistributions of source code must retain the above copyright notice, this                  #
+#    list of conditions and the following disclaimer.                                             #
+# 2. Redistributions in binary form must reproduce the above copyright notice,                    #
+#    this list of conditions and the following disclaimer in the documentation                    #
+#    and/or other materials provided with the distribution.                                       #
+#                                                                                                 #
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND                 #
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED                   #
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE                          #
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR                 #
+# ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES                  #
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;                    #
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND                     #
+# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT                      #
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS                   #
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                                    #
+#                                                                                                 #
+# Author: Gianluca Frison, gianluca.frison (at) imtek.uni-freiburg.de                             #
+#                                                                                                 #
+###################################################################################################
+
+#
+# Error handling routines for level 2 & 3
+#
+ERRHAND =
+ERRHAND += netlib/cblas/src/cblas_globals.o
+ERRHAND += netlib/cblas/src/cblas_xerbla.o
+#ERRHAND += netlib/cblas/src/xerbla.o
+
+#
+# CBLAS routines : level 1
+#
+
+#
+# All object files for single real precision
+#
+SLEV1 =
+SLEV1_DONE =
+SLEV1 += netlib/cblas/src/cblas_srotg.o
+SLEV1 += netlib/cblas/src/cblas_srotmg.o
+SLEV1 += netlib/cblas/src/cblas_srot.o
+SLEV1 += netlib/cblas/src/cblas_srotm.o
+SLEV1 += netlib/cblas/src/cblas_sswap.o
+SLEV1 += netlib/cblas/src/cblas_sscal.o
+SLEV1 += netlib/cblas/src/cblas_scopy.o
+SLEV1_DONE += netlib/cblas/src/cblas_saxpy.o
+SLEV1 += netlib/cblas/src/cblas_sdot.o
+SLEV1 += netlib/cblas/src/cblas_sdsdot.o
+SLEV1 += netlib/cblas/src/cblas_snrm2.o
+SLEV1 += netlib/cblas/src/cblas_sasum.o
+SLEV1 += netlib/cblas/src/cblas_isamax.o
+SLEV1 += netlib/cblas/src/sdotsub.o
+SLEV1 += netlib/cblas/src/sdsdotsub.o
+SLEV1 += netlib/cblas/src/snrm2sub.o
+SLEV1 += netlib/cblas/src/sasumsub.o
+SLEV1 += netlib/cblas/src/isamaxsub.o 
+
+#
+# All object files for double real precision
+#
+DLEV1 =
+DLEV1_DONE =
+DLEV1 += netlib/cblas/src/cblas_drotg.o
+DLEV1 += netlib/cblas/src/cblas_drotmg.o
+DLEV1 += netlib/cblas/src/cblas_drot.o
+DLEV1 += netlib/cblas/src/cblas_drotm.o
+DLEV1 += netlib/cblas/src/cblas_dswap.o
+DLEV1 += netlib/cblas/src/cblas_dscal.o
+DLEV1_DONE += netlib/cblas/src/cblas_dcopy.o
+DLEV1_DONE += netlib/cblas/src/cblas_daxpy.o
+DLEV1 += netlib/cblas/src/cblas_ddot.o
+DLEV1 += netlib/cblas/src/cblas_dsdot.o
+DLEV1 += netlib/cblas/src/cblas_dnrm2.o
+DLEV1 += netlib/cblas/src/cblas_dasum.o
+DLEV1 += netlib/cblas/src/cblas_idamax.o
+DLEV1 += netlib/cblas/src/ddotsub.o
+DLEV1 += netlib/cblas/src/dsdotsub.o
+DLEV1 += netlib/cblas/src/dnrm2sub.o
+DLEV1 += netlib/cblas/src/dasumsub.o
+DLEV1 += netlib/cblas/src/idamaxsub.o
+
+#
+# All object files for single complex precision
+#
+CLEV1 =
+CLEV1 += netlib/cblas/src/cblas_cswap.o
+CLEV1 += netlib/cblas/src/cblas_cscal.o
+CLEV1 += netlib/cblas/src/cblas_csscal.o
+CLEV1 += netlib/cblas/src/cblas_ccopy.o
+CLEV1 += netlib/cblas/src/cblas_caxpy.o
+CLEV1 += netlib/cblas/src/cblas_cdotu_sub.o
+CLEV1 += netlib/cblas/src/cblas_cdotc_sub.o
+CLEV1 += netlib/cblas/src/cblas_icamax.o
+CLEV1 += netlib/cblas/src/cdotcsub.o
+CLEV1 += netlib/cblas/src/cdotusub.o
+CLEV1 += netlib/cblas/src/icamaxsub.o 
+
+#
+# All object files for double complex precision
+#
+ZLEV1 =
+ZLEV1 += netlib/cblas/src/cblas_zswap.o
+ZLEV1 += netlib/cblas/src/cblas_zscal.o
+ZLEV1 += netlib/cblas/src/cblas_zdscal.o
+ZLEV1 += netlib/cblas/src/cblas_zcopy.o
+ZLEV1 += netlib/cblas/src/cblas_zaxpy.o
+ZLEV1 += netlib/cblas/src/cblas_zdotu_sub.o
+ZLEV1 += netlib/cblas/src/cblas_zdotc_sub.o
+ZLEV1 += netlib/cblas/src/cblas_dznrm2.o
+ZLEV1 += netlib/cblas/src/cblas_dzasum.o
+ZLEV1 += netlib/cblas/src/cblas_izamax.o
+ZLEV1 += netlib/cblas/src/zdotcsub.o
+ZLEV1 += netlib/cblas/src/zdotusub.o
+ZLEV1 += netlib/cblas/src/dzasumsub.o
+ZLEV1 += netlib/cblas/src/dznrm2sub.o
+ZLEV1 += netlib/cblas/src/izamaxsub.o 
+
+#
+# Common files for single / complex precision
+#
+SCLEV1 =
+SCLEV1 += netlib/cblas/src/cblas_scasum.o
+SCLEV1 += netlib/cblas/src/scasumsub.o
+SCLEV1 += netlib/cblas/src/cblas_scnrm2.o
+SCLEV1 += netlib/cblas/src/scnrm2sub.o
+
+#
+# All object files
+#
+ALEV1 = $(SLEV1) $(DLEV1) $(CLEV1) $(ZLEV1) $(SCLEV1)
+
+ALEV1_DONE = $(SLEV1_DONE) $(DLEV1_DONE)
+
+#
+# CBLAS routines : level 2
+#
+
+#
+# All object files for single real precision
+#
+SLEV2 =
+SLEV2 += netlib/cblas/src/cblas_sgemv.o
+SLEV2 += netlib/cblas/src/cblas_sgbmv.o
+SLEV2 += netlib/cblas/src/cblas_sger.o
+SLEV2 += netlib/cblas/src/cblas_ssbmv.o
+SLEV2 += netlib/cblas/src/cblas_sspmv.o
+SLEV2 += netlib/cblas/src/cblas_sspr.o
+SLEV2 += netlib/cblas/src/cblas_sspr2.o
+SLEV2 += netlib/cblas/src/cblas_ssymv.o
+SLEV2 += netlib/cblas/src/cblas_ssyr.o
+SLEV2 += netlib/cblas/src/cblas_ssyr2.o
+SLEV2 += netlib/cblas/src/cblas_stbmv.o
+SLEV2 += netlib/cblas/src/cblas_stbsv.o
+SLEV2 += netlib/cblas/src/cblas_stpmv.o
+SLEV2 += netlib/cblas/src/cblas_stpsv.o
+SLEV2 += netlib/cblas/src/cblas_strmv.o
+SLEV2 += netlib/cblas/src/cblas_strsv.o  
+ 
+#
+# All object files for double real precision
+#
+DLEV2 =
+DLEV2_DONE =
+DLEV2_DONE += netlib/cblas/src/cblas_dgemv.o
+DLEV2 += netlib/cblas/src/cblas_dgbmv.o
+DLEV2 += netlib/cblas/src/cblas_dger.o
+DLEV2 += netlib/cblas/src/cblas_dsbmv.o
+DLEV2 += netlib/cblas/src/cblas_dspmv.o
+DLEV2 += netlib/cblas/src/cblas_dspr.o
+DLEV2 += netlib/cblas/src/cblas_dspr2.o
+DLEV2 += netlib/cblas/src/cblas_dsymv.o
+DLEV2 += netlib/cblas/src/cblas_dsyr.o
+DLEV2 += netlib/cblas/src/cblas_dsyr2.o
+DLEV2 += netlib/cblas/src/cblas_dtbmv.o
+DLEV2 += netlib/cblas/src/cblas_dtbsv.o
+DLEV2 += netlib/cblas/src/cblas_dtpmv.o
+DLEV2 += netlib/cblas/src/cblas_dtpsv.o
+DLEV2 += netlib/cblas/src/cblas_dtrmv.o
+DLEV2 += netlib/cblas/src/cblas_dtrsv.o  
+
+#
+# All object files for single complex precision
+#
+CLEV2 =
+CLEV2 += netlib/cblas/src/cblas_cgemv.o
+CLEV2 += netlib/cblas/src/cblas_cgbmv.o
+CLEV2 += netlib/cblas/src/cblas_chemv.o
+CLEV2 += netlib/cblas/src/cblas_chbmv.o
+CLEV2 += netlib/cblas/src/cblas_chpmv.o
+CLEV2 += netlib/cblas/src/cblas_ctrmv.o
+CLEV2 += netlib/cblas/src/cblas_ctbmv.o
+CLEV2 += netlib/cblas/src/cblas_ctpmv.o
+CLEV2 += netlib/cblas/src/cblas_ctrsv.o
+CLEV2 += netlib/cblas/src/cblas_ctbsv.o
+CLEV2 += netlib/cblas/src/cblas_ctpsv.o
+CLEV2 += netlib/cblas/src/cblas_cgeru.o
+CLEV2 += netlib/cblas/src/cblas_cgerc.o
+CLEV2 += netlib/cblas/src/cblas_cher.o
+CLEV2 += netlib/cblas/src/cblas_cher2.o
+CLEV2 += netlib/cblas/src/cblas_chpr.o
+CLEV2 += netlib/cblas/src/cblas_chpr2.o 
+
+#
+# All object files for double complex precision
+#
+ZLEV2 =
+ZLEV2 += netlib/cblas/src/cblas_zgemv.o
+ZLEV2 += netlib/cblas/src/cblas_zgbmv.o
+ZLEV2 += netlib/cblas/src/cblas_zhemv.o
+ZLEV2 += netlib/cblas/src/cblas_zhbmv.o
+ZLEV2 += netlib/cblas/src/cblas_zhpmv.o
+ZLEV2 += netlib/cblas/src/cblas_ztrmv.o
+ZLEV2 += netlib/cblas/src/cblas_ztbmv.o
+ZLEV2 += netlib/cblas/src/cblas_ztpmv.o
+ZLEV2 += netlib/cblas/src/cblas_ztrsv.o
+ZLEV2 += netlib/cblas/src/cblas_ztbsv.o
+ZLEV2 += netlib/cblas/src/cblas_ztpsv.o
+ZLEV2 += netlib/cblas/src/cblas_zgeru.o
+ZLEV2 += netlib/cblas/src/cblas_zgerc.o
+ZLEV2 += netlib/cblas/src/cblas_zher.o
+ZLEV2 += netlib/cblas/src/cblas_zher2.o
+ZLEV2 += netlib/cblas/src/cblas_zhpr.o
+ZLEV2 += netlib/cblas/src/cblas_zhpr2.o 
+
+#
+# All object files
+#
+ALEV2 = $(SLEV2) $(DLEV2) $(CLEV2) $(ZLEV2)
+
+ALEV2_DONE = $(DLEV2_DONE)
+
+#
+# CBLAS routines : level 3
+#
+
+#
+# All object files for single real precision
+#
+SLEV3 =
+SLEV3_DONE =
+SLEV3_DONE += netlib/cblas/src/cblas_sgemm.o
+SLEV3 += netlib/cblas/src/cblas_ssymm.o
+SLEV3 += netlib/cblas/src/cblas_ssyrk.o
+SLEV3 += netlib/cblas/src/cblas_ssyr2k.o
+SLEV3 += netlib/cblas/src/cblas_strmm.o
+SLEV3_DONE += netlib/cblas/src/cblas_strsm.o
+ 
+#
+# All object files for double real precision
+#
+DLEV3 =
+DLEV3_DONE =
+DLEV3_DONE += netlib/cblas/src/cblas_dgemm.o
+DLEV3 += netlib/cblas/src/cblas_dsymm.o
+DLEV3_DONE += netlib/cblas/src/cblas_dsyrk.o
+DLEV3 += netlib/cblas/src/cblas_dsyr2k.o
+DLEV3_DONE += netlib/cblas/src/cblas_dtrmm.o
+DLEV3_DONE += netlib/cblas/src/cblas_dtrsm.o
+
+#
+# All object files for single complex precision
+#
+CLEV3 =
+CLEV3 += netlib/cblas/src/cblas_cgemm.o
+CLEV3 += netlib/cblas/src/cblas_csymm.o
+CLEV3 += netlib/cblas/src/cblas_chemm.o
+CLEV3 += netlib/cblas/src/cblas_cherk.o
+CLEV3 += netlib/cblas/src/cblas_cher2k.o
+CLEV3 += netlib/cblas/src/cblas_ctrmm.o
+CLEV3 += netlib/cblas/src/cblas_ctrsm.o
+CLEV3 += netlib/cblas/src/cblas_csyrk.o
+CLEV3 += netlib/cblas/src/cblas_csyr2k.o
+
+#
+# All object files for double complex precision
+#
+ZLEV3 =
+ZLEV3 += netlib/cblas/src/cblas_zgemm.o
+ZLEV3 += netlib/cblas/src/cblas_zsymm.o
+ZLEV3 += netlib/cblas/src/cblas_zhemm.o
+ZLEV3 += netlib/cblas/src/cblas_zherk.o
+ZLEV3 += netlib/cblas/src/cblas_zher2k.o
+ZLEV3 += netlib/cblas/src/cblas_ztrmm.o
+ZLEV3 += netlib/cblas/src/cblas_ztrsm.o
+ZLEV3 += netlib/cblas/src/cblas_zsyrk.o
+ZLEV3 += netlib/cblas/src/cblas_zsyr2k.o
+
+#
+# All object files
+#
+ALEV3 = $(SLEV3) $(DLEV3) $(CLEV3) $(ZLEV3)
+
+ALEV3_DONE = $(SLEV3_DONE) $(DLEV3_DONE)
+
+#
+# Object files of all routines
+#
+NETLIB_CBLAS_OBJS = $(ALEV1_DONE) $(ALEV2_DONE) $(ALEV3_DONE) $(ERRHAND)
+ifeq ($(COMPLEMENT_WITH_NETLIB_BLAS), 1)
+NETLIB_CBLAS_OBJS += $(ALEV1) $(ALEV2) $(ALEV3)
+endif
+
+#
+# definitions to change API to BLASFEO own one
+# only for routines implemented natively in BLASFEO
+#
+BLASFEO_CBLAS_DEF =
+ifeq ($(FORTRAN_BLAS_API), 0)
+# macro
+BLASFEO_CBLAS_DEF += -DCBLAS_ORDER=BLASFEO_CBLAS_ORDER
+BLASFEO_CBLAS_DEF += -DCblasRowMajor=BlasfeoCblasRowMajor
+BLASFEO_CBLAS_DEF += -DCblasColMajor=BlasfeoCblasColMajor
+BLASFEO_CBLAS_DEF += -DCBLAS_TRANSPOSE=BLASFEO_CBLAS_TRANSPOSE
+BLASFEO_CBLAS_DEF += -DCblasNoTrans=BlasfeoCblasNoTrans
+BLASFEO_CBLAS_DEF += -DCblasTrans=BlasfeoCblasTrans
+BLASFEO_CBLAS_DEF += -DCblasConjTrans=BlasfeoCblasConjTrans
+BLASFEO_CBLAS_DEF += -DCBLAS_UPLO=BLASFEO_CBLAS_UPLO
+BLASFEO_CBLAS_DEF += -DCblasUpper=BlasfeoCblasUpper
+BLASFEO_CBLAS_DEF += -DCblasLower=BlasfeoCblasLower
+BLASFEO_CBLAS_DEF += -DCBLAS_DIAG=BLASFEO_CBLAS_DIAG
+BLASFEO_CBLAS_DEF += -DCblasNonUnit=BlasfeoCblasNonUnit
+BLASFEO_CBLAS_DEF += -DCblasUnit=BlasfeoCblasUnit
+BLASFEO_CBLAS_DEF += -DCBLAS_SIDE=BLASFEO_CBLAS_SIDE
+BLASFEO_CBLAS_DEF += -DCblasLeft=BlasfeoCblasLeft
+BLASFEO_CBLAS_DEF += -DCblasRight=BlasfeoCblasRight
+# level 1 single
+BLASFEO_CBLAS_DEF += -Dcblas_saxpy=blasfeo_cblas_saxpy -Dsaxpy_=blasfeo_blas_saxpy
+# level 1 double
+BLASFEO_CBLAS_DEF += -Dcblas_daxpy=blasfeo_cblas_daxpy -Ddaxpy_=blasfeo_blas_daxpy
+BLASFEO_CBLAS_DEF += -Dcblas_dcopy=blasfeo_cblas_dcopy -Ddcopy_=blasfeo_blas_dcopy
+# level 2 double
+BLASFEO_CBLAS_DEF += -Dcblas_dgemv=blasfeo_cblas_dgemv -Ddgemv_=blasfeo_blas_dgemv
+# level 3 single
+BLASFEO_CBLAS_DEF += -Dcblas_sgemm=blasfeo_cblas_sgemm -Dsgemm_=blasfeo_blas_sgemm
+BLASFEO_CBLAS_DEF += -Dcblas_strsm=blasfeo_cblas_strsm -Dstrsm_=blasfeo_blas_strsm
+# level 3 double
+BLASFEO_CBLAS_DEF += -Dcblas_dgemm=blasfeo_cblas_dgemm -Ddgemm_=blasfeo_blas_dgemm
+BLASFEO_CBLAS_DEF += -Dcblas_dsyrk=blasfeo_cblas_dsyrk -Ddsyrk_=blasfeo_blas_dsyrk
+BLASFEO_CBLAS_DEF += -Dcblas_dtrsm=blasfeo_cblas_dtrsm -Ddtrsm_=blasfeo_blas_dtrsm
+BLASFEO_CBLAS_DEF += -Dcblas_dtrmm=blasfeo_cblas_dtrmm -Ddtrmm_=blasfeo_blas_dtrmm
+endif
+

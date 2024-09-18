@@ -1,0 +1,243 @@
+\documentclass[a4paper]{report}
+
+\usepackage[margin=3.0cm]{geometry}
+\usepackage{amsmath}
+\usepackage[pdftex]{graphicx}
+%\usepackage{graphics}
+\usepackage{subfig}
+
+
+
+\title{BLASFEO reference guide}
+\author{Gianluca Frison}
+
+
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Introduction}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+BLASFEO - BLAS For Embedded Optimization.
+
+BLASFEO is a library providing basic linear algebra routines performance-optimized for rather small matrices (fitting in cache).
+A detailed introduction to BLASFEO can be found in the ArXiv paper at the URL
+\begin{verbatim}
+https://arxiv.org/abs/1704.02457
+\end{verbatim}
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{BLASFEO implementations}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+BLASFEO comes in three implementations:
+\begin{itemize}
+\item reference (RF)
+\item high-performance (HP)
+\item wrapper to BLAS and LAPACK (WR)
+\end{itemize}
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Matrix and vector data types}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+The fundamental data types in BLASFEO are the C structures {\tt blasfeo\_dmat} and {\tt blasfeo\_dvec}, defining respectively a double-precision matrix and vector (and similarly {\tt blasfeo\_smat} and {\tt blasfeo\_sec} for single-precision matrix and vector).
+
+Some structure members are common to all BLASFEO implementations, some others are specific to some BLASFEO implementation.
+Therefore, some structure members should be considered public (typically, the common members), some others should be considered as private (and typically directly used only from advanced users and targeting specific BLASFEO implementations).
+Below only the public members are documented.
+
+
+
+%%%%%%%%%%%%%%%%
+\section{{\tt blasfeo\_dmat} structure}
+%%%%%%%%%%%%%%%%
+
+The structure {\tt blasfeo\_dmat} defines the (double-precision) matrix type in BLASFEO.
+Structures and routines for single-precision are analogue.
+
+
+
+\subsection{{\tt blasfeo\_dmat} definition}
+
+\begin{verbatim}
+struct blasfeo_dmat 
+    {
+    int m;
+    int n;
+    double *pA;
+    int memsize;
+    };
+\end{verbatim}
+where the structure members are
+\begin{description}
+\item[m] number of rows in the matrix
+\item[n] number of columns in the matrix
+\item[pA] pointer to the first element of the matrix
+\item[memsize] size (in bytes) of the memory referenced by the structure
+\end{description}
+
+
+
+\subsection{{\tt blasfeo\_dmat} management}
+
+\begin{verbatim}
+void blasfeo_allocate_dmat(int m, int n, struct blasfeo_dmat *sA);
+\end{verbatim}
+Populates the structure defining a $m\times n$ matrix, referenced by {\tt sA} and internally dynamically allocated the memory referenced by the structure.
+The use of this routine is intended for prototype and off-line use, and it not advised in performance-critical code, where the routine {\tt blasfeo\_create\_dmat} should be employed instead.
+
+\begin{verbatim}
+void blasfeo_free_dmat(struct blasfeo_dmat *sA);
+\end{verbatim}
+Frees the memory allocated by the routine {\tt blasfeo\_allocate\_dmat}.
+
+\begin{verbatim}
+int blasfeo_memsize_dmat(int m, int n);
+\end{verbatim}
+Computes the size (in bytes) of the memory referenced by the structure defining a $m\times n$ matrix.
+The memory has to be externally allocated to use in the {\tt blasfeo\_create\_dmat} routine.
+
+\begin{verbatim}
+void blasfeo_create_dmat(int m, int n, struct blasfeo_dmat *sA, void *memory);
+\end{verbatim}
+Populates the structure defining a $m\times n$ matrix, referenced by {\tt sA}.
+The memory referenced by the structure should be allocated externally and provided to the routine using the {\tt memory} pointer.
+It should typically be aligned to 64-byte boundaries (the typical cache line size).
+The amount of memory referenced by the structure is computed using the {\tt blasfeo\_memsize\_dmat} routine.
+
+
+
+\subsection{{\tt blasfeo\_dmat} packing}
+
+\begin{verbatim}
+void blasfeo_pack_dmat(int m, int n, double *A, int lda, struct blasfeo_dmat *sA, 
+     int ai, int aj);
+\end{verbatim}
+
+\begin{verbatim}
+void blasfeo_pack_tran_dmat(int m, int n, double *A, int lda, struct blasfeo_dmat *sA, 
+     int ai, int aj);
+\end{verbatim}
+
+\begin{verbatim}
+void blasfeo_unpack_dmat(int m, int n, struct blasfeo_dmat *sA, int ai, int aj, 
+     double *A, int lda);
+\end{verbatim}
+
+\begin{verbatim}
+void blasfeo_unpack_tran_dmat(int m, int n, struct blasfeo_dmat *sA, int ai, int aj, 
+     double *A, int lda);
+\end{verbatim}
+
+
+
+\subsection{{\tt blasfeo\_dmat} printing}
+
+\begin{verbatim}
+void blasfeo_print_dmat(int m, int n, struct blasfeo_dmat *sA, int ai, int aj);
+\end{verbatim}
+
+\begin{verbatim}
+void blasfeo_print_tran_dmat(int m, int n, struct blasfeo_dmat *sA, int ai, int aj);
+\end{verbatim}
+
+
+
+%%%%%%%%%%%%%%%%
+\section{{\tt blasfeo\_dvec} structure}
+%%%%%%%%%%%%%%%%
+
+The structure {\tt blasfeo\_dvec} defines the (double-precision) vector type in BLASFEO.
+Structures and routines for single-precision are analogue.
+
+
+
+\subsection{{\tt blasfeo\_dvec} definition}
+
+\begin{verbatim}
+struct blasfeo_dvec 
+    {
+    int m;
+    double *pa;
+    int memsize;
+    };
+\end{verbatim}
+where the structure members are
+\begin{description}
+\item[m] number of elements in the vector
+\item[pA] pointer to the first element of the vector
+\item[memsize] size (in bytes) of the memory referenced by the structure
+\end{description}
+
+
+
+\subsection{{\tt blasfeo\_dvec} management}
+
+\begin{verbatim}
+void blasfeo_allocate_dvec(int m, struct blasfeo_dvec *sx);
+\end{verbatim}
+Populates the structure defining a $m\times 1$ vector, referenced by {\tt sx} and internally dynamically allocated the memory referenced by the structure.
+The use of this routine is intended for prototype and off-line use, and it not advised in performance-critical code, where the routine {\tt blasfeo\_create\_dvec} should be employed instead.
+
+\begin{verbatim}
+void blasfeo_free_dvec(struct blasfeo_dvec *sx);
+\end{verbatim}
+Frees the memory allocated by the routine {\tt blasfeo\_allocate\_dvec}.
+
+\begin{verbatim}
+int blasfeo_memsize_dvec(int m);
+\end{verbatim}
+Computes the size (in bytes) of the memory referenced by the structure defining a $m\times 1$ vector.
+The memory has to be externally allocated to use in the {\tt blasfeo\_create\_dvec} routine.
+
+\begin{verbatim}
+void blasfeo_create_dvec(int m, struct blasfeo_dvec *sx, void *memory);
+\end{verbatim}
+Populates the structure defining a $m\times 1$ vector, referenced by {\tt sx}.
+The memory referenced by the structure should be allocated externally and provided to the routine using the {\tt memory} pointer.
+There are no alignment requirements for memory to be used by the vector structure. %It should typically be aligned to 64-byte boundaries (the typical cache line size).
+The amount of memory referenced by the structure is computed using the {\tt blasfeo\_memsize\_dvec} routine.
+
+
+
+\subsection{{\tt blasfeo\_dvec} packing}
+
+\begin{verbatim}
+void blasfeo_pack_dvec(int m, double *x, int incx, struct blasfeo_dvec *sy, int yi);
+\end{verbatim}
+
+\begin{verbatim}
+void blasfeo_unpack_dvec(int m, struct blasfeo_dvec *sx, int xi, double *y, int incy);
+\end{verbatim}
+
+
+
+\subsection{{\tt blasfeo\_dvec} printing}
+
+\begin{verbatim}
+void blasfeo_print_dvec(int m, struct blasfeo_dvec *sx, int xi);
+\end{verbatim}
+
+\begin{verbatim}
+void blasfeo_print_tran_dvec(int m, struct blasfeo_dvec *sx, int xi);
+\end{verbatim}
+
+
+
+\end{document}

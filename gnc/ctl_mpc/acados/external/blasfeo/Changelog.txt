@@ -1,0 +1,150 @@
+BLASFEO ChangeLog
+
+
+
+====================================================================
+Version 0.1.4
+28-Apr-2022
+
+common:
+	* advance Netlib BLAS & LAPACK to version 3.10.0
+	* various bug fixes
+
+BLASFEO_API:
+	* add dsyr2k based on 3-arguments dsyrk
+
+BLAS_API:
+	* add dsyr2k and optimize it with cache blocking (natively ln version; based on 3-arguments dsyrk the others)
+	* add dgemv, dsymv, dger
+
+x64:
+	* for column-major matrix format, optimize dsyr2k_ln, dgemv, dsymv, dger
+
+ARMv8A:
+	* for column-major matrix format, optimize dsyr2k_ln, dgemv, dsymv, dger
+
+====================================================================
+Version 0.1.3
+10-Feb-2022
+
+BLASFEO_API:
+	* use macros in REFERENCE backend to allow column- and panel-major formats
+	* add HP backed for column-major MF, expanding the former BLAS API code
+	* add option to export the HP or REF backends with different naming (used e.g. in tests and to implmenent all not-implemente-yet features in HP)
+
+BLAS_API:
+	* implement the BLAS API as a wrapper on top of the BLASFEO API
+	* spotrf for all targets (partially optimized for avx2 and armv8a, generic for others)
+	* dgemm: optimize switching algorithm for Intel Haswell and ARM Cortex A57
+	* dgemm: some work on cache blocking: k-block (all targets), m- and n-block (haswell, sandybridge, cortexa76, cortexa73, cortexa57, cortexa55, cortexa53)
+	* cache-blocking for dgemm, sgemm, dsyrk, dtrmm (llnn, lltn, rlnn), dtrsm (rlnn, lutn, rltn), dpotrf (l); fully optimized for haswell and cortexa57 targets.
+	* dgetr: optimize for haswell, sandybridge, cortexa57, cortexa53
+
+x64:
+	* Intel Skylake X:
+		- optimize panel-major routines needed in HPIPM
+		- optimize column-major dgemm
+
+ARMv8A:
+	* add kernel sgemm nt {8x4,8x8} lib44cc & some relative spotrf kernels
+	* add kernel sgemm {nn,nt} 4x4 lib4ccc & some relative spotrf kernels
+	* colmaj/blas_api  dgemm, no-pack algorithm (for small/skinny matrices) fully optimized for Cortex A57 (partially for A53)
+	* Cortex A53:
+		- improve kernels sgemm_nt lib4
+	* add Cortex A73 target (makefile only for now)
+	* add Cortex A55 target (makefile only for now)
+	* add Cortex A76 target (makefile only for now)
+	* add Apple M1 target (makefile only for now)
+
+====================================================================
+Version 0.1.2
+13-Aug-2020
+
+common:
+	* change license to BFD-2
+	* add function checking x86 features support based on cpuid
+	* improve windows and visual studio support (static library)
+
+BLASFEO_API:
+	* dorglq for all targets
+
+BLAS_API:
+	* dtrmm for all targets (optimized for haswell, mainly based on 4x4 kernels for others)
+	* use netlib BLAS & LAPACK & CBLAS to provide missing routines
+	* add flag to add CBLAS and LAPACKE
+	* improve dgemm performance for skinny matrices
+	  (e.g. add algorithm version with A colunm-major and B panel-major)
+	* improve performance for dgemm_{nn,nt,tt} for small matrices
+	  (e.g. add algorithm version with A, B and C colunm-major)
+	* sgemm for all targets (partially optimized for avx2, avx, armv7a, based on generic for others)
+	* dgetrf_np alg0 for all targets (optimized for avx2, partially optimized avx, generic the others)
+	* strsm for all targets (generic kernels for all targets)
+
+ARMv8A:
+	* Cortex A57:
+		- improve kernels sgemm_nt lib4
+		- optimize xgemv kernels lib4
+
+ARMv7A:
+	* Cortex A9:
+		- add support (based on A7 with some optimizations to handle 32-bytes cache line size)
+
+====================================================================
+Version 0.1.1
+04-Feb-2019
+
+common:
+	* example_d_riccati_recursion: add trf for blas_api
+	* add CBLAS source (only add to libblasfeo what needed)
+
+BLASFEO_API:
+	* stable version of dsyrk_ln for all targets
+	* dsyrk_ut for all targets
+	* dtrsm_llnn for all targets
+	* renamed blasfeo_{d/s}getrf_{no/row}pivot => blasfeo_{d/s}getrf_{n/r}p
+
+BLAS_API:
+	* stable version of dsyrk for all targets
+	* dtrmm_rlnn for all targets
+	* stable version of dtrsm for all targets
+	* stable version of dgesv for all targets
+	* stable version of dgetrf for all targets
+	* stable version of dgetrs for all targets
+	* stable version of dposv for all targets
+	* dpotrf for all targets
+	* stable version of dpotrs for all targets
+	* stable version of dtrtrs for all targets
+	* stable version of dcopy for all targets
+
+CBLAS_API
+	* dgemm
+	* dsyrk
+	* dtrsm
+
+x64:
+	* AMD_BULLDOZER:
+		- fix performance bug (mix of legacy and VEX code)
+		- add optimized kernel_dgemm_nn_4x4_lib4
+
+ARMv8A:
+	* Cortex A57:
+		- improve kernels dgemm_nn & dgemm_nt lib4
+		- add kernels dgemm_nn & dgemm_nt lib4c
+	* Cortex A53:
+		- add optimized kernels dgemm_nn lib4
+		- add kernels dgemm_nn & dgemm_nt lib4c (not fully optimized)
+
+
+
+====================================================================
+Version 0.1.0
+19-Oct-2018
+
+common:
+	* initial release
+
+BLASFEO_API:
+	* stable version of dgemm for all targets
+	
+BLAS_API:
+	* stable version of dgemm for all targets

@@ -1,0 +1,4 @@
+*.o
+*.s
+*.swp
+testing/c/data/*
