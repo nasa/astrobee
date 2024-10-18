@@ -108,7 +108,7 @@ Result RotationOnlyImage(const vc::FeatureMatches& matches, const camera::Camera
     return result;
   }
   std::vector<cv::DMatch> inliers;
-  const auto source_T_target = sm::EstimateAffine3d(matches, camera_params, inliers);
+  const auto source_T_target = sm::EstimateAffine3d(matches, camera_params, camera_params, inliers);
   const double relative_pose_inliers_ratio = static_cast<double>(inliers.size()) / static_cast<double>(matches.size());
   if (relative_pose_inliers_ratio < min_relative_pose_inliers_ratio) {
     LogDebug("Too few inliers found. Inliers: " << inliers.size() << ", total matches: " << matches.size()

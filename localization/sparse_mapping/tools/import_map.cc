@@ -78,7 +78,7 @@ namespace {
 
     // Save the camera parameters for the given robot.
     camera::CameraParameters camera_params(&config, "nav_cam");
-    map.SetCameraParameters(camera_params);
+    map.OverwriteCameraParameters(camera_params);
 
     // Replace the undistorted images with distorted ones
     std::vector<std::string> distorted_images;
@@ -191,7 +191,7 @@ int main(int argc, char** argv) {
       = camera::CameraParameters(Eigen::Vector2i(widx, widy),
                                  Eigen::Vector2d::Constant(f),
                                  Eigen::Vector2d(cx, cy));
-    map.SetCameraParameters(camera_params);
+    map.OverwriteCameraParameters(camera_params);
 
   } else {
     // Replace the images and robot camera params with distorted (original) ones

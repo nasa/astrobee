@@ -146,14 +146,16 @@ namespace sparse_mapping {
 
   // Filter the matches by a geometric constraint. Compute the essential matrix.
   void FindEssentialAndInliers(Eigen::Matrix2Xd const& keypoints1, Eigen::Matrix2Xd const& keypoints2,
-                               std::vector<cv::DMatch> const& matches, camera::CameraParameters const& camera_params,
+                               std::vector<cv::DMatch> const& matches, camera::CameraParameters const& camera_params1,
+                               camera::CameraParameters const& camera_params2,
                                std::vector<cv::DMatch>* inlier_matches, std::vector<size_t>* vec_inliers,
                                Eigen::Matrix3d* essential_matrix, const int ransac_iterations = 4096);
 
   void BuildMapFindEssentialAndInliers(const Eigen::Matrix2Xd & keypoints1,
                                        const Eigen::Matrix2Xd & keypoints2,
                                        const std::vector<cv::DMatch> & matches,
-                                       camera::CameraParameters const& camera_params,
+                                       camera::CameraParameters const& camera_params1,
+                                       camera::CameraParameters const& camera_params2,
                                        bool compute_inliers_only,
                                        size_t cam_a_idx, size_t cam_b_idx,
                                        std::mutex * match_mutex,
@@ -176,7 +178,8 @@ namespace sparse_mapping {
 
   // Triangulates all points given camera positions. This is better
   // than what is in sparse map as it uses multiple view information.
-  void Triangulate(bool rm_invalid_xyz, double focal_length,
+  void Triangulate(bool rm_invalid_xyz, std::vector<int> const& cid_to_camera_id,
+                   std::vector<camera::CameraParameters> const& camera_id_to_camera_params,
                    std::vector<Eigen::Affine3d> const& cid_to_cam_t_global,
                    std::vector<Eigen::Matrix2Xd> const& cid_to_keypoint_map,
                    std::vector<std::map<int, int> > * pid_to_cid_fid,

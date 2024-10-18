@@ -65,13 +65,21 @@ struct SparseMap {
 
   /**
    * Constructs a new sparse map from a list of image files and their
-   * associate keypoint and descriptor files. If use_cached_features
-   * is set to false, it reads the image files and performs feature
-   * detection instead. Does not perform bundle adjustment.
+   * associate keypoint and descriptor files. Assumes a single camera model
+   * used for all the images. 
    **/
   SparseMap(const std::vector<std::string> & filenames,
             const std::string & detector,
             const camera::CameraParameters & params);
+
+  /**
+   * Constructs a new sparse map from a list of image files and their
+   * associate keypoint and descriptor files. Adds camera models 
+   * and a map associating each image  with its respective camera model.
+   **/
+  SparseMap(const std::vector<std::string>& filenames, const std::string& detector,
+            const std::vector<int>& cid_to_camera_id,
+            const std::vector<camera::CameraParameters>& camera_id_to_camera_params);
 
   /**
    * Constructs a new sparse map from a protobuf file, with specified
@@ -177,8 +185,17 @@ struct SparseMap {
   /**
    * Return the parameters of the camera used to construct the map.
    **/
-  camera::CameraParameters GetCameraParameters(void) const {return camera_params_;}
-  void SetCameraParameters(camera::CameraParameters camera_params) {camera_params_ = camera_params;}
+  const camera::CameraParameters& camera_params(int cid) const {
+    return camera_id_to_camera_params_[cid_to_camera_id_[cid]];
+  }
+  camera::CameraParameters GetCameraParameters(int cid) const {
+    return camera_id_to_camera_params_[cid_to_camera_id_[cid]];
+  }
+
+  void OverwriteCameraParameters(const camera::CameraParameters& camera_params, int camera_id = 0) {
+    camera_id_to_camera_params_[camera_id] = camera_params;
+  }
+
   /**
    * Return the number of observations. Use this number to divide the final error to find the average pixel error.
    **/
@@ -212,10 +229,12 @@ struct SparseMap {
 
   // detect features with opencv
   void DetectFeaturesFromFile(std::string const& filename,
+                              const camera::CameraParameters& camera_params,
                               bool multithreaded,
                               cv::Mat* descriptors,
                               Eigen::Matrix2Xd* keypoints);
   void DetectFeatures(cv::Mat const& image,
+                      const camera::CameraParameters& camera_params,
                       bool multithreaded,
                       cv::Mat* descriptors,
                       Eigen::Matrix2Xd* keypoints);
@@ -239,7 +258,8 @@ struct SparseMap {
   std::vector<std::map<int, int>> cid_to_matching_cid_counts_;
 
   interest_point::FeatureDetector detector_;
-  camera::CameraParameters camera_params_;
+  std::vector<int> cid_to_camera_id_;
+  std::vector<camera::CameraParameters> camera_id_to_camera_params_;
   mutable sparse_mapping::VocabDB vocab_db_;  // TODO(oalexan1): Mutable means someone is doing something wrong.
   LocalizationParameters loc_params_;
   std::string protobuf_file_;

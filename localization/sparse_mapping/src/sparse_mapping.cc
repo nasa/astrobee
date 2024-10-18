@@ -1054,7 +1054,8 @@ double sparse_mapping::ComputeRaysAngle(int pid,
 }
 
 void sparse_mapping::FilterPID(double reproj_thresh,
-                               camera::CameraParameters const& camera_params,
+                               std::vector<int> const& cid_to_camera_id,
+                               std::vector<camera::CameraParameters> const& camera_id_to_camera_params,
                                std::vector<Eigen::Affine3d > const& cid_to_cam_t_global,
                                std::vector<Eigen::Matrix2Xd > const& cid_to_keypoint_map,
                                std::vector<std::map<int, int> > * pid_to_cid_fid,
@@ -1077,7 +1078,6 @@ void sparse_mapping::FilterPID(double reproj_thresh,
   s.total = (*pid_to_xyz).size();
 
   std::vector<bool> is_bad((*pid_to_xyz).size(), false);
-  Eigen::Vector2d half_size = camera_params.GetUndistortedHalfSize();
   for (size_t pid = 0; pid < (*pid_to_xyz).size(); pid++) {
     bool small_angle = false, behind_cam = false, invalid_reproj = false;
 
@@ -1090,11 +1090,13 @@ void sparse_mapping::FilterPID(double reproj_thresh,
     }
 
     for (std::pair<int, int> cid_fid : (*pid_to_cid_fid)[pid]) {
+      const auto& camera_params = camera_id_to_camera_params[cid_to_camera_id[cid_fid.first]];
       Eigen::Vector2d pix = (cid_to_cam_t_global[cid_fid.first] *
                              (*pid_to_xyz)[pid]).hnormalized() * camera_params.GetFocalLength();
       errors.push_back((cid_to_keypoint_map[cid_fid.first].col(cid_fid.second) - pix).norm());
       // Mark points which don't project at valid camera pixels
       // TODO(zmoratto) : This can probably be done with a Eigen Array reduction
+      Eigen::Vector2d half_size = camera_params.GetUndistortedHalfSize();
       if (pix[0] < -half_size[0] || pix[0] >= half_size[0] || pix[1] < -half_size[1] || pix[1] >= half_size[1]) {
         invalid_reproj = true;
         is_bad[pid] = true;
@@ -1133,6 +1135,7 @@ void sparse_mapping::FilterPID(double reproj_thresh,
     std::map<int, int>::iterator itr = cid_fid.begin();
     while (itr != cid_fid.end()) {
       s.num_features++;
+      const auto& camera_params = camera_id_to_camera_params[cid_to_camera_id[itr->first]];
       Eigen::Vector2d pix = (cid_to_cam_t_global[itr->first] *
                              (*pid_to_xyz)[pid]).hnormalized() * camera_params.GetFocalLength();
       double err

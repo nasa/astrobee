@@ -249,7 +249,7 @@ void LocalizationNodelet::Localize(void) {
       Eigen::Vector2d undistorted, distorted;
       undistorted[0] = vl.landmarks[i].u;
       undistorted[1] = vl.landmarks[i].v;
-      (map_->GetCameraParameters()).Convert<camera::UNDISTORTED_C, camera::DISTORTED>(undistorted, &distorted);
+      (inst_->camera_params()).Convert<camera::UNDISTORTED_C, camera::DISTORTED>(undistorted, &distorted);
       cv::circle(used_image->image, cv::Point(distorted[0], distorted[1]), 10, CV_RGB(255, 255, 255), 3, 8);
       cv::circle(used_image->image, cv::Point(distorted[0], distorted[1]), 6, CV_RGB(0, 0, 0), 3, 8);
     }
@@ -261,7 +261,7 @@ void LocalizationNodelet::Localize(void) {
       Eigen::Vector2d undistorted, distorted;
       undistorted[0] = image_keypoints.col(i)[0];
       undistorted[1] = image_keypoints.col(i)[1];
-      (map_->GetCameraParameters()).Convert<camera::UNDISTORTED_C, camera::DISTORTED>(undistorted, &distorted);
+      (inst_->camera_params()).Convert<camera::UNDISTORTED_C, camera::DISTORTED>(undistorted, &distorted);
       cv::circle(detected_image->image, cv::Point(distorted[0], distorted[1]), 10, CV_RGB(255, 255, 255), 3, 8);
       cv::circle(detected_image->image, cv::Point(distorted[0], distorted[1]), 6, CV_RGB(0, 0, 0), 2, 8);
     }

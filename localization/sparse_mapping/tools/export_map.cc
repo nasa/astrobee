@@ -52,7 +52,9 @@ int main(int argc, char** argv) {
 
   sparse_mapping::SparseMap map(FLAGS_input_map);
 
-  camera::CameraParameters camera_params = map.GetCameraParameters();
+  // Note: this assumes only one camera exists in the map, since the NVM
+  // format only supports one camera!
+  camera::CameraParameters camera_params = map.camera_id_to_camera_params_[0];
 
   // This is very important,
   std::cout << "Saving the nvm file with interest point matches that ";

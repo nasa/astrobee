@@ -36,6 +36,7 @@ message Frame {
   optional string name     = 1;
   repeated Feature feature = 2;
   optional Affine3d pose   = 3;
+  optional int32 camera_id = 4;
 }
 
 message Vector3d {
@@ -124,5 +125,6 @@ message Map {
   optional int32 orgbrisk_threshold = 8;  // this is no longer used but remains for compatability
   // histogram_equalization 1 means true, 0 means false, 2 means not known 
   optional int32 histogram_equalization = 9 [default = 2];
+  optional int32 num_cameras = 10;
 }
 
