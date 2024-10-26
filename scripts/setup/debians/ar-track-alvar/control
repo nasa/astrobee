@@ -2,7 +2,7 @@ Source: ros-noetic-ar-track-alvar
 Section: misc
 Priority: extra
 Maintainer: Ruben Garcia <nospam@nospam.org>
-Build-Depends: debhelper (>= 9.0.0), libtinyxml-dev, ros-noetic-ar-track-alvar-msgs, ros-noetic-catkin, ros-noetic-cmake-modules, ros-noetic-cv-bridge, ros-noetic-dynamic-reconfigure, ros-noetic-geometry-msgs, ros-noetic-image-transport, ros-noetic-message-generation, ros-noetic-resource-retriever, ros-noetic-rosbag, ros-noetic-roscpp, ros-noetic-rospy, ros-noetic-rostest, ros-noetic-sensor-msgs, ros-noetic-std-msgs, ros-noetic-tf, ros-noetic-tf2, ros-noetic-visualization-msgs
+Build-Depends: debhelper (>= 9.0.0), libtinyxml-dev, ros-noetic-ar-track-alvar-msgs, ros-noetic-catkin, ros-noetic-cmake-modules, ros-noetic-cv-bridge, ros-noetic-dynamic-reconfigure, ros-noetic-geometry-msgs, ros-noetic-image-transport, ros-noetic-message-generation, ros-noetic-resource-retriever, ros-noetic-rosbag, ros-noetic-roscpp, ros-noetic-rospy, ros-noetic-rostest, ros-noetic-sensor-msgs, ros-noetic-std-msgs, ros-noetic-tf, ros-noetic-tf2, ros-noetic-visualization-msgs, libeigen3-dev, libpcl-dev
 Homepage: http://ros.org/wiki/ar_track_alvar
 Standards-Version: 3.9.2
 
