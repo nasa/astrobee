@@ -1,0 +1,19 @@
+<map id="hardware/smart_dock/src/smart_dock.cc" name="hardware/smart_dock/src/smart_dock.cc">
+<area shape="rect" id="node1" title=" " alt="" coords="689,5,852,47"/>
+<area shape="rect" id="node2" href="$smart__dock_8h.html" title=" " alt="" coords="389,95,579,121"/>
+<area shape="rect" id="node13" title=" " alt="" coords="603,95,666,121"/>
+<area shape="rect" id="node14" title=" " alt="" coords="691,95,757,121"/>
+<area shape="rect" id="node15" title=" " alt="" coords="782,95,855,121"/>
+<area shape="rect" id="node16" title=" " alt="" coords="880,95,960,121"/>
+<area shape="rect" id="node17" title=" " alt="" coords="984,95,1059,121"/>
+<area shape="rect" id="node3" href="$i2c__new_8h.html" title=" " alt="" coords="213,244,323,271"/>
+<area shape="rect" id="node8" title=" " alt="" coords="381,319,440,345"/>
+<area shape="rect" id="node9" href="$eps__driver_8h.html" title=" " alt="" coords="397,169,571,196"/>
+<area shape="rect" id="node11" title=" " alt="" coords="559,244,622,271"/>
+<area shape="rect" id="node12" title=" " alt="" coords="647,244,697,271"/>
+<area shape="rect" id="node4" title=" " alt="" coords="93,319,160,345"/>
+<area shape="rect" id="node5" title=" " alt="" coords="185,319,255,345"/>
+<area shape="rect" id="node6" title=" " alt="" coords="280,319,357,345"/>
+<area shape="rect" id="node7" title=" " alt="" coords="5,319,69,345"/>
+<area shape="rect" id="node10" title=" " alt="" coords="449,244,535,271"/>
+</map>

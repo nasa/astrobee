@@ -1,0 +1,11 @@
+<map id="localization/localization_common/include/localization_common/rate_timer.h" name="localization/localization_common/include/localization_common/rate_timer.h">
+<area shape="rect" id="node1" title=" " alt="" coords="368,5,584,61"/>
+<area shape="rect" id="node2" href="$imu__augmentor__wrapper_8h.html" title=" " alt="" coords="258,109,467,165"/>
+<area shape="rect" id="node9" href="$rate__timer_8cc.html" title=" " alt="" coords="491,117,690,158"/>
+<area shape="rect" id="node3" href="$imu__augmentor__nodelet_8h.html" title=" " alt="" coords="14,213,223,269"/>
+<area shape="rect" id="node5" href="$imu__augmentor__wrapper_8cc.html" title=" " alt="" coords="248,221,477,262"/>
+<area shape="rect" id="node6" href="$graph__bag_8h.html" title=" " alt="" coords="501,213,715,269"/>
+<area shape="rect" id="node4" href="$imu__augmentor__nodelet_8cc.html" title=" " alt="" coords="5,325,232,366"/>
+<area shape="rect" id="node7" href="$graph__bag_8cc.html" title=" " alt="" coords="449,317,596,373"/>
+<area shape="rect" id="node8" href="$run__graph__bag_8cc.html" title=" " alt="" coords="620,317,764,373"/>
+</map>

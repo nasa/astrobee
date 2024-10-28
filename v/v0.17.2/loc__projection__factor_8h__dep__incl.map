@@ -1,0 +1,11 @@
+<map id="localization/graph_localizer/include/graph_localizer/loc_projection_factor.h" name="localization/graph_localizer/include/graph_localizer/loc_projection_factor.h">
+<area shape="rect" id="node1" title=" " alt="" coords="546,5,725,76"/>
+<area shape="rect" id="node2" href="$graph__localizer_8cc.html" title=" " alt="" coords="5,124,153,180"/>
+<area shape="rect" id="node3" href="$graph__localizer__stats_8cc.html" title=" " alt="" coords="177,124,325,180"/>
+<area shape="rect" id="node4" href="$loc__factor__adder_8cc.html" title=" " alt="" coords="349,124,524,180"/>
+<area shape="rect" id="node5" href="$loc__graph__action__completer_8cc.html" title=" " alt="" coords="548,124,723,180"/>
+<area shape="rect" id="node6" href="$serialization_8cc.html" title=" " alt="" coords="747,131,956,173"/>
+<area shape="rect" id="node7" href="$localization__graph__display_8h.html" title=" " alt="" coords="980,124,1189,180"/>
+<area shape="rect" id="node9" href="$localization__graph__panel_8cc.html" title=" " alt="" coords="1213,124,1423,180"/>
+<area shape="rect" id="node8" href="$localization__graph__display_8cc.html" title=" " alt="" coords="980,228,1189,284"/>
+</map>

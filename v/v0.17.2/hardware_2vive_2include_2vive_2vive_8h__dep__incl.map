@@ -1,0 +1,11 @@
+<map id="hardware/vive/include/vive/vive.h" name="hardware/vive/include/vive/vive.h">
+<area shape="rect" id="node1" title=" " alt="" coords="749,5,916,47"/>
+<area shape="rect" id="node2" href="$vive__data__button_8h.html" title=" " alt="" coords="5,95,201,136"/>
+<area shape="rect" id="node3" href="$vive__data__imu_8h.html" title=" " alt="" coords="226,95,405,136"/>
+<area shape="rect" id="node4" href="$vive__data__light_8h.html" title=" " alt="" coords="429,95,612,136"/>
+<area shape="rect" id="node5" href="$vive__data__ootx_8h.html" title=" " alt="" coords="636,95,819,136"/>
+<area shape="rect" id="node6" href="$vive__dev__tracker_8h.html" title=" " alt="" coords="843,95,1036,136"/>
+<area shape="rect" id="node7" href="$vive__dev__watchman_8h.html" title=" " alt="" coords="1060,95,1277,136"/>
+<area shape="rect" id="node8" href="$vive__usb_8h.html" title=" " alt="" coords="1302,95,1473,136"/>
+<area shape="rect" id="node9" href="$vive__nodelet_8cc.html" title=" " alt="" coords="1497,95,1681,136"/>
+</map>

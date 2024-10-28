@@ -1,0 +1,5 @@
+<map id="node_adders::CombinedNavStateNodeAdderModel" name="node_adders::CombinedNavStateNodeAdderModel">
+<area shape="rect" id="node1" title=" " alt="" coords="20,535,259,759"/>
+<area shape="rect" id="node2" href="$classnode__adders_1_1MeasurementBasedTimestampedNodeAdderModel.html" title=" " alt="" coords="5,263,273,487"/>
+<area shape="rect" id="node3" href="$classnode__adders_1_1TimestampedNodeAdderModel.html" title=" " alt="" coords="9,5,269,215"/>
+</map>

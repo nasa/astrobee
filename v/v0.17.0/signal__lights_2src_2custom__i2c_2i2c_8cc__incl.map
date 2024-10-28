@@ -1,0 +1,14 @@
+<map id="hardware/signal_lights/src/custom_i2c/i2c.cc" name="hardware/signal_lights/src/custom_i2c/i2c.cc">
+<area shape="rect" id="node1" title=" " alt="" coords="440,5,609,47"/>
+<area shape="rect" id="node2" title=" " alt="" coords="5,95,73,121"/>
+<area shape="rect" id="node3" title=" " alt="" coords="97,95,160,121"/>
+<area shape="rect" id="node4" title=" " alt="" coords="185,95,302,121"/>
+<area shape="rect" id="node5" title=" " alt="" coords="327,95,416,121"/>
+<area shape="rect" id="node6" title=" " alt="" coords="712,169,783,196"/>
+<area shape="rect" id="node7" title=" " alt="" coords="491,95,558,121"/>
+<area shape="rect" id="node8" title=" " alt="" coords="583,95,653,121"/>
+<area shape="rect" id="node9" title=" " alt="" coords="678,95,766,121"/>
+<area shape="rect" id="node10" href="$time_8h.html" title=" " alt="" coords="790,95,854,121"/>
+<area shape="rect" id="node11" title=" " alt="" coords="878,95,953,121"/>
+<area shape="rect" id="node12" href="$signal__lights_2include_2custom__i2c_2i2c_8h.html" title=" " alt="" coords="977,95,1107,121"/>
+</map>

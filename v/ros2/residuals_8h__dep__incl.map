@@ -1,0 +1,12 @@
+<map id="localization/optimization_common/include/optimization_common/residuals.h" name="localization/optimization_common/include/optimization_common/residuals.h">
+<area shape="rect" id="node1" title=" " alt="" coords="375,5,597,61"/>
+<area shape="rect" id="node2" href="$point__cloud__with__known__correspondences__aligner_8cc.html" title=" " alt="" coords="90,109,357,180"/>
+<area shape="rect" id="node3" href="$pose__estimation_8h.html" title=" " alt="" coords="381,117,591,173"/>
+<area shape="rect" id="node7" href="$camera__target__based__intrinsics__calibrator_8h.html" title=" " alt="" coords="633,332,848,388"/>
+<area shape="rect" id="node4" href="$vision__common_2include_2vision__common_2test__utilities_8h.html" title=" " alt="" coords="292,228,475,284"/>
+<area shape="rect" id="node5" href="$vision__common_2src_2test__utilities_8cc.html" title=" " alt="" coords="67,339,279,381"/>
+<area shape="rect" id="node6" href="$pose__estimation_8cc.html" title=" " alt="" coords="29,235,268,277"/>
+<area shape="rect" id="node9" href="$tools_2calibration_2include_2calibration_2utilities_8h.html" title=" " alt="" coords="499,235,678,277"/>
+<area shape="rect" id="node8" href="$run__camera__target__based__intrinsics__calibrator_8cc.html" title=" " alt="" coords="643,436,838,492"/>
+<area shape="rect" id="node10" href="$tools_2calibration_2src_2utilities_8cc.html" title=" " alt="" coords="459,339,609,381"/>
+</map>

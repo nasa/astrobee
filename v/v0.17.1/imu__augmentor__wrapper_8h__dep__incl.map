@@ -1,0 +1,9 @@
+<map id="localization/imu_augmentor/include/imu_augmentor/imu_augmentor_wrapper.h" name="localization/imu_augmentor/include/imu_augmentor/imu_augmentor_wrapper.h">
+<area shape="rect" id="node1" title=" " alt="" coords="258,5,467,61"/>
+<area shape="rect" id="node2" href="$imu__augmentor__nodelet_8h.html" title=" " alt="" coords="14,109,223,165"/>
+<area shape="rect" id="node4" href="$imu__augmentor__wrapper_8cc.html" title=" " alt="" coords="248,117,477,158"/>
+<area shape="rect" id="node5" href="$graph__bag_8h.html" title=" " alt="" coords="501,109,715,165"/>
+<area shape="rect" id="node3" href="$imu__augmentor__nodelet_8cc.html" title=" " alt="" coords="5,221,232,262"/>
+<area shape="rect" id="node6" href="$graph__bag_8cc.html" title=" " alt="" coords="449,213,596,269"/>
+<area shape="rect" id="node7" href="$run__graph__bag_8cc.html" title=" " alt="" coords="620,213,764,269"/>
+</map>

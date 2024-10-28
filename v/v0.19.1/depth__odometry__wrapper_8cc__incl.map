@@ -1,0 +1,82 @@
+<map id="localization/depth_odometry/src/depth_odometry_wrapper.cc" name="localization/depth_odometry/src/depth_odometry_wrapper.cc">
+<area shape="rect" id="node1" title=" " alt="" coords="2418,5,2587,61"/>
+<area shape="rect" id="node2" href="$depth__odometry__wrapper_8h.html" title=" " alt="" coords="2941,228,3112,269"/>
+<area shape="rect" id="node8" href="$logger_8h.html" title=" " alt="" coords="1597,733,1758,775"/>
+<area shape="rect" id="node25" href="$image__features__with__known__correspondences__aligner__depth__odometry__params_8h.html" title=" " alt="" coords="769,407,973,477"/>
+<area shape="rect" id="node39" href="$image__features__with__known__correspondences__aligner__depth__odometry_8h.html" title=" " alt="" coords="1950,109,2141,180"/>
+<area shape="rect" id="node41" href="$point__to__plane__icp__depth__odometry_8h.html" title=" " alt="" coords="2385,228,2620,269"/>
+<area shape="rect" id="node43" href="$localization_2localization__common_2include_2localization__common_2utilities_8h.html" title=" " alt="" coords="4574,421,4735,463"/>
+<area shape="rect" id="node60" href="$localization_2depth__odometry_2include_2depth__odometry_2parameter__reader_8h.html" title=" " alt="" coords="621,228,822,269"/>
+<area shape="rect" id="node61" href="$localization_2depth__odometry_2include_2depth__odometry_2utilities_8h.html" title=" " alt="" coords="1995,325,2189,351"/>
+<area shape="rect" id="node64" href="$ff__names_8h.html" title=" " alt="" coords="3869,131,4040,158"/>
+<area shape="rect" id="node65" href="$measurement__conversions_8h.html" title=" " alt="" coords="5723,317,5938,359"/>
+<area shape="rect" id="node80" title=" " alt="" coords="4064,131,4301,158"/>
+<area shape="rect" id="node3" href="$depth__odometry_8h.html" title=" " alt="" coords="2389,317,2560,359"/>
+<area shape="rect" id="node7" href="$timestamped__set_8h.html" title=" " alt="" coords="2074,644,2235,685"/>
+<area shape="rect" id="node14" title=" " alt="" coords="2931,823,2989,849"/>
+<area shape="rect" id="node15" href="$time_8h.html" title=" " alt="" coords="3649,733,3810,775"/>
+<area shape="rect" id="node18" title=" " alt="" coords="2313,741,2375,767"/>
+<area shape="rect" id="node21" title=" " alt="" coords="3135,547,3267,574"/>
+<area shape="rect" id="node22" title=" " alt="" coords="3343,547,3476,574"/>
+<area shape="rect" id="node23" href="$depth__odometry__wrapper__params_8h.html" title=" " alt="" coords="902,317,1122,359"/>
+<area shape="rect" id="node33" title=" " alt="" coords="3115,429,3306,455"/>
+<area shape="rect" id="node34" href="$timer_8h.html" title=" " alt="" coords="3151,644,3313,685"/>
+<area shape="rect" id="node37" title=" " alt="" coords="3569,317,3743,359"/>
+<area shape="rect" id="node38" title=" " alt="" coords="3779,429,3981,455"/>
+<area shape="rect" id="node4" href="$depth__odometry__params_8h.html" title=" " alt="" coords="133,644,304,685"/>
+<area shape="rect" id="node5" href="$pose__with__covariance__and__correspondences_8h.html" title=" " alt="" coords="2265,414,2431,470"/>
+<area shape="rect" id="node16" title=" " alt="" coords="1834,741,1977,767"/>
+<area shape="rect" id="node20" href="$depth__image__measurement_8h.html" title=" " alt="" coords="3483,421,3704,463"/>
+<area shape="rect" id="node6" href="$pose__with__covariance_8h.html" title=" " alt="" coords="1901,540,2083,581"/>
+<area shape="rect" id="node19" href="$depth__correspondences_8h.html" title=" " alt="" coords="1623,540,1825,581"/>
+<area shape="rect" id="node10" title=" " alt="" coords="1419,897,1546,924"/>
+<area shape="rect" id="node17" title=" " alt="" coords="6890,741,6950,767"/>
+<area shape="rect" id="node9" href="$eigen__vectors_8h.html" title=" " alt="" coords="1451,823,1653,849"/>
+<area shape="rect" id="node11" title=" " alt="" coords="1678,823,1786,849"/>
+<area shape="rect" id="node12" title=" " alt="" coords="2140,823,2255,849"/>
+<area shape="rect" id="node13" title=" " alt="" coords="1811,823,1885,849"/>
+<area shape="rect" id="node24" href="$point__to__plane__icp__depth__odometry__params_8h.html" title=" " alt="" coords="31,533,257,589"/>
+<area shape="rect" id="node26" href="$camera__params_8h.html" title=" " alt="" coords="2463,547,2655,574"/>
+<area shape="rect" id="node29" href="$point__cloud__with__known__correspondences__aligner__params_8h.html" title=" " alt="" coords="982,525,1173,596"/>
+<area shape="rect" id="node30" href="$brisk__feature__detector__and__matcher__params_8h.html" title=" " alt="" coords="331,533,499,589"/>
+<area shape="rect" id="node31" href="$lk__optical__flow__feature__detector__and__matcher__params_8h.html" title=" " alt="" coords="523,533,715,589"/>
+<area shape="rect" id="node32" href="$surf__feature__detector__and__matcher__params_8h.html" title=" " alt="" coords="739,533,907,589"/>
+<area shape="rect" id="node27" href="$config__reader_8h.html" title=" " alt="" coords="2565,644,2718,685"/>
+<area shape="rect" id="node28" title=" " alt="" coords="5193,651,5285,678"/>
+<area shape="rect" id="node35" href="$averager_8h.html" title=" " alt="" coords="3151,733,3313,775"/>
+<area shape="rect" id="node36" title=" " alt="" coords="3009,741,3076,767"/>
+<area shape="rect" id="node40" href="$depth__image__features__and__points_8h.html" title=" " alt="" coords="1488,228,1709,269"/>
+<area shape="rect" id="node58" href="$point__cloud__with__known__correspondences__aligner_8h.html" title=" " alt="" coords="1299,414,1501,470"/>
+<area shape="rect" id="node59" href="$feature__detector__and__matcher_8h.html" title=" " alt="" coords="1733,228,1920,269"/>
+<area shape="rect" id="node42" href="$point__to__plane__icp_8h.html" title=" " alt="" coords="2637,317,2798,359"/>
+<area shape="rect" id="node44" title=" " alt="" coords="4693,547,4907,574"/>
+<area shape="rect" id="node45" title=" " alt="" coords="4931,547,5117,574"/>
+<area shape="rect" id="node46" title=" " alt="" coords="5814,547,6015,574"/>
+<area shape="rect" id="node47" href="$combined__nav__state_8h.html" title=" " alt="" coords="5565,540,5739,581"/>
+<area shape="rect" id="node48" title=" " alt="" coords="5683,651,5869,678"/>
+<area shape="rect" id="node49" title=" " alt="" coords="5309,651,5507,678"/>
+<area shape="rect" id="node50" href="$combined__nav__state__covariances_8h.html" title=" " alt="" coords="6627,533,6789,589"/>
+<area shape="rect" id="node51" href="$msg__conversions_8h.html" title=" " alt="" coords="3703,540,3870,581"/>
+<area shape="rect" id="node52" title=" " alt="" coords="3693,651,3867,678"/>
+<area shape="rect" id="node53" title=" " alt="" coords="3943,651,4209,678"/>
+<area shape="rect" id="node54" title=" " alt="" coords="5141,547,5339,574"/>
+<area shape="rect" id="node55" title=" " alt="" coords="3996,540,4191,581"/>
+<area shape="rect" id="node56" title=" " alt="" coords="4215,547,4447,574"/>
+<area shape="rect" id="node57" title=" " alt="" coords="4471,547,4617,574"/>
+<area shape="rect" id="node62" title=" " alt="" coords="1803,429,2037,455"/>
+<area shape="rect" id="node63" title=" " alt="" coords="1627,429,1779,455"/>
+<area shape="rect" id="node66" title=" " alt="" coords="7312,429,7512,455"/>
+<area shape="rect" id="node67" title=" " alt="" coords="7536,429,7723,455"/>
+<area shape="rect" id="node68" href="$depth__odometry__measurement_8h.html" title=" " alt="" coords="4307,421,4549,463"/>
+<area shape="rect" id="node69" href="$fan__speed__mode_8h.html" title=" " alt="" coords="7747,421,7949,463"/>
+<area shape="rect" id="node70" href="$feature__points__measurement_8h.html" title=" " alt="" coords="2845,644,3075,685"/>
+<area shape="rect" id="node71" href="$handrail__points__measurement_8h.html" title=" " alt="" coords="6317,540,6553,581"/>
+<area shape="rect" id="node72" href="$plane_8h.html" title=" " alt="" coords="7312,644,7515,685"/>
+<area shape="rect" id="node73" href="$timestamped__handrail__pose_8h.html" title=" " alt="" coords="6169,644,6391,685"/>
+<area shape="rect" id="node74" href="$image__measurement_8h.html" title=" " alt="" coords="6908,644,7111,685"/>
+<area shape="rect" id="node75" href="$imu__measurement_8h.html" title=" " alt="" coords="6040,540,6243,581"/>
+<area shape="rect" id="node76" href="$matched__projections__measurement_8h.html" title=" " alt="" coords="6813,540,7085,581"/>
+<area shape="rect" id="node77" href="$point__cloud__measurement_8h.html" title=" " alt="" coords="4056,421,4267,463"/>
+<area shape="rect" id="node78" title=" " alt="" coords="5515,421,5664,463"/>
+<area shape="rect" id="node79" title=" " alt="" coords="5689,429,5853,455"/>
+</map>

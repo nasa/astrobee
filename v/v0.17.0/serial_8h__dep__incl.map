@@ -1,0 +1,12 @@
+<map id="hardware/ff_serial/include/ff_serial/serial.h" name="hardware/ff_serial/include/ff_serial/serial.h">
+<area shape="rect" id="node1" title=" " alt="" coords="309,5,491,47"/>
+<area shape="rect" id="node2" href="$serial_8cc.html" title=" " alt="" coords="149,102,288,143"/>
+<area shape="rect" id="node3" href="$perching__arm_8h.html" title=" " alt="" coords="312,95,488,151"/>
+<area shape="rect" id="node7" href="$speed__cam_8h.html" title=" " alt="" coords="707,102,949,143"/>
+<area shape="rect" id="node4" href="$perching__arm_8cc.html" title=" " alt="" coords="5,199,181,240"/>
+<area shape="rect" id="node5" href="$perching__arm__node_8cc.html" title=" " alt="" coords="205,199,400,240"/>
+<area shape="rect" id="node6" href="$perching__arm__tool_8cc.html" title=" " alt="" coords="425,199,626,240"/>
+<area shape="rect" id="node8" href="$speed__cam_8cc.html" title=" " alt="" coords="650,199,811,240"/>
+<area shape="rect" id="node9" href="$speed__cam__node_8cc.html" title=" " alt="" coords="835,199,1015,240"/>
+<area shape="rect" id="node10" href="$speed__cam__tool_8cc.html" title=" " alt="" coords="1040,199,1227,240"/>
+</map>

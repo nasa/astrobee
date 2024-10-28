@@ -1,0 +1,7 @@
+<map id="node_adders::NodeAdder" name="node_adders::NodeAdder">
+<area shape="rect" id="node1" title=" " alt="" coords="195,5,407,141"/>
+<area shape="rect" id="node2" href="$classnode__adders_1_1SlidingWindowNodeAdder.html" title=" " alt="" coords="187,189,414,355"/>
+<area shape="rect" id="node3" href="$classnode__adders_1_1TimestampedNodeAdder.html" title=" " alt="" coords="5,410,276,751"/>
+<area shape="rect" id="node4" href="$classnode__adders_1_1TimestampedNodeAdder.html" title=" " alt="" coords="300,403,621,759"/>
+<area shape="rect" id="node5" href="$classnode__adders_1_1MeasurementBasedTimestampedNodeAdder.html" title=" " alt="" coords="298,807,623,1031"/>
+</map>

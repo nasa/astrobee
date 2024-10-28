@@ -1,0 +1,11 @@
+<map id="hardware/pmc_actuator/include/pmc_actuator/pmc_actuator.h" name="hardware/pmc_actuator/include/pmc_actuator/pmc_actuator.h">
+<area shape="rect" id="node1" title=" " alt="" coords="288,5,464,61"/>
+<area shape="rect" id="node2" href="$i2c__new_8h.html" title=" " alt="" coords="177,109,287,136"/>
+<area shape="rect" id="node6" title=" " alt="" coords="293,184,357,211"/>
+<area shape="rect" id="node7" title=" " alt="" coords="381,184,440,211"/>
+<area shape="rect" id="node8" title=" " alt="" coords="413,109,480,136"/>
+<area shape="rect" id="node9" title=" " alt="" coords="504,109,568,136"/>
+<area shape="rect" id="node3" title=" " alt="" coords="5,184,72,211"/>
+<area shape="rect" id="node4" title=" " alt="" coords="97,184,167,211"/>
+<area shape="rect" id="node5" title=" " alt="" coords="192,184,269,211"/>
+</map>

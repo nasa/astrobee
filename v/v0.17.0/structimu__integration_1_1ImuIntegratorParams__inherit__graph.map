@@ -1,0 +1,6 @@
+<map id="imu_integration::ImuIntegratorParams" name="imu_integration::ImuIntegratorParams">
+<area shape="rect" id="node1" title=" " alt="" coords="128,5,351,215"/>
+<area shape="rect" id="node2" href="$structimu__augmentor_1_1ImuAugmentorParams.html" title=" " alt="" coords="5,270,236,362"/>
+<area shape="rect" id="node3" href="$structimu__integration_1_1LatestImuIntegratorParams.html" title=" " alt="" coords="260,263,459,369"/>
+<area shape="rect" id="node4" href="$structgraph__localizer_1_1GraphInitializerParams.html" title=" " alt="" coords="245,417,474,568"/>
+</map>

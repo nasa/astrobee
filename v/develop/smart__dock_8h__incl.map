@@ -1,0 +1,13 @@
+<map id="hardware/smart_dock/include/smart_dock/smart_dock.h" name="hardware/smart_dock/include/smart_dock/smart_dock.h">
+<area shape="rect" id="node1" title=" " alt="" coords="403,5,565,61"/>
+<area shape="rect" id="node2" href="$i2c__new_8h.html" title=" " alt="" coords="213,184,323,211"/>
+<area shape="rect" id="node7" title=" " alt="" coords="381,259,440,285"/>
+<area shape="rect" id="node8" href="$eps__driver_8h.html" title=" " alt="" coords="397,109,571,136"/>
+<area shape="rect" id="node10" title=" " alt="" coords="559,184,622,211"/>
+<area shape="rect" id="node11" title=" " alt="" coords="647,184,697,211"/>
+<area shape="rect" id="node3" title=" " alt="" coords="93,259,160,285"/>
+<area shape="rect" id="node4" title=" " alt="" coords="185,259,255,285"/>
+<area shape="rect" id="node5" title=" " alt="" coords="280,259,357,285"/>
+<area shape="rect" id="node6" title=" " alt="" coords="5,259,69,285"/>
+<area shape="rect" id="node9" title=" " alt="" coords="449,184,535,211"/>
+</map>

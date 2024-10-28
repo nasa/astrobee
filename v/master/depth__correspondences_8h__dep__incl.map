@@ -1,0 +1,41 @@
+<map id="localization/localization_measurements/include/localization_measurements/depth_correspondences.h" name="localization/localization_measurements/include/localization_measurements/depth_correspondences.h">
+<area shape="rect" id="node1" title=" " alt="" coords="1281,5,1579,61"/>
+<area shape="rect" id="node2" href="$pose__with__covariance__and__correspondences_8h.html" title=" " alt="" coords="758,109,998,180"/>
+<area shape="rect" id="node22" href="$localization_2depth__odometry_2include_2depth__odometry_2utilities_8h.html" title=" " alt="" coords="950,235,1134,291"/>
+<area shape="rect" id="node24" href="$depth__odometry__measurement_8h.html" title=" " alt="" coords="1655,117,2003,173"/>
+<area shape="rect" id="node38" href="$standstill__measurement_8h.html" title=" " alt="" coords="2027,117,2329,173"/>
+<area shape="rect" id="node3" href="$depth__odometry_8h.html" title=" " alt="" coords="563,235,777,291"/>
+<area shape="rect" id="node18" href="$image__features__with__known__correspondences__aligner__depth__odometry_8h.html" title=" " alt="" coords="242,465,466,551"/>
+<area shape="rect" id="node20" href="$point__to__plane__icp__depth__odometry_8h.html" title=" " alt="" coords="607,347,799,417"/>
+<area shape="rect" id="node23" href="$localization_2depth__odometry_2src_2utilities_8cc.html" title=" " alt="" coords="823,361,1010,403"/>
+<area shape="rect" id="node4" href="$depth__odometry__wrapper_8h.html" title=" " alt="" coords="490,473,693,543"/>
+<area shape="rect" id="node5" href="$depth__odometry__nodelet_8h.html" title=" " alt="" coords="494,606,697,677"/>
+<area shape="rect" id="node7" href="$depth__odometry__wrapper_8cc.html" title=" " alt="" coords="959,613,1128,669"/>
+<area shape="rect" id="node8" href="$ros__graph__localizer__nodelet_8h.html" title=" " alt="" coords="1308,606,1504,677"/>
+<area shape="rect" id="node10" href="$depth__odometry__adder_8h.html" title=" " alt="" coords="220,613,469,669"/>
+<area shape="rect" id="node13" href="$live__measurement__simulator_8h.html" title=" " alt="" coords="721,606,934,677"/>
+<area shape="rect" id="node6" href="$depth__odometry__nodelet_8cc.html" title=" " alt="" coords="512,732,679,788"/>
+<area shape="rect" id="node9" href="$ros__graph__localizer__nodelet_8cc.html" title=" " alt="" coords="1319,732,1493,788"/>
+<area shape="rect" id="node11" href="$depth__odometry__adder_8cc.html" title=" " alt="" coords="89,732,243,788"/>
+<area shape="rect" id="node12" href="$run__depth__odometry__adder_8cc.html" title=" " alt="" coords="267,732,465,788"/>
+<area shape="rect" id="node14" href="$offline__replay_8h.html" title=" " alt="" coords="977,732,1190,788"/>
+<area shape="rect" id="node17" href="$live__measurement__simulator_8cc.html" title=" " alt="" coords="711,732,943,788"/>
+<area shape="rect" id="node15" href="$offline__replay_8cc.html" title=" " alt="" coords="921,836,1072,892"/>
+<area shape="rect" id="node16" href="$run__offline__replay_8cc.html" title=" " alt="" coords="1097,836,1241,892"/>
+<area shape="rect" id="node19" href="$image__features__with__known__correspondences__aligner__depth__odometry_8cc.html" title=" " alt="" coords="5,599,196,684"/>
+<area shape="rect" id="node21" href="$point__to__plane__icp__depth__odometry_8cc.html" title=" " alt="" coords="717,480,959,536"/>
+<area shape="rect" id="node25" href="$depth__odometry__factor__adder_8h.html" title=" " alt="" coords="1887,228,2071,299"/>
+<area shape="rect" id="node26" href="$graph__vio_2include_2graph__vio_2graph__vio_8h.html" title=" " alt="" coords="2149,354,2317,410"/>
+<area shape="rect" id="node32" href="$measurement__conversions_8h.html" title=" " alt="" coords="1464,235,1783,291"/>
+<area shape="rect" id="node37" href="$depth__odometry__display_8h.html" title=" " alt="" coords="1954,354,2125,410"/>
+<area shape="rect" id="node27" href="$graph__vio_2src_2graph__vio_8cc.html" title=" " alt="" coords="2153,487,2312,529"/>
+<area shape="rect" id="node28" href="$ros__graph__vio__wrapper_8h.html" title=" " alt="" coords="1813,480,2028,536"/>
+<area shape="rect" id="node29" href="$ros__graph__vio__wrapper_8cc.html" title=" " alt="" coords="1580,613,1747,669"/>
+<area shape="rect" id="node30" href="$graph__vio__simulator_8h.html" title=" " alt="" coords="1797,613,2028,669"/>
+<area shape="rect" id="node31" href="$graph__vio__simulator_8cc.html" title=" " alt="" coords="1839,732,1986,788"/>
+<area shape="rect" id="node33" href="$measurement__conversions_8cc.html" title=" " alt="" coords="1434,354,1679,410"/>
+<area shape="rect" id="node34" href="$ros__graph__localizer__wrapper_8cc.html" title=" " alt="" coords="1755,354,1929,410"/>
+<area shape="rect" id="node35" href="$ros__pose__extrapolator__wrapper_8cc.html" title=" " alt="" coords="1085,354,1309,410"/>
+<area shape="rect" id="node36" href="$depth__odometry__display_8cc.html" title=" " alt="" coords="1618,480,1789,536"/>
+<area shape="rect" id="node39" href="$standstill__factor__adder_8h.html" title=" " alt="" coords="2205,228,2388,299"/>
+</map>

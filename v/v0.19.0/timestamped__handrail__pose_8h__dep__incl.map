@@ -1,0 +1,12 @@
+<map id="localization/localization_measurements/include/localization_measurements/timestamped_handrail_pose.h" name="localization/localization_measurements/include/localization_measurements/timestamped_handrail_pose.h">
+<area shape="rect" id="node1" title=" " alt="" coords="587,5,915,61"/>
+<area shape="rect" id="node2" href="$handrail__points__measurement_8h.html" title=" " alt="" coords="540,109,797,180"/>
+<area shape="rect" id="node3" href="$measurement__conversions_8h.html" title=" " alt="" coords="592,228,911,284"/>
+<area shape="rect" id="node4" href="$depth__odometry__wrapper_8cc.html" title=" " alt="" coords="5,332,175,388"/>
+<area shape="rect" id="node5" href="$measurement__conversions_8cc.html" title=" " alt="" coords="199,332,445,388"/>
+<area shape="rect" id="node6" href="$ros__graph__localizer__wrapper_8cc.html" title=" " alt="" coords="469,332,644,388"/>
+<area shape="rect" id="node7" href="$ros__graph__vio__wrapper_8cc.html" title=" " alt="" coords="668,332,835,388"/>
+<area shape="rect" id="node8" href="$ros__pose__extrapolator__wrapper_8cc.html" title=" " alt="" coords="859,332,1083,388"/>
+<area shape="rect" id="node9" href="$depth__odometry__display_8cc.html" title=" " alt="" coords="1097,436,1267,492"/>
+<area shape="rect" id="node10" href="$depth__odometry__display_8h.html" title=" " alt="" coords="1158,332,1329,388"/>
+</map>

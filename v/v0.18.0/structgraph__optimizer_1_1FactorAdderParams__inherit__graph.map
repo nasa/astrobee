@@ -1,0 +1,10 @@
+<map id="graph_optimizer::FactorAdderParams" name="graph_optimizer::FactorAdderParams">
+<area shape="rect" id="node1" title=" " alt="" coords="745,5,958,112"/>
+<area shape="rect" id="node2" href="$structgraph__localizer_1_1DepthOdometryFactorAdderParams.html" title=" " alt="" coords="5,204,239,487"/>
+<area shape="rect" id="node3" href="$structgraph__localizer_1_1HandrailFactorAdderParams.html" title=" " alt="" coords="263,255,467,435"/>
+<area shape="rect" id="node4" href="$structgraph__localizer_1_1LocFactorAdderParams.html" title=" " alt="" coords="491,160,713,531"/>
+<area shape="rect" id="node5" href="$structgraph__localizer_1_1ProjectionFactorAdderParams.html" title=" " alt="" coords="737,211,966,479"/>
+<area shape="rect" id="node6" href="$structgraph__localizer_1_1RotationFactorAdderParams.html" title=" " alt="" coords="990,270,1174,421"/>
+<area shape="rect" id="node7" href="$structgraph__localizer_1_1SmartProjectionFactorAdderParams.html" title=" " alt="" coords="1198,197,1435,494"/>
+<area shape="rect" id="node8" href="$structgraph__localizer_1_1StandstillFactorAdderParams.html" title=" " alt="" coords="1460,255,1667,435"/>
+</map>

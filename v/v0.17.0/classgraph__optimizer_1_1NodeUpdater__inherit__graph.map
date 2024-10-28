@@ -1,0 +1,8 @@
+<map id="graph_optimizer::NodeUpdater" name="graph_optimizer::NodeUpdater">
+<area shape="rect" id="node1" title=" " alt="" coords="320,5,555,200"/>
+<area shape="rect" id="node2" href="$classgraph__optimizer_1_1NodeUpdaterWithPriors.html" title=" " alt="" coords="5,270,264,391"/>
+<area shape="rect" id="node3" href="$classgraph__optimizer_1_1NodeUpdaterWithPriors.html" title=" " alt="" coords="288,248,587,413"/>
+<area shape="rect" id="node5" href="$classgraph__optimizer_1_1NodeUpdaterWithPriors.html" title=" " alt="" coords="611,248,882,413"/>
+<area shape="rect" id="node4" href="$classgraph__localizer_1_1CombinedNavStateNodeUpdater.html" title=" " alt="" coords="308,461,567,788"/>
+<area shape="rect" id="node6" href="$classgraph__localizer_1_1FeaturePointNodeUpdater.html" title=" " alt="" coords="629,461,864,788"/>
+</map>

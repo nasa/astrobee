@@ -1,0 +1,4 @@
+<map id="marker_tracking::LabelingCvSeq" name="marker_tracking::LabelingCvSeq">
+<area shape="rect" id="node1" title="Labeling class that uses OpenCV routines to find connected components." alt="" coords="5,277,196,443"/>
+<area shape="rect" id="node2" href="$classmarker__tracking_1_1Labeling.html" title="Base class for labeling connected components from binary image." alt="" coords="5,5,196,229"/>
+</map>

@@ -1,0 +1,12 @@
+<map id="hardware/temp_monitor/src/ADT7410.h" name="hardware/temp_monitor/src/ADT7410.h">
+<area shape="rect" id="node1" title=" " alt="" coords="280,5,459,47"/>
+<area shape="rect" id="node2" href="$temp__monitor_8h.html" title=" " alt="" coords="259,95,480,121"/>
+<area shape="rect" id="node3" href="$i2c__new_8h.html" title=" " alt="" coords="171,169,280,196"/>
+<area shape="rect" id="node6" title=" " alt="" coords="280,244,357,271"/>
+<area shape="rect" id="node8" title=" " alt="" coords="381,244,440,271"/>
+<area shape="rect" id="node9" title=" " alt="" coords="407,169,457,196"/>
+<area shape="rect" id="node10" title=" " alt="" coords="482,169,545,196"/>
+<area shape="rect" id="node4" title=" " alt="" coords="5,244,72,271"/>
+<area shape="rect" id="node5" title=" " alt="" coords="97,244,167,271"/>
+<area shape="rect" id="node7" title=" " alt="" coords="192,244,256,271"/>
+</map>
