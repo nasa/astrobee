@@ -115,14 +115,6 @@ target_link_libraries(ground_dds_ros_bridge_node ground_dds_ros_bridge ${catkin_
 # Determine our module name
 get_filename_component(MODULE_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 
-install(CODE "execute_process(
-  COMMAND mkdir -p share/${MODULE_NAME}
-  COMMAND ln -s ../../bin/ground_dds_ros_bridge share/${MODULE_NAME}
-  WORKING_DIRECOTRY ${CMAKE_INSTALL_PREFIX}
-  OUTPUT_QUIET
-  ERROR_QUIET
-  )")
-
 # Mark libraries for installation
 install(TARGETS ground_dds_ros_bridge
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
@@ -134,6 +126,15 @@ install(TARGETS ground_dds_ros_bridge
 #install(FILES nodelet_plugins.xml
 #        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 #)
+
+# Install C++ executables
+install(TARGETS ground_dds_ros_bridge_node DESTINATION bin)
+install(CODE "execute_process(
+  COMMAND ln -s ../../bin/ground_dds_ros_bridge_node share/${MODULE_NAME}
+  WORKING_DIRECOTRY ${CMAKE_INSTALL_PREFIX}
+  OUTPUT_QUIET
+  ERROR_QUIET
+  )")
 
 # Mark launch files for installation
 install(DIRECTORY launch/
