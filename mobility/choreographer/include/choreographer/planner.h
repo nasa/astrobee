@@ -223,7 +223,7 @@ class PlannerImplementation : public ff_util::FreeFlyerComponent {
   // called if action and service servers timeout on conenction.
   void InitFault(std::string const& msg ) {
     Error(msg);
-    AssertFault(ff_util::INITIALIZATION_FAILED, msg);
+    AssertFault(ff_util::INITIALIZATION_FAILED, msg, GetTimeNow());
     return;
   }
 

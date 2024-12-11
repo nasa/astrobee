@@ -89,7 +89,7 @@ class FreeFlyerComponent {
 
   void AssertFault(FaultKeys enum_key,
                    std::string const& message,
-                   ros::Time time_fault_occurred = rclcpp::Clock().now());
+                   ros::Time time_fault_occurred);
   void ClearAllFaults();
   void ClearFault(FaultKeys enum_key);
   void PrintFaults();

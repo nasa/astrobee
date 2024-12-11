@@ -40,7 +40,7 @@ void MapperComponent::Initialize(NodeHandle &nh) {
   cfg_.AddFile("mobility/mapper.config");
   if (!cfg_.Initialize(nh)) {
     AssertFault(ff_util::INITIALIZATION_FAILED,
-                "Could not start config server");
+                "Could not start config server", GetTimeNow());
     return;
   }
 

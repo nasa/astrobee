@@ -76,12 +76,11 @@ DEFINE_bool(move, false, "Send move command");
 DEFINE_bool(stop, false, "Send stop command");
 DEFINE_bool(idle, false, "Send idle command");
 DEFINE_bool(prep, false, "Send prep command");
-DEFINE_bool(novalidate, false, "Don't validate the segment before running");
-DEFINE_bool(nocollision, false, "Don't check for collisions during action");
+DEFINE_bool(novalidate, true, "Don't validate the segment before running");
+DEFINE_bool(nocollision, true, "Don't check for collisions during action");
 DEFINE_bool(nobootstrap, false, "Don't move to the starting station on execute");
 DEFINE_bool(noimmediate, false, "Don't execute immediately");
 DEFINE_bool(replan, false, "Enable replanning");
-DEFINE_bool(timesync, false, "Enable time synchronization");
 DEFINE_string(rec, "", "Plan and record to this file.");
 DEFINE_string(exec, "", "Execute a given segment");
 DEFINE_string(pos, "", "Desired position in cartesian format 'X Y Z' (meters)");
@@ -89,7 +88,7 @@ DEFINE_string(att, "", "Desired attitude in angle-axis format 'angle X Y Z'");
 DEFINE_double(wait, 0.0, "Defer move by given amount in seconds (needs -noimmediate)");
 DEFINE_double(connect, 30.0, "Action connect timeout");
 DEFINE_double(active, 30.0, "Action active timeout");
-DEFINE_double(response, 30.0, "Action response timeout");
+DEFINE_double(response, 120.0, "Action response timeout");
 DEFINE_double(deadline, -1.0, "Action deadline timeout");
 
 // Avoid sending the command multiple times
@@ -423,7 +422,6 @@ int main(int argc, char *argv[]) {
     cfg.Set<bool>("enable_validation", !FLAGS_novalidate);
     cfg.Set<bool>("enable_bootstrapping", !FLAGS_nobootstrap);
     cfg.Set<bool>("enable_immediate", !FLAGS_noimmediate);
-    cfg.Set<bool>("enable_timesync", FLAGS_timesync);
     cfg.Set<bool>("enable_replanning", FLAGS_replan);
     cfg.Set<bool>("enable_faceforward", FLAGS_ff);
     if (!FLAGS_planner.empty())
