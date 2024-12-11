@@ -3907,7 +3907,7 @@ void Executive::Initialize(NodeHandle &nh) {
   if (!ff_util::FlightUtil::GetFlightMode(flight_mode, "nominal")) {
     err_msg = "Couldn't get flight mode nominal.";
     FF_ERROR("%s", err_msg.c_str());
-    this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
+    this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg, GetTimeNow());
     return;
   } else {
     agent_state_.target_linear_velocity = flight_mode.hard_limit_vel;
@@ -4002,7 +4002,7 @@ bool Executive::ReadParams() {
   if (!config_params_.ReadFiles()) {
     err_msg = "Error loading executive parameters. Couldn't read config files.";
     FF_ERROR("%s", err_msg.c_str());
-    this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
+    this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg, GetTimeNow());
     return false;
   }
 
@@ -4081,14 +4081,14 @@ bool Executive::ReadParams() {
                                  &sys_monitor_heartbeat_timeout_)) {
     err_msg = "System monitor heartbeat timeout not specified.";
     FF_ERROR("%s", err_msg.c_str());
-    this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
+    this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg, GetTimeNow());
     return false;
   }
 
   if (!config_params_.CheckValExists("sys_monitor_heartbeat_fault_response")) {
     err_msg = "Sys monitor heartbeat fault response not specified.";
     FF_ERROR("%s", err_msg.c_str());
-    this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
+    this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg, GetTimeNow());
     return false;
   }
 
@@ -4098,7 +4098,7 @@ bool Executive::ReadParams() {
   if (!ReadCommand(&hb_response, sys_monitor_heartbeat_fault_response_)) {
     err_msg = "Unable to read sys monitor heartbeat fault response.";
     FF_ERROR("%s", err_msg.c_str());
-    this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
+    this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg, GetTimeNow());
     return false;
   }
 
@@ -4106,14 +4106,14 @@ bool Executive::ReadParams() {
                               &sys_monitor_heartbeat_fault_blocking_)) {
     err_msg == "Sys monitor heartbeat fault blocking not specified.";
     FF_ERROR("%s", err_msg.c_str());
-    this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
+    this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg, GetTimeNow());
     return false;
   }
 
   if (!config_params_.CheckValExists("sys_monitor_init_fault_response")) {
     err_msg = "System monitor init fault response not specified.";
     FF_ERROR("%s", err_msg.c_str());
-    this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
+    this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg, GetTimeNow());
     return false;
   }
 
@@ -4123,7 +4123,7 @@ bool Executive::ReadParams() {
   if (!ReadCommand(&init_response, sys_monitor_init_fault_response_)) {
     err_msg = "Unable to read sys monitor init fault response.";
     FF_ERROR("%s", err_msg.c_str());
-    this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
+    this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg, GetTimeNow());
     return false;
   }
 
@@ -4131,7 +4131,7 @@ bool Executive::ReadParams() {
                               &sys_monitor_init_fault_blocking_)) {
     err_msg = "Sys monitor init fault blocking not specified.";
     FF_ERROR("%s", err_msg.c_str());
-    this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
+    this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg, GetTimeNow());
     return false;
   }
 
@@ -4145,7 +4145,7 @@ bool Executive::ReadMapperParams() {
     err_msg = "Error loading executive parameters.";
     err_msg += "Couldn't read mapper config files.";
     FF_ERROR("%s", err_msg.c_str());
-    this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
+    this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg, GetTimeNow());
     return false;
   }
 
@@ -4155,7 +4155,7 @@ bool Executive::ReadMapperParams() {
   if (!mapper_config_params_.GetTable("parameters", &mapper_params_table)) {
     err_msg = "Unable to read mapper parameters table.";
     FF_ERROR("%s", err_msg.c_str());
-    this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
+    this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg, GetTimeNow());
     return false;
   }
 
@@ -4177,7 +4177,7 @@ bool Executive::ReadMapperParams() {
       if (!mapper_group.GetReal("default", &collision_distance)) {
         err_msg = "Unable to read collision distance from mapper config";
         FF_ERROR("%s", err_msg.c_str());
-        this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
+        this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg, GetTimeNow());
         return false;
       }
       // Stop searching for the collision distance
@@ -4191,7 +4191,7 @@ bool Executive::ReadMapperParams() {
   } else {
     err_msg = "Unable to find the collision distance from the mapper config.";
     FF_ERROR("%s", err_msg.c_str());
-    this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
+    this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg, GetTimeNow());
     return false;
   }
 
