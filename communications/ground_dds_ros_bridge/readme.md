@@ -70,18 +70,18 @@ ASTROBEE_CONFIG_DIR=$ASTROBEE_WS/src/astrobee/config/ roslaunch ground_dds_ros_b
 # Commanding the Robot
 
 In order to command Astrobee from the ground, you must grab control of the
-robot. Grabbing control of an Astrobee is done in a handshake like manor. First,
-you request control, Astrobee sends a cookie, and then you use that cookie to
-grab control. You can do this either using ros command line tools or creating
-a ros node to do it. The steps are listen to the access control state, issue the
-request control command, extract the cookie out of the access control state, and
-then send the grab control command with the cookie as an argument in the
-command. IMPORTANT, Astrobee uses the command source portion of the command to
-determine who has control. Be sure to set the command source to the same thing
-every time you issue a command or the robot may reject your command. It is also
-helpful to set it to a distinguishing name so that it is clear who is commanding
-the robot. For instance, ISAAC used "ISAACGroundSystem" as the command source.
-The ISAAC team created a node that grabs control of the robot and issues
-commands. If you would like to use it as an example, please see:
+robot. Grabbing control of an Astrobee is done in a handshake like manner.
+First, you request control, Astrobee sends a cookie, and then you use that
+cookie to grab control. You can do this either using ros command line tools or
+creating a ros node to do it. The steps are listen to the access control state,
+issue the request control command, extract the cookie out of the access control 
+state, and then send the grab control command with the cookie as an argument in
+the command. IMPORTANT, Astrobee uses the command source portion of the command
+to determine who has control. Be sure to set the command source to the same
+thing every time you issue a command or the robot may reject your command. It is
+also helpful to set it to a distinguishing name so that it is clear who is
+commanding the robot. For instance, ISAAC used "ISAACGroundSystem" as the
+command source. The ISAAC team created a node that grabs control of the robot
+and issues commands. If you would like to use it as an example, please see:
 
 https://github.com/nasa/isaac/blob/master/communications/ros_gs_bridge/src/ros_gs_bridge.cc
