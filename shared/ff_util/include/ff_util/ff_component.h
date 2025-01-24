@@ -72,7 +72,7 @@ class FreeFlyerComponent {
 
   // Use default name from freeflyer - crashes in ROS2
   // explicit FreeFlyerComponent(const rclcpp::NodeOptions & options, bool autostart_hb_timer = true);
-  // Explicitly specift the name
+  // Explicitly specify the name
   explicit FreeFlyerComponent(const rclcpp::NodeOptions& options, std::string const& name,
                             bool autostart_hb_timer = true);
   // Explicitly specify the node from gazebo

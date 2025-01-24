@@ -19,21 +19,19 @@
 #ifndef EXECUTIVE_OP_STATE_H_
 #define EXECUTIVE_OP_STATE_H_
 
-#include <ros/ros.h>
-
 #include <executive/executive.h>
 
-#include <ff_msgs/ArmAction.h>
-#include <ff_msgs/CommandArg.h>
-#include <ff_msgs/CommandConstants.h>
-#include <ff_msgs/ControlState.h>
-#include <ff_msgs/DockAction.h>
-#include <ff_msgs/MotionAction.h>
+#include <ff_msgs/action/arm.hpp>
+#include <ff_msgs/action/dock.hpp>
+#include <ff_msgs/action/motion.hpp>
+#include <ff_msgs/msg/command_arg.hpp>
+#include <ff_msgs/msg/command_constants.hpp>
+#include <ff_msgs/msg/control_state.hpp>
 #include <ff_util/ff_action.h>
 
 #include <string>
 
-using ff_msgs::CommandConstants;
+using ff_msgs::msg::CommandConstants;
 
 namespace executive {
 class Executive;
@@ -46,8 +44,8 @@ class OpState {
  public:
   virtual ~OpState() {}
   virtual OpState* StartupState(std::string const& cmd_id = "");
-  virtual OpState* HandleCmd(ff_msgs::CommandStampedPtr const& cmd);
-  OpState* HandleCmd(ff_msgs::CommandStampedPtr const& cmd,
+  virtual OpState* HandleCmd(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
+  OpState* HandleCmd(ff_msgs::msg::CommandStamped::SharedPtr const cmd,
                      bool& completed,
                      bool& successful);
 
@@ -60,12 +58,12 @@ class OpState {
   virtual OpState* HandleWaitCallback();
 
   virtual OpState* HandleGuestScienceAck(
-                                        ff_msgs::AckStampedConstPtr const& ack);
+                                ff_msgs::msg::AckStamped::SharedPtr const ack);
 
   virtual void AckCmd(std::string const& cmd_id,
-                    uint8_t completed_status = ff_msgs::AckCompletedStatus::OK,
-                    std::string const& message = "",
-                    uint8_t status = ff_msgs::AckStatus::COMPLETED);
+              uint8_t completed_status = ff_msgs::msg::AckCompletedStatus::OK,
+              std::string const& message = "",
+              uint8_t status = ff_msgs::msg::AckStatus::COMPLETED);
 
   std::string GenerateActionFailedMsg(
                               ff_util::FreeFlyerActionState::Enum const& state,
@@ -74,10 +72,9 @@ class OpState {
 
   std::string GetActionString(Action const& action);
 
-  virtual bool PausePlan(ff_msgs::CommandStampedPtr const& cmd);
+  virtual bool PausePlan(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
 
   OpState* TransitionToState(unsigned char id);
-
   std::string const& name() const {return name_;}
   unsigned char const& id() const {return id_;}
 

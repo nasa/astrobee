@@ -778,7 +778,12 @@ class DockComponent : public ff_util::FreeFlyerComponent {
     // Package up the desired end pose
     geometry_msgs::PoseStamped msg;
     msg.header.stamp = GetTimeNow();
-    ff_util::ConfigClient cfg(node_, NODE_CHOREOGRAPHER);
+
+    // ConfigClient blocks when Setting parameters. Creating a  new node prevent this
+    std::string platform = this->GetPlatform();
+    std::shared_ptr<rclcpp::Node> temp_node = std::make_shared<rclcpp::Node>("temporal_dock_node", platform, rclcpp::NodeOptions().use_global_arguments(false));
+    ff_util::ConfigClient cfg(temp_node, NODE_CHOREOGRAPHER);
+
     // Set parameters for the choreographer
     cfg.Set<bool>("enable_collision_checking", false);
     cfg.Set<bool>("enable_validation", false);

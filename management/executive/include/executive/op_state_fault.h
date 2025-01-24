@@ -27,10 +27,10 @@ class OpStateFault : public OpState {
  public:
   ~OpStateFault() {}
 
-  OpState* HandleCmd(ff_msgs::CommandStampedPtr const& cmd);
+  OpState* HandleCmd(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
 
   // Guest Science Ack
-  OpState* HandleGuestScienceAck(ff_msgs::AckStampedConstPtr const& ack);
+  OpState* HandleGuestScienceAck(ff_msgs::msg::AckStamped::SharedPtr const ack);
 
   OpState* HandleResult(ff_util::FreeFlyerActionState::Enum const& state,
                         std::string const& result_response,

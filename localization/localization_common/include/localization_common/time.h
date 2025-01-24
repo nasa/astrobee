@@ -19,9 +19,11 @@
 #ifndef LOCALIZATION_COMMON_TIME_H_
 #define LOCALIZATION_COMMON_TIME_H_
 
+#include <cstdint>
+
 namespace localization_common {
 using Time = double;
-Time GetTime(const int seconds, const int nanoseconds);
+Time GetTime(const int seconds, const unsigned int nanoseconds);
 }  // namespace localization_common
 
 #endif  // LOCALIZATION_COMMON_TIME_H_

@@ -80,7 +80,12 @@ Time TimeFromHeader(const std_msgs::Header& header) { return GetTime(header.stam
 
 Time TimeFromRosTime(const rclcpp::Time& time) { return GetTime(time.seconds(), time.nanoseconds()); }
 
-void TimeToHeader(const Time timestamp, std_msgs::Header& header) { header.stamp = rclcpp::Time(timestamp); }
+rclcpp::Time TimeToRosTime(const Time timestamp) { 
+  int sec = (int)(floor(timestamp)); int nanosec = (timestamp - floor(timestamp))*1e9; 
+  return rclcpp::Time(sec, nanosec, RCL_ROS_TIME); 
+}
+
+void TimeToHeader(const Time timestamp, std_msgs::Header& header) { header.stamp = TimeToRosTime(timestamp); }
 
 gtsam::Pose3 PoseFromMsg(const geometry_msgs::PoseStamped& msg) { return PoseFromMsg(msg.pose); }
 

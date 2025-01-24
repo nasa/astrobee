@@ -20,6 +20,8 @@
 #ifndef EXECUTIVE_UTILS_SEQUENCER_COMMAND_CONVERSION_H_
 #define EXECUTIVE_UTILS_SEQUENCER_COMMAND_CONVERSION_H_
 
+#include <ff_msgs/msg/command_stamped.hpp>
+
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -44,7 +46,7 @@ namespace internal {
 // a function that takes plan command and generates a DDS-based command
 // if the conversion is successful, return true. otherwise... don't.
 using GenerateFn = bool (*)(const jsonloader::Command * plan_cmd,
-                            ff_msgs::CommandStamped * dds_cmd);
+                            ff_msgs::msg::CommandStamped * dds_cmd);
 
 struct CommandInfo {
   std::string name;

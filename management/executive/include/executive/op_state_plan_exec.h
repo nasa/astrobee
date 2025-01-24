@@ -22,7 +22,7 @@
 #include <string>
 #include "executive/op_state.h"
 #include "executive/utils/sequencer/sequencer.h"
-#include "ff_msgs/AckCompletedStatus.h"
+#include "ff_msgs/msg/ack_completed_status.hpp"
 
 namespace executive {
 class OpStatePlanExec : public OpState {
@@ -30,7 +30,7 @@ class OpStatePlanExec : public OpState {
   ~OpStatePlanExec() {}
 
   OpState* StartupState(std::string const& cmd_id);
-  OpState* HandleCmd(ff_msgs::CommandStampedPtr const& cmd);
+  OpState* HandleCmd(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
 
   OpState* HandleResult(ff_util::FreeFlyerActionState::Enum const& state,
                         std::string const& result_response,
@@ -39,16 +39,16 @@ class OpStatePlanExec : public OpState {
 
   OpState* HandleWaitCallback();
 
-  OpState* HandleGuestScienceAck(ff_msgs::AckStampedConstPtr const& ack);
+  OpState* HandleGuestScienceAck(ff_msgs::msg::AckStamped::SharedPtr const ack);
 
   void AckCmd(std::string const& cmd_id,
-              uint8_t completed_status = ff_msgs::AckCompletedStatus::OK,
+              uint8_t completed_status = ff_msgs::msg::AckCompletedStatus::OK,
               std::string const& message = "",
-              uint8_t status = ff_msgs::AckStatus::COMPLETED);
+              uint8_t status = ff_msgs::msg::AckStatus::COMPLETED);
 
   void AckPlanCmdFailed(uint8_t completed_status, std::string const& message);
 
-  bool PausePlan(ff_msgs::CommandStampedPtr const& cmd);
+  bool PausePlan(ff_msgs::msg::CommandStamped::SharedPtr const cmd);
 
  protected:
   explicit OpStatePlanExec(std::string const& name, unsigned char id) :

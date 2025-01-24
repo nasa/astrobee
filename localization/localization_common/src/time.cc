@@ -19,5 +19,5 @@
 #include <localization_common/time.h>
 
 namespace localization_common {
-Time GetTime(const int seconds, const int nanoseconds) { return seconds + 1e-9 * nanoseconds; }
+Time GetTime(const int seconds, const unsigned int nanoseconds) { return (Time) seconds + 1e-9 * (Time) nanoseconds; }
 }  // namespace localization_common

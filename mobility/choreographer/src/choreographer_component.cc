@@ -64,6 +64,9 @@
 #include <functional>
 #include <map>
 #include <utility>
+#include <chrono>
+
+using namespace std::chrono_literals;
 
 /**
  * \ingroup mobility
@@ -606,7 +609,7 @@ class ChoreographerComponent : public ff_util::FreeFlyerComponent {
     UpdateCallback(fsm_.GetState(), MANUAL_STATE_SET);
   }
 
-  // Called on registration of aplanner
+  // Called on registration of a planner
   void SetInertiaCallback(const std::shared_ptr<ff_msgs::srv::SetInertia::Request> req,
                           std::shared_ptr<ff_msgs::srv::SetInertia::Response> res) {
     // TODO(Andrew) Potentially sanity check inertia?
@@ -847,8 +850,9 @@ class ChoreographerComponent : public ff_util::FreeFlyerComponent {
     if (!GetPlatform().empty())
       child_frame = GetPlatform() + "/" + child_frame;
     try {
+      rclcpp::Time now = GetTimeNow();
       geometry_msgs::TransformStamped tf = tf_buffer_->lookupTransform(
-        std::string(FRAME_NAME_WORLD), child_frame, ros::Time(0));
+        std::string(FRAME_NAME_WORLD), child_frame, now, 50ms);
       pose.header = tf.header;
       pose.pose = msg_conversions::ros_transform_to_ros_pose(tf.transform);
     }

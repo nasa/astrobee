@@ -34,15 +34,15 @@ bool sequencer::DecompressData(const char* data, const std::size_t length,
   io::filtering_ostream ostream;
 
   switch (type) {
-    case ff_msgs::CompressedFile::TYPE_NONE:
+    case ff_msgs::msg::CompressedFile::TYPE_NONE:
     break;
-  case ff_msgs::CompressedFile::TYPE_DEFLATE:
+  case ff_msgs::msg::CompressedFile::TYPE_DEFLATE:
     ostream.push(io::zlib_decompressor());
     break;
-  case ff_msgs::CompressedFile::TYPE_GZ:
+  case ff_msgs::msg::CompressedFile::TYPE_GZ:
     ostream.push(io::gzip_decompressor());
     break;
-  case ff_msgs::CompressedFile::TYPE_BZ2:
+  case ff_msgs::msg::CompressedFile::TYPE_BZ2:
     ostream.push(io::bzip2_decompressor());
     break;
   default:

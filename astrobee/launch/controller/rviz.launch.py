@@ -33,6 +33,7 @@ def generate_launch_description():
             namespace="",
             executable="rviz2",
             name="rviz_node",
+            parameters=[{'use_sim_time': True}],  
             arguments=["-d", PathJoinSubstitution([get_package_share_directory("astrobee"),"resources/rviz",LaunchConfiguration("rviz_file")])],
             respawn=True,
         ),

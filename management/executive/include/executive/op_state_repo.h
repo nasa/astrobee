@@ -19,8 +19,6 @@
 #ifndef EXECUTIVE_OP_STATE_REPO_H_
 #define EXECUTIVE_OP_STATE_REPO_H_
 
-#include <ros/ros.h>
-
 #include "executive/op_state.h"
 #include "executive/op_state_auto_return.h"
 #include "executive/op_state_fault.h"
@@ -28,7 +26,7 @@
 #include "executive/op_state_ready.h"
 #include "executive/op_state_teleop.h"
 
-#include "ff_msgs/OpState.h"
+#include "ff_msgs/msg/op_state.hpp"
 
 namespace executive {
 /**

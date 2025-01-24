@@ -20,7 +20,7 @@
 #ifndef EXECUTIVE_EXECUTIVE_ACTION_CLIENT_H_
 #define EXECUTIVE_EXECUTIVE_ACTION_CLIENT_H_
 
-#include <actionlib/client/simple_action_client.h>
+#include <rclcpp_action/rclcpp_action.hpp>
 #include <ff_util/ff_action.h>
 #include <string>
 

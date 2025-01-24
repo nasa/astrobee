@@ -16,14 +16,16 @@
  * under the License.
  */
 
+#include <ff_common/ff_names.h>
+#include <ff_common/ff_ros.h>
 #include <ff_common/init.h>
 
-#include <ros/ros.h>
-#include <ff_msgs/CompressedFile.h>
-#include <ff_msgs/CompressedFileAck.h>
-#include <ff_msgs/CommandConstants.h>
-#include <ff_msgs/CommandStamped.h>
-#include <ff_common/ff_names.h>
+#include <ff_msgs/msg/compressed_file.hpp>
+#include <ff_msgs/msg/compressed_file_ack.hpp>
+#include <ff_msgs/msg/command_constants.hpp>
+#include <ff_msgs/msg/command_stamped.hpp>
+
+#include <ff_util/ff_timer.h>
 
 #include <boost/filesystem.hpp>
 
@@ -44,12 +46,20 @@
 namespace fs = boost::filesystem;
 namespace io = boost::iostreams;
 
+FF_DEFINE_LOGGER("data_to_disk_pub")
+
 DEFINE_string(compression, "none",
               "Type of compression [none, deflate, gzip]");
 
 constexpr uintmax_t kMaxSize = 128 * 1024;
-ros::Time data_pub_time;
-ros::Publisher command_pub;
+
+rclcpp::Time data_pub_time;
+
+Publisher<ff_msgs::msg::CommandStamped> command_pub;
+Publisher<ff_msgs::msg::CompressedFile> data_to_disk_pub;
+
+ff_msgs::msg::CompressedFile cf;
+ff_util::FreeFlyerTimer data_sub_connected_timer;
 
 bool ValidateCompression(const char* name, std::string const &value) {
   if (value == "none" || value == "gzip" || value == "deflate")
@@ -60,29 +70,35 @@ bool ValidateCompression(const char* name, std::string const &value) {
   return false;
 }
 
-void on_connect(ros::SingleSubscriberPublisher const& sub,
-                ff_msgs::CompressedFile &cf) {  // NOLINT
-  ROS_INFO("subscriber present: sending data to disk");
-  cf.header.stamp = ros::Time::now();
-  sub.publish(cf);
+void on_connect() {
+  FF_INFO("subscriber present: sending data to disk");
+  data_to_disk_pub->publish(cf);
 }
 
-void on_cf_ack(ff_msgs::CompressedFileAckConstPtr const& cf_ack) {
-  ROS_INFO("ack received: sending set data to disk command");
+void on_cf_ack(ff_msgs::msg::CompressedFileAck::SharedPtr const cf_ack) {
+  FF_INFO("ack received: sending set data to disk command");
   // compressed file ack is latched so we need to check the timestamp to make
   // sure this plan is being acked
   if (data_pub_time < cf_ack->header.stamp) {
-    ff_msgs::CommandStamped cmd;
-    cmd.cmd_name = ff_msgs::CommandConstants::CMD_NAME_SET_DATA_TO_DISK;
+    ff_msgs::msg::CommandStamped cmd;
+    cmd.cmd_name = ff_msgs::msg::CommandConstants::CMD_NAME_SET_DATA_TO_DISK;
     cmd.subsys_name = "Astrobee";
-    command_pub.publish(cmd);
-    ros::shutdown();
+    command_pub->publish(cmd);
+    rclcpp::shutdown();
+  }
+}
+
+void TimerCallback() {
+  if (data_to_disk_pub->get_subscription_count() > 0) {
+    on_connect();
+    data_sub_connected_timer.stop();
   }
 }
 
 int main(int argc, char** argv) {
   ff_common::InitFreeFlyerApplication(&argc, &argv);
-  ros::init(argc, argv, "data_to_disk_publisher");
+  rclcpp::init(argc, argv);
+  NodeHandle nh;
 
   if (!google::RegisterFlagValidator(&FLAGS_compression, &ValidateCompression)) {
     std::cerr << "Failed to register compression flag validator." << std::endl;
@@ -96,8 +112,6 @@ int main(int argc, char** argv) {
     return -1;
   }
 
-  ff_msgs::CompressedFile cf;
-  cf.header.seq = 1;
   cf.header.frame_id = "world";
 
   // Load the plan
@@ -107,13 +121,13 @@ int main(int argc, char** argv) {
 
   io::filtering_ostream out;
   if (FLAGS_compression == "deflate") {
-    cf.type = ff_msgs::CompressedFile::TYPE_DEFLATE;
+    cf.type = ff_msgs::msg::CompressedFile::TYPE_DEFLATE;
     out.push(io::zlib_compressor());
   } else if (FLAGS_compression == "gzip") {
-    cf.type = ff_msgs::CompressedFile::TYPE_GZ;
+    cf.type = ff_msgs::msg::CompressedFile::TYPE_GZ;
     out.push(io::gzip_compressor());
   } else {
-    cf.type = ff_msgs::CompressedFile::TYPE_NONE;
+    cf.type = ff_msgs::msg::CompressedFile::TYPE_NONE;
   }
   out.push(io::back_inserter(data));
 
@@ -135,23 +149,33 @@ int main(int argc, char** argv) {
     cf.file.push_back(static_cast<unsigned char>(c));
   }
 
-  ros::NodeHandle n;
-  data_pub_time = ros::Time::now();
+  data_pub_time = nh->get_clock()->now();
+
+  data_sub_connected_timer.createTimer(1.0, &TimerCallback, nh);
 
   // Publishes the data to disk to the executive using subscriber status
   // callbacks
-  ros::Publisher data_to_disk_pub = n.advertise<ff_msgs::CompressedFile>(
-                              TOPIC_COMMUNICATIONS_DDS_DATA, 10,
-                              std::bind(&on_connect, std::placeholders::_1, cf));
+  data_to_disk_pub = FF_CREATE_PUBLISHER(nh,
+                                         ff_msgs::msg::CompressedFile,
+                                         TOPIC_COMMUNICATIONS_DDS_DATA,
+                                         10);
 
-  // After the zones are received, commands a set zones to the executive
-  command_pub = n.advertise<ff_msgs::CommandStamped>(TOPIC_COMMAND, 5, false);
+  // After the zones are received, send command to set zones to the executive
+  command_pub = FF_CREATE_PUBLISHER(nh,
+                                    ff_msgs::msg::CommandStamped,
+                                    TOPIC_COMMAND,
+                                    5);
 
   // Subscriber that receives confirmation that the zones were received
-  ros::Subscriber cf_acK_pub = n.subscribe(TOPIC_MANAGEMENT_EXEC_CF_ACK, 10, &on_cf_ack);
+  Subscriber<ff_msgs::msg::CompressedFileAck> cf_acK_sub =
+      FF_CREATE_SUBSCRIBER(nh,
+                           ff_msgs::msg::CompressedFileAck,
+                           TOPIC_MANAGEMENT_EXEC_CF_ACK,
+                           10,
+                           std::bind(&on_cf_ack, std::placeholders::_1));
 
-  ROS_INFO("waiting for a subscriber...");
-  ros::spin();
+  FF_INFO("waiting for a subscriber...");
+  rclcpp::spin(nh);
 
   return 0;
 }

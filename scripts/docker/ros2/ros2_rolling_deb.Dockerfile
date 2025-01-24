@@ -4,7 +4,12 @@ ARG REMOTE=astrobee
 FROM ${REMOTE}/astrobee:latest-rolling_base-ubuntu${UBUNTU_VERSION}
 
 # install ros rolling + gazebo and dependencies
+RUN /bin/bash -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable `lsb_release -cs` main" > /etc/apt/sources.list.d/gazebo-stable.list' \
+    && wget https://packages.osrfoundation.org/gazebo.key -O - | sudo apt-key add -
+
 RUN apt-get update && apt-get install -q -y --fix-missing \
+    gazebo11 \
+    libgazebo11-dev \
     ros-rolling-desktop \
     binutils \
     mesa-utils \

@@ -20,17 +20,17 @@
 #ifndef EXECUTIVE_UTILS_SEQUENCER_SEQUENCER_H_
 #define EXECUTIVE_UTILS_SEQUENCER_SEQUENCER_H_
 
-#include <ros/console.h>
-#include <ros/time.h>
+#include <ff_common/ff_ros.h>
 
-#include <ff_msgs/AgentStateStamped.h>
-#include <ff_msgs/ControlState.h>
-#include <ff_msgs/CommandStamped.h>
-#include <ff_msgs/CompressedFile.h>
-#include <ff_msgs/ControlFeedback.h>
-#include <ff_msgs/PlanStatusStamped.h>
+#include <ff_msgs/action/control.hpp>
+#include <ff_msgs/msg/agent_state_stamped.hpp>
+#include <ff_msgs/msg/control_feedback.hpp>
+#include <ff_msgs/msg/control_state.hpp>
+#include <ff_msgs/msg/command_stamped.hpp>
+#include <ff_msgs/msg/compressed_file.hpp>
+#include <ff_msgs/msg/plan_status_stamped.hpp>
 
-#include <geometry_msgs/InertiaStamped.h>
+#include <geometry_msgs/msg/inertia_stamped.hpp>
 
 #include <jsonloader/command.h>
 #include <jsonloader/plan.h>
@@ -52,20 +52,20 @@ class Sequencer {
 
   // because unions can't even :/ OMG.
   ItemType CurrentType(bool reset_time = true) noexcept;
-  ff_msgs::CommandStamped::Ptr CurrentCommand() noexcept;
+  ff_msgs::msg::CommandStamped::SharedPtr CurrentCommand() noexcept;
   jsonloader::Segment CurrentSegment() noexcept;
 
   // give feedback about the end of the current item (command/segment)
   // this advances the current item if it is a successful ack.
   //
   // returns true if there are more command/segments in the plan.
-  bool Feedback(ff_msgs::AckCompletedStatus const& ack) noexcept;
+  bool Feedback(ff_msgs::msg::AckCompletedStatus const& ack) noexcept;
 
   // give feedback about an index in the current segment
-  void Feedback(ff_msgs::ControlFeedback const& progress) noexcept;
+  void Feedback(ff_msgs::msg::ControlFeedback const& progress) noexcept;
 
   // get the current plan status
-  ff_msgs::PlanStatusStamped const& plan_status() noexcept;
+  ff_msgs::msg::PlanStatusStamped const& plan_status() noexcept;
 
   // I can haz validity?
   bool valid() const noexcept;
@@ -76,24 +76,28 @@ class Sequencer {
   bool HaveOperatingLimits() const noexcept;
 
   // get the goods
-  geometry_msgs::InertiaStamped GetInertia() const noexcept;
-  bool GetOperatingLimits(ff_msgs::AgentStateStamped &state) const noexcept;
+  geometry_msgs::msg::InertiaStamped GetInertia() const noexcept;
+  bool GetOperatingLimits(ff_msgs::msg::AgentStateStamped &state) const noexcept;
+
+  void SetNodeHandle(NodeHandle nh);
 
  private:
-  int AppendStatus(ff_msgs::Status const& msg) noexcept;
+  int AppendStatus(ff_msgs::msg::Status const& msg) noexcept;
 
   void Reset() noexcept;
 
-  friend bool LoadPlan(ff_msgs::CompressedFile::ConstPtr const& cf,
+  friend bool LoadPlan(ff_msgs::msg::CompressedFile::SharedPtr const& cf,
                        Sequencer * seq);
 
   bool valid_;
 
   jsonloader::Plan plan_;
-  ff_msgs::PlanStatusStamped status_;
+  ff_msgs::msg::PlanStatusStamped status_;
+
+  NodeHandle nh_;
 
   // when we started the current item
-  ros::Time start_;
+  rclcpp::Time start_;
 
   // milestone is a station or segment within a plan
   int current_milestone_;
@@ -111,9 +115,9 @@ class Sequencer {
 
 // load a plan from a compressed file.
 // returns true if everything be cool, otherwise not.
-bool LoadPlan(ff_msgs::CompressedFile::ConstPtr const& cf, Sequencer *seq);
+bool LoadPlan(ff_msgs::msg::CompressedFile::SharedPtr const& cf, Sequencer *seq);
 
-std::vector<ff_msgs::ControlState>
+std::vector<ff_msgs::msg::ControlState>
 Segment2Trajectory(jsonloader::Segment const& segment);
 
 }  // end namespace sequencer

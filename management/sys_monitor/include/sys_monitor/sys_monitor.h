@@ -19,37 +19,35 @@
 #ifndef SYS_MONITOR_SYS_MONITOR_H_
 #define SYS_MONITOR_SYS_MONITOR_H_
 
-#include <nodelet/NodeletLoad.h>
-#include <nodelet/NodeletUnload.h>
-#include <pluginlib/class_list_macros.h>
-#include <ros/ros.h>
-#include <ros/package.h>
-
 #include <config_reader/config_reader.h>
-#include <ff_msgs/CommandConstants.h>
-#include <ff_msgs/CommandStamped.h>
-#include <ff_msgs/Heartbeat.h>
-#include <ff_msgs/Fault.h>
-#include <ff_msgs/FaultConfig.h>
-#include <ff_msgs/FaultInfo.h>
-#include <ff_msgs/FaultState.h>
-#include <ff_msgs/TimeSyncStamped.h>
-#include <ff_msgs/UnloadLoadNodelet.h>
+#include <ff_msgs/msg/command_constants.hpp>
+#include <ff_msgs/msg/command_stamped.hpp>
+#include <ff_msgs/msg/heartbeat.hpp>
+#include <ff_msgs/msg/fault.hpp>
+#include <ff_msgs/msg/fault_config.hpp>
+#include <ff_msgs/msg/fault_info.hpp>
+#include <ff_msgs/msg/fault_state.hpp>
+#include <ff_msgs/msg/time_sync_stamped.hpp>
+#include <ff_msgs/srv/unload_load_nodelet.hpp>
+
 #include <ff_common/ff_names.h>
 #include <ff_util/ff_faults.h>
-#include <ff_util/ff_nodelet.h>
+#include <ff_util/ff_component.h>
+#include <ff_util/ff_service.h>
+#include <composition_interfaces/srv/load_node.hpp>
+#include <composition_interfaces/srv/unload_node.hpp>
 
 #include <cmath>
 #include <map>
 #include <string>
 #include <vector>
 
-using ff_msgs::CommandArg;
+using ff_msgs::msg::CommandArg;
 
 namespace sys_monitor {
-class SysMonitor : public ff_util::FreeFlyerNodelet {
+class SysMonitor : public ff_util::FreeFlyerComponent {
  public:
-  SysMonitor();
+  explicit SysMonitor(const rclcpp::NodeOptions& options);
   ~SysMonitor();
 
   /** 
@@ -59,9 +57,9 @@ class SysMonitor : public ff_util::FreeFlyerNodelet {
    * @param time_occurred   time fault occurred
    */
   void AddFault(unsigned int fault_id, std::string const& fault_msg = "",
-                ros::Time time_occurred = ros::Time::now());
+                rclcpp::Time time_occurred = rclcpp::Time(0));
 
-  void AddFault(ff_msgs::Fault const& fault, bool check_added = false);
+  void AddFault(ff_msgs::msg::Fault const& fault, bool check_added = false);
 
   void ChangeFaultErrMsg(unsigned int fault_id, std::string err_msg);
 
@@ -72,12 +70,12 @@ class SysMonitor : public ff_util::FreeFlyerNodelet {
    public:
     Watchdog(SysMonitor *const sys_monitor,
              std::string const& node_name,
-             ros::Duration const& timeout,
+             double const& timeout,
              uint const allowed_misses,
                uint const fault_id);
     uint fault_id();
     uint misses_allowed();
-    ff_msgs::HeartbeatConstPtr previous_hb();
+    ff_msgs::msg::Heartbeat::SharedPtr previous_hb();
     bool hb_fault_occurring();
     bool heartbeat_started();
     bool unloaded();
@@ -91,11 +89,11 @@ class SysMonitor : public ff_util::FreeFlyerNodelet {
     void unloaded(bool is_unloaded);
     void ResetTimer();
     void StopTimer();
-    void previous_hb(ff_msgs::HeartbeatConstPtr hb);
-    void TimerCallBack(ros::TimerEvent const& te);
+    void previous_hb(ff_msgs::msg::Heartbeat::SharedPtr hb);
+    void TimerCallBack();
 
    private:
-    ros::Timer timer_;
+    ff_util::FreeFlyerTimer timer_;
     SysMonitor *const monitor_;
     uint missed_count_;
     uint const misses_allowed_;
@@ -106,7 +104,7 @@ class SysMonitor : public ff_util::FreeFlyerNodelet {
     std::string nodelet_manager_;
     std::string nodelet_name_;
     std::string nodelet_type_;
-    ff_msgs::HeartbeatConstPtr previous_hb_;
+    ff_msgs::msg::Heartbeat::SharedPtr previous_hb_;
   };
   typedef std::shared_ptr<Watchdog> WatchdogPtr;
 
@@ -114,11 +112,11 @@ class SysMonitor : public ff_util::FreeFlyerNodelet {
     Fault(std::string const& node_name_in,
           bool const blocking_in,
           bool const warning_in,
-          ff_msgs::CommandStampedPtr response_in);
+          std::shared_ptr<ff_msgs::msg::CommandStamped> response_in);
     std::string const node_name;
     bool const blocking;
     bool const warning;
-    ff_msgs::CommandStampedPtr response;
+    std::shared_ptr<ff_msgs::msg::CommandStamped> response;
   };
 
   /**
@@ -128,7 +126,7 @@ class SysMonitor : public ff_util::FreeFlyerNodelet {
    * @param allowed_misses  allowable missed watchdog timeouts
    * @param fault_id        unique fault id
    */
-  void AddWatchDog(ros::Duration const& timeout, std::string const& node_name,
+  void AddWatchDog(double const& timeout, std::string const& node_name,
                    uint const allowed_misses, uint const fault_id);
 
   void SetFaultState(unsigned int fault_id, bool adding_fault);
@@ -137,19 +135,19 @@ class SysMonitor : public ff_util::FreeFlyerNodelet {
    * Heartbeat callback will reset watchdog for the sender's node
    * @param heartbeat received message
    */
-  void HeartbeatCallback(ff_msgs::HeartbeatConstPtr const& heartbeat);
+  void HeartbeatCallback(const ff_msgs::msg::Heartbeat::SharedPtr heartbeat);
 
   void AssertFault(ff_util::FaultKeys enum_key,
                    std::string const& message,
-                   ros::Time time_fault_occurred = ros::Time::now());
+                   rclcpp::Time time_fault_occurred = rclcpp::Time(0));
 
   void ClearFault(ff_util::FaultKeys enum_key);
 
-  virtual void Initialize(ros::NodeHandle *nh);
+  virtual void Initialize(NodeHandle &nh);
 
   void OutputFaultTables();
 
-  void PublishCmd(ff_msgs::CommandStampedPtr cmd);
+  void PublishCmd(std::shared_ptr<ff_msgs::msg::CommandStamped> cmd);
 
   void PublishFaultConfig();
 
@@ -157,15 +155,15 @@ class SysMonitor : public ff_util::FreeFlyerNodelet {
 
   void PublishFaultResponse(unsigned int fault_id);
 
-  void PublishHeartbeatCallback(ros::TimerEvent const& te);
+  void PublishHeartbeatCallback();
 
   void PublishHeartbeat(bool initialization_fault = false);
 
   void PublishTimeDiff(float time_diff_sec);
 
-  void StartupTimerCallback(ros::TimerEvent const& te);
+  void StartupTimerCallback();
 
-  void ReloadNodeletTimerCallback(ros::TimerEvent const& te);
+  void ReloadNodeletTimerCallback();
   /**
    * Read params will read in all the parameters from the lua config files.
    * When reloading parameters with this function, the watch dog will be cleared
@@ -178,28 +176,30 @@ class SysMonitor : public ff_util::FreeFlyerNodelet {
    * If no command is specified, false is returned.
    */
   bool ReadCommand(config_reader::ConfigReader::Table *entry,
-                   ff_msgs::CommandStampedPtr cmd);
+                   std::shared_ptr<ff_msgs::msg::CommandStamped> cmd);
 
-  bool NodeletService(ff_msgs::UnloadLoadNodelet::Request &req,
-                      ff_msgs::UnloadLoadNodelet::Response &res);
-  int LoadNodelet(ff_msgs::UnloadLoadNodelet::Request &req);
+  bool NodeletService(const std::shared_ptr<ff_msgs::srv::UnloadLoadNodelet::Request> req,
+                      std::shared_ptr<ff_msgs::srv::UnloadLoadNodelet::Response> res);
+  int LoadNodelet(std::shared_ptr<ff_msgs::srv::UnloadLoadNodelet::Request> req);
   int UnloadNodelet(std::string const& nodelet, std::string const& manager);
 
-  ff_msgs::FaultState fault_state_;
-  ff_msgs::FaultConfig fault_config_;
-  ff_msgs::Heartbeat heartbeat_;
+  ff_msgs::msg::FaultState fault_state_;
+  ff_msgs::msg::FaultConfig fault_config_;
+  ff_msgs::msg::Heartbeat heartbeat_;
 
-  nodelet::NodeletLoad load_service_;
-  nodelet::NodeletUnload unload_service_;
+  ff_util::FreeFlyerService<composition_interfaces::srv::LoadNode> load_service_;
+  ff_util::FreeFlyerService<composition_interfaces::srv::UnloadNode> unload_service_;
 
-  ros::NodeHandle nh_;
-  ros::Publisher pub_cmd_, pub_heartbeat_;
-  ros::Publisher pub_fault_config_, pub_fault_state_;
-  ros::Publisher pub_time_sync_;
-  ros::Timer reload_params_timer_, startup_timer_, reload_nodelet_timer_;
-  ros::Timer heartbeat_timer_;
-  ros::ServiceServer unload_load_nodelet_service_;
-  ros::Subscriber sub_hb_;
+  NodeHandle nh_;
+  Publisher<ff_msgs::msg::CommandStamped> pub_cmd_;
+  Publisher<ff_msgs::msg::Heartbeat> pub_heartbeat_;
+  Publisher<ff_msgs::msg::FaultConfig> pub_fault_config_;
+  Publisher<ff_msgs::msg::FaultState> pub_fault_state_;
+  Publisher<ff_msgs::msg::TimeSyncStamped> pub_time_sync_;
+  ff_util::FreeFlyerTimer reload_params_timer_, startup_timer_, reload_nodelet_timer_;
+  ff_util::FreeFlyerTimer heartbeat_timer_;
+  rclcpp::Service<ff_msgs::srv::UnloadLoadNodelet>::SharedPtr unload_load_nodelet_service_;
+  Subscriber<ff_msgs::msg::Heartbeat> sub_hb_;
 
   std::map<unsigned int, std::shared_ptr<Fault>> all_faults_;
   std::map<std::string, WatchdogPtr> watch_dogs_;
@@ -219,6 +219,7 @@ class SysMonitor : public ff_util::FreeFlyerNodelet {
   unsigned int startup_time_, reload_nodelet_timeout_, heartbeat_pub_rate_;
   float time_drift_thres_sec_;
 };
+typedef std::unique_ptr<SysMonitor> SysMonitorPtr;
 }  // namespace sys_monitor
 
 #endif  // SYS_MONITOR_SYS_MONITOR_H_

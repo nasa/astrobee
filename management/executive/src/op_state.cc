@@ -40,13 +40,13 @@ void OpState::SetExec(Executive *const exec) {
   }
 }
 
-OpState* OpState::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
-  ROS_ERROR("Executive: Handle command not implemented yet!");
+OpState* OpState::HandleCmd(ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
+  exec_->Error("Executive: Handle command not implemented yet!");
   return this;
 }
 
 // Handles commands that are excepted in every op state
-OpState* OpState::HandleCmd(ff_msgs::CommandStampedPtr const& cmd,
+OpState* OpState::HandleCmd(ff_msgs::msg::CommandStamped::SharedPtr const cmd,
                             bool& completed,
                             bool& successful) {
   completed = true;
@@ -86,18 +86,18 @@ OpState* OpState::HandleResult(ff_util::FreeFlyerActionState::Enum const& state,
                                std::string const& result_response,
                                std::string const& cmd_id,
                                Action const& action) {
-  ROS_ERROR("Executive: Handle action result not implemented yet!");
+  exec_->Error("Executive: Handle action result not implemented yet!");
   return this;
 }
 
 OpState* OpState::HandleWaitCallback() {
-  ROS_ERROR("Executive: Handle wait callback not implemented yet!");
+  exec_->Error("Executive: Handle wait callback not implemented yet!");
   return this;
 }
 
-OpState* OpState::HandleGuestScienceAck(ff_msgs::AckStampedConstPtr const&
-                                                                          ack) {
-  ROS_ERROR("Executive: Handle guest science ack not implemented yet!");
+OpState* OpState::HandleGuestScienceAck(
+                                ff_msgs::msg::AckStamped::SharedPtr const ack) {
+  exec_->Error("Executive: Handle guest science ack not implemented yet!");
   return this;
 }
 
@@ -184,52 +184,52 @@ std::string OpState::GetActionString(Action const& action) {
       action_str = "Unperch";
       break;
     default:
-      ROS_ERROR("Executive: Action unknown or wrong in action result.");
+      exec_->Error("Executive: Action unknown or wrong in action result.");
   }
 
   return action_str;
 }
 
-bool OpState::PausePlan(ff_msgs::CommandStampedPtr const& cmd) {
+bool OpState::PausePlan(ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   AckCmd(cmd->cmd_id,
-         ff_msgs::AckCompletedStatus::EXEC_FAILED,
+         ff_msgs::msg::AckCompletedStatus::EXEC_FAILED,
          ("Pause plan not accepted in opstate " + name() + "!"));
   return false;
 }
 
 OpState* OpState::TransitionToState(unsigned char id) {
-  if (id == ff_msgs::OpState::READY) {
+  if (id == ff_msgs::msg::OpState::READY) {
     return OpStateRepo::Instance()->ready()->StartupState();
-  } else if (id == ff_msgs::OpState::PLAN_EXECUTION) {
+  } else if (id == ff_msgs::msg::OpState::PLAN_EXECUTION) {
     return OpStateRepo::Instance()->plan_exec()->StartupState();
-  } else if (id == ff_msgs::OpState::TELEOPERATION) {
+  } else if (id == ff_msgs::msg::OpState::TELEOPERATION) {
     return OpStateRepo::Instance()->teleop()->StartupState();
-  } else if (id == ff_msgs::OpState::AUTO_RETURN) {
+  } else if (id == ff_msgs::msg::OpState::AUTO_RETURN) {
     return OpStateRepo::Instance()->auto_return()->StartupState();
-  } else if (id == ff_msgs::OpState::FAULT) {
+  } else if (id == ff_msgs::msg::OpState::FAULT) {
     return OpStateRepo::Instance()->fault()->StartupState();
   }
 
-  ROS_WARN("Executive: unknown state id in transition to state.");
+  exec_->Warn("Executive: unknown state id in transition to state.");
   return this;
 }
 
 void OpState::SetPlanStatus(bool successful, std::string err_msg) {
-  exec_->SetPlanExecState(ff_msgs::ExecState::PAUSED);
+  exec_->SetPlanExecState(ff_msgs::msg::ExecState::PAUSED);
   if (successful) {
     // Ack run plan command as cancelled since we are pausing the plan until the
     // fault is cleared
     AckCmd(exec_->GetRunPlanCmdId(),
-           ff_msgs::AckCompletedStatus::CANCELED,
+           ff_msgs::msg::AckCompletedStatus::CANCELED,
            "Executive had to execute the fault command.");
     exec_->AckCurrentPlanItem();
-    exec_->PublishPlanStatus(ff_msgs::AckStatus::QUEUED);
+    exec_->PublishPlanStatus(ff_msgs::msg::AckStatus::QUEUED);
   } else {
     err_msg.append(" Executive also received a fault!");
     AckCmd(exec_->GetRunPlanCmdId(),
-           ff_msgs::AckCompletedStatus::EXEC_FAILED,
+           ff_msgs::msg::AckCompletedStatus::EXEC_FAILED,
            err_msg);
-    exec_->PublishPlanStatus(ff_msgs::AckStatus::REQUEUED);
+    exec_->PublishPlanStatus(ff_msgs::msg::AckStatus::REQUEUED);
   }
 }
 

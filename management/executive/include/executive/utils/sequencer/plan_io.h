@@ -21,7 +21,7 @@
 #ifndef EXECUTIVE_UTILS_SEQUENCER_PLAN_IO_H_
 #define EXECUTIVE_UTILS_SEQUENCER_PLAN_IO_H_
 
-#include <ff_msgs/CompressedFile.h>
+#include <ff_msgs/msg/compressed_file.hpp>
 
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/device/back_inserter.hpp>

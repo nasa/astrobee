@@ -59,12 +59,14 @@ def generate_launch_description():
                  package='localization_manager',
                  plugin='localization_manager::LocalizationManagerComponent',
                  name='localization_manager',
-                extra_arguments=[{'use_intra_process_comms': False, 'use_sim_time': True}]),
+                 parameters=[{'use_sim_time': True}],
+                extra_arguments=[{'use_intra_process_comms': False}]),
             ComposableNode(
                 package='ground_truth_localizer',
                 plugin='ground_truth_localizer::GroundTruthLocalizerComponent',
                 name='ground_truth_localizer',
-                extra_arguments=[{'use_intra_process_comms': False, 'use_sim_time': True}]),
+                parameters=[{'use_sim_time': True}],
+                extra_arguments=[{'use_intra_process_comms': False}]),
             # ComposableNode(
             #     package='image_sampler',
             #     plugin='image_sampler::ImageSampler',
@@ -85,7 +87,8 @@ def generate_launch_description():
                 package='localization_manager',
                 plugin='localization_manager::LocalizationManagerNodelet',
                 name='localization_manager',
-                extra_arguments=[{'use_intra_process_comms': False, 'use_sim_time': True}]),
+                parameters=[{'use_sim_time': True}],
+                extra_arguments=[{'use_intra_process_comms': False}]),
             # ComposableNode(
             #     package='image_sampler',
             #     plugin='image_sampler::ImageSampler',
@@ -226,25 +229,28 @@ def generate_launch_description():
                 package='mapper',
                 plugin='mapper::MapperComponent',
                 name='mapper',
-                extra_arguments=[{'use_intra_process_comms': False, 'use_sim_time': True}]),
+                parameters=[{'use_sim_time': True}],
+                extra_arguments=[{'use_intra_process_comms': False}]),
             ]
         ),
         ComposableNodeContainer(
         name='mlp_management',
         namespace='',
         package='rclcpp_components',
-        executable='component_container',
+        executable='component_container_mt',
         composable_node_descriptions=[
-            # ComposableNode(
-            #     package='executive',
-            #     plugin='executive::Executive',
-            #     name='executive',
-            #     extra_arguments=[{'use_intra_process_comms': True}]),
-            # ComposableNode(
-            #     package='access_control',
-            #     plugin='access_control::AccessControl',
-            #     name='access_control',
-            #     extra_arguments=[{'use_intra_process_comms': True}]),
+            ComposableNode(
+                package='executive',
+                plugin='executive::Executive',
+                name='executive',
+                parameters=[{'use_sim_time': True}],                
+                extra_arguments=[{'use_intra_process_comms': False}]),
+            ComposableNode(
+                package='access_control',
+                plugin='access_control::AccessControl',
+                name='access_control',
+                parameters=[{'use_sim_time': True}],
+                extra_arguments=[{'use_intra_process_comms': False}]),
             ]
         ),
         ComposableNodeContainer(
@@ -291,11 +297,12 @@ def generate_launch_description():
         executable='component_container',
         condition=UnlessCondition(LaunchConfiguration("drivers")),
         composable_node_descriptions=[
-            # ComposableNode(
-            #     package='sys_monitor',
-            #     plugin='sys_monitor::SysMonitor',
-            #     name='sys_monitor',
-            #     extra_arguments=[{'use_intra_process_comms': True}]),
+             ComposableNode(
+                 package='sys_monitor',
+                 plugin='sys_monitor::SysMonitor',
+                 name='sys_monitor',
+                 parameters=[{'use_sim_time': True}],
+                 extra_arguments=[{'use_intra_process_comms': False}]),
             ]
         ),
         ComposableNodeContainer(
@@ -348,17 +355,20 @@ def generate_launch_description():
                 package='choreographer',
                 plugin='choreographer::ChoreographerComponent',
                 name='choreographer',
-                extra_arguments=[{'use_intra_process_comms': False, 'use_sim_time': True}]),
+                parameters=[{'use_sim_time': True}],                
+                extra_arguments=[{'use_intra_process_comms': False}]),
             ComposableNode(
                 package='planner_trapezoidal',
                 plugin='planner_trapezoidal::PlannerTrapezoidalComponent',
                 name='planner_trapezoidal',
-                extra_arguments=[{'use_intra_process_comms': False, 'use_sim_time': True}]),
+                parameters=[{'use_sim_time': True}],                
+                extra_arguments=[{'use_intra_process_comms': False}]),
             ComposableNode(
                 package='framestore',
                 plugin='mobility::FrameStore',
                 name='framestore',
-                extra_arguments=[{'use_intra_process_comms': False, 'use_sim_time': True}]),
+                parameters=[{'use_sim_time': True}],                
+                extra_arguments=[{'use_intra_process_comms': False}]),
             ]
         ),
         ComposableNodeContainer(
@@ -370,7 +380,8 @@ def generate_launch_description():
             ComposableNode(
                 package='arm',
                 plugin='arm::ArmComponent',
-                name='arm'),
+                name='arm',
+                parameters=[{'use_sim_time': True}] ),
             ]
         ),
         ComposableNodeContainer(
@@ -382,8 +393,10 @@ def generate_launch_description():
             ComposableNode(
                 package='dock',
                 plugin='dock::DockComponent',
-                name='dock'),
-                #extra_arguments=[{'use_intra_process_comms': True}]),
+                name='dock',
+                parameters=[{'use_sim_time': True}]                
+                #extra_arguments=[{'use_intra_process_comms': False}]
+              ),
             ]
         ),
         ComposableNodeContainer(
@@ -395,8 +408,10 @@ def generate_launch_description():
             ComposableNode(
                 package='perch',
                 plugin='perch::PerchComponent',
-                name='perch'),
-                #extra_arguments=[{'use_intra_process_comms': True}]),
+                name='perch',
+                parameters=[{'use_sim_time': True}],                                
+                #extra_arguments=[{'use_intra_process_comms': True}]
+              ),
             ]
         ),
         ComposableNodeContainer(
@@ -423,7 +438,8 @@ def generate_launch_description():
                 package='states',
                 plugin='states::StatesComponent',
                 name='states',
-                extra_arguments=[{'use_intra_process_comms': False, 'use_sim_time': True}]),
+                parameters=[{'use_sim_time': True}],                
+                extra_arguments=[{'use_intra_process_comms': False}]),
             ]
         ),
     ])

@@ -19,7 +19,9 @@
 #include "executive/op_state_teleop.h"
 
 namespace executive {
-OpState* OpStateTeleop::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
+
+OpState* OpStateTeleop::HandleCmd(
+                            ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   bool completed = false, successful = false;
   std::string err_msg;
 
@@ -81,10 +83,13 @@ OpState* OpStateTeleop::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
     exec_->SetZones(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SIMPLE_MOVE6DOF) {
     // Make sure we aren't docked, docking, perched, or perching
-    if (exec_->GetMobilityState().state != ff_msgs::MobilityState::DOCKING &&
-        exec_->GetMobilityState().state != ff_msgs::MobilityState::PERCHING) {
+    if (exec_->GetMobilityState().state !=
+                                        ff_msgs::msg::MobilityState::DOCKING &&
+        exec_->GetMobilityState().state !=
+                                      ff_msgs::msg::MobilityState::PERCHING) {
       // If flying, need to stop
-      if (exec_->GetMobilityState().state == ff_msgs::MobilityState::FLYING) {
+      if (exec_->GetMobilityState().state ==
+                                        ff_msgs::msg::MobilityState::FLYING) {
         exec_->CancelAction(MOVE, "move");
         // Need to stop before we can issue the next move
         exec_->FillMotionGoal(STOP);
@@ -100,7 +105,7 @@ OpState* OpStateTeleop::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
 
         if (!exec_->ConfigureMobility(false, err_msg)) {
           AckCmd(cmd->cmd_id,
-                 ff_msgs::AckCompletedStatus::EXEC_FAILED,
+                 ff_msgs::msg::AckCompletedStatus::EXEC_FAILED,
                  err_msg);
           return this;
         }
@@ -109,7 +114,7 @@ OpState* OpStateTeleop::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
       }
     } else {
       AckCmd(cmd->cmd_id,
-             ff_msgs::AckCompletedStatus::EXEC_FAILED,
+             ff_msgs::msg::AckCompletedStatus::EXEC_FAILED,
              "Cannot execute a move when docked, docking, perched or perching");
     }
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SKIP_PLAN_STEP) {
@@ -127,7 +132,9 @@ OpState* OpStateTeleop::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
   } else {
     err_msg = "Command " + cmd->cmd_name + " not accepted in op state" +
                                                                     " teleop.";
-    AckCmd(cmd->cmd_id, ff_msgs::AckCompletedStatus::EXEC_FAILED, err_msg);
+    AckCmd(cmd->cmd_id,
+           ff_msgs::msg::AckCompletedStatus::EXEC_FAILED,
+           err_msg);
   }
 
   // Check if actions are running. If they aren't, go back to ready mode
@@ -165,7 +172,7 @@ OpState* OpStateTeleop::HandleResult(
 
         if (!exec_->ConfigureMobility(false, err_msg)) {
           AckCmd(move_cmd_->cmd_id,
-                 ff_msgs::AckCompletedStatus::EXEC_FAILED,
+                 ff_msgs::msg::AckCompletedStatus::EXEC_FAILED,
                  err_msg);
           move_cmd_ = NULL;
           return OpStateRepo::Instance()->ready()->StartupState();
@@ -197,7 +204,7 @@ OpState* OpStateTeleop::HandleResult(
     if (cmd_id == "plan") {
       SetPlanStatus(false, err_msg);
     } else {
-      AckCmd(cmd_id, ff_msgs::AckCompletedStatus::EXEC_FAILED, err_msg);
+      AckCmd(cmd_id, ff_msgs::msg::AckCompletedStatus::EXEC_FAILED, err_msg);
     }
   }
 

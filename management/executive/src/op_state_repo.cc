@@ -31,13 +31,13 @@ void OpStateRepo::SetExec(Executive *const exec) {
 }
 
 OpStateRepo::OpStateRepo() {
-  ready_.reset(new OpStateReady("ready", ff_msgs::OpState::READY));
+  ready_.reset(new OpStateReady("ready", ff_msgs::msg::OpState::READY));
   plan_exec_.reset(new OpStatePlanExec("plan execution",
-        ff_msgs::OpState::PLAN_EXECUTION));
+        ff_msgs::msg::OpState::PLAN_EXECUTION));
   teleop_.reset(new OpStateTeleop("teleoperation",
-        ff_msgs::OpState::TELEOPERATION));
+        ff_msgs::msg::OpState::TELEOPERATION));
   auto_return_.reset(new OpStateAutoReturn("auto return",
-        ff_msgs::OpState::AUTO_RETURN));
-  fault_.reset(new OpStateFault("fault", ff_msgs::OpState::FAULT));
+        ff_msgs::msg::OpState::AUTO_RETURN));
+  fault_.reset(new OpStateFault("fault", ff_msgs::msg::OpState::FAULT));
 }
 }  // namespace executive

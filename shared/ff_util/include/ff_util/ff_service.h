@@ -130,7 +130,7 @@ class FreeFlyerServiceClient {
   }
 
   bool call(FreeFlyerService<ServiceSpec> & service) {
-    return call(service.request.get(), service.response);
+    return call(service.request, service.response);
   }
 
   bool exists() {

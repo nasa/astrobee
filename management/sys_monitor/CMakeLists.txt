@@ -15,26 +15,24 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5)
 project(sys_monitor)
 
 ## Compile as C++14, supported in ROS Kinetic and newer
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 14)
+endif()
 add_compile_options(-std=c++14)
-add_definitions(-DROS1)
+set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror -O3 -fPIC" )
 
-## Find catkin macros and libraries
-find_package(catkin2 REQUIRED COMPONENTS
-  roscpp
-  ff_util
-  ff_msgs
-  nodelet
-  config_reader
-)
+## Find ament and libraries
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(rclcpp_components REQUIRED)
+find_package(ff_msgs REQUIRED)
+find_package(config_reader REQUIRED)
+find_package(ff_util REQUIRED)
 
-catkin_package(
-  LIBRARIES sys_monitor
-  DEPENDS roscpp ff_util ff_msgs nodelet config_reader
-)
 
 ###########
 ## Build ##
@@ -43,70 +41,78 @@ catkin_package(
 # Specify additional locations of header files
 include_directories(
   include
-  ${catkin_INCLUDE_DIRS}
 )
 
 # Declare C++ libraries
-add_library(sys_monitor
+add_library(sys_monitor SHARED
   src/sys_monitor.cc
 )
-add_dependencies(sys_monitor ${catkin_EXPORTED_TARGETS})
-target_link_libraries(sys_monitor ${catkin_LIBRARIES})
+target_compile_definitions(sys_monitor PRIVATE "COMPOSITION_BUILDING_DLL")
+ament_target_dependencies(sys_monitor rclcpp rclcpp_components ff_msgs config_reader ff_util)
+rclcpp_components_register_nodes(sys_monitor "sys_monitor::SysMonitor")
 
 ## Declare a C++ executable: fault_tester
-add_executable(fault_tester tools/fault_tester.cc)
-add_dependencies(fault_tester ${catkin_EXPORTED_TARGETS})
-target_link_libraries(fault_tester
-  sys_monitor gflags glog ${catkin_LIBRARIES})
+#add_executable(fault_tester tools/fault_tester.cc)
+#ament_target_dependencies(fault_tester rclcpp rclcpp_components ff_msgs config_reader ff_util)
+#target_link_libraries(fault_tester sys_monitor gflags glog)
 
-if(CATKIN_ENABLE_TESTING)
-  find_package(rostest REQUIRED)
-  # System monitor initialization fault tester
-  add_rostest_gtest(test_init_sys_monitor
-    test/test_init_sys_monitor.test
-    test/test_init_sys_monitor.cc
-  )
 
-  target_link_libraries(test_init_sys_monitor
-    ${catkin_LIBRARIES} glog
-  )
-  # System monitor tester
-  add_rostest_gtest(test_sys_monitor
-    test/test_sys_monitor.test
-    test/test_sys_monitor.cc
-  )
+#if(CATKIN_ENABLE_TESTING)
+#  find_package(rostest REQUIRED)
+#  # System monitor initialization fault tester
+#  add_rostest_gtest(test_init_sys_monitor
+#    test/test_init_sys_monitor.test
+#    test/test_init_sys_monitor.cc
+#  )
 
-  target_link_libraries(test_sys_monitor
-    ${catkin_LIBRARIES} glog
-  )
-endif()
+#  target_link_libraries(test_init_sys_monitor
+#    ${catkin_LIBRARIES} glog
+#  )
+#  # System monitor tester
+#  add_rostest_gtest(test_sys_monitor
+#    test/test_sys_monitor.test
+#    test/test_sys_monitor.cc
+#  )
+
+#  target_link_libraries(test_sys_monitor
+#    ${catkin_LIBRARIES} glog
+#  )
+#endif()
 
 #############
 ## Install ##
 #############
 
+ament_export_include_directories(include)
+
 # Mark libraries for installation
 install(TARGETS ${PROJECT_NAME}
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+  EXPORT sys_monitor
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
 )
 
-# Mark nodelet_plugin for installation
-install(FILES nodelet_plugins.xml
-        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-)
 
 # Install C++ executables
-install(TARGETS fault_tester DESTINATION bin)
-install(CODE "execute_process(
-  COMMAND ln -s ../../bin/fault_tester share/${PROJECT_NAME}
-  WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
-  OUTPUT_QUIET
-  ERROR_QUIET
-  )")
+#install(TARGETS fault_tester RUNTIME DESTINATION lib/${PROJECT_NAME})
+#install(CODE "execute_process(
+#  COMMAND ln -s ../../bin/fault_tester share/${PROJECT_NAME}
+#  WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
+#  OUTPUT_QUIET
+#  ERROR_QUIET
+#  )")
+
+install(DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION include
+  FILES_MATCHING PATTERN "*.h"
+  PATTERN ".svn" EXCLUDE  
+)
 
 # Mark launch files for installation
-install(DIRECTORY launch/
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+install(DIRECTORY launch
+  DESTINATION share/${PROJECT_NAME}
   PATTERN ".svn" EXCLUDE)
+
+ament_package()

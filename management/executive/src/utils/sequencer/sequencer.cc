@@ -26,10 +26,12 @@
 
 #include <jsonloader/planio.h>
 
-#include <ff_msgs/CommandConstants.h>
+#include <ff_msgs/msg/command_constants.hpp>
 
 #include <cstdint>
 #include <unordered_map>
+
+FF_DEFINE_LOGGER("sequencer");
 
 namespace sequencer {
 
@@ -45,9 +47,9 @@ const char * kWaypointTypes[] = {
 };
 */
 
-ff_msgs::ControlState
+ff_msgs::msg::ControlState
 Waypoint2TrajectoryPoint(jsonloader::Waypoint const& w) {
-  ff_msgs::ControlState p;
+  ff_msgs::msg::ControlState p;
   sv::pose_vel_accel::StateVector sv;
   sv.vec = w.cwaypoint();
 
@@ -66,13 +68,16 @@ Waypoint2TrajectoryPoint(jsonloader::Waypoint const& w) {
   p.accel.angular = msg_conversions::eigen_to_ros_vector(
     sv::pose_vel_accel::GetAngularAcceleration(sv.vec).cast<double>());
 
-  p.when.nsec = w.ctime().nsec();
+  p.when.nanosec = w.ctime().nsec();
   p.when.sec = w.ctime().sec();
   return p;
 }
 
-inline ff_msgs::Status MakeStatus(std::uint8_t status, int point, int command, int duration) {
-  ff_msgs::Status s;
+inline ff_msgs::msg::Status MakeStatus(std::uint8_t status,
+                                        int point,
+                                        int command,
+                                        int duration) {
+  ff_msgs::msg::Status s;
   s.status.status = status;
   s.point = point;
   s.command = command;
@@ -82,7 +87,8 @@ inline ff_msgs::Status MakeStatus(std::uint8_t status, int point, int command, i
 
 }  // namespace
 
-bool LoadPlan(ff_msgs::CompressedFile::ConstPtr const& cf, Sequencer *seq) {
+bool LoadPlan(ff_msgs::msg::CompressedFile::SharedPtr const& cf,
+              Sequencer *seq) {
   std::string out;
 
   // sanity check
@@ -111,9 +117,9 @@ bool LoadPlan(ff_msgs::CompressedFile::ConstPtr const& cf, Sequencer *seq) {
   return true;
 }
 
-std::vector<ff_msgs::ControlState>
+std::vector<ff_msgs::msg::ControlState>
 Segment2Trajectory(jsonloader::Segment const& seg) {
-  std::vector<ff_msgs::ControlState> traj;
+  std::vector<ff_msgs::msg::ControlState> traj;
   traj.reserve(seg.waypoints().size());
   for (jsonloader::Waypoint const& wp : seg.waypoints()) {
     traj.push_back(Waypoint2TrajectoryPoint(wp));
@@ -144,12 +150,12 @@ bool Sequencer::HaveInertia() const noexcept {
   return plan_.inertia_configuration().valid();
 }
 
-geometry_msgs::InertiaStamped Sequencer::GetInertia() const noexcept {
-  geometry_msgs::InertiaStamped i;
+geometry_msgs::msg::InertiaStamped Sequencer::GetInertia() const noexcept {
+  geometry_msgs::msg::InertiaStamped i;
   jsonloader::InertiaConfiguration const& ic = plan_.inertia_configuration();
 
   if (!ic.valid()) {
-    ROS_WARN("requesting inertia, but no inertia was provided");
+    FF_WARN("requesting inertia, but no inertia was provided");
   }
 
   i.header.frame_id = ic.name();
@@ -173,10 +179,11 @@ bool Sequencer::HaveOperatingLimits() const noexcept {
   return plan_.operating_limits().valid();
 }
 
-bool Sequencer::GetOperatingLimits(ff_msgs::AgentStateStamped &state) const noexcept {
+bool Sequencer::GetOperatingLimits(
+                        ff_msgs::msg::AgentStateStamped &state) const noexcept {
   jsonloader::OperatingLimits const & ol = plan_.operating_limits();
   if (!ol.valid()) {
-    ROS_WARN("requesting operating limits, but none provided.");
+    FF_WARN("requesting operating limits, but none provided.");
     return false;
   }
 
@@ -191,6 +198,10 @@ bool Sequencer::GetOperatingLimits(ff_msgs::AgentStateStamped &state) const noex
   state.target_angular_accel = ol.angular_accel();
 
   return true;
+}
+
+void Sequencer::SetNodeHandle(NodeHandle nh) {
+  nh_ = nh;
 }
 
 ItemType Sequencer::CurrentType(bool reset_time) noexcept {
@@ -210,11 +221,12 @@ ItemType Sequencer::CurrentType(bool reset_time) noexcept {
     jsonloader::Milestone const& m = plan_.GetMilestone(current_milestone_);
     jsonloader::Station const& s = dynamic_cast<jsonloader::Station const&>(m);
     if (s.commands().size() == 0) {
-      AppendStatus(MakeStatus(ff_msgs::AckCompletedStatus::OK, 0, -1, 0));
+      AppendStatus(MakeStatus(ff_msgs::msg::AckCompletedStatus::OK, 0, -1, 0));
       current_milestone_++;
     } else {
       station_idx_ =
-        AppendStatus(MakeStatus(ff_msgs::AckCompletedStatus::NOT, 0, -1, 0));
+        AppendStatus(MakeStatus(ff_msgs::msg::AckCompletedStatus::NOT,
+                                0, -1, 0));
       if (current_command_ <= 0)
         current_command_ = 0;
     }
@@ -226,7 +238,7 @@ ItemType Sequencer::CurrentType(bool reset_time) noexcept {
 
   // http://imgur.com/vGyMAnB
   if (reset_time)
-    start_ = ros::Time::now();
+    start_ = nh_->get_clock()->now();
 
   if (plan_.GetMilestone(current_milestone_).IsSegment())
     return ItemType::SEGMENT;
@@ -238,7 +250,7 @@ ItemType Sequencer::CurrentType(bool reset_time) noexcept {
 jsonloader::Segment Sequencer::CurrentSegment() noexcept {
   jsonloader::Milestone const& m = plan_.GetMilestone(current_milestone_);
   if (!m.IsSegment()) {
-    ROS_WARN("requesting a segment, but current milestone is not a segment.");
+    FF_WARN("requesting a segment, but current milestone is not a segment");
     return jsonloader::Segment();
   }
 
@@ -247,8 +259,9 @@ jsonloader::Segment Sequencer::CurrentSegment() noexcept {
   return dynamic_cast<jsonloader::Segment const&>(m);
 }
 
-ff_msgs::CommandStamped::Ptr Sequencer::CurrentCommand() noexcept {
-  ff_msgs::CommandStamped::Ptr cmd(new ff_msgs::CommandStamped());
+ff_msgs::msg::CommandStamped::SharedPtr Sequencer::CurrentCommand() noexcept {
+  ff_msgs::msg::CommandStamped::SharedPtr cmd =
+                              std::make_shared<ff_msgs::msg::CommandStamped>();
   cmd->subsys_name = "INVALID";
   cmd->cmd_name = "INVALID";
   cmd->cmd_id = "plan";
@@ -257,7 +270,7 @@ ff_msgs::CommandStamped::Ptr Sequencer::CurrentCommand() noexcept {
 
   jsonloader::Milestone const& m = plan_.GetMilestone(current_milestone_);
   if (!m.IsStation()) {
-    ROS_WARN("requesting a command, but current milestone is not a station.");
+    FF_WARN("requesting a command, but current milestone is not a station");
     cmd.reset();
     return cmd;
   }
@@ -267,15 +280,15 @@ ff_msgs::CommandStamped::Ptr Sequencer::CurrentCommand() noexcept {
 
   auto it = internal::kCmdGenMap.find(plan_cmd->type());
   if (it == internal::kCmdGenMap.end()) {
-    ROS_ERROR("do not know how to generate command %s",
-              plan_cmd->type().data());
+    FF_ERROR("do not know how to generate command %s",
+             plan_cmd->type().data());
     cmd.reset();
     return cmd;
   }
 
   if (!it->second.fn(plan_cmd, cmd.get())) {
-    ROS_ERROR("error converting command %s",
-              plan_cmd->type().data());
+    FF_ERROR("error converting command %s",
+             plan_cmd->type().data());
     cmd.reset();
     return cmd;
   }
@@ -286,13 +299,13 @@ ff_msgs::CommandStamped::Ptr Sequencer::CurrentCommand() noexcept {
   return cmd;
 }
 
-bool Sequencer::Feedback(ff_msgs::AckCompletedStatus const& ack) noexcept {
+bool Sequencer::Feedback(ff_msgs::msg::AckCompletedStatus const& ack) noexcept {
   // WE DUN!
-  ros::Time end = ros::Time::now();
-  ros::Duration d = end - start_;
+  rclcpp::Time end = nh_->get_clock()->now();
+  rclcpp::Duration d = end - start_;
 
   // update the current thing's status
-  AppendStatus(MakeStatus(ack.status, current_milestone_, current_command_, d.sec));
+  AppendStatus(MakeStatus(ack.status, current_milestone_, current_command_, d.seconds()));
 
   // skip ahead
   jsonloader::Milestone const& m = plan_.GetMilestone(current_milestone_);
@@ -303,7 +316,7 @@ bool Sequencer::Feedback(ff_msgs::AckCompletedStatus const& ack) noexcept {
   } else {
     jsonloader::Station const& s = dynamic_cast<jsonloader::Station const&>(m);
     current_command_++;
-    station_duration_ += d.sec;
+    station_duration_ += d.seconds();
 
     if (static_cast<std::size_t>(current_command_) < s.commands().size())
       return true;
@@ -333,25 +346,26 @@ bool Sequencer::Feedback(ff_msgs::AckCompletedStatus const& ack) noexcept {
     // log a temporary entry for the current station, keep track of the index
     station_idx_ =
         AppendStatus(  // feel like lisp yet?
-            MakeStatus(ff_msgs::AckCompletedStatus::NOT,
+            MakeStatus(ff_msgs::msg::AckCompletedStatus::NOT,
                        current_milestone_, -1, 0));
     station_duration_ = 0;
     return true;
   }
 
   // update plan status for the skipped station, CUZ WE ON FIAH
-  AppendStatus(MakeStatus(ff_msgs::AckCompletedStatus::OK,
+  AppendStatus(MakeStatus(ff_msgs::msg::AckCompletedStatus::OK,
                           current_milestone_, -1, 0));
 
   current_milestone_++;
   return static_cast<std::size_t>(current_milestone_) < plan_.NumMilestones();
 }
 
-void Sequencer::Feedback(ff_msgs::ControlFeedback const& progress) noexcept {
+void Sequencer::Feedback(
+                      ff_msgs::msg::ControlFeedback const& progress) noexcept {
   current_index_ = progress.index;  // ain't no thang
 }
 
-int Sequencer::AppendStatus(ff_msgs::Status const& msg) noexcept {
+int Sequencer::AppendStatus(ff_msgs::msg::Status const& msg) noexcept {
   status_.history.push_back(msg);
   if (status_.history.size() > kMaxHistory)
     status_.history.erase(status_.history.begin());
@@ -363,13 +377,13 @@ bool Sequencer::valid() const noexcept {
   return valid_;
 }
 
-ff_msgs::PlanStatusStamped const& Sequencer::plan_status() noexcept {
+ff_msgs::msg::PlanStatusStamped const& Sequencer::plan_status() noexcept {
   status_.point = current_milestone_;
   status_.command = current_command_;
   if (static_cast<std::size_t>(current_milestone_) >= plan_.NumMilestones()) {
-    status_.status.status = ff_msgs::AckStatus::COMPLETED;
+    status_.status.status = ff_msgs::msg::AckStatus::COMPLETED;
   } else {
-    status_.status.status = ff_msgs::AckStatus::EXECUTING;
+    status_.status.status = ff_msgs::msg::AckStatus::EXECUTING;
   }
   return status_;
 }

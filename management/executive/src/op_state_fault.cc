@@ -20,7 +20,8 @@
 
 namespace executive {
 
-OpState* OpStateFault::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
+OpState* OpStateFault::HandleCmd(
+                        ff_msgs::msg::CommandStamped::SharedPtr const cmd) {
   bool completed = false, successful = false;
   std::string err_msg;
   // Check if command is accepted in every op state and execute it if it is
@@ -91,19 +92,22 @@ OpState* OpStateFault::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
   } else {
     err_msg = "Command " + cmd->cmd_name + " not accepted in op state"
         + " fault.";
-    AckCmd(cmd->cmd_id, ff_msgs::AckCompletedStatus::EXEC_FAILED, err_msg);
-    ROS_WARN("Executive: %s", err_msg.c_str());
+    AckCmd(cmd->cmd_id,
+           ff_msgs::msg::AckCompletedStatus::EXEC_FAILED,
+           err_msg);
+    exec_->Warn(err_msg);
   }
   return this;
 }
 
 OpState* OpStateFault::HandleGuestScienceAck(
-                                      ff_msgs::AckStampedConstPtr const& ack) {
+                                ff_msgs::msg::AckStamped::SharedPtr const ack) {
   // If the command is not part of a plan, it gets acked in the executive
   // If the command isn't done, don't do anything.
-  if (ack->completed_status.status == ff_msgs::AckCompletedStatus::NOT) {
+  if (ack->completed_status.status == ff_msgs::msg::AckCompletedStatus::NOT) {
     return this;
-  } else if (ack->completed_status.status != ff_msgs::AckCompletedStatus::OK) {
+  } else if (ack->completed_status.status !=
+                                        ff_msgs::msg::AckCompletedStatus::OK) {
     SetPlanStatus(false, ack->message);
   } else {
     SetPlanStatus(true);
@@ -138,11 +142,10 @@ OpState* OpStateFault::HandleResult(
     if (cmd_id == "plan") {
       SetPlanStatus(false, err_msg);
     } else {
-      AckCmd(cmd_id, ff_msgs::AckCompletedStatus::EXEC_FAILED, err_msg);
+      AckCmd(cmd_id, ff_msgs::msg::AckCompletedStatus::EXEC_FAILED, err_msg);
     }
   }
 
   return this;
 }
-
 }  // namespace executive

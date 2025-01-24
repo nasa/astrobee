@@ -64,7 +64,7 @@ class GroundTruthLocalizerComponent : public ff_util::FreeFlyerComponent {
  private:
   void Initialize(NodeHandle &nh);
 
-  void SubscribeAndAdvertise(NodeHandle &nh);
+  void SubscribeAndAdvertise();
 
   bool SetMode(const std::shared_ptr<ff_msgs::SetEkfInput::Request> req,
                std::shared_ptr<ff_msgs::SetEkfInput::Response> res);
@@ -78,7 +78,6 @@ class GroundTruthLocalizerComponent : public ff_util::FreeFlyerComponent {
 
   void PublishLocState(const localization_common::Time& timestamp);
 
-  NodeHandle node_;
   std::string platform_name_;
   rclcpp::Time last_time_;
   boost::optional<Eigen::Isometry3d> pose_;

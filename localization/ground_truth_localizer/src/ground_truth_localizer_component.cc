@@ -34,36 +34,35 @@ GroundTruthLocalizerComponent::GroundTruthLocalizerComponent(const rclcpp::NodeO
 void GroundTruthLocalizerComponent::Initialize(NodeHandle &nh) {
   platform_name_ = GetPlatform();
   platform_name_ = (platform_name_.empty() ? "" : platform_name_ + "/");
-  SubscribeAndAdvertise(nh);
+  SubscribeAndAdvertise();
   // Initialize the transform broadcaster
   transform_pub_ = std::make_unique<tf2_ros::TransformBroadcaster>(*nh);
 }
 
-void GroundTruthLocalizerComponent::SubscribeAndAdvertise(NodeHandle &nh) {
-  node_ = nh;
-  pose_pub_ = FF_CREATE_PUBLISHER(nh, geometry_msgs::PoseStamped, TOPIC_LOCALIZATION_POSE, 1);
-  twist_pub_ = FF_CREATE_PUBLISHER(nh, geometry_msgs::TwistStamped, TOPIC_LOCALIZATION_TWIST, 1);
-  state_pub_ = FF_CREATE_PUBLISHER(nh, ff_msgs::EkfState, TOPIC_GNC_EKF, 1);
-  heartbeat_pub_ = FF_CREATE_PUBLISHER(nh, ff_msgs::Heartbeat, TOPIC_HEARTBEAT, 5);
-  reset_pub_ = FF_CREATE_PUBLISHER(nh, std_msgs::Empty, TOPIC_GNC_EKF_RESET, 10);
+void GroundTruthLocalizerComponent::SubscribeAndAdvertise() {
+  pose_pub_ = FF_CREATE_PUBLISHER(node_, geometry_msgs::PoseStamped, TOPIC_LOCALIZATION_POSE, 1);
+  twist_pub_ = FF_CREATE_PUBLISHER(node_, geometry_msgs::TwistStamped, TOPIC_LOCALIZATION_TWIST, 1);
+  state_pub_ = FF_CREATE_PUBLISHER(node_, ff_msgs::EkfState, TOPIC_GNC_EKF, 1);
+  heartbeat_pub_ = FF_CREATE_PUBLISHER(node_, ff_msgs::Heartbeat, TOPIC_HEARTBEAT, 5);
+  reset_pub_ = FF_CREATE_PUBLISHER(node_, std_msgs::Empty, TOPIC_GNC_EKF_RESET, 10);
 
-  pose_sub_ = FF_CREATE_SUBSCRIBER(nh, geometry_msgs::PoseStamped,
+  pose_sub_ = FF_CREATE_SUBSCRIBER(node_, geometry_msgs::PoseStamped,
     TOPIC_LOCALIZATION_TRUTH, 1,
     std::bind(&GroundTruthLocalizerComponent::PoseCallback, this, std::placeholders::_1));
-  twist_sub_ = FF_CREATE_SUBSCRIBER(nh, geometry_msgs::TwistStamped,
+  twist_sub_ = FF_CREATE_SUBSCRIBER(node_, geometry_msgs::TwistStamped,
     TOPIC_LOCALIZATION_TRUTH_TWIST, 1,
     std::bind(&GroundTruthLocalizerComponent::TwistCallback, this, std::placeholders::_1));
 
-  input_mode_srv_ = nh->create_service<ff_msgs::SetEkfInput>(
+  input_mode_srv_ = node_->create_service<ff_msgs::SetEkfInput>(
     SERVICE_GNC_EKF_SET_INPUT,
     std::bind(&GroundTruthLocalizerComponent::SetMode, this, std::placeholders::_1, std::placeholders::_2));
-  bias_srv_ = FF_CREATE_SERVICE(nh, std_srvs::Empty, SERVICE_GNC_EKF_INIT_BIAS,
+  bias_srv_ = FF_CREATE_SERVICE(node_, std_srvs::Empty, SERVICE_GNC_EKF_INIT_BIAS,
       std::bind(&GroundTruthLocalizerComponent::DefaultServiceResponse,
                               this, std::placeholders::_1, std::placeholders::_2));
-  bias_from_file_srv_ = FF_CREATE_SERVICE(nh, std_srvs::Empty, SERVICE_GNC_EKF_INIT_BIAS_FROM_FILE,
+  bias_from_file_srv_ = FF_CREATE_SERVICE(node_, std_srvs::Empty, SERVICE_GNC_EKF_INIT_BIAS_FROM_FILE,
       std::bind(&GroundTruthLocalizerComponent::DefaultServiceResponse,
                               this, std::placeholders::_1, std::placeholders::_2));
-  reset_srv_ = FF_CREATE_SERVICE(nh, std_srvs::Empty, SERVICE_GNC_EKF_RESET,
+  reset_srv_ = FF_CREATE_SERVICE(node_, std_srvs::Empty, SERVICE_GNC_EKF_RESET,
       std::bind(&GroundTruthLocalizerComponent::DefaultServiceResponse,
                               this, std::placeholders::_1, std::placeholders::_2));
 }
