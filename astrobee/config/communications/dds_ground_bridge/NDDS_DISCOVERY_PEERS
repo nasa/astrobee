@@ -1,0 +1,13 @@
+;; NDDS_DISCOVERY_PEERS - Default Discovery Configuration File
+; This basic default configuration limits DDS discovery to peers running on
+; the same host.
+; For actual space-to-ground usage on the ISS, you will need to add the
+; IP address of the relay host. Please reach out to your Astrobee POC
+; for this information.
+; EVERY LINE IN THIS FILE MUST END IN A COMMENT. Even blank lines.
+;
+127.0.0.1              ; Local host is added by default
+;
+; You'll want to uncomment the next line and substitute the actual relay host
+; IP here; check with your Astrobee POC to get it
+; 10.0.0.1 ; Relay host IP 

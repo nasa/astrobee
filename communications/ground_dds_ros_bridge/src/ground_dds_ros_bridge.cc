@@ -55,7 +55,7 @@ namespace ground_dds_ros_bridge {
 GroundDdsRosBridge::GroundDdsRosBridge() {
   components_ = 0;
 
-  agent_name_ = "ISAAC Ground Bridge";
+  agent_name_ = "Ground Bridge";
 
   connecting_robot_ = "";
 }
@@ -204,7 +204,7 @@ bool GroundDdsRosBridge::Initialize(ros::NodeHandle *nh) {
 
   // Make path to QOS and NDDS files
   std::string config_path = ff_common::GetConfigDir();
-  config_path += "/communications/dds/";
+  config_path += "/communications/dds_ground_bridge/";
 
   // Create fake argv containing only the particaptant name
   // Participant name needs to unique so combine bridge name with timestamp
