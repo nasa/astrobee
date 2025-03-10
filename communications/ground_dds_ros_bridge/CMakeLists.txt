@@ -109,6 +109,37 @@ add_executable(ground_dds_ros_bridge_node
 add_dependencies(ground_dds_ros_bridge_node ${catkin_EXPORTED_TARGETS})
 target_link_libraries(ground_dds_ros_bridge_node ground_dds_ros_bridge ${catkin_LIBRARIES})
 
+#############
+## Install ##
+#############
+# Determine our module name
+get_filename_component(MODULE_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
+
+# Mark libraries for installation
+install(TARGETS ground_dds_ros_bridge
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+)
+
+# Mark nodelet_plugin for installation
+#install(FILES nodelet_plugins.xml
+#        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+#)
+
+# Install C++ executables
+install(TARGETS ground_dds_ros_bridge_node DESTINATION bin)
+install(CODE "execute_process(
+  COMMAND ln -s ../../bin/ground_dds_ros_bridge_node share/${MODULE_NAME}
+  WORKING_DIRECOTRY ${CMAKE_INSTALL_PREFIX}
+  OUTPUT_QUIET
+  ERROR_QUIET
+  )")
+
+# Mark launch files for installation
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  PATTERN ".svn" EXCLUDE)
 else (USE_DDS)
   find_package(catkin REQUIRED COMPONENTS)
   catkin_package()

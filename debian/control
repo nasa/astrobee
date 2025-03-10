@@ -43,6 +43,24 @@ Depends: ${misc:Depends}
 Description: Astrobee flight software communications.
  The communications portion of the Astrobee flight software.
 
+Package: astrobee-ground-comms
+Section: comm
+Architecture: amd64
+Depends: ${misc:Depends}
+  astrobee-config (>= ${binary:Version}),
+  astrobee-comms (>= ${binary:Version}),
+  rti (>=1.0), libmiro0 (>=0.1), libsoracore1 (>=1.0),
+  ros-${ros-distro}-ros-base, ros-${ros-distro}-cpp-common,
+  ros-${ros-distro}-common-msgs, ros-${ros-distro}-nodelet, ros-${ros-distro}-image-transport,
+  ros-${ros-distro}-compressed-image-transport, ros-${ros-distro}-tf2,
+  ros-${ros-distro}-tf2-geometry-msgs, ros-${ros-distro}-tf2-msgs, ros-${ros-distro}-tf2-ros,
+  ros-${ros-distro}-tf2-sensor-msgs,
+  libgoogle-glog0v5
+Description: Astrobee flight software communications.
+ The communications portion of the Astrobee flight software.
+
+
+
 Package: astrobee0
 Architecture: any
 Depends: ${misc:Depends}
