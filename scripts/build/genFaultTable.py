@@ -357,6 +357,11 @@ def main():
                     for fault in fault_table[subsys_key][nodes_key]:
                         if fault.key.find("HEARTBEAT") != -1:
                             smf_file.write(
+                                "sys_monitor_heartbeat_fault_id = "
+                                + str(fault.fault_id)
+                                + "\n\n"
+                            )
+                            smf_file.write(
                                 "sys_monitor_heartbeat_timeout = "
                                 + str(fault.timeout_sec)
                                 + "\n\n"
@@ -378,6 +383,11 @@ def main():
                                 smf_file.write("false")
                             smf_file.write("\n\n")
                         elif fault.key.find("INITIALIZATION") != -1:
+                            smf_file.write(
+                                "sys_monitor_init_fault_id = "
+                                + str(fault.fault_id)
+                                + "\n\n"
+                            )
                             smf_file.write(
                                 "sys_monitor_init_fault_response"
                                 + ' = command("'
