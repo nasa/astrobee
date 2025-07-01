@@ -70,6 +70,13 @@ def make_map(
         + bag_surf_map
         + " -feature_detection -feature_matching -track_building -incremental_ba -bundle_adjustment -num_subsequent_images 100"
     )
+    print("#############################################################################")
+    print(bag_images_dir)
+    print(bag_images)
+    print(all_bag_images)
+    print(base_surf_map)
+    print("#############################################################################")
+
     if histogram_equalization:
         build_map_command += " -histogram_equalization"
     lu.run_command_and_save_output(build_map_command, "build_map.txt")
@@ -97,26 +104,32 @@ def make_map(
         (returncode, stdout, stderr) = lu.run_command_and_save_output(build_map_command)
         if returncode != 0:
             print(("Failed to run: " + " ".join(cmd)))
-        maps_directory = ""
+        maps_directory = set()
+        map_images_directory = "/srv/novus_1/amoravar/data/maps"
         for line in (stdout + "\n" + stderr).split("\n"):
             # Assuming the map only has one images directory
             match = re.match("^.*?\s([^\s]*?jpg)", line)
             if match:
-                maps_directory = os.path.abspath(
+                maps_directory.add(os.path.abspath(
                     os.path.join(
-                        os.path.dirname(base_surf_map), os.path.dirname(match.group(1))
+                       #os.path.dirname
+                       (map_images_directory), os.path.dirname(match.group(1))
                     )
-                )
-                break
+                ))
+                
         if maps_directory == "":
             print(
                 "Surf map images directory does not exist. This is weird, is the map empty?"
             )
             sys.exit()
-        print(maps_directory)
         os.mkdir("maps")
-        base_bag_images = os.path.join("maps", os.path.basename(maps_directory))
-        os.symlink(maps_directory, base_bag_images)
+        base_bag_images = set()
+        for matches in maps_directory:
+            base_bag_images_2 = os.path.join("maps", os.path.basename(matches))
+            base_bag_images.add(os.path.join("maps", os.path.basename(matches)))
+            print(base_bag_images)
+            print("###################################################") 
+            os.symlink(matches, base_bag_images_2)
         merged_bag_images = os.path.join("maps", bag_images_dir)
         if not os.path.isdir(merged_bag_images):
             os.symlink(bag_images, merged_bag_images)
@@ -132,6 +145,13 @@ def make_map(
     bag_path = os.getcwd()
     if merge_with_base_map:
         os.chdir("maps")
+    print("######################################3")
+    print(map_images_directory)
+    print("cwd: " + os.getcwd())
+    print("bag_path: " + bag_path)
+    print(maps_directory)
+    print(base_bag_images)
+    print("merged_bag_images: " + merged_bag_images)
     rebuild_map_command = (
         "rosrun sparse_mapping build_map -rebuild -rebuild_detector TEBLID512 -output_map "
         + bag_teblid512_map_full_path
@@ -153,11 +173,12 @@ def make_map(
     lu.run_command_and_save_output(add_vocabdb_command, "build_vocabdb.txt")
 
     if merge_with_base_map:
-        os.unlink(base_bag_images)
+        for images in base_bag_images:
+            os.unlink(images)
         # Remove simlinks
         if linked_map_images:
             os.unlink(merged_bag_images)
-        os.rmdir("maps")
+        shutil.rmtree("maps") 
 
 
 if __name__ == "__main__":
