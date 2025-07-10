@@ -115,7 +115,7 @@ def make_map(
                 "Surf map images directory does not exist. This is weird, is the map empty?"
             )
             sys.exit()
-       #os.mkdir("maps")
+        os.mkdir("maps")
         base_bag_images = set()
         for matches in maps_directory:
             base_bag_images_2 = os.path.join("maps", matches)
