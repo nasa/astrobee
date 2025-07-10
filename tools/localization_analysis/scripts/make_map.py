@@ -70,12 +70,6 @@ def make_map(
         + bag_surf_map
         + " -feature_detection -feature_matching -track_building -incremental_ba -bundle_adjustment -num_subsequent_images 100"
     )
-    print("#############################################################################")
-    print(bag_images_dir)
-    print(bag_images)
-    print(all_bag_images)
-    print(base_surf_map)
-    print("#############################################################################")
 
     if histogram_equalization:
         build_map_command += " -histogram_equalization"
@@ -110,26 +104,30 @@ def make_map(
             # Assuming the map only has one images directory
             match = re.match("^.*?\s([^\s]*?jpg)", line)
             if match:
-                maps_directory.add(os.path.abspath(
-                    os.path.join(
-                       #os.path.dirname
-                       (map_images_directory), os.path.dirname(match.group(1))
-                    )
-                ))
+                match_list = match.group()
+                first_space_index = match_list.find(' ')
+                path = os.path.dirname(match_list[first_space_index + 1:])
+                maps_directory.add(path)
                 
         if maps_directory == "":
             print(
                 "Surf map images directory does not exist. This is weird, is the map empty?"
             )
             sys.exit()
-        os.mkdir("maps")
+       #os.mkdir("maps")
         base_bag_images = set()
+        print("matches:")
         for matches in maps_directory:
-            base_bag_images_2 = os.path.join("maps", os.path.basename(matches))
-            base_bag_images.add(os.path.join("maps", os.path.basename(matches)))
-            print(base_bag_images)
-            print("###################################################") 
-            os.symlink(matches, base_bag_images_2)
+            base_bag_images_2 = os.path.join("maps", matches)
+            base_bag_images.add(os.path.join("maps", matches))
+            full_path = os.path.abspath(os.path.join((map_images_directory), base_bag_images_2))
+            full_path2 = os.path.join(os.getcwd(), base_bag_images_2)
+            try:
+                os.makedirs(os.path.dirname(full_path2))
+                os.symlink(full_path, full_path2)
+            except OSError as e:
+                pass
+                
         merged_bag_images = os.path.join("maps", bag_images_dir)
         if not os.path.isdir(merged_bag_images):
             os.symlink(bag_images, merged_bag_images)
@@ -145,13 +143,6 @@ def make_map(
     bag_path = os.getcwd()
     if merge_with_base_map:
         os.chdir("maps")
-    print("######################################3")
-    print(map_images_directory)
-    print("cwd: " + os.getcwd())
-    print("bag_path: " + bag_path)
-    print(maps_directory)
-    print(base_bag_images)
-    print("merged_bag_images: " + merged_bag_images)
     rebuild_map_command = (
         "rosrun sparse_mapping build_map -rebuild -rebuild_detector TEBLID512 -output_map "
         + bag_teblid512_map_full_path
