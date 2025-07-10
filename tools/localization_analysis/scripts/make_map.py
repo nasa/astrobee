@@ -117,7 +117,6 @@ def make_map(
             sys.exit()
        #os.mkdir("maps")
         base_bag_images = set()
-        print("matches:")
         for matches in maps_directory:
             base_bag_images_2 = os.path.join("maps", matches)
             base_bag_images.add(os.path.join("maps", matches))
