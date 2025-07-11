@@ -18,7 +18,7 @@ for topic, msg, t in input_bag.read_messages(topics="/sparse_mapping/pose"):
         info = (time, point_x, point_y, point_z, ori_x, ori_y, ori_z, ori_w)
         mapping_pose.append(info)
  
-poses_file = "pose_file.csv"
+poses_file = "pose_" + input("enter file name") + ".csv"
  
 with open(poses_file, 'w', newline='') as file:
     writer = csv.writer(file)
