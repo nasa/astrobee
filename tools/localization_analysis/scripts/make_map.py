@@ -120,14 +120,15 @@ def make_map(
         for matches in maps_directory:
             base_bag_images_2 = os.path.join("maps", matches)
             base_bag_images.add(os.path.join("maps", matches))
-            full_path = os.path.abspath(os.path.join((map_images_directory), base_bag_images_2))
+            full_path = os.path.abspath(os.path.join((map_images_directory),*base_bag_images_2.split(os.path.sep)[1:]))
             full_path2 = os.path.join(os.getcwd(), base_bag_images_2)
+            full_path = os.path.abspath(os.path.join((map_images_directory),*base_bag_images_2.split(os.path.sep)[1:]))
             try:
                 os.makedirs(os.path.dirname(full_path2))
-                os.symlink(full_path, full_path2)
             except OSError as e:
-                pass
-                
+                if e.errno != 17:
+                    raise
+            os.symlink(full_path, full_path2)    
         merged_bag_images = os.path.join("maps", bag_images_dir)
         if not os.path.isdir(merged_bag_images):
             os.symlink(bag_images, merged_bag_images)
