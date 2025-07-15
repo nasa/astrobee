@@ -102,7 +102,6 @@ def make_map(
         maps_directory = set()
         map_images_directory = "/srv/novus_1/amoravar/data/maps"
         for line in (stdout + "\n" + stderr).split("\n"):
-            # Assuming the map only has one images directory
             match = re.match("^.*?\s([^\s]*?jpg)", line)
             if match:
                 match_list = match.group()
@@ -126,6 +125,7 @@ def make_map(
             try:
                 os.makedirs(os.path.dirname(full_path2))
             except OSError as e:
+                # Error code 17 is file exsits
                 if e.errno != 17:
                     raise
             os.symlink(full_path, full_path2)    
