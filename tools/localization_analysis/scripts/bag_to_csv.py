@@ -8,7 +8,7 @@ import argparse
 parser = argparse.ArgumentParser(description="Takes bag created from ground truth script and extracts postion,orientaion, and time")
 
 parser.add_argument(
-    "-bag",
+    "--bag",
     "-b",
     type=str,
     help="bag created from ground truth script"
