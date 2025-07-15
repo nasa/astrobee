@@ -1,32 +1,25 @@
 #!/usr/bin/python3
-import rosbag
+import argparse
 import subprocess
 import sys
-import argparse
 
-parser = argparse.ArgumentParser(description="This file is intended to run the ground truth scripts on mutiple bags in the same directory with one map")
+import rosbag
 
-#define arguments
+parser = argparse.ArgumentParser(
+    description="This file is intended to run the ground truth scripts on mutiple bags in the same directory with one map"
+)
+
+# define arguments
 parser.add_argument(
-    "--bag_path",
-    "-bp",
-    type=str,
-    help="path of the directory containing your bags"
+    "--bag_path", "-bp", type=str, help="path of the directory containing your bags"
 )
 
 parser.add_argument(
-    "--map_path",
-    "-m",
-    type=str,
-    help="path of the directory containing your map"
+    "--map_path", "-m", type=str, help="path of the directory containing your map"
 )
 
 parser.add_argument(
-    "--bags",
-    "-b",
-    nargs='+',
-    type=str,
-    help="List of bag names to process"
+    "--bags", "-b", nargs="+", type=str, help="List of bag names to process"
 )
 
 args = parser.parse_args()
@@ -40,4 +33,12 @@ map_file_path = args.map_path
 bags = args.bags
 
 for bag in bags:
-    subprocess.run(["rosrun", "localization_analysis", "make_groundtruth.py", bag_file_path + bag, map_file_path])
+    subprocess.run(
+        [
+            "rosrun",
+            "localization_analysis",
+            "make_groundtruth.py",
+            bag_file_path + bag,
+            map_file_path,
+        ]
+    )

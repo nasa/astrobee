@@ -22,11 +22,11 @@ merges new map from the provided input bagfile with an existing map.
 """
 
 import argparse
+import errno
 import os
 import re
 import shutil
 import sys
-import errno
 
 import localization_common.utilities as lu
 
@@ -105,10 +105,10 @@ def make_map(
             match = re.match("^.*?\s([^\s]*?jpg)", line)
             if match:
                 match_list = match.group()
-                first_space_index = match_list.find(' ')
-                path = os.path.dirname(match_list[first_space_index + 1:])
+                first_space_index = match_list.find(" ")
+                path = os.path.dirname(match_list[first_space_index + 1 :])
                 maps_directory.add(path)
-                
+
         if maps_directory == "":
             print(
                 "Surf map images directory does not exist. This is weird, is the map empty?"
@@ -119,16 +119,24 @@ def make_map(
         for matches in maps_directory:
             base_bag_images_2 = os.path.join("maps", matches)
             base_bag_images.add(os.path.join("maps", matches))
-            full_path = os.path.abspath(os.path.join((map_images_directory),*base_bag_images_2.split(os.path.sep)[1:]))
+            full_path = os.path.abspath(
+                os.path.join(
+                    (map_images_directory), *base_bag_images_2.split(os.path.sep)[1:]
+                )
+            )
             full_path2 = os.path.join(os.getcwd(), base_bag_images_2)
-            full_path = os.path.abspath(os.path.join((map_images_directory),*base_bag_images_2.split(os.path.sep)[1:]))
+            full_path = os.path.abspath(
+                os.path.join(
+                    (map_images_directory), *base_bag_images_2.split(os.path.sep)[1:]
+                )
+            )
             try:
                 os.makedirs(os.path.dirname(full_path2))
             except OSError as e:
                 # Error code 17 is file exsits
                 if e.errno != 17:
                     raise
-            os.symlink(full_path, full_path2)    
+            os.symlink(full_path, full_path2)
         merged_bag_images = os.path.join("maps", bag_images_dir)
         if not os.path.isdir(merged_bag_images):
             os.symlink(bag_images, merged_bag_images)
@@ -170,7 +178,7 @@ def make_map(
         # Remove simlinks
         if linked_map_images:
             os.unlink(merged_bag_images)
-        shutil.rmtree("maps") 
+        shutil.rmtree("maps")
 
 
 if __name__ == "__main__":

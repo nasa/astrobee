@@ -1,25 +1,20 @@
 #!/usr/bin/python3
-import rosbag
-from geometry_msgs.msg import PoseArray, Pose, Point, Quaternion
+import argparse
 import csv
 import sys
-import argparse
 
-parser = argparse.ArgumentParser(description="Takes bag created from ground truth script and extracts postion,orientaion, and time")
+import rosbag
+from geometry_msgs.msg import Point, Pose, PoseArray, Quaternion
 
-parser.add_argument(
-    "--bag",
-    "-b",
-    type=str,
-    help="bag created from ground truth script"
+parser = argparse.ArgumentParser(
+    description="Takes bag created from ground truth script and extracts postion,orientaion, and time"
 )
 
 parser.add_argument(
-    "--file_name",
-    "-f",
-    type=str,
-    help="name the file"
+    "--bag", "-b", type=str, help="bag created from ground truth script"
 )
+
+parser.add_argument("--file_name", "-f", type=str, help="name the file")
 
 args = parser.parse_args()
 
@@ -42,10 +37,9 @@ if args.file_name is not None:
     poses_file = "pose_" + args.file_name + ".csv"
 else:
     poses_file = "pose_" + ".csv"
- 
-with open(poses_file, 'w', newline='') as file:
+
+with open(poses_file, "w", newline="") as file:
     writer = csv.writer(file)
     writer.writerow(["time", "posex", "posey", "posez", "orix", "oriy", "oriz", "oriw"])
     for tup in mapping_pose:
         writer.writerow(tup)
- 
