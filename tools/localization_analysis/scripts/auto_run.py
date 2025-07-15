@@ -8,21 +8,21 @@ parser = argparse.ArgumentParser(description="This file is intended to run the g
 
 #define arguments
 parser.add_argument(
-    "-bag_path",
+    "--bag_path",
     "-bp",
     type=str,
     help="path of the directory containing your bags"
 )
 
 parser.add_argument(
-    "-map_path",
-    "-mp",
+    "--map_path",
+    "-m",
     type=str,
     help="path of the directory containing your map"
 )
 
 parser.add_argument(
-    "-bags",
+    "--bags",
     "-b",
     nargs='+',
     type=str,
