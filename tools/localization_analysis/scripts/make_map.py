@@ -102,7 +102,6 @@ def make_map(
         maps_directory = set()
         map_images_directory = "/srv/novus_1/amoravar/data/maps"
         for line in (stdout + "\n" + stderr).split("\n"):
-            # Assuming the map only has one images directory
             match = re.match("^.*?\s([^\s]*?jpg)", line)
             if match:
                 match_list = match.group()
@@ -122,16 +121,14 @@ def make_map(
             base_bag_images.add(os.path.join("maps", matches))
             full_path = os.path.abspath(os.path.join((map_images_directory),*base_bag_images_2.split(os.path.sep)[1:]))
             full_path2 = os.path.join(os.getcwd(), base_bag_images_2)
-            print("##############################")
-            print(full_path)
-            print(full_path2)
-            print(base_bag_images_2)
+            full_path = os.path.abspath(os.path.join((map_images_directory),*base_bag_images_2.split(os.path.sep)[1:]))
             try:
                 os.makedirs(os.path.dirname(full_path2))
             except OSError as e:
-                if e.errno != 17: 
+                # Error code 17 is file exsits
+                if e.errno != 17:
                     raise
-            os.symlink(full_path, full_path2)
+            os.symlink(full_path, full_path2)    
         merged_bag_images = os.path.join("maps", bag_images_dir)
         if not os.path.isdir(merged_bag_images):
             os.symlink(bag_images, merged_bag_images)
