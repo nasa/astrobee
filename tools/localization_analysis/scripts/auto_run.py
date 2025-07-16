@@ -32,7 +32,11 @@ map_file_path = args.map_path
 # stores the names of the bag files you want to run the ground truth script on
 bags = args.bags
 
+counter = 0
 for bag in bags:
+    #takes the name of the bag and names the output directory after it
+    split = bags[counter].split(".", 1)
+    output_name = split[0]
     subprocess.run(
         [
             "rosrun",
@@ -40,5 +44,8 @@ for bag in bags:
             "make_groundtruth.py",
             bag_file_path + bag,
             map_file_path,
+            "-o",
+            output_name
         ]
     )
+    counter += 1
