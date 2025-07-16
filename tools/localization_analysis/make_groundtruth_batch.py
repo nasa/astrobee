@@ -11,7 +11,7 @@ parser = argparse.ArgumentParser(
 
 # define arguments
 parser.add_argument(
-    "--bag_path", "-bp", type=str, help="path of the directory containing your bags"
+    "--bag_path", "-b", type=str, help="path of the directory containing your bags"
 )
 
 parser.add_argument(
@@ -19,7 +19,7 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    "--bags", "-b", nargs="+", type=str, help="List of bag names to process"
+    "bags", nargs="+", type=str, help="List of bag names to process"
 )
 
 args = parser.parse_args()
