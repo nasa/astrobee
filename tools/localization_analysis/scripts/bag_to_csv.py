@@ -23,9 +23,9 @@ mapping_pose = []
 for topic, msg, t in input_bag.read_messages(topics="/sparse_mapping/pose"):
     time = msg.header.stamp
     for i, pose in enumerate(msg.poses):
-        point_x = pose.postion.x
-        point_y = pose.postion.y
-        point_z = pose.postion.z
+        point_x = pose.position.x
+        point_y = pose.position.y
+        point_z = pose.position.z
         ori_x = pose.orientation.x
         ori_y = pose.orientation.y
         ori_z = pose.orientation.z
