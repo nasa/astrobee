@@ -14,14 +14,14 @@ parser.add_argument(
     "--bag", "-b", type=str, help="bag created from ground truth script"
 )
 
-parser.add_argument("--file_name", "-f", type=str, help="name the file")
+parser.add_argument("-file_name", type=str, help="name the file")
 
 args = parser.parse_args()
 
 input_bag = rosbag.Bag(args.bag)
 mapping_pose = []
 for topic, msg, t in input_bag.read_messages(topics="/sparse_mapping/pose"):
-    time = msg.header.time
+    time = msg.header.stamp
     for i, pose in enumerate(msg.poses):
         point_x = pose.postion.x
         point_y = pose.postion.y
@@ -36,7 +36,9 @@ for topic, msg, t in input_bag.read_messages(topics="/sparse_mapping/pose"):
 if args.file_name is not None:
     poses_file = "pose_" + args.file_name + ".csv"
 else:
-    poses_file = "pose_" + ".csv"
+    split = input_bag.split(".", 1)
+    file_name = split[0]
+    poses_file = file_name + ".csv"
 
 with open(poses_file, "w", newline="") as file:
     writer = csv.writer(file)
