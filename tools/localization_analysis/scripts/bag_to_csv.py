@@ -29,7 +29,7 @@ for topic, msg, t in input_bag.read_messages(topics="/sparse_mapping/pose"):
     ori_y = msg.pose.orientation.y
     ori_z = msg.pose.orientation.z
     ori_w = msg.pose.orientation.w
-    info = (time, point_x, point_y, point_z, ori_x, ori_y, ori_z, ori_w)
+    info = (time, ori_w, ori_x, ori_y, ori_z, point_x, point_y, point_z)
     mapping_pose.append(info)
 
 if args.file_name is not None:
@@ -41,6 +41,6 @@ else:
 
 with open(poses_file, "w", newline="") as file:
     writer = csv.writer(file)
-    writer.writerow(["time", "posex", "posey", "posez", "orix", "oriy", "oriz", "oriw"])
+    writer.writerow(["time", "oriw", "orix", "oriy", "oriz","posex", "posey", "posez"])
     for tup in mapping_pose:
         writer.writerow(tup)
