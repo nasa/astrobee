@@ -35,7 +35,7 @@ bags = args.bags
 counter = 0
 for bag in bags:
     #takes the name of the bag and names the output directory after it
-    split = bags[counter].split(".", 1)
+    split = bags[counter].rsplit(".", 1)
     output_name = split[0]
     subprocess.run(
         [
