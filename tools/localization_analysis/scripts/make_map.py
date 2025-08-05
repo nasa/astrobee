@@ -100,7 +100,8 @@ def make_map(
         if returncode != 0:
             print(("Failed to run: " + " ".join(cmd)))
         maps_directory = set()
-        map_images_directory = "/srv/novus_1/amoravar/data/maps"
+        # Use the grandparent directory of the surf map for the output map 
+        map_directory = os.path.dirname(os.path.dirname(args.base_surf_map))
         for line in (stdout + "\n" + stderr).split("\n"):
             match = re.match("^.*?\s([^\s]*?jpg)", line)
             if match:
