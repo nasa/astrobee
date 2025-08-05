@@ -14,17 +14,12 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    "--bag","-b", nargs="+", type=str, help="name of differnt bags in the directory"
-)
-
-parser.add_argument(
     "--robot", "-r", type=str, help="put the first letter of the robot your working with(queen, bumble, honey)"
 )
 
 args = parser.parse_args()
 
 directory = args.directory
-baggy = args.bag
 robo = args.robot
 file_exstension = "_groundtruth.bag"
 #change to your path to colmap
@@ -36,7 +31,7 @@ def run_colmap_command(command_args):
     full_command = [colmap] + command_args
     subprocess.run(full_command, check=True, text=True, capture_output=True)
 
-for bags in baggy:
+for bags in os.listdir(directory):
     full_path = directory + "/" + bags
 
     #assumes that each directory is named after the bag with splice ex:bag_name_22
