@@ -100,7 +100,7 @@ for bags in os.listdir(directory):
                     "2 PINHOLE 0.0 602.67924 509.73835",
                     "3 SIMPLE_RADIAL 0.0 0.0 1.0"
                     ]
-            else:
+            elif robo.casefold() == "h".casefold()::
                 #honey
                 camera_data = [
                     "1 SIMPLE_PINHOLE  610.12594 0.0 628.35064 0.998575",
