@@ -2,6 +2,7 @@
 import argparse
 import subprocess
 import os
+import sys
 import shutil
 import rosbag
 from geometry_msgs.msg import Point, Pose, PoseArray, Quaternion
