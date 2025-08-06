@@ -7,14 +7,20 @@ import rosbag
 from geometry_msgs.msg import Point, Pose, PoseArray, Quaternion
 
 parser = argparse.ArgumentParser(
-    description="Filters through ground truth bag to pull pose postions"
+    description="Generates dense models from ground truth can do directories of issac activities or for splices of one bag using the folder option"
+    #Note that the directory option assumes a flow of: (directory containing directories for each orginal bag) --> (each orginal bag directory contains the directories of ground truth for each splice )
 )
 parser.add_argument(
-    "--directory", "-d", type=str, help="full path to the directory that holds all the differnt bags from the issac activity"
+    "--directory", "-d", type=str, help="full path to the directory that holds all the differnt bags from the issac activity/splices"
 )
 
 parser.add_argument(
     "--robot", "-r", type=str, help="put the first letter of the robot your working with(queen, bumble, honey)"
+)
+
+parser.add_argument(
+    "--folder", "-f", action='store_true', help="To generate models for splices only"
+    ##Note that the folder option assumes a flow of: (orginal bag directory) --> (directories of ground truth for each splice)
 )
 
 args = parser.parse_args()
@@ -31,16 +37,16 @@ def run_colmap_command(command_args):
     full_command = [colmap] + command_args
     subprocess.run(full_command, check=True, text=True, capture_output=True)
 
-for bags in os.listdir(directory):
-    full_path = directory + "/" + bags
-
-    #assumes that each directory is named after the bag with splice ex:bag_name_22
-    for splice in os.listdir(full_path):
+def model_generator(path):
+    for splice in os.listdir(path):
             counter = 0
-            bag_directory = directory + "/" + bags + "/" + splice
+            bag_directory = path + "/" + splice
+
             mapping_pose = []
             images_path = bag_directory+ "/bag_images_" + splice
             timestamps = []
+
+            #Extracts the timestamps of the images 
             for images in os.listdir(images_path):
                 chars_ignore ="jpg."
                 edit_name = str.maketrans("","",chars_ignore)
@@ -51,6 +57,7 @@ for bags in os.listdir(directory):
             bag = bag_path + file_exstension
             input_bag = rosbag.Bag(bag, 'r')
 
+            #Gets the postion closets to the timestamp from the image within 5 secs
             for time in timestamps:
                 for topic, msg, t in input_bag.read_messages(topics="/sparse_mapping/pose"):
                     image_time = int(time)
@@ -188,5 +195,14 @@ for bags in os.listdir(directory):
                 error_bags.append(error_bag)
                 continue
 
-print("These bags had errors:")
-print(error_bags)
+    print("These bags had errors:")
+    print(error_bags)
+
+if args.folder:
+    model_generator(directory)
+else:
+    for bags in os.listdir(directory):
+        full_path = directory + "/" + bags
+        model_generator(full_path)
+
+    
