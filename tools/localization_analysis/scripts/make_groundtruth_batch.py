@@ -31,6 +31,7 @@ bag_file_path = args.bag_path
 map_file_path = args.map_path
 
 # stores the names of the bag files you want to run the ground truth script on
+# brace expansion makes this easier
 bags = args.bags
 
 counter = 0
