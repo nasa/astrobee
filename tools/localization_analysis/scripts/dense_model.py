@@ -29,8 +29,8 @@ args = parser.parse_args()
 directory = args.directory
 robo = args.robot
 file_exstension = "_groundtruth.bag"
-#change to your path to colmap
-colmap = "/srv/novus_1/cmason9/bin/colmap"
+#change to your path to colmap executable
+colmap = "colmap"
 error_bags = []
 #function to call colmap commands 
 def run_colmap_command(command_args):
@@ -94,6 +94,7 @@ def model_generator(path):
                     file.write(counter_str + " " + line + "\n\n")
  
             #cameras.txt file
+            #Used the latest camera intrinsics for the github
             if robo.casefold() == "b".casefold():
                 #bumble
                 camera_data = [
