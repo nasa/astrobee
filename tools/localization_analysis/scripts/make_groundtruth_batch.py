@@ -19,8 +19,11 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    "bags", nargs="+", type=str, help="List of bag names to process"
-    #Brace expansion can make this easier
+    "bags",
+    nargs="+",
+    type=str,
+    help="List of bag names to process"
+    # Brace expansion can make this easier
 )
 
 args = parser.parse_args()
@@ -36,7 +39,7 @@ bags = args.bags
 
 counter = 0
 for bag in bags:
-    #takes the name of the bag and names the output directory after it
+    # takes the name of the bag and names the output directory after it
     split = bags[counter].rsplit(".", 1)
     output_name = split[0]
     subprocess.run(
@@ -47,7 +50,7 @@ for bag in bags:
             bag_file_path + bag,
             map_file_path,
             "-o",
-            output_name
+            output_name,
         ]
     )
     counter += 1

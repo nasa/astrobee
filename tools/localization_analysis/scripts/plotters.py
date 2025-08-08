@@ -362,7 +362,6 @@ class MultiPosePlotter:
         markeredgewidth=None,
         markersize=1,
     ):
-
         xyz_vectors = plot_conversions.xyz_vectors_from_poses(timestamped_poses)
         times = plot_conversions.times_from_timestamped_objects(timestamped_poses)
         position_plotter = PositionPlotter(

@@ -41,6 +41,6 @@ else:
 
 with open(poses_file, "w", newline="") as file:
     writer = csv.writer(file)
-    writer.writerow(["time", "oriw", "orix", "oriy", "oriz","posex", "posey", "posez"])
+    writer.writerow(["time", "oriw", "orix", "oriy", "oriz", "posex", "posey", "posez"])
     for tup in mapping_pose:
         writer.writerow(tup)

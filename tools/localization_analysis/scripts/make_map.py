@@ -100,7 +100,7 @@ def make_map(
         if returncode != 0:
             print(("Failed to run: " + " ".join(cmd)))
         maps_directory = set()
-        # Use the grandparent directory of the surf map for the output map 
+        # Use the grandparent directory of the surf map for the output map
         map_images_directory = os.path.dirname(os.path.dirname(base_surf_map))
         for line in (stdout + "\n" + stderr).split("\n"):
             match = re.match("^.*?\s([^\s]*?jpg)", line)
