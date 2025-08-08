@@ -16,6 +16,9 @@ The depth odometry display publishes source and target point clouds and correspo
 ## Imu Augmentor Display
 The imu augmentor display draws imu augmentor poses.  This is useful when comparing with graph localizer poses and sparse mapping poses, as ideally these are all alligned.
 
+## Localization Coverage Display 
+The localization coverage display draws map pose positions from a bagfile. To use this, use: export COVERAGE_BAG=/path/to/bagfile before launching rviz to set the bagfile to use for plotting. The bag file should have poses stored using the /sparse_mapping/pose topic, which is the output for the localization_analysis map matcher and offline replay tools for map matched poses. Subscribe to the output topic called /localization_coverage/cloud using the rviz PointCloud2 visualization plugin to view the pose positions.
+
 ## Localization Graph Display 
 The localization graph display draws the full history of poses in the latest graph localization message.  It also draws imu estimates between poses as arrows, and publishes optical flow feature track images using the feature tracks in the localizer.
 

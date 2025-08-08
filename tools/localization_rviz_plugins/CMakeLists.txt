@@ -18,7 +18,7 @@
 cmake_minimum_required(VERSION 3.0)
 project(localization_rviz_plugins)
 
-if (FALSE AND BUILD_LOC_RVIZ_PLUGINS)
+if (BUILD_LOC_RVIZ_PLUGINS)
  
   ## Compile as C++14, supported in ROS Kinetic and newer
   add_compile_options(-std=c++14)
@@ -61,13 +61,14 @@ if (FALSE AND BUILD_LOC_RVIZ_PLUGINS)
 
   # Declare C++ libraries
   add_library(${PROJECT_NAME}
-    src/depth_odometry_display.cc
-    src/localization_graph_display.cc
-    src/localization_graph_panel.cc
-    src/pose_display.cc
-    src/utilities.cc
-    src/imu_augmentor_display.cc
-    src/slider_property.cc
+    #src/depth_odometry_display.cc
+    src/localization_coverage_display.cc
+    #src/localization_graph_display.cc
+    #src/localization_graph_panel.cc
+    #src/pose_display.cc
+    #src/utilities.cc
+    #src/imu_augmentor_display.cc
+    #src/slider_property.cc
     src/sparse_mapping_display.cc
   )
   add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})

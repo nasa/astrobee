@@ -1,0 +1,13 @@
+Index: ros-noetic-rosjava-bootstrap/build.gradle
+===================================================================
+--- ros-noetic-rosjava-bootstrap.orig/build.gradle
++++ ros-noetic-rosjava-bootstrap/build.gradle
+@@ -33,7 +33,7 @@ subprojects {
+ 
+   // These external repositories are copied from bootstrap.gradle.
+   repositories {
+-    jcenter()
++    mavenCentral()
+     maven {
+       url "http://repository.springsource.com/maven/bundles/release"
+     }

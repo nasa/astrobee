@@ -306,7 +306,7 @@ class Executive : public ff_util::FreeFlyerNodelet {
   ros::NodeHandle nh_;
 
   ros::Publisher agent_state_pub_, cmd_ack_pub_, plan_pub_, plan_status_pub_;
-  ros::Publisher cf_ack_pub_, gs_cmd_pub_;
+  ros::Publisher cf_ack_pub_, gs_cmd_pub_, sys_monitor_state_pub_;
 
   ros::ServiceClient zones_client_, laser_enable_client_;
   ros::ServiceClient front_flashlight_client_, back_flashlight_client_;
@@ -353,6 +353,8 @@ class Executive : public ff_util::FreeFlyerNodelet {
 
   int pub_queue_size_;
   int sub_queue_size_;
+  unsigned int sys_monitor_heartbeat_fault_id_;
+  unsigned int sys_monitor_init_fault_id_;
 
   bool allow_blind_flying_;
   bool live_led_on_;

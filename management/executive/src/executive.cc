@@ -415,6 +415,10 @@ void Executive::SysMonitorHeartbeatCallback(
   // system monitor initialization fault.
   if (heartbeat->faults.size() > 0 && !sys_monitor_init_fault_occurring_) {
     NODELET_ERROR("System monitor initalization fault detected in executive.");
+
+    ff_msgs::FaultState sys_monitor_state_;
+
+    // React to fault
     sys_monitor_init_fault_occurring_ = true;
     sys_monitor_init_fault_response_->cmd_id = "executive" +
                                           std::to_string(ros::Time::now().sec);
@@ -422,7 +426,27 @@ void Executive::SysMonitorHeartbeatCallback(
     // If fault is blocking, transition to fault state
     if (sys_monitor_init_fault_blocking_) {
       SetOpState(state_->TransitionToState(ff_msgs::OpState::FAULT));
+      sys_monitor_state_.state = ff_msgs::FaultState::BLOCKED;
+    } else {
+      sys_monitor_state_.state = ff_msgs::FaultState::FAULT;
     }
+
+    // Report system monitor initialization fault
+    sys_monitor_state_.hr_state = "System monitor initialization fault ";
+    sys_monitor_state_.hr_state += "detected in executive. Transitioning to ";
+    sys_monitor_state_.hr_state += "fault state.";
+
+    ff_msgs::Fault fault;
+    fault.id = sys_monitor_init_fault_id_;
+    // The system monitor only has one fault
+    fault.time_of_fault = heartbeat->faults[0].time_of_fault;
+    fault.msg = "Executive received system monitor initialization fault.";
+    fault.msg += "Check logs for more information.";
+
+    sys_monitor_state_.faults.push_back(fault);
+    sys_monitor_state_.header.stamp = ros::Time::now();
+    sys_monitor_state_pub_.publish(sys_monitor_state_);
+
     return;
   // Check initialiization fault went away
   } else if (heartbeat->faults.size() == 0 &&
@@ -449,6 +473,9 @@ void Executive::SysMonitorHeartbeatCallback(
 
 void Executive::SysMonitorTimeoutCallback(ros::TimerEvent const& te) {
   NODELET_ERROR("System monitor heartbeat fault detected in executive.");
+
+  ff_msgs::FaultState sys_monitor_state_;
+
   // If the executive doesn't receive a heartbeat from the system monitor, it
   // needs to trigger the system monitor heartbeat missed fault.
   sys_monitor_heartbeat_fault_occurring_ = true;
@@ -458,8 +485,26 @@ void Executive::SysMonitorTimeoutCallback(ros::TimerEvent const& te) {
   // If fault is blocking, transition to fault state
   if (sys_monitor_heartbeat_fault_blocking_) {
     SetOpState(state_->TransitionToState(ff_msgs::OpState::FAULT));
+    sys_monitor_state_.state = ff_msgs::FaultState::BLOCKED;
+  } else {
+    sys_monitor_state_.state = ff_msgs::FaultState::FAULT;
   }
+
   sys_monitor_heartbeat_timer_.stop();
+
+  // Report system monitor heartbeat fault
+  sys_monitor_state_.hr_state = "System monitor heartbeat not detected in ";
+  sys_monitor_state_.hr_state += "executive. Transitioning to fault state.";
+
+  ff_msgs::Fault fault;
+  fault.id = sys_monitor_heartbeat_fault_id_;
+  fault.time_of_fault = ros::Time::now();
+  fault.msg = "Executive didn't receive a system monitor heartbeat. ";
+  fault.msg += "System monitor node may have died!";
+
+  sys_monitor_state_.faults.push_back(fault);
+  sys_monitor_state_.header.stamp = ros::Time::now();
+  sys_monitor_state_pub_.publish(sys_monitor_state_);
 }
 
 void Executive::WaitCallback(ros::TimerEvent const& te) {
@@ -3778,11 +3823,6 @@ void Executive::Initialize(ros::NodeHandle *nh) {
                              this);
 
   // initialize pubs
-  agent_state_pub_ = nh_.advertise<ff_msgs::AgentStateStamped>(
-                                              TOPIC_MANAGEMENT_EXEC_AGENT_STATE,
-                                              pub_queue_size_,
-                                              true);
-
   cf_ack_pub_ = nh_.advertise<ff_msgs::CompressedFileAck>(
                                                   TOPIC_MANAGEMENT_EXEC_CF_ACK,
                                                   pub_queue_size_,
@@ -3801,10 +3841,21 @@ void Executive::Initialize(ros::NodeHandle *nh) {
                                                      pub_queue_size_,
                                                      false);
 
+  // All states/status should be latching
+  agent_state_pub_ = nh_.advertise<ff_msgs::AgentStateStamped>(
+                                              TOPIC_MANAGEMENT_EXEC_AGENT_STATE,
+                                              pub_queue_size_,
+                                              true);
+
   plan_status_pub_ = nh_.advertise<ff_msgs::PlanStatusStamped>(
                                               TOPIC_MANAGEMENT_EXEC_PLAN_STATUS,
                                               pub_queue_size_,
                                               true);
+
+  sys_monitor_state_pub_ = nh_.advertise<ff_msgs::FaultState>(
+                                            TOPIC_MANAGEMENT_SYS_MONITOR_STATE,
+                                            pub_queue_size_,
+                                            true);
 
   // initialize services
   zones_client_ = nh_.serviceClient<ff_msgs::SetZones>(
@@ -4059,6 +4110,12 @@ bool Executive::ReadParams() {
     dock_result_timeout_ = 360;
   }
 
+  // get planner
+  if (!config_params_.GetStr("planner", &agent_state_.planner)) {
+    NODELET_WARN("System monitor planner not specified.");
+    agent_state_.planner = "QuadraticProgram";
+  }
+
   if (!config_params_.GetPosReal("perch_result_timeout",
                                  &perch_result_timeout_)) {
     NODELET_WARN("Perch result timeout not specified.");
@@ -4071,16 +4128,19 @@ bool Executive::ReadParams() {
     localization_result_timeout_ = 10;
   }
 
+  // get system monitor parameters
   if (!config_params_.GetPosReal("sys_monitor_startup_time_secs",
                                  &sys_monitor_startup_time_secs_)) {
     NODELET_WARN("System monitor startup time not specified.");
     sys_monitor_startup_time_secs_ = 30;
   }
 
-  // get planner
-  if (!config_params_.GetStr("planner", &agent_state_.planner)) {
-    NODELET_WARN("System monitor planner not specified.");
-    agent_state_.planner = "QuadraticProgram";
+  if (!config_params_.GetUInt("sys_monitor_heartbeat_fault_id",
+                              &sys_monitor_heartbeat_fault_id_)) {
+    err_msg = "System monitor heartbeat fault id not specified.";
+    NODELET_ERROR("%s", err_msg.c_str());
+    this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
+    return false;
   }
 
   if (!config_params_.GetPosReal("sys_monitor_heartbeat_timeout",
@@ -4111,6 +4171,14 @@ bool Executive::ReadParams() {
   if (!config_params_.GetBool("sys_monitor_heartbeat_fault_blocking",
                               &sys_monitor_heartbeat_fault_blocking_)) {
     err_msg == "Sys monitor heartbeat fault blocking not specified.";
+    NODELET_ERROR("%s", err_msg.c_str());
+    this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
+    return false;
+  }
+
+  if (!config_params_.GetUInt("sys_monitor_init_fault_id",
+                              &sys_monitor_init_fault_id_)) {
+    err_msg = "System monitor initialization fault id not specified.";
     NODELET_ERROR("%s", err_msg.c_str());
     this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
     return false;
