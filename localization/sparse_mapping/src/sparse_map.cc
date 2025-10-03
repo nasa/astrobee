@@ -666,8 +666,10 @@ void SparseMap::DetectFeaturesFromFile(std::string const& filename,
                                        cv::Mat* descriptors,
                                        Eigen::Matrix2Xd* keypoints) {
   cv::Mat image = cv::imread(filename, cv::IMREAD_GRAYSCALE);
-  if (image.rows == 0 || image.cols == 0)
-    LOG(FATAL) << "Found empty image in file: " << filename;
+  if (image.rows == 0 || image.cols == 0) {
+    boost::filesystem::path full_path(boost::filesystem::current_path());
+    LOG(FATAL) << "Found empty image in file: " << filename << " from " << full_path;
+  }
 
   DetectFeatures(image, multithreaded, descriptors, keypoints);
 }

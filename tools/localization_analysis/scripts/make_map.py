@@ -22,6 +22,7 @@ merges new map from the provided input bagfile with an existing map.
 """
 
 import argparse
+import errno
 import os
 import re
 import shutil
@@ -70,6 +71,7 @@ def make_map(
         + bag_surf_map
         + " -feature_detection -feature_matching -track_building -incremental_ba -bundle_adjustment -num_subsequent_images 100"
     )
+
     if histogram_equalization:
         build_map_command += " -histogram_equalization"
     lu.run_command_and_save_output(build_map_command, "build_map.txt")
@@ -97,26 +99,45 @@ def make_map(
         (returncode, stdout, stderr) = lu.run_command_and_save_output(build_map_command)
         if returncode != 0:
             print(("Failed to run: " + " ".join(cmd)))
-        maps_directory = ""
+        maps_directory = set()
+        # Use the grandparent directory of the surf map for the output map
+        map_images_directory = os.path.dirname(os.path.dirname(base_surf_map))
         for line in (stdout + "\n" + stderr).split("\n"):
-            # Assuming the map only has one images directory
             match = re.match("^.*?\s([^\s]*?jpg)", line)
             if match:
-                maps_directory = os.path.abspath(
-                    os.path.join(
-                        os.path.dirname(base_surf_map), os.path.dirname(match.group(1))
-                    )
-                )
-                break
+                match_list = match.group()
+                first_space_index = match_list.find(" ")
+                path = os.path.dirname(match_list[first_space_index + 1 :])
+                maps_directory.add(path)
+
         if maps_directory == "":
             print(
                 "Surf map images directory does not exist. This is weird, is the map empty?"
             )
             sys.exit()
-        print(maps_directory)
         os.mkdir("maps")
-        base_bag_images = os.path.join("maps", os.path.basename(maps_directory))
-        os.symlink(maps_directory, base_bag_images)
+        base_bag_images = set()
+        for matches in maps_directory:
+            base_bag_images_2 = os.path.join("maps", matches)
+            base_bag_images.add(os.path.join("maps", matches))
+            full_path = os.path.abspath(
+                os.path.join(
+                    (map_images_directory), *base_bag_images_2.split(os.path.sep)[1:]
+                )
+            )
+            full_path2 = os.path.join(os.getcwd(), base_bag_images_2)
+            full_path = os.path.abspath(
+                os.path.join(
+                    (map_images_directory), *base_bag_images_2.split(os.path.sep)[1:]
+                )
+            )
+            try:
+                os.makedirs(os.path.dirname(full_path2))
+            except OSError as e:
+                # Error code 17 is file exsits
+                if e.errno != 17:
+                    raise
+            os.symlink(full_path, full_path2)
         merged_bag_images = os.path.join("maps", bag_images_dir)
         if not os.path.isdir(merged_bag_images):
             os.symlink(bag_images, merged_bag_images)
@@ -153,11 +174,12 @@ def make_map(
     lu.run_command_and_save_output(add_vocabdb_command, "build_vocabdb.txt")
 
     if merge_with_base_map:
-        os.unlink(base_bag_images)
+        for images in base_bag_images:
+            os.unlink(images)
         # Remove simlinks
         if linked_map_images:
             os.unlink(merged_bag_images)
-        os.rmdir("maps")
+        shutil.rmtree("maps")
 
 
 if __name__ == "__main__":
