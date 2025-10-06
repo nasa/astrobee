@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>ctl_mpc</name>
+  <version>0.0.1</version>
+  <description>The ctl_mpc package</description>
+
+  <maintainer email="todo@todo.todo">todo</maintainer>
+
+  <license>TODO</license>
+
+  <author email="jonnevanhaastregt@gmail.com">Jonne van Haastregt</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>roscpp</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>ff_msgs</build_depend>
+  <build_depend>ff_util</build_depend>
+  <build_depend>nodelet</build_depend>
+  <build_depend>config_reader</build_depend>
+<!-- 
+  <build_export_depend>roscpp</build_export_depend>
+  <build_export_depend>std_msgs</build_export_depend>
+  <build_export_depend>ff_msgs</build_export_depend>
+  <build_export_depend>ff_util</build_export_depend> -->
+
+  <exec_depend>roscpp</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>ff_util</exec_depend>
+  <exec_depend>ff_msgs</exec_depend>
+  <exec_depend>nodelet</exec_depend>
+  <exec_depend>config_reader</exec_depend>
+
+  <!-- <build_depend>ff_common</build_depend>
+  <exec_depend>ff_common</exec_depend>
+  <build_depend>ff_flight</build_depend>
+  <exec_depend>ff_flight</exec_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <build_depend>std_srvs</build_depend>
+  <exec_depend>std_srvs</exec_depend> -->
+
+  <export>
+    <nodelet plugin="${prefix}/nodelet_plugins.xml" />
+  </export>
+</package>

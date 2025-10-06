@@ -1,0 +1,50 @@
+{
+  "options":{
+    "rebuild": 1,
+    "silent": 1,
+    "continue": 0
+  },
+  "test_macros":
+  {
+    "VERBOSE":2
+  },
+  "env_flags":{
+    "CC": "gcc",
+    "CFLAGS": "-Wuninitialized"
+  },
+  "blasfeo_flags":{
+    "BLASFEO_REF_API": 1,
+    "BLAS_API": 0,
+    "EXTERNAL_BLAS": "SYSTEM"
+  },
+  "precisions": [
+    "single"
+  ],
+  "apis": [
+    "blasfeo"
+  ],
+  "K_MAX_STACK":[
+    0, 500
+  ],
+  "PACKING_ALG":[
+    "AUTO"
+  ],
+  "MF": [
+    "PANELMAJ"
+  ],
+  "TARGET": [
+    "ARMV8A_ARM_CORTEX_A57",
+    "ARMV8A_ARM_CORTEX_A53",
+    "GENERIC"
+  ],
+  "LA": [
+    "HIGH_PERFORMANCE"
+  ],
+  "routines": [
+    "gemm_nn",
+    "gemm_nt",
+    "potrf_l"
+  ]
+}
+
+

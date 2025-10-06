@@ -1,0 +1,185 @@
+#
+# Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
+# Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
+# Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan,
+# Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
+#
+# This file is part of acados.
+#
+# The 2-Clause BSD License
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice,
+# this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+# this list of conditions and the following disclaimer in the documentation
+# and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.;
+#
+
+
+CC = gcc
+#CC = clang
+#CC = x86_64-w64-mingw32-gcc
+
+# Operating system
+UNAME_S = $(shell uname -s)
+ifeq ($(UNAME_S),Linux)
+    OS = LINUX
+endif
+ifeq ($(UNAME_S),Darwin)
+    OS = MAC
+endif
+#OS = LINUX
+#OS = MAC
+#OS = WINDOWS
+
+# Installation directory
+TOP = $(shell pwd)
+#PREFIX = /opt
+
+# External projects directory
+EXT_PATH = $(TOP)/external
+
+## BLASFEO path
+BLASFEO_PATH = $(EXT_PATH)/blasfeo
+#BLASFEO_PATH = /home/gianluca/blasfeo
+## BLASFEO version
+BLASFEO_VERSION = HIGH_PERFORMANCE
+# BLASFEO_VERSION = REFERENCE
+# BLASFEO_VERSION = BLAS_WRAPPER
+
+## BLASFEO target
+BLASFEO_TARGET = X64_INTEL_HASWELL
+# BLASFEO_TARGET = X64_INTEL_SANDY_BRIDGE
+# BLASFEO_TARGET = X64_INTEL_CORE
+#
+# BLASFEO_TARGET = X64_AMD_BULLDOZER
+# BLASFEO_TARGET = X86_AMD_JAGUAR
+# BLASFEO_TARGET = X86_AMD_BARCELONA
+#
+# BLASFEO_TARGET = ARMV8A_ARM_CORTEX_A57
+# BLASFEO_TARGET = ARMV8A_ARM_CORTEX_A53
+# BLASFEO_TARGET = ARMV7A_ARM_CORTEX_A15
+# BLASFEO_TARGET = ARMV7A_ARM_CORTEX_A7
+#
+# BLASFEO_TARGET = GENERIC
+
+## HPIPM path
+HPIPM_PATH = $(EXT_PATH)/hpipm
+#HPIPM_PATH = /home/gianluca/hpipm
+
+## HPIPM target
+HPIPM_TARGET = AVX
+# HPIPM_TARGET = GENERIC
+
+## HPMPC path
+HPMPC_PATH = $(EXT_PATH)/hpmpc
+## HPMPC target
+HPMPC_TARGET = X64_AVX
+
+## qpOASES path
+QPOASES_PATH = $(EXT_PATH)/qpoases
+
+# QORE path
+QORE_PATH = $(EXT_PATH)/qore
+
+# QPDUNES path
+QPDUNES_PATH = $(EXT_PATH)/qpdunes
+
+# OSQP path
+OSQP_PATH = $(EXT_PATH)/osqp
+
+# parallelize using openmp
+ACADOS_WITH_OPENMP = 0
+ACADOS_NUM_THREADS = 4
+
+# include QPOASES
+ACADOS_WITH_QPOASES = 0
+
+# include HPMPC
+ACADOS_WITH_HPMPC = 0
+
+# include QPDUNES
+ACADOS_WITH_QPDUNES = 0
+
+# include QORE
+ACADOS_WITH_QORE = 0
+
+# include OSQP
+ACADOS_WITH_OSQP = 0
+
+# C interface
+ACADOS_WITH_C_INTERFACE = 1
+
+# measure timings
+MEASURE_TIMINGS = 1
+
+# compiler flags
+CFLAGS =
+
+# Possible overide with local options
+mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
+current_dir := $(patsubst %/,%,$(dir $(mkfile_path)))
+# Do not complain if Makefile.local does not exisist
+-include $(current_dir)/Makefile.local
+
+# optimization flags
+CFLAGS += -O2 -fPIC
+
+# turn off assert
+#CFLAGS += -DNDEBUG
+
+# debugging flags
+CFLAGS  += #-g -Wall -pedantic -Wfloat-equal #-pg
+
+ifeq ($(ACADOS_WITH_OPENMP), 1)
+CFLAGS += -DACADOS_WITH_OPENMP -DACADOS_NUM_THREADS=$(ACADOS_NUM_THREADS) -fopenmp
+endif
+ifeq ($(ACADOS_WITH_QPOASES), 1)
+CFLAGS += -DACADOS_WITH_QPOASES
+endif
+ifeq ($(ACADOS_WITH_HPMPC), 1)
+CFLAGS += -DACADOS_WITH_HPMPC
+endif
+ifeq ($(ACADOS_WITH_QPDUNES), 1)
+CFLAGS += -DACADOS_WITH_QPDUNES
+endif
+ifeq ($(ACADOS_WITH_QORE), 1)
+CFLAGS += -DACADOS_WITH_QORE
+endif
+ifeq ($(ACADOS_WITH_OSQP), 1)
+CFLAGS += -DACADOS_WITH_OSQP
+endif
+ifeq ($(ACADOS_WITH_C_INTERFACE), 1)
+CFLAGS += -DACADOS_WITH_C_INTERFACE
+endif
+
+# TEMP
+#CFLAGS += -g -O0 -DRUNTIME_CHECKS -DEXT_DEPS -DALIGNMENT=64 -D__DEBUG__
+
+# timing
+ifeq ($(MEASURE_TIMINGS), 1)
+CFLAGS += -DMEASURE_TIMINGS
+endif
+
+# search directories
+CFLAGS += -I$(TOP) -I$(TOP)/interfaces -I$(TOP)/include -I$(BLASFEO_PATH)/include -I$(HPIPM_PATH)/include -I$(HPMPC_PATH)/include -I$(QPOASES_PATH)/include -I$(TOP)/include/qore/include -I$(QPDUNES_PATH)/include -I$(OSQP_PATH)/include
+LDFLAGS += -L$(TOP)/lib
+
+CXXFLAGS = $(CFLAGS) -std=c++11
+CFLAGS += -std=c99

@@ -1,0 +1,1883 @@
+###################################################################################################
+#                                                                                                 #
+# This file is part of BLASFEO.                                                                   #
+#                                                                                                 #
+# BLASFEO -- BLAS for embedded optimization.                                                      #
+# Copyright (C) 2019 by Gianluca Frison.                                                          #
+# Developed at IMTEK (University of Freiburg) under the supervision of Moritz Diehl.              #
+# All rights reserved.                                                                            #
+#                                                                                                 #
+# The 2-Clause BSD License                                                                        #
+#                                                                                                 #
+# Redistribution and use in source and binary forms, with or without                              #
+# modification, are permitted provided that the following conditions are met:                     #
+#                                                                                                 #
+# 1. Redistributions of source code must retain the above copyright notice, this                  #
+#    list of conditions and the following disclaimer.                                             #
+# 2. Redistributions in binary form must reproduce the above copyright notice,                    #
+#    this list of conditions and the following disclaimer in the documentation                    #
+#    and/or other materials provided with the distribution.                                       #
+#                                                                                                 #
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND                 #
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED                   #
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE                          #
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR                 #
+# ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES                  #
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;                    #
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND                     #
+# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT                      #
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS                   #
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                                    #
+#                                                                                                 #
+# Author: Gianluca Frison, gianluca.frison (at) imtek.uni-freiburg.de                             #
+#                                                                                                 #
+###################################################################################################
+
+# BLASFEO API bennchmarks
+
+
+DP_BLAS2_OBJS =
+DP_BLAS3_OBJS =
+DP_LAPACK_OBJS =
+DGEMM_OBJS =
+DSYRK_OBJS =
+DTRMM_OBJS =
+DTRSM_OBJS =
+
+SP_BLAS2_OBJS =
+SP_BLAS3_OBJS =
+SP_LAPACK_OBJS =
+SGEMM_OBJS =
+SSYRK_OBJS =
+STRMM_OBJS =
+STRSM_OBJS =
+
+RUN_DP_BLAS2_OBJS =
+RUN_DP_BLAS3_OBJS =
+RUN_DP_LAPACK_OBJS =
+RUN_DGEMM_OBJS =
+RUN_DSYRK_OBJS =
+RUN_DTRMM_OBJS =
+RUN_DTRSM_OBJS =
+
+RUN_SP_BLAS2_OBJS =
+RUN_SP_BLAS3_OBJS =
+RUN_SP_LAPACK_OBJS =
+RUN_SGEMM_OBJS =
+RUN_SSYRK_OBJS =
+RUN_STRMM_OBJS =
+RUN_STRSM_OBJS =
+
+
+# dgemm_nn
+
+DGEMM_OBJS += blasfeo_api_dgemm_nn
+RUN_DGEMM_OBJS += run_blasfeo_api_dgemm_nn
+
+blasfeo_api_dgemm_nn: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dgemm_nn_benchmark.o -DDOUBLE_PRECISION -DGEMM_NN
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dgemm_nn_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dgemm_nn_benchmark.out $(LIBS)
+
+run_blasfeo_api_dgemm_nn:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dgemm_nn
+	./$(BINARY_DIR)/BLASFEO_API/dgemm_nn_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dgemm_nn.m
+
+
+# dgemm_nt
+
+DGEMM_OBJS += blasfeo_api_dgemm_nt
+RUN_DGEMM_OBJS += run_blasfeo_api_dgemm_nt
+
+blasfeo_api_dgemm_nt: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dgemm_nt_benchmark.o -DDOUBLE_PRECISION -DGEMM_NT
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dgemm_nt_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dgemm_nt_benchmark.out $(LIBS)
+
+run_blasfeo_api_dgemm_nt:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dgemm_nt
+	./$(BINARY_DIR)/BLASFEO_API/dgemm_nt_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dgemm_nt.m
+
+
+# dgemm_tn
+
+DGEMM_OBJS += blasfeo_api_dgemm_tn
+RUN_DGEMM_OBJS += run_blasfeo_api_dgemm_tn
+
+blasfeo_api_dgemm_tn: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dgemm_tn_benchmark.o -DDOUBLE_PRECISION -DGEMM_TN
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dgemm_tn_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dgemm_tn_benchmark.out $(LIBS)
+
+run_blasfeo_api_dgemm_tn:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dgemm_tn
+	./$(BINARY_DIR)/BLASFEO_API/dgemm_tn_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dgemm_tn.m
+
+
+# dgemm_tt
+
+DGEMM_OBJS += blasfeo_api_dgemm_tt
+RUN_DGEMM_OBJS += run_blasfeo_api_dgemm_tt
+
+blasfeo_api_dgemm_tt: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dgemm_tt_benchmark.o -DDOUBLE_PRECISION -DGEMM_TT
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dgemm_tt_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dgemm_tt_benchmark.out $(LIBS)
+
+run_blasfeo_api_dgemm_tt:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dgemm_tt
+	./$(BINARY_DIR)/BLASFEO_API/dgemm_tt_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dgemm_tt.m
+
+
+# dsyrk_ln
+
+DSYRK_OBJS += blasfeo_api_dsyrk_ln
+RUN_DSYRK_OBJS += run_blasfeo_api_dsyrk_ln
+
+blasfeo_api_dsyrk_ln: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dsyrk_ln_benchmark.o -DDOUBLE_PRECISION -DSYRK_LN
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dsyrk_ln_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dsyrk_ln_benchmark.out $(LIBS)
+
+run_blasfeo_api_dsyrk_ln:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dsyrk_ln
+	./$(BINARY_DIR)/BLASFEO_API/dsyrk_ln_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dsyrk_ln.m
+
+
+# dsyrk_lt
+
+DSYRK_OBJS += blasfeo_api_dsyrk_lt
+RUN_DSYRK_OBJS += run_blasfeo_api_dsyrk_lt
+
+blasfeo_api_dsyrk_lt: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dsyrk_lt_benchmark.o -DDOUBLE_PRECISION -DSYRK_LT
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dsyrk_lt_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dsyrk_lt_benchmark.out $(LIBS)
+
+run_blasfeo_api_dsyrk_lt:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dsyrk_lt
+	./$(BINARY_DIR)/BLASFEO_API/dsyrk_lt_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dsyrk_lt.m
+
+
+# dsyrk_un
+
+DSYRK_OBJS += blasfeo_api_dsyrk_un
+RUN_DSYRK_OBJS += run_blasfeo_api_dsyrk_un
+
+blasfeo_api_dsyrk_un: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dsyrk_un_benchmark.o -DDOUBLE_PRECISION -DSYRK_UN
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dsyrk_un_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dsyrk_un_benchmark.out $(LIBS)
+
+run_blasfeo_api_dsyrk_un:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dsyrk_un
+	./$(BINARY_DIR)/BLASFEO_API/dsyrk_un_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dsyrk_un.m
+
+
+# dsyrk_ut
+
+DSYRK_OBJS += blasfeo_api_dsyrk_ut
+RUN_DSYRK_OBJS += run_blasfeo_api_dsyrk_ut
+
+blasfeo_api_dsyrk_ut: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dsyrk_ut_benchmark.o -DDOUBLE_PRECISION -DSYRK_UT
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dsyrk_ut_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dsyrk_ut_benchmark.out $(LIBS)
+
+run_blasfeo_api_dsyrk_ut:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dsyrk_ut
+	./$(BINARY_DIR)/BLASFEO_API/dsyrk_ut_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dsyrk_ut.m
+
+
+# dtrmm_llnn
+
+DTRMM_OBJS += blasfeo_api_dtrmm_llnn
+RUN_DTRMM_OBJS += run_blasfeo_api_dtrmm_llnn
+
+blasfeo_api_dtrmm_llnn: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dtrmm_llnn_benchmark.o -DDOUBLE_PRECISION -DTRMM -DTRMM_LLNN
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dtrmm_llnn_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dtrmm_llnn_benchmark.out $(LIBS)
+
+run_blasfeo_api_dtrmm_llnn:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dtrmm_llnn
+	./$(BINARY_DIR)/BLASFEO_API/dtrmm_llnn_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dtrmm_llnn.m
+
+
+# dtrmm_llnu
+
+DTRMM_OBJS += blasfeo_api_dtrmm_llnu
+RUN_DTRMM_OBJS += run_blasfeo_api_dtrmm_llnu
+
+blasfeo_api_dtrmm_llnu: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dtrmm_llnu_benchmark.o -DDOUBLE_PRECISION -DTRMM -DTRMM_LLNU
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dtrmm_llnu_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dtrmm_llnu_benchmark.out $(LIBS)
+
+run_blasfeo_api_dtrmm_llnu:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dtrmm_llnu
+	./$(BINARY_DIR)/BLASFEO_API/dtrmm_llnu_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dtrmm_llnu.m
+
+
+# dtrmm_lltn
+
+DTRMM_OBJS += blasfeo_api_dtrmm_lltn
+RUN_DTRMM_OBJS += run_blasfeo_api_dtrmm_lltn
+
+blasfeo_api_dtrmm_lltn: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dtrmm_lltn_benchmark.o -DDOUBLE_PRECISION -DTRMM -DTRMM_LLTN
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dtrmm_lltn_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dtrmm_lltn_benchmark.out $(LIBS)
+
+run_blasfeo_api_dtrmm_lltn:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dtrmm_lltn
+	./$(BINARY_DIR)/BLASFEO_API/dtrmm_lltn_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dtrmm_lltn.m
+
+
+# dtrmm_lltu
+
+DTRMM_OBJS += blasfeo_api_dtrmm_lltu
+RUN_DTRMM_OBJS += run_blasfeo_api_dtrmm_lltu
+
+blasfeo_api_dtrmm_lltu: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dtrmm_lltu_benchmark.o -DDOUBLE_PRECISION -DTRMM -DTRMM_LLTU
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dtrmm_lltu_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dtrmm_lltu_benchmark.out $(LIBS)
+
+run_blasfeo_api_dtrmm_lltu:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dtrmm_lltu
+	./$(BINARY_DIR)/BLASFEO_API/dtrmm_lltu_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dtrmm_lltu.m
+
+
+# dtrmm_lunn
+
+DTRMM_OBJS += blasfeo_api_dtrmm_lunn
+RUN_DTRMM_OBJS += run_blasfeo_api_dtrmm_lunn
+
+blasfeo_api_dtrmm_lunn: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dtrmm_lunn_benchmark.o -DDOUBLE_PRECISION -DTRMM -DTRMM_LUNN
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dtrmm_lunn_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dtrmm_lunn_benchmark.out $(LIBS)
+
+run_blasfeo_api_dtrmm_lunn:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dtrmm_lunn
+	./$(BINARY_DIR)/BLASFEO_API/dtrmm_lunn_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dtrmm_lunn.m
+
+
+# dtrmm_lunu
+
+DTRMM_OBJS += blasfeo_api_dtrmm_lunu
+RUN_DTRMM_OBJS += run_blasfeo_api_dtrmm_lunu
+
+blasfeo_api_dtrmm_lunu: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dtrmm_lunu_benchmark.o -DDOUBLE_PRECISION -DTRMM -DTRMM_LUNU
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dtrmm_lunu_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dtrmm_lunu_benchmark.out $(LIBS)
+
+run_blasfeo_api_dtrmm_lunu:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dtrmm_lunu
+	./$(BINARY_DIR)/BLASFEO_API/dtrmm_lunu_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dtrmm_lunu.m
+
+
+# dtrmm_lutn
+
+DTRMM_OBJS += blasfeo_api_dtrmm_lutn
+RUN_DTRMM_OBJS += run_blasfeo_api_dtrmm_lutn
+
+blasfeo_api_dtrmm_lutn: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dtrmm_lutn_benchmark.o -DDOUBLE_PRECISION -DTRMM -DTRMM_LUTN
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dtrmm_lutn_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dtrmm_lutn_benchmark.out $(LIBS)
+
+run_blasfeo_api_dtrmm_lutn:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dtrmm_lutn
+	./$(BINARY_DIR)/BLASFEO_API/dtrmm_lutn_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dtrmm_lutn.m
+
+
+# dtrmm_lutu
+
+DTRMM_OBJS += blasfeo_api_dtrmm_lutu
+RUN_DTRMM_OBJS += run_blasfeo_api_dtrmm_lutu
+
+blasfeo_api_dtrmm_lutu: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dtrmm_lutu_benchmark.o -DDOUBLE_PRECISION -DTRMM -DTRMM_LUTU
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dtrmm_lutu_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dtrmm_lutu_benchmark.out $(LIBS)
+
+run_blasfeo_api_dtrmm_lutu:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dtrmm_lutu
+	./$(BINARY_DIR)/BLASFEO_API/dtrmm_lutu_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dtrmm_lutu.m
+
+
+# dtrmm_rlnn
+
+DTRMM_OBJS += blasfeo_api_dtrmm_rlnn
+RUN_DTRMM_OBJS += run_blasfeo_api_dtrmm_rlnn
+
+blasfeo_api_dtrmm_rlnn: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dtrmm_rlnn_benchmark.o -DDOUBLE_PRECISION -DTRMM -DTRMM_RLNN
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dtrmm_rlnn_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dtrmm_rlnn_benchmark.out $(LIBS)
+
+run_blasfeo_api_dtrmm_rlnn:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dtrmm_rlnn
+	./$(BINARY_DIR)/BLASFEO_API/dtrmm_rlnn_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dtrmm_rlnn.m
+
+
+# dtrmm_rlnu
+
+DTRMM_OBJS += blasfeo_api_dtrmm_rlnu
+RUN_DTRMM_OBJS += run_blasfeo_api_dtrmm_rlnu
+
+blasfeo_api_dtrmm_rlnu: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dtrmm_rlnu_benchmark.o -DDOUBLE_PRECISION -DTRMM -DTRMM_RLNU
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dtrmm_rlnu_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dtrmm_rlnu_benchmark.out $(LIBS)
+
+run_blasfeo_api_dtrmm_rlnu:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dtrmm_rlnu
+	./$(BINARY_DIR)/BLASFEO_API/dtrmm_rlnu_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dtrmm_rlnu.m
+
+
+# dtrmm_rltn
+
+DTRMM_OBJS += blasfeo_api_dtrmm_rltn
+RUN_DTRMM_OBJS += run_blasfeo_api_dtrmm_rltn
+
+blasfeo_api_dtrmm_rltn: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dtrmm_rltn_benchmark.o -DDOUBLE_PRECISION -DTRMM -DTRMM_RLTN
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dtrmm_rltn_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dtrmm_rltn_benchmark.out $(LIBS)
+
+run_blasfeo_api_dtrmm_rltn:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dtrmm_rltn
+	./$(BINARY_DIR)/BLASFEO_API/dtrmm_rltn_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dtrmm_rltn.m
+
+
+# dtrmm_rltu
+
+DTRMM_OBJS += blasfeo_api_dtrmm_rltu
+RUN_DTRMM_OBJS += run_blasfeo_api_dtrmm_rltu
+
+blasfeo_api_dtrmm_rltu: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dtrmm_rltu_benchmark.o -DDOUBLE_PRECISION -DTRMM -DTRMM_RLTU
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dtrmm_rltu_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dtrmm_rltu_benchmark.out $(LIBS)
+
+run_blasfeo_api_dtrmm_rltu:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dtrmm_rltu
+	./$(BINARY_DIR)/BLASFEO_API/dtrmm_rltu_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dtrmm_rltu.m
+
+
+# dtrmm_runn
+
+DTRMM_OBJS += blasfeo_api_dtrmm_runn
+RUN_DTRMM_OBJS += run_blasfeo_api_dtrmm_runn
+
+blasfeo_api_dtrmm_runn: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dtrmm_runn_benchmark.o -DDOUBLE_PRECISION -DTRMM -DTRMM_RUNN
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dtrmm_runn_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dtrmm_runn_benchmark.out $(LIBS)
+
+run_blasfeo_api_dtrmm_runn:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dtrmm_runn
+	./$(BINARY_DIR)/BLASFEO_API/dtrmm_runn_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dtrmm_runn.m
+
+
+# dtrmm_runu
+
+DTRMM_OBJS += blasfeo_api_dtrmm_runu
+RUN_DTRMM_OBJS += run_blasfeo_api_dtrmm_runu
+
+blasfeo_api_dtrmm_runu: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dtrmm_runu_benchmark.o -DDOUBLE_PRECISION -DTRMM -DTRMM_RUNU
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dtrmm_runu_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dtrmm_runu_benchmark.out $(LIBS)
+
+run_blasfeo_api_dtrmm_runu:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dtrmm_runu
+	./$(BINARY_DIR)/BLASFEO_API/dtrmm_runu_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dtrmm_runu.m
+
+
+# dtrmm_rutn
+
+DTRMM_OBJS += blasfeo_api_dtrmm_rutn
+RUN_DTRMM_OBJS += run_blasfeo_api_dtrmm_rutn
+
+blasfeo_api_dtrmm_rutn: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dtrmm_rutn_benchmark.o -DDOUBLE_PRECISION -DTRMM -DTRMM_RUTN
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dtrmm_rutn_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dtrmm_rutn_benchmark.out $(LIBS)
+
+run_blasfeo_api_dtrmm_rutn:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dtrmm_rutn
+	./$(BINARY_DIR)/BLASFEO_API/dtrmm_rutn_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dtrmm_rutn.m
+
+
+# dtrmm_rutu
+
+DTRMM_OBJS += blasfeo_api_dtrmm_rutu
+RUN_DTRMM_OBJS += run_blasfeo_api_dtrmm_rutu
+
+blasfeo_api_dtrmm_rutu: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dtrmm_rutu_benchmark.o -DDOUBLE_PRECISION -DTRMM -DTRMM_RUTU
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dtrmm_rutu_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dtrmm_rutu_benchmark.out $(LIBS)
+
+run_blasfeo_api_dtrmm_rutu:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dtrmm_rutu
+	./$(BINARY_DIR)/BLASFEO_API/dtrmm_rutu_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dtrmm_rutu.m
+
+
+# dtrsm_llnn
+
+DTRSM_OBJS += blasfeo_api_dtrsm_llnn
+RUN_DTRSM_OBJS += run_blasfeo_api_dtrsm_llnn
+
+blasfeo_api_dtrsm_llnn: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dtrsm_llnn_benchmark.o -DDOUBLE_PRECISION -DTRSM -DTRSM_LLNN
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dtrsm_llnn_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dtrsm_llnn_benchmark.out $(LIBS)
+
+run_blasfeo_api_dtrsm_llnn:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dtrsm_llnn
+	./$(BINARY_DIR)/BLASFEO_API/dtrsm_llnn_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dtrsm_llnn.m
+
+
+# dtrsm_llnu
+
+DTRSM_OBJS += blasfeo_api_dtrsm_llnu
+RUN_DTRSM_OBJS += run_blasfeo_api_dtrsm_llnu
+
+blasfeo_api_dtrsm_llnu: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dtrsm_llnu_benchmark.o -DDOUBLE_PRECISION -DTRSM -DTRSM_LLNU
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dtrsm_llnu_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dtrsm_llnu_benchmark.out $(LIBS)
+
+run_blasfeo_api_dtrsm_llnu:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dtrsm_llnu
+	./$(BINARY_DIR)/BLASFEO_API/dtrsm_llnu_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dtrsm_llnu.m
+
+
+# dtrsm_lltn
+
+DTRSM_OBJS += blasfeo_api_dtrsm_lltn
+RUN_DTRSM_OBJS += run_blasfeo_api_dtrsm_lltn
+
+blasfeo_api_dtrsm_lltn: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dtrsm_lltn_benchmark.o -DDOUBLE_PRECISION -DTRSM -DTRSM_LLTN
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dtrsm_lltn_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dtrsm_lltn_benchmark.out $(LIBS)
+
+run_blasfeo_api_dtrsm_lltn:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dtrsm_lltn
+	./$(BINARY_DIR)/BLASFEO_API/dtrsm_lltn_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dtrsm_lltn.m
+
+
+# dtrsm_lltu
+
+DTRSM_OBJS += blasfeo_api_dtrsm_lltu
+RUN_DTRSM_OBJS += run_blasfeo_api_dtrsm_lltu
+
+blasfeo_api_dtrsm_lltu: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dtrsm_lltu_benchmark.o -DDOUBLE_PRECISION -DTRSM -DTRSM_LLTU
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dtrsm_lltu_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dtrsm_lltu_benchmark.out $(LIBS)
+
+run_blasfeo_api_dtrsm_lltu:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dtrsm_lltu
+	./$(BINARY_DIR)/BLASFEO_API/dtrsm_lltu_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dtrsm_lltu.m
+
+
+# dtrsm_lunn
+
+DTRSM_OBJS += blasfeo_api_dtrsm_lunn
+RUN_DTRSM_OBJS += run_blasfeo_api_dtrsm_lunn
+
+blasfeo_api_dtrsm_lunn: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dtrsm_lunn_benchmark.o -DDOUBLE_PRECISION -DTRSM -DTRSM_LUNN
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dtrsm_lunn_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dtrsm_lunn_benchmark.out $(LIBS)
+
+run_blasfeo_api_dtrsm_lunn:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dtrsm_lunn
+	./$(BINARY_DIR)/BLASFEO_API/dtrsm_lunn_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dtrsm_lunn.m
+
+
+# dtrsm_lunu
+
+DTRSM_OBJS += blasfeo_api_dtrsm_lunu
+RUN_DTRSM_OBJS += run_blasfeo_api_dtrsm_lunu
+
+blasfeo_api_dtrsm_lunu: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dtrsm_lunu_benchmark.o -DDOUBLE_PRECISION -DTRSM -DTRSM_LUNU
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dtrsm_lunu_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dtrsm_lunu_benchmark.out $(LIBS)
+
+run_blasfeo_api_dtrsm_lunu:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dtrsm_lunu
+	./$(BINARY_DIR)/BLASFEO_API/dtrsm_lunu_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dtrsm_lunu.m
+
+
+# dtrsm_lutn
+
+DTRSM_OBJS += blasfeo_api_dtrsm_lutn
+RUN_DTRSM_OBJS += run_blasfeo_api_dtrsm_lutn
+
+blasfeo_api_dtrsm_lutn: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dtrsm_lutn_benchmark.o -DDOUBLE_PRECISION -DTRSM -DTRSM_LUTN
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dtrsm_lutn_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dtrsm_lutn_benchmark.out $(LIBS)
+
+run_blasfeo_api_dtrsm_lutn:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dtrsm_lutn
+	./$(BINARY_DIR)/BLASFEO_API/dtrsm_lutn_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dtrsm_lutn.m
+
+
+# dtrsm_lutu
+
+DTRSM_OBJS += blasfeo_api_dtrsm_lutu
+RUN_DTRSM_OBJS += run_blasfeo_api_dtrsm_lutu
+
+blasfeo_api_dtrsm_lutu: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dtrsm_lutu_benchmark.o -DDOUBLE_PRECISION -DTRSM -DTRSM_LUTU
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dtrsm_lutu_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dtrsm_lutu_benchmark.out $(LIBS)
+
+run_blasfeo_api_dtrsm_lutu:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dtrsm_lutu
+	./$(BINARY_DIR)/BLASFEO_API/dtrsm_lutu_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dtrsm_lutu.m
+
+
+# dtrsm_rlnn
+
+DTRSM_OBJS += blasfeo_api_dtrsm_rlnn
+RUN_DTRSM_OBJS += run_blasfeo_api_dtrsm_rlnn
+
+blasfeo_api_dtrsm_rlnn: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dtrsm_rlnn_benchmark.o -DDOUBLE_PRECISION -DTRSM -DTRSM_RLNN
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dtrsm_rlnn_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dtrsm_rlnn_benchmark.out $(LIBS)
+
+run_blasfeo_api_dtrsm_rlnn:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dtrsm_rlnn
+	./$(BINARY_DIR)/BLASFEO_API/dtrsm_rlnn_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dtrsm_rlnn.m
+
+
+# dtrsm_rlnu
+
+DTRSM_OBJS += blasfeo_api_dtrsm_rlnu
+RUN_DTRSM_OBJS += run_blasfeo_api_dtrsm_rlnu
+
+blasfeo_api_dtrsm_rlnu: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dtrsm_rlnu_benchmark.o -DDOUBLE_PRECISION -DTRSM -DTRSM_RLNU
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dtrsm_rlnu_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dtrsm_rlnu_benchmark.out $(LIBS)
+
+run_blasfeo_api_dtrsm_rlnu:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dtrsm_rlnu
+	./$(BINARY_DIR)/BLASFEO_API/dtrsm_rlnu_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dtrsm_rlnu.m
+
+
+# dtrsm_rltn
+
+DTRSM_OBJS += blasfeo_api_dtrsm_rltn
+RUN_DTRSM_OBJS += run_blasfeo_api_dtrsm_rltn
+
+blasfeo_api_dtrsm_rltn: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dtrsm_rltn_benchmark.o -DDOUBLE_PRECISION -DTRSM -DTRSM_RLTN
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dtrsm_rltn_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dtrsm_rltn_benchmark.out $(LIBS)
+
+run_blasfeo_api_dtrsm_rltn:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dtrsm_rltn
+	./$(BINARY_DIR)/BLASFEO_API/dtrsm_rltn_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dtrsm_rltn.m
+
+
+# dtrsm_rltu
+
+DTRSM_OBJS += blasfeo_api_dtrsm_rltu
+RUN_DTRSM_OBJS += run_blasfeo_api_dtrsm_rltu
+
+blasfeo_api_dtrsm_rltu: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dtrsm_rltu_benchmark.o -DDOUBLE_PRECISION -DTRSM -DTRSM_RLTU
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dtrsm_rltu_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dtrsm_rltu_benchmark.out $(LIBS)
+
+run_blasfeo_api_dtrsm_rltu:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dtrsm_rltu
+	./$(BINARY_DIR)/BLASFEO_API/dtrsm_rltu_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dtrsm_rltu.m
+
+
+# dtrsm_runn
+
+DTRSM_OBJS += blasfeo_api_dtrsm_runn
+RUN_DTRSM_OBJS += run_blasfeo_api_dtrsm_runn
+
+blasfeo_api_dtrsm_runn: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dtrsm_runn_benchmark.o -DDOUBLE_PRECISION -DTRSM -DTRSM_RUNN
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dtrsm_runn_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dtrsm_runn_benchmark.out $(LIBS)
+
+run_blasfeo_api_dtrsm_runn:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dtrsm_runn
+	./$(BINARY_DIR)/BLASFEO_API/dtrsm_runn_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dtrsm_runn.m
+
+
+# dtrsm_runu
+
+DTRSM_OBJS += blasfeo_api_dtrsm_runu
+RUN_DTRSM_OBJS += run_blasfeo_api_dtrsm_runu
+
+blasfeo_api_dtrsm_runu: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dtrsm_runu_benchmark.o -DDOUBLE_PRECISION -DTRSM -DTRSM_RUNU
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dtrsm_runu_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dtrsm_runu_benchmark.out $(LIBS)
+
+run_blasfeo_api_dtrsm_runu:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dtrsm_runu
+	./$(BINARY_DIR)/BLASFEO_API/dtrsm_runu_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dtrsm_runu.m
+
+
+# dtrsm_rutn
+
+DTRSM_OBJS += blasfeo_api_dtrsm_rutn
+RUN_DTRSM_OBJS += run_blasfeo_api_dtrsm_rutn
+
+blasfeo_api_dtrsm_rutn: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dtrsm_rutn_benchmark.o -DDOUBLE_PRECISION -DTRSM -DTRSM_RUTN
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dtrsm_rutn_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dtrsm_rutn_benchmark.out $(LIBS)
+
+run_blasfeo_api_dtrsm_rutn:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dtrsm_rutn
+	./$(BINARY_DIR)/BLASFEO_API/dtrsm_rutn_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dtrsm_rutn.m
+
+
+# dtrsm_rutu
+
+DTRSM_OBJS += blasfeo_api_dtrsm_rutu
+RUN_DTRSM_OBJS += run_blasfeo_api_dtrsm_rutu
+
+blasfeo_api_dtrsm_rutu: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dtrsm_rutu_benchmark.o -DDOUBLE_PRECISION -DTRSM -DTRSM_RUTU
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dtrsm_rutu_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dtrsm_rutu_benchmark.out $(LIBS)
+
+run_blasfeo_api_dtrsm_rutu:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dtrsm_rutu
+	./$(BINARY_DIR)/BLASFEO_API/dtrsm_rutu_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dtrsm_rutu.m
+
+
+# dgelqf
+
+DP_LAPACK_OBJS += blasfeo_api_dgelqf
+RUN_DP_LAPACK_OBJS += run_blasfeo_api_dgelqf
+
+blasfeo_api_dgelqf: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dgelqf_benchmark.o -DDOUBLE_PRECISION -DGELQF
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dgelqf_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dgelqf_benchmark.out $(LIBS)
+
+run_blasfeo_api_dgelqf:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dgelqf
+	./$(BINARY_DIR)/BLASFEO_API/dgelqf_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dgelqf.m
+
+
+# dgeqrf
+
+DP_LAPACK_OBJS += blasfeo_api_dgeqrf
+RUN_DP_LAPACK_OBJS += run_blasfeo_api_dgeqrf
+
+blasfeo_api_dgeqrf: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dgeqrf_benchmark.o -DDOUBLE_PRECISION -DGEQRF
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dgeqrf_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dgeqrf_benchmark.out $(LIBS)
+
+run_blasfeo_api_dgeqrf:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dgeqrf
+	./$(BINARY_DIR)/BLASFEO_API/dgeqrf_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dgeqrf.m
+
+
+# dgetrf_nopivot
+
+DP_LAPACK_OBJS += blasfeo_api_dgetrf_nopivot
+RUN_DP_LAPACK_OBJS += run_blasfeo_api_dgetrf_nopivot
+
+blasfeo_api_dgetrf_nopivot: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dgetrf_nopivot_benchmark.o -DDOUBLE_PRECISION -DGETRF_NOPIVOT
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dgetrf_nopivot_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dgetrf_nopivot_benchmark.out $(LIBS)
+
+run_blasfeo_api_dgetrf_nopivot:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dgetrf_nopivot
+	./$(BINARY_DIR)/BLASFEO_API/dgetrf_nopivot_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dgetrf_nopivot.m
+
+
+# dgetrf_rowpivot
+
+DP_LAPACK_OBJS += blasfeo_api_dgetrf_rowpivot
+RUN_DP_LAPACK_OBJS += run_blasfeo_api_dgetrf_rowpivot
+
+blasfeo_api_dgetrf_rowpivot: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dgetrf_rowpivot_benchmark.o -DDOUBLE_PRECISION -DGETRF_ROWPIVOT
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dgetrf_rowpivot_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dgetrf_rowpivot_benchmark.out $(LIBS)
+
+run_blasfeo_api_dgetrf_rowpivot:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dgetrf_rowpivot
+	./$(BINARY_DIR)/BLASFEO_API/dgetrf_rowpivot_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dgetrf_rowpivot.m
+
+
+# dpotrf_l
+
+DP_LAPACK_OBJS += blasfeo_api_dpotrf_l
+RUN_DP_LAPACK_OBJS += run_blasfeo_api_dpotrf_l
+
+blasfeo_api_dpotrf_l: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dpotrf_l_benchmark.o -DDOUBLE_PRECISION -DPOTRF_L
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dpotrf_l_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dpotrf_l_benchmark.out $(LIBS)
+
+run_blasfeo_api_dpotrf_l:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dpotrf_l
+	./$(BINARY_DIR)/BLASFEO_API/dpotrf_l_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dpotrf_l.m
+
+
+# dpotrf_u
+
+DP_LAPACK_OBJS += blasfeo_api_dpotrf_u
+RUN_DP_LAPACK_OBJS += run_blasfeo_api_dpotrf_u
+
+blasfeo_api_dpotrf_u: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dpotrf_u_benchmark.o -DDOUBLE_PRECISION -DPOTRF_U
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dpotrf_u_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dpotrf_u_benchmark.out $(LIBS)
+
+run_blasfeo_api_dpotrf_u:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dpotrf_u
+	./$(BINARY_DIR)/BLASFEO_API/dpotrf_u_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dpotrf_u.m
+
+
+# dgemv_n
+
+DP_BLAS2_OBJS += blasfeo_api_dgemv_n
+RUN_DP_BLAS2_OBJS += run_blasfeo_api_dgemv_n
+
+blasfeo_api_dgemv_n: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dgemv_n_benchmark.o -DDOUBLE_PRECISION -DGEMV_N
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dgemv_n_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dgemv_n_benchmark.out $(LIBS)
+
+run_blasfeo_api_dgemv_n:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dgemv_n
+	./$(BINARY_DIR)/BLASFEO_API/dgemv_n_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dgemv_n.m
+
+
+# dgemv_t
+
+DP_BLAS2_OBJS += blasfeo_api_dgemv_t
+RUN_DP_BLAS2_OBJS += run_blasfeo_api_dgemv_t
+
+blasfeo_api_dgemv_t: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dgemv_t_benchmark.o -DDOUBLE_PRECISION -DGEMV_T
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dgemv_t_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dgemv_t_benchmark.out $(LIBS)
+
+run_blasfeo_api_dgemv_t:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dgemv_t
+	./$(BINARY_DIR)/BLASFEO_API/dgemv_t_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dgemv_t.m
+
+
+# dtrmv_lnn
+
+DP_BLAS2_OBJS += blasfeo_api_dtrmv_lnn
+RUN_DP_BLAS2_OBJS += run_blasfeo_api_dtrmv_lnn
+
+blasfeo_api_dtrmv_lnn: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dtrmv_lnn_benchmark.o -DDOUBLE_PRECISION -DTRMV_LNN
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dtrmv_lnn_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dtrmv_lnn_benchmark.out $(LIBS)
+
+run_blasfeo_api_dtrmv_lnn:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dtrmv_lnn
+	./$(BINARY_DIR)/BLASFEO_API/dtrmv_lnn_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dtrmv_lnn.m
+
+
+# dtrmv_ltn
+
+DP_BLAS2_OBJS += blasfeo_api_dtrmv_ltn
+RUN_DP_BLAS2_OBJS += run_blasfeo_api_dtrmv_ltn
+
+blasfeo_api_dtrmv_ltn: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dtrmv_ltn_benchmark.o -DDOUBLE_PRECISION -DTRMV_LTN
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dtrmv_ltn_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dtrmv_ltn_benchmark.out $(LIBS)
+
+run_blasfeo_api_dtrmv_ltn:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dtrmv_ltn
+	./$(BINARY_DIR)/BLASFEO_API/dtrmv_ltn_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dtrmv_ltn.m
+
+
+# dtrsv_lnn
+
+DP_BLAS2_OBJS += blasfeo_api_dtrsv_lnn
+RUN_DP_BLAS2_OBJS += run_blasfeo_api_dtrsv_lnn
+
+blasfeo_api_dtrsv_lnn: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dtrsv_lnn_benchmark.o -DDOUBLE_PRECISION -DTRSV_LNN
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dtrsv_lnn_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dtrsv_lnn_benchmark.out $(LIBS)
+
+run_blasfeo_api_dtrsv_lnn:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dtrsv_lnn
+	./$(BINARY_DIR)/BLASFEO_API/dtrsv_lnn_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dtrsv_lnn.m
+
+
+# dtrsv_ltn
+
+DP_BLAS2_OBJS += blasfeo_api_dtrsv_ltn
+RUN_DP_BLAS2_OBJS += run_blasfeo_api_dtrsv_ltn
+
+blasfeo_api_dtrsv_ltn: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dtrsv_ltn_benchmark.o -DDOUBLE_PRECISION -DTRSV_LTN
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dtrsv_ltn_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dtrsv_ltn_benchmark.out $(LIBS)
+
+run_blasfeo_api_dtrsv_ltn:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dtrsv_ltn
+	./$(BINARY_DIR)/BLASFEO_API/dtrsv_ltn_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dtrsv_ltn.m
+
+
+# dgemv_nt
+
+DP_BLAS2_OBJS += blasfeo_api_dgemv_nt
+RUN_DP_BLAS2_OBJS += run_blasfeo_api_dgemv_nt
+
+blasfeo_api_dgemv_nt: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dgemv_nt_benchmark.o -DDOUBLE_PRECISION -DGEMV_NT
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dgemv_nt_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dgemv_nt_benchmark.out $(LIBS)
+
+run_blasfeo_api_dgemv_nt:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dgemv_nt
+	./$(BINARY_DIR)/BLASFEO_API/dgemv_nt_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dgemv_nt.m
+
+
+# dsymv_l
+
+DP_BLAS2_OBJS += blasfeo_api_dsymv_l
+RUN_DP_BLAS2_OBJS += run_blasfeo_api_dsymv_l
+
+blasfeo_api_dsymv_l: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/dsymv_l_benchmark.o -DDOUBLE_PRECISION -DSYMV_L
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/dsymv_l_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/dsymv_l_benchmark.out $(LIBS)
+
+run_blasfeo_api_dsymv_l:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking dsymv_l
+	./$(BINARY_DIR)/BLASFEO_API/dsymv_l_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/dsymv_l.m
+
+
+# sgemm_nn
+
+SGEMM_OBJS += blasfeo_api_sgemm_nn
+RUN_SGEMM_OBJS += run_blasfeo_api_sgemm_nn
+
+blasfeo_api_sgemm_nn: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/sgemm_nn_benchmark.o -DSINGLE_PRECISION -DGEMM_NN
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/sgemm_nn_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/sgemm_nn_benchmark.out $(LIBS)
+
+run_blasfeo_api_sgemm_nn:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking sgemm_nn
+	./$(BINARY_DIR)/BLASFEO_API/sgemm_nn_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/sgemm_nn.m
+
+
+# sgemm_nt
+
+SGEMM_OBJS += blasfeo_api_sgemm_nt
+RUN_SGEMM_OBJS += run_blasfeo_api_sgemm_nt
+
+blasfeo_api_sgemm_nt: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/sgemm_nt_benchmark.o -DSINGLE_PRECISION -DGEMM_NT
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/sgemm_nt_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/sgemm_nt_benchmark.out $(LIBS)
+
+run_blasfeo_api_sgemm_nt:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking sgemm_nt
+	./$(BINARY_DIR)/BLASFEO_API/sgemm_nt_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/sgemm_nt.m
+
+
+# sgemm_tn
+
+SGEMM_OBJS += blasfeo_api_sgemm_tn
+RUN_SGEMM_OBJS += run_blasfeo_api_sgemm_tn
+
+blasfeo_api_sgemm_tn: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/sgemm_tn_benchmark.o -DSINGLE_PRECISION -DGEMM_TN
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/sgemm_tn_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/sgemm_tn_benchmark.out $(LIBS)
+
+run_blasfeo_api_sgemm_tn:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking sgemm_tn
+	./$(BINARY_DIR)/BLASFEO_API/sgemm_tn_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/sgemm_tn.m
+
+
+# sgemm_tt
+
+SGEMM_OBJS += blasfeo_api_sgemm_tt
+RUN_SGEMM_OBJS += run_blasfeo_api_sgemm_tt
+
+blasfeo_api_sgemm_tt: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/sgemm_tt_benchmark.o -DSINGLE_PRECISION -DGEMM_TT
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/sgemm_tt_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/sgemm_tt_benchmark.out $(LIBS)
+
+run_blasfeo_api_sgemm_tt:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking sgemm_tt
+	./$(BINARY_DIR)/BLASFEO_API/sgemm_tt_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/sgemm_tt.m
+
+
+# ssyrk_ln
+
+SSYRK_OBJS += blasfeo_api_ssyrk_ln
+RUN_SSYRK_OBJS += run_blasfeo_api_ssyrk_ln
+
+blasfeo_api_ssyrk_ln: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/ssyrk_ln_benchmark.o -DSINGLE_PRECISION -DSYRK_LN
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/ssyrk_ln_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/ssyrk_ln_benchmark.out $(LIBS)
+
+run_blasfeo_api_ssyrk_ln:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking ssyrk_ln
+	./$(BINARY_DIR)/BLASFEO_API/ssyrk_ln_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/ssyrk_ln.m
+
+
+# ssyrk_lt
+
+SSYRK_OBJS += blasfeo_api_ssyrk_lt
+RUN_SSYRK_OBJS += run_blasfeo_api_ssyrk_lt
+
+blasfeo_api_ssyrk_lt: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/ssyrk_lt_benchmark.o -DSINGLE_PRECISION -DSYRK_LT
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/ssyrk_lt_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/ssyrk_lt_benchmark.out $(LIBS)
+
+run_blasfeo_api_ssyrk_lt:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking ssyrk_lt
+	./$(BINARY_DIR)/BLASFEO_API/ssyrk_lt_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/ssyrk_lt.m
+
+
+# ssyrk_un
+
+SSYRK_OBJS += blasfeo_api_ssyrk_un
+RUN_SSYRK_OBJS += run_blasfeo_api_ssyrk_un
+
+blasfeo_api_ssyrk_un: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/ssyrk_un_benchmark.o -DSINGLE_PRECISION -DSYRK_UN
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/ssyrk_un_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/ssyrk_un_benchmark.out $(LIBS)
+
+run_blasfeo_api_ssyrk_un:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking ssyrk_un
+	./$(BINARY_DIR)/BLASFEO_API/ssyrk_un_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/ssyrk_un.m
+
+
+# ssyrk_ut
+
+SSYRK_OBJS += blasfeo_api_ssyrk_ut
+RUN_SSYRK_OBJS += run_blasfeo_api_ssyrk_ut
+
+blasfeo_api_ssyrk_ut: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/ssyrk_ut_benchmark.o -DSINGLE_PRECISION -DSYRK_UT
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/ssyrk_ut_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/ssyrk_ut_benchmark.out $(LIBS)
+
+run_blasfeo_api_ssyrk_ut:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking ssyrk_ut
+	./$(BINARY_DIR)/BLASFEO_API/ssyrk_ut_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/ssyrk_ut.m
+
+
+# strmm_llnn
+
+STRMM_OBJS += blasfeo_api_strmm_llnn
+RUN_STRMM_OBJS += run_blasfeo_api_strmm_llnn
+
+blasfeo_api_strmm_llnn: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/strmm_llnn_benchmark.o -DSINGLE_PRECISION -DTRMM -DTRMM_LLNN
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/strmm_llnn_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/strmm_llnn_benchmark.out $(LIBS)
+
+run_blasfeo_api_strmm_llnn:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking strmm_llnn
+	./$(BINARY_DIR)/BLASFEO_API/strmm_llnn_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/strmm_llnn.m
+
+
+# strmm_llnu
+
+STRMM_OBJS += blasfeo_api_strmm_llnu
+RUN_STRMM_OBJS += run_blasfeo_api_strmm_llnu
+
+blasfeo_api_strmm_llnu: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/strmm_llnu_benchmark.o -DSINGLE_PRECISION -DTRMM -DTRMM_LLNU
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/strmm_llnu_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/strmm_llnu_benchmark.out $(LIBS)
+
+run_blasfeo_api_strmm_llnu:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking strmm_llnu
+	./$(BINARY_DIR)/BLASFEO_API/strmm_llnu_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/strmm_llnu.m
+
+
+# strmm_lltn
+
+STRMM_OBJS += blasfeo_api_strmm_lltn
+RUN_STRMM_OBJS += run_blasfeo_api_strmm_lltn
+
+blasfeo_api_strmm_lltn: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/strmm_lltn_benchmark.o -DSINGLE_PRECISION -DTRMM -DTRMM_LLTN
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/strmm_lltn_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/strmm_lltn_benchmark.out $(LIBS)
+
+run_blasfeo_api_strmm_lltn:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking strmm_lltn
+	./$(BINARY_DIR)/BLASFEO_API/strmm_lltn_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/strmm_lltn.m
+
+
+# strmm_lltu
+
+STRMM_OBJS += blasfeo_api_strmm_lltu
+RUN_STRMM_OBJS += run_blasfeo_api_strmm_lltu
+
+blasfeo_api_strmm_lltu: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/strmm_lltu_benchmark.o -DSINGLE_PRECISION -DTRMM -DTRMM_LLTU
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/strmm_lltu_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/strmm_lltu_benchmark.out $(LIBS)
+
+run_blasfeo_api_strmm_lltu:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking strmm_lltu
+	./$(BINARY_DIR)/BLASFEO_API/strmm_lltu_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/strmm_lltu.m
+
+
+# strmm_lunn
+
+STRMM_OBJS += blasfeo_api_strmm_lunn
+RUN_STRMM_OBJS += run_blasfeo_api_strmm_lunn
+
+blasfeo_api_strmm_lunn: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/strmm_lunn_benchmark.o -DSINGLE_PRECISION -DTRMM -DTRMM_LUNN
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/strmm_lunn_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/strmm_lunn_benchmark.out $(LIBS)
+
+run_blasfeo_api_strmm_lunn:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking strmm_lunn
+	./$(BINARY_DIR)/BLASFEO_API/strmm_lunn_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/strmm_lunn.m
+
+
+# strmm_lunu
+
+STRMM_OBJS += blasfeo_api_strmm_lunu
+RUN_STRMM_OBJS += run_blasfeo_api_strmm_lunu
+
+blasfeo_api_strmm_lunu: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/strmm_lunu_benchmark.o -DSINGLE_PRECISION -DTRMM -DTRMM_LUNU
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/strmm_lunu_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/strmm_lunu_benchmark.out $(LIBS)
+
+run_blasfeo_api_strmm_lunu:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking strmm_lunu
+	./$(BINARY_DIR)/BLASFEO_API/strmm_lunu_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/strmm_lunu.m
+
+
+# strmm_lutn
+
+STRMM_OBJS += blasfeo_api_strmm_lutn
+RUN_STRMM_OBJS += run_blasfeo_api_strmm_lutn
+
+blasfeo_api_strmm_lutn: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/strmm_lutn_benchmark.o -DSINGLE_PRECISION -DTRMM -DTRMM_LUTN
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/strmm_lutn_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/strmm_lutn_benchmark.out $(LIBS)
+
+run_blasfeo_api_strmm_lutn:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking strmm_lutn
+	./$(BINARY_DIR)/BLASFEO_API/strmm_lutn_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/strmm_lutn.m
+
+
+# strmm_lutu
+
+STRMM_OBJS += blasfeo_api_strmm_lutu
+RUN_STRMM_OBJS += run_blasfeo_api_strmm_lutu
+
+blasfeo_api_strmm_lutu: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/strmm_lutu_benchmark.o -DSINGLE_PRECISION -DTRMM -DTRMM_LUTU
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/strmm_lutu_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/strmm_lutu_benchmark.out $(LIBS)
+
+run_blasfeo_api_strmm_lutu:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking strmm_lutu
+	./$(BINARY_DIR)/BLASFEO_API/strmm_lutu_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/strmm_lutu.m
+
+
+# strmm_rlnn
+
+STRMM_OBJS += blasfeo_api_strmm_rlnn
+RUN_STRMM_OBJS += run_blasfeo_api_strmm_rlnn
+
+blasfeo_api_strmm_rlnn: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/strmm_rlnn_benchmark.o -DSINGLE_PRECISION -DTRMM -DTRMM_RLNN
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/strmm_rlnn_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/strmm_rlnn_benchmark.out $(LIBS)
+
+run_blasfeo_api_strmm_rlnn:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking strmm_rlnn
+	./$(BINARY_DIR)/BLASFEO_API/strmm_rlnn_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/strmm_rlnn.m
+
+
+# strmm_rlnu
+
+STRMM_OBJS += blasfeo_api_strmm_rlnu
+RUN_STRMM_OBJS += run_blasfeo_api_strmm_rlnu
+
+blasfeo_api_strmm_rlnu: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/strmm_rlnu_benchmark.o -DSINGLE_PRECISION -DTRMM -DTRMM_RLNU
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/strmm_rlnu_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/strmm_rlnu_benchmark.out $(LIBS)
+
+run_blasfeo_api_strmm_rlnu:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking strmm_rlnu
+	./$(BINARY_DIR)/BLASFEO_API/strmm_rlnu_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/strmm_rlnu.m
+
+
+# strmm_rltn
+
+STRMM_OBJS += blasfeo_api_strmm_rltn
+RUN_STRMM_OBJS += run_blasfeo_api_strmm_rltn
+
+blasfeo_api_strmm_rltn: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/strmm_rltn_benchmark.o -DSINGLE_PRECISION -DTRMM -DTRMM_RLTN
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/strmm_rltn_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/strmm_rltn_benchmark.out $(LIBS)
+
+run_blasfeo_api_strmm_rltn:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking strmm_rltn
+	./$(BINARY_DIR)/BLASFEO_API/strmm_rltn_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/strmm_rltn.m
+
+
+# strmm_rltu
+
+STRMM_OBJS += blasfeo_api_strmm_rltu
+RUN_STRMM_OBJS += run_blasfeo_api_strmm_rltu
+
+blasfeo_api_strmm_rltu: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/strmm_rltu_benchmark.o -DSINGLE_PRECISION -DTRMM -DTRMM_RLTU
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/strmm_rltu_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/strmm_rltu_benchmark.out $(LIBS)
+
+run_blasfeo_api_strmm_rltu:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking strmm_rltu
+	./$(BINARY_DIR)/BLASFEO_API/strmm_rltu_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/strmm_rltu.m
+
+
+# strmm_runn
+
+STRMM_OBJS += blasfeo_api_strmm_runn
+RUN_STRMM_OBJS += run_blasfeo_api_strmm_runn
+
+blasfeo_api_strmm_runn: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/strmm_runn_benchmark.o -DSINGLE_PRECISION -DTRMM -DTRMM_RUNN
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/strmm_runn_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/strmm_runn_benchmark.out $(LIBS)
+
+run_blasfeo_api_strmm_runn:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking strmm_runn
+	./$(BINARY_DIR)/BLASFEO_API/strmm_runn_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/strmm_runn.m
+
+
+# strmm_runu
+
+STRMM_OBJS += blasfeo_api_strmm_runu
+RUN_STRMM_OBJS += run_blasfeo_api_strmm_runu
+
+blasfeo_api_strmm_runu: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/strmm_runu_benchmark.o -DSINGLE_PRECISION -DTRMM -DTRMM_RUNU
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/strmm_runu_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/strmm_runu_benchmark.out $(LIBS)
+
+run_blasfeo_api_strmm_runu:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking strmm_runu
+	./$(BINARY_DIR)/BLASFEO_API/strmm_runu_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/strmm_runu.m
+
+
+# strmm_rutn
+
+STRMM_OBJS += blasfeo_api_strmm_rutn
+RUN_STRMM_OBJS += run_blasfeo_api_strmm_rutn
+
+blasfeo_api_strmm_rutn: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/strmm_rutn_benchmark.o -DSINGLE_PRECISION -DTRMM -DTRMM_RUTN
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/strmm_rutn_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/strmm_rutn_benchmark.out $(LIBS)
+
+run_blasfeo_api_strmm_rutn:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking strmm_rutn
+	./$(BINARY_DIR)/BLASFEO_API/strmm_rutn_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/strmm_rutn.m
+
+
+# strmm_rutu
+
+STRMM_OBJS += blasfeo_api_strmm_rutu
+RUN_STRMM_OBJS += run_blasfeo_api_strmm_rutu
+
+blasfeo_api_strmm_rutu: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/strmm_rutu_benchmark.o -DSINGLE_PRECISION -DTRMM -DTRMM_RUTU
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/strmm_rutu_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/strmm_rutu_benchmark.out $(LIBS)
+
+run_blasfeo_api_strmm_rutu:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking strmm_rutu
+	./$(BINARY_DIR)/BLASFEO_API/strmm_rutu_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/strmm_rutu.m
+
+
+# strsm_llnn
+
+STRSM_OBJS += blasfeo_api_strsm_llnn
+RUN_STRSM_OBJS += run_blasfeo_api_strsm_llnn
+
+blasfeo_api_strsm_llnn: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/strsm_llnn_benchmark.o -DSINGLE_PRECISION -DTRSM -DTRSM_LLNN
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/strsm_llnn_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/strsm_llnn_benchmark.out $(LIBS)
+
+run_blasfeo_api_strsm_llnn:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking strsm_llnn
+	./$(BINARY_DIR)/BLASFEO_API/strsm_llnn_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/strsm_llnn.m
+
+
+# strsm_llnu
+
+STRSM_OBJS += blasfeo_api_strsm_llnu
+RUN_STRSM_OBJS += run_blasfeo_api_strsm_llnu
+
+blasfeo_api_strsm_llnu: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/strsm_llnu_benchmark.o -DSINGLE_PRECISION -DTRSM -DTRSM_LLNU
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/strsm_llnu_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/strsm_llnu_benchmark.out $(LIBS)
+
+run_blasfeo_api_strsm_llnu:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking strsm_llnu
+	./$(BINARY_DIR)/BLASFEO_API/strsm_llnu_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/strsm_llnu.m
+
+
+# strsm_lltn
+
+STRSM_OBJS += blasfeo_api_strsm_lltn
+RUN_STRSM_OBJS += run_blasfeo_api_strsm_lltn
+
+blasfeo_api_strsm_lltn: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/strsm_lltn_benchmark.o -DSINGLE_PRECISION -DTRSM -DTRSM_LLTN
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/strsm_lltn_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/strsm_lltn_benchmark.out $(LIBS)
+
+run_blasfeo_api_strsm_lltn:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking strsm_lltn
+	./$(BINARY_DIR)/BLASFEO_API/strsm_lltn_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/strsm_lltn.m
+
+
+# strsm_lltu
+
+STRSM_OBJS += blasfeo_api_strsm_lltu
+RUN_STRSM_OBJS += run_blasfeo_api_strsm_lltu
+
+blasfeo_api_strsm_lltu: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/strsm_lltu_benchmark.o -DSINGLE_PRECISION -DTRSM -DTRSM_LLTU
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/strsm_lltu_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/strsm_lltu_benchmark.out $(LIBS)
+
+run_blasfeo_api_strsm_lltu:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking strsm_lltu
+	./$(BINARY_DIR)/BLASFEO_API/strsm_lltu_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/strsm_lltu.m
+
+
+# strsm_lunn
+
+STRSM_OBJS += blasfeo_api_strsm_lunn
+RUN_STRSM_OBJS += run_blasfeo_api_strsm_lunn
+
+blasfeo_api_strsm_lunn: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/strsm_lunn_benchmark.o -DSINGLE_PRECISION -DTRSM -DTRSM_LUNN
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/strsm_lunn_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/strsm_lunn_benchmark.out $(LIBS)
+
+run_blasfeo_api_strsm_lunn:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking strsm_lunn
+	./$(BINARY_DIR)/BLASFEO_API/strsm_lunn_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/strsm_lunn.m
+
+
+# strsm_lunu
+
+STRSM_OBJS += blasfeo_api_strsm_lunu
+RUN_STRSM_OBJS += run_blasfeo_api_strsm_lunu
+
+blasfeo_api_strsm_lunu: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/strsm_lunu_benchmark.o -DSINGLE_PRECISION -DTRSM -DTRSM_LUNU
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/strsm_lunu_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/strsm_lunu_benchmark.out $(LIBS)
+
+run_blasfeo_api_strsm_lunu:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking strsm_lunu
+	./$(BINARY_DIR)/BLASFEO_API/strsm_lunu_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/strsm_lunu.m
+
+
+# strsm_lutn
+
+STRSM_OBJS += blasfeo_api_strsm_lutn
+RUN_STRSM_OBJS += run_blasfeo_api_strsm_lutn
+
+blasfeo_api_strsm_lutn: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/strsm_lutn_benchmark.o -DSINGLE_PRECISION -DTRSM -DTRSM_LUTN
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/strsm_lutn_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/strsm_lutn_benchmark.out $(LIBS)
+
+run_blasfeo_api_strsm_lutn:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking strsm_lutn
+	./$(BINARY_DIR)/BLASFEO_API/strsm_lutn_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/strsm_lutn.m
+
+
+# strsm_lutu
+
+STRSM_OBJS += blasfeo_api_strsm_lutu
+RUN_STRSM_OBJS += run_blasfeo_api_strsm_lutu
+
+blasfeo_api_strsm_lutu: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/strsm_lutu_benchmark.o -DSINGLE_PRECISION -DTRSM -DTRSM_LUTU
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/strsm_lutu_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/strsm_lutu_benchmark.out $(LIBS)
+
+run_blasfeo_api_strsm_lutu:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking strsm_lutu
+	./$(BINARY_DIR)/BLASFEO_API/strsm_lutu_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/strsm_lutu.m
+
+
+# strsm_rlnn
+
+STRSM_OBJS += blasfeo_api_strsm_rlnn
+RUN_STRSM_OBJS += run_blasfeo_api_strsm_rlnn
+
+blasfeo_api_strsm_rlnn: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/strsm_rlnn_benchmark.o -DSINGLE_PRECISION -DTRSM -DTRSM_RLNN
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/strsm_rlnn_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/strsm_rlnn_benchmark.out $(LIBS)
+
+run_blasfeo_api_strsm_rlnn:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking strsm_rlnn
+	./$(BINARY_DIR)/BLASFEO_API/strsm_rlnn_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/strsm_rlnn.m
+
+
+# strsm_rlnu
+
+STRSM_OBJS += blasfeo_api_strsm_rlnu
+RUN_STRSM_OBJS += run_blasfeo_api_strsm_rlnu
+
+blasfeo_api_strsm_rlnu: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/strsm_rlnu_benchmark.o -DSINGLE_PRECISION -DTRSM -DTRSM_RLNU
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/strsm_rlnu_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/strsm_rlnu_benchmark.out $(LIBS)
+
+run_blasfeo_api_strsm_rlnu:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking strsm_rlnu
+	./$(BINARY_DIR)/BLASFEO_API/strsm_rlnu_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/strsm_rlnu.m
+
+
+# strsm_rltn
+
+STRSM_OBJS += blasfeo_api_strsm_rltn
+RUN_STRSM_OBJS += run_blasfeo_api_strsm_rltn
+
+blasfeo_api_strsm_rltn: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/strsm_rltn_benchmark.o -DSINGLE_PRECISION -DTRSM -DTRSM_RLTN
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/strsm_rltn_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/strsm_rltn_benchmark.out $(LIBS)
+
+run_blasfeo_api_strsm_rltn:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking strsm_rltn
+	./$(BINARY_DIR)/BLASFEO_API/strsm_rltn_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/strsm_rltn.m
+
+
+# strsm_rltu
+
+STRSM_OBJS += blasfeo_api_strsm_rltu
+RUN_STRSM_OBJS += run_blasfeo_api_strsm_rltu
+
+blasfeo_api_strsm_rltu: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/strsm_rltu_benchmark.o -DSINGLE_PRECISION -DTRSM -DTRSM_RLTU
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/strsm_rltu_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/strsm_rltu_benchmark.out $(LIBS)
+
+run_blasfeo_api_strsm_rltu:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking strsm_rltu
+	./$(BINARY_DIR)/BLASFEO_API/strsm_rltu_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/strsm_rltu.m
+
+
+# strsm_runn
+
+STRSM_OBJS += blasfeo_api_strsm_runn
+RUN_STRSM_OBJS += run_blasfeo_api_strsm_runn
+
+blasfeo_api_strsm_runn: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/strsm_runn_benchmark.o -DSINGLE_PRECISION -DTRSM -DTRSM_RUNN
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/strsm_runn_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/strsm_runn_benchmark.out $(LIBS)
+
+run_blasfeo_api_strsm_runn:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking strsm_runn
+	./$(BINARY_DIR)/BLASFEO_API/strsm_runn_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/strsm_runn.m
+
+
+# strsm_runu
+
+STRSM_OBJS += blasfeo_api_strsm_runu
+RUN_STRSM_OBJS += run_blasfeo_api_strsm_runu
+
+blasfeo_api_strsm_runu: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/strsm_runu_benchmark.o -DSINGLE_PRECISION -DTRSM -DTRSM_RUNU
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/strsm_runu_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/strsm_runu_benchmark.out $(LIBS)
+
+run_blasfeo_api_strsm_runu:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking strsm_runu
+	./$(BINARY_DIR)/BLASFEO_API/strsm_runu_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/strsm_runu.m
+
+
+# strsm_rutn
+
+STRSM_OBJS += blasfeo_api_strsm_rutn
+RUN_STRSM_OBJS += run_blasfeo_api_strsm_rutn
+
+blasfeo_api_strsm_rutn: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/strsm_rutn_benchmark.o -DSINGLE_PRECISION -DTRSM -DTRSM_RUTN
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/strsm_rutn_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/strsm_rutn_benchmark.out $(LIBS)
+
+run_blasfeo_api_strsm_rutn:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking strsm_rutn
+	./$(BINARY_DIR)/BLASFEO_API/strsm_rutn_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/strsm_rutn.m
+
+
+# strsm_rutu
+
+STRSM_OBJS += blasfeo_api_strsm_rutu
+RUN_STRSM_OBJS += run_blasfeo_api_strsm_rutu
+
+blasfeo_api_strsm_rutu: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/strsm_rutu_benchmark.o -DSINGLE_PRECISION -DTRSM -DTRSM_RUTU
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/strsm_rutu_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/strsm_rutu_benchmark.out $(LIBS)
+
+run_blasfeo_api_strsm_rutu:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking strsm_rutu
+	./$(BINARY_DIR)/BLASFEO_API/strsm_rutu_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/strsm_rutu.m
+
+
+# sgelqf
+
+SP_LAPACK_OBJS += blasfeo_api_sgelqf
+RUN_SP_LAPACK_OBJS += run_blasfeo_api_sgelqf
+
+blasfeo_api_sgelqf: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/sgelqf_benchmark.o -DSINGLE_PRECISION -DGELQF
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/sgelqf_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/sgelqf_benchmark.out $(LIBS)
+
+run_blasfeo_api_sgelqf:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking sgelqf
+	./$(BINARY_DIR)/BLASFEO_API/sgelqf_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/sgelqf.m
+
+
+# sgeqrf
+
+SP_LAPACK_OBJS += blasfeo_api_sgeqrf
+RUN_SP_LAPACK_OBJS += run_blasfeo_api_sgeqrf
+
+blasfeo_api_sgeqrf: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/sgeqrf_benchmark.o -DSINGLE_PRECISION -DGEQRF
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/sgeqrf_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/sgeqrf_benchmark.out $(LIBS)
+
+run_blasfeo_api_sgeqrf:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking sgeqrf
+	./$(BINARY_DIR)/BLASFEO_API/sgeqrf_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/sgeqrf.m
+
+
+# sgetrf_nopivot
+
+SP_LAPACK_OBJS += blasfeo_api_sgetrf_nopivot
+RUN_SP_LAPACK_OBJS += run_blasfeo_api_sgetrf_nopivot
+
+blasfeo_api_sgetrf_nopivot: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/sgetrf_nopivot_benchmark.o -DSINGLE_PRECISION -DGETRF_NOPIVOT
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/sgetrf_nopivot_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/sgetrf_nopivot_benchmark.out $(LIBS)
+
+run_blasfeo_api_sgetrf_nopivot:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking sgetrf_nopivot
+	./$(BINARY_DIR)/BLASFEO_API/sgetrf_nopivot_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/sgetrf_nopivot.m
+
+
+# sgetrf_rowpivot
+
+SP_LAPACK_OBJS += blasfeo_api_sgetrf_rowpivot
+RUN_SP_LAPACK_OBJS += run_blasfeo_api_sgetrf_rowpivot
+
+blasfeo_api_sgetrf_rowpivot: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/sgetrf_rowpivot_benchmark.o -DSINGLE_PRECISION -DGETRF_ROWPIVOT
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/sgetrf_rowpivot_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/sgetrf_rowpivot_benchmark.out $(LIBS)
+
+run_blasfeo_api_sgetrf_rowpivot:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking sgetrf_rowpivot
+	./$(BINARY_DIR)/BLASFEO_API/sgetrf_rowpivot_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/sgetrf_rowpivot.m
+
+
+# spotrf_l
+
+SP_LAPACK_OBJS += blasfeo_api_spotrf_l
+RUN_SP_LAPACK_OBJS += run_blasfeo_api_spotrf_l
+
+blasfeo_api_spotrf_l: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/spotrf_l_benchmark.o -DSINGLE_PRECISION -DPOTRF_L
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/spotrf_l_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/spotrf_l_benchmark.out $(LIBS)
+
+run_blasfeo_api_spotrf_l:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking spotrf_l
+	./$(BINARY_DIR)/BLASFEO_API/spotrf_l_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/spotrf_l.m
+
+
+# spotrf_u
+
+SP_LAPACK_OBJS += blasfeo_api_spotrf_u
+RUN_SP_LAPACK_OBJS += run_blasfeo_api_spotrf_u
+
+blasfeo_api_spotrf_u: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/spotrf_u_benchmark.o -DSINGLE_PRECISION -DPOTRF_U
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/spotrf_u_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/spotrf_u_benchmark.out $(LIBS)
+
+run_blasfeo_api_spotrf_u:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking spotrf_u
+	./$(BINARY_DIR)/BLASFEO_API/spotrf_u_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/spotrf_u.m
+
+
+# sgemv_n
+
+SP_BLAS2_OBJS += blasfeo_api_sgemv_n
+RUN_SP_BLAS2_OBJS += run_blasfeo_api_sgemv_n
+
+blasfeo_api_sgemv_n: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/sgemv_n_benchmark.o -DSINGLE_PRECISION -DGEMV_N
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/sgemv_n_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/sgemv_n_benchmark.out $(LIBS)
+
+run_blasfeo_api_sgemv_n:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking sgemv_n
+	./$(BINARY_DIR)/BLASFEO_API/sgemv_n_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/sgemv_n.m
+
+
+# sgemv_t
+
+SP_BLAS2_OBJS += blasfeo_api_sgemv_t
+RUN_SP_BLAS2_OBJS += run_blasfeo_api_sgemv_t
+
+blasfeo_api_sgemv_t: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/sgemv_t_benchmark.o -DSINGLE_PRECISION -DGEMV_T
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/sgemv_t_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/sgemv_t_benchmark.out $(LIBS)
+
+run_blasfeo_api_sgemv_t:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking sgemv_t
+	./$(BINARY_DIR)/BLASFEO_API/sgemv_t_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/sgemv_t.m
+
+
+# strmv_lnn
+
+SP_BLAS2_OBJS += blasfeo_api_strmv_lnn
+RUN_SP_BLAS2_OBJS += run_blasfeo_api_strmv_lnn
+
+blasfeo_api_strmv_lnn: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/strmv_lnn_benchmark.o -DSINGLE_PRECISION -DTRMV_LNN
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/strmv_lnn_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/strmv_lnn_benchmark.out $(LIBS)
+
+run_blasfeo_api_strmv_lnn:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking strmv_lnn
+	./$(BINARY_DIR)/BLASFEO_API/strmv_lnn_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/strmv_lnn.m
+
+
+# strmv_ltn
+
+SP_BLAS2_OBJS += blasfeo_api_strmv_ltn
+RUN_SP_BLAS2_OBJS += run_blasfeo_api_strmv_ltn
+
+blasfeo_api_strmv_ltn: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/strmv_ltn_benchmark.o -DSINGLE_PRECISION -DTRMV_LTN
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/strmv_ltn_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/strmv_ltn_benchmark.out $(LIBS)
+
+run_blasfeo_api_strmv_ltn:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking strmv_ltn
+	./$(BINARY_DIR)/BLASFEO_API/strmv_ltn_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/strmv_ltn.m
+
+
+# strsv_lnn
+
+SP_BLAS2_OBJS += blasfeo_api_strsv_lnn
+RUN_SP_BLAS2_OBJS += run_blasfeo_api_strsv_lnn
+
+blasfeo_api_strsv_lnn: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/strsv_lnn_benchmark.o -DSINGLE_PRECISION -DTRSV_LNN
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/strsv_lnn_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/strsv_lnn_benchmark.out $(LIBS)
+
+run_blasfeo_api_strsv_lnn:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking strsv_lnn
+	./$(BINARY_DIR)/BLASFEO_API/strsv_lnn_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/strsv_lnn.m
+
+
+# strsv_ltn
+
+SP_BLAS2_OBJS += blasfeo_api_strsv_ltn
+RUN_SP_BLAS2_OBJS += run_blasfeo_api_strsv_ltn
+
+blasfeo_api_strsv_ltn: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/strsv_ltn_benchmark.o -DSINGLE_PRECISION -DTRSV_LTN
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/strsv_ltn_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/strsv_ltn_benchmark.out $(LIBS)
+
+run_blasfeo_api_strsv_ltn:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking strsv_ltn
+	./$(BINARY_DIR)/BLASFEO_API/strsv_ltn_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/strsv_ltn.m
+
+
+# sgemv_nt
+
+SP_BLAS2_OBJS += blasfeo_api_sgemv_nt
+RUN_SP_BLAS2_OBJS += run_blasfeo_api_sgemv_nt
+
+blasfeo_api_sgemv_nt: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/sgemv_nt_benchmark.o -DSINGLE_PRECISION -DGEMV_NT
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/sgemv_nt_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/sgemv_nt_benchmark.out $(LIBS)
+
+run_blasfeo_api_sgemv_nt:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking sgemv_nt
+	./$(BINARY_DIR)/BLASFEO_API/sgemv_nt_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/sgemv_nt.m
+
+
+# ssymv_l
+
+SP_BLAS2_OBJS += blasfeo_api_ssymv_l
+RUN_SP_BLAS2_OBJS += run_blasfeo_api_ssymv_l
+
+blasfeo_api_ssymv_l: common
+	$(CC) $(CFLAGS) -c x_benchmark_blasfeo_api.c -o $(BINARY_DIR)/BLASFEO_API/ssymv_l_benchmark.o -DSINGLE_PRECISION -DSYMV_L
+	$(CC) $(CFLAGS) $(BINARY_DIR)/BLASFEO_API/ssymv_l_benchmark.o -o $(BINARY_DIR)/BLASFEO_API/ssymv_l_benchmark.out $(LIBS)
+
+run_blasfeo_api_ssymv_l:
+	mkdir -p ./$(BINARY_DIR)/BLASFEO_API/data
+	@echo
+	@echo benchmarking ssymv_l
+	./$(BINARY_DIR)/BLASFEO_API/ssymv_l_benchmark.out > ./$(BINARY_DIR)/BLASFEO_API/data/ssymv_l.m
+
+
+
+# build
+
+blasfeo_api_dp_blas2: $(DP_BLAS2_OBJS)
+
+blasfeo_api_dp_blas3: $(DGEMM_OBJS) $(DSYRK_OBJS) $(DTRMM_OBJS) $(DTRSM_OBJS) $(DP_BLAS3_OBJS)
+
+blasfeo_api_dgemm: $(DGEMM_OBJS)
+
+blasfeo_api_dsyrk: $(DSYRK_OBJS)
+
+blasfeo_api_dtrmm: $(DTRMM_OBJS)
+
+blasfeo_api_dtrsm: $(DTRSM_OBJS)
+
+blasfeo_api_dp_lapack: $(DP_LAPACK_OBJS)
+
+blasfeo_api_dp_all: blasfeo_api_dp_blas3 blasfeo_api_dp_lapack blasfeo_api_dp_blas2
+
+blasfeo_api_sp_blas2: $(SP_BLAS2_OBJS)
+
+blasfeo_api_sp_blas3: $(SGEMM_OBJS) $(SSYRK_OBJS) $(STRMM_OBJS) $(STRSM_OBJS) $(SP_BLAS3_OBJS)
+
+blasfeo_api_sgemm: $(SGEMM_OBJS)
+
+blasfeo_api_ssyrk: $(SSYRK_OBJS)
+
+blasfeo_api_strmm: $(STRMM_OBJS)
+
+blasfeo_api_strsm: $(STRSM_OBJS)
+
+blasfeo_api_sp_lapack: $(SP_LAPACK_OBJS)
+
+blasfeo_api_sp_all: blasfeo_api_sp_blas3 blasfeo_api_sp_lapack blasfeo_api_sp_blas2
+
+blasfeo_api_all: blasfeo_api_dp_all blasfeo_api_sp_all
+
+# run
+
+run_blasfeo_api_dp_blas2: $(RUN_DP_BLAS2_OBJS)
+
+run_blasfeo_api_dp_blas3: $(RUN_DGEMM_OBJS) $(RUN_DSYRK_OBJS) $(RUN_DTRMM_OBJS) $(RUN_DTRSM_OBJS) $(RUN_DP_BLAS3_OBJS)
+
+run_blasfeo_api_dgemm: $(RUN_DGEMM_OBJS)
+
+run_blasfeo_api_dsyrk: $(RUN_DSYRK_OBJS)
+
+run_blasfeo_api_dtrmm: $(RUN_DTRMM_OBJS)
+
+run_blasfeo_api_dtrsm: $(RUN_DTRSM_OBJS)
+
+run_blasfeo_api_dp_lapack: $(RUN_DP_LAPACK_OBJS)
+
+run_blasfeo_api_dp_all: run_blasfeo_api_dp_blas3 run_blasfeo_api_dp_lapack run_blasfeo_api_dp_blas2
+
+run_blasfeo_api_sp_blas2: $(RUN_SP_BLAS2_OBJS)
+
+run_blasfeo_api_sp_blas3: $(RUN_SGEMM_OBJS) $(RUN_SSYRK_OBJS) $(RUN_STRMM_OBJS) $(RUN_STRSM_OBJS) $(RUN_SP_BLAS3_OBJS)
+
+run_blasfeo_api_sgemm: $(RUN_SGEMM_OBJS)
+
+run_blasfeo_api_ssyrk: $(RUN_SSYRK_OBJS)
+
+run_blasfeo_api_strmm: $(RUN_STRMM_OBJS)
+
+run_blasfeo_api_strsm: $(RUN_STRSM_OBJS)
+
+run_blasfeo_api_sp_lapack: $(RUN_SP_LAPACK_OBJS)
+
+run_blasfeo_api_sp_all: run_blasfeo_api_sp_blas3 run_blasfeo_api_sp_lapack run_blasfeo_api_sp_blas2
+
+run_blasfeo_api_all: run_blasfeo_api_dp_all run_blasfeo_api_sp_all
+
+
+
+# print
+
+figures_benchmark_blasfeo_api_all:
+	cp figures_blas_benchmark.m ./$(BINARY_DIR)/BLASFEO_API/data/
+	cd ./$(BINARY_DIR)/BLASFEO_API/data/ ; octave-cli figures_blas_benchmark.m
+
+
+
+

@@ -1,0 +1,181 @@
+============================================================================
+
+  JSONlab - a toolbox to encode/decode JSON/UBJSON/MessagePack data in MATLAB/Octave
+
+----------------------------------------------------------------------------
+
+JSONlab ChangeLog (key features marked by *):
+
+== JSONlab 1.9.8 (codename: Magnus - beta), FangQ <q.fang (at) neu.edu> ==
+
+ 2019-10-22*[650b5ec] enable preencode by default for savejson and saveubjson
+ 2019-10-21 [0f870c0] make demos to run with jdataencode, but still have issues
+ 2019-10-21*[874945f] decode graph data, encode non-char-keyed map data
+ 2019-10-18 [11712b7] add any2jd, pass opt to name check, add more options
+ 2019-10-18*[f97de9b] extract name encoding/decoding to separate function, like in easyh5
+ 2019-10-17*[9d0fd4a] rewrite jdataencode
+ 2019-10-15 [23f14d6] minor updates to make msgpack to work on octave
+ 2019-10-14 [04d6c04] update encoding and decoding function help info
+ 2019-09-16*[689cb40] support lz4 and lz4hc compression via zmat v0.9
+ 2019-09-03 [2aa6591] add conditions to use the U marker
+ 2019-08-20 [31eabba] fix table transpose issue for uniform type tables
+ 2019-08-13 [cdb218d] use iso2mesh original function isoctavemesh in place of isoctave
+ 2019-07-18 [6c44724] Add Encoding option to loadjson and savejson
+ 2019-07-11*[06d33aa] update zmat test to support zmat v0.8 mox-the-fox
+ 2019-07-09 [6a4821c] fix 2d array transpose issue, close #54
+ 2019-06-24 [fb5b240] update format for table objects
+ 2019-06-24*[eba4078] saving table objects with new syntax
+ 2019-06-20 [6803542] fix ubjson array output bug
+ 2019-06-18 [69006d5] encode and decode non-string keyed maps
+ 2019-06-14 [bf26892] allow to decode jdata structures loaded from jsonencode from matlab
+ 2019-06-12 [3eb6d56] change ArrayCompression keywords to ArrayZip to be short
+ 2019-06-12*[e5f2ffb] complete saveubjson debug mode, add compression example
+ 2019-06-11 [ebbcfd2] pass formatversion tag to jdatadecode
+ 2019-06-10*[95b2eb0] add jdataencode and jdatadecode
+ 2019-06-10*[f86219d] major update: use row-major for N-D array, incompatible with old JSONLab
+ 2019-06-02 [63ff948] handle nestarray in json and ubjson
+ 2019-06-01 [f421b14] add a modified msgpack decoder based on Bastian Bechtold's transplant project
+ 2019-05-31 [428b47f] fix savemsgpack input test
+ 2019-05-31 [0ff5d47] support table in ubjson,add demo for handles,containers.Map and datetime and tables
+ 2019-05-31*[0c467ee] support lzma and lzip compression decompression via zmat toolbox (http://github.com/fangq/zmat)
+ 2019-05-31 [599ee4c] support categorical data
+ 2019-05-31 [15c4b8d] completely remove global var using nested functions
+ 2019-05-30*[d47be45] fast bracket matching
+ 2019-05-30 [1993a24] recursively processing output
+ 2019-05-30 [d1f7ee8] fix bracket matching, transpose _ArrayData_; convert irregular array to cell
+ 2019-05-24*[0ec2d01] rewriting fastarrayparser, 10x faster for Octave, close #4 with fast bracket matching
+ 2019-05-22*[d8c19b8] add support to MessagePack, close #53, add NestArray option, close #6
+ 2019-05-19*[c87e7d2] support containers.Map
+
+== JSONlab 1.9 (codename: Magnus - alpha), FangQ <q.fang (at) neu.edu> ==
+
+ 2019-05-06 [25ad795] unescape string in loadjson.m
+ 2019-05-04 [2e317c9] explain extra compression fields
+ 2019-05-02 [1b1be65] avoid side effect of removing singletarray
+ 2019-05-02*[8360fd1] support zmat based base64 encoding and decoding
+ 2019-05-01*[c797bb2] integrating zmat, for zlib/gzip data compression
+ 2019-04-29 [70551fe] remove warnings from matlab
+ 2019-04-28 [0d61c4b] complete data compression support, close #52
+ 2019-04-27 [804115b] avoid typecast error
+ 2019-04-27 [c166aa7] change default compressarraysize to 100
+ 2019-04-27*[3322f6f] major new feature: support array compression and decompression
+ 2019-03-13*[9c01046] support saving function handles, close #51
+ 2019-03-13 [a8fde38] add option to parse string array or convert to char, close #50
+ 2019-03-12 [ed2645e] treat string array as cell array in newer matlab
+ 2018-11-18 [c3eb021] allow saving uint64 integers in saveubjson, fix #49
+
+== JSONlab 1.8 (codename: Nominus), FangQ <q.fang (at) neu.edu> ==
+
+ 2018-07-12 [03a6c25] update documentation, bump version to 1.8, tag Nominus
+ 2018-07-12*[1597106] add patch provided by pjkoprowski to support MATLAB table, add RowNames support, fix #29
+ 2018-07-12 [f16cc57] fix #31, throw an error when : array construct is used
+ 2018-07-12 [956e000] drop octave 3.x support, fix ubjson error in octave
+ 2018-07-12 [e090f0a] fix octave warning for saveubjson
+ 2018-07-12*[34284c7] fix issues #34 #39 #44 and #45, support double-quoted strings
+ 2017-09-06 [474d8c8] Merge pull request #41 from dasantonym/master
+ 2017-08-07*[38b24fb] added package.json to be able to intall via npm package manager, converted readme to utf-8, added basic .gitignore file
+ 2017-07-19 [ae7a5d9] Merge pull request #40 from astorfi/master
+ 2017-07-17 [154ef61] Rename README.txt to README.rst
+ 2017-03-27 [31b5bdc] simplify condition flow in matching_bracket
+ 2017-03-27 [86ef12a] avoid error in matlab 2017a, close #34
+ 2017-02-18 [4a09ac3] Merge pull request #32 from vrichter/master
+ 2017-02-14 [e67d3a3] respect integer types
+
+== JSONlab 1.5 (codename: Nominus - alpha), FangQ <q.fang (at) neu.edu> ==
+
+ 2017/01/02 *use Big-endian format to store floating points (d/D) in saveubjson (Issue #25)
+ 2017/01/02 *speedup parsing large unstructured data by 2x (Issue #9)
+ 2017/01/01  make parsing independent of white space (Issue #30)
+ 2016/08/27  allow to parse array of homogeneous elements (Issue 5)
+ 2016/08/22  permit [] inside file names in savejson
+ 2016/01/06  fix a bug that prevents saving to a file in savejson
+ 
+
+== JSONlab 1.2 (codename: Optimus - Update 2), FangQ <q.fang (at) neu.edu> ==
+
+ 2015/12/16 *replacing string concatenation by str cells to gain 2x speed in savejson (Issue#17)
+ 2015/12/11  fix FileName option case bug (SVN rev#495)
+ 2015/12/11  add SingletCell option, add SingletArray to replace NoRowBracket (Issue#15,#8)
+ 2015/11/10  fix bug for inerpreting file names as JSON string - by Mykhailo Bratukha (Pull#14)
+ 2015/10/16  fix bug for cell with transposed data - by Insik Kim (Pull#12)
+ 2015/09/25  support exporting matlab object to JSON - by Sertan Senturk (Pull#10, #11)
+
+== JSONlab 1.1 (codename: Optimus - Update 1), FangQ <q.fang (at) neu.edu> ==
+
+ 2015/05/05 *massively accelerating loadjson for parsing large collection of unstructured small objects
+ 2015/05/05  force array bracket in 1x1 struct to maintain depth (Issue#1)
+ 2015/05/05  parse logicals in loadjson
+ 2015/05/05  make options case insensitive
+ 2015/05/01  reading unicode encoded json files (thanks to Sertan Senturk,Issue#3)
+ 2015/04/30  allow \uXXXX to represent a unicode in a string (Issue#2)
+ 2015/03/30  save a 0x0 solid real empty array as null and handel empty struct array
+ 2015/03/30  properly handle escape characters in a string
+ 2015/01/24 *implement the UBJSON Draft12 new name format
+ 2015/01/13  correct cell array indentation inconsistency
+
+== JSONlab 1.0 (codename: Optimus - Final), FangQ <q.fang (at) neu.edu> ==
+
+ 2015/01/02  polish help info for all major functions, update examples, finalize 1.0
+ 2014/12/19  fix a bug to strictly respect NoRowBracket in savejson
+
+== JSONlab 1.0.0-RC2 (codename: Optimus - RC2), FangQ <q.fang (at) neu.edu> ==
+
+ 2014/11/22  show progress bar in loadjson ('ShowProgress') 
+ 2014/11/17 *add Compact option in savejson to output compact JSON format ('Compact')
+ 2014/11/17  add FastArrayParser in loadjson to specify fast parser applicable levels
+ 2014/09/18 *start official github mirror: https://github.com/fangq/jsonlab
+
+== JSONlab 1.0.0-RC1 (codename: Optimus - RC1), FangQ <q.fang (at) neu.edu> ==
+
+ 2014/09/17  fix several compatibility issues when running on octave versions 3.2-3.8
+ 2014/09/17 *support 2D cell and struct arrays in both savejson and saveubjson
+ 2014/08/04  escape special characters in a JSON string
+ 2014/02/16  fix a bug when saving ubjson files
+
+== JSONlab 0.9.9 (codename: Optimus - beta), FangQ <q.fang (at) neu.edu> ==
+
+ 2014/01/22  use binary read and write in saveubjson and loadubjson
+
+== JSONlab 0.9.8-1 (codename: Optimus - alpha update 1), FangQ <q.fang (at) neu.edu> ==
+
+ 2013/10/07  better round-trip conservation for empty arrays and structs (patch submitted by Yul Kang)
+
+== JSONlab 0.9.8 (codename: Optimus - alpha), FangQ <q.fang (at) neu.edu> ==
+ 2013/08/23 *universal Binary JSON (UBJSON) support, including both saveubjson and loadubjson
+
+== JSONlab 0.9.1 (codename: Rodimus, update 1), FangQ <q.fang (at) neu.edu> ==
+ 2012/12/18 *handling of various empty and sparse matrices (fixes submitted by Niclas Borlin)
+
+== JSONlab 0.9.0 (codename: Rodimus), FangQ <q.fang (at) neu.edu> ==
+
+ 2012/06/17 *new format for an invalid leading char, unpacking hex code in savejson
+ 2012/06/01  support JSONP in savejson
+ 2012/05/25  fix the empty cell bug (reported by Cyril Davin)
+ 2012/04/05  savejson can save to a file (suggested by Patrick Rapin)
+
+== JSONlab 0.8.1 (codename: Sentiel, Update 1), FangQ <q.fang (at) neu.edu> ==
+
+ 2012/02/28  loadjson quotation mark escape bug, see http://bit.ly/yyk1nS
+ 2012/01/25  patch to handle root-less objects, contributed by Blake Johnson
+
+== JSONlab 0.8.0 (codename: Sentiel), FangQ <q.fang (at) neu.edu> ==
+
+ 2012/01/13 *speed up loadjson by 20 fold when parsing large data arrays in matlab
+ 2012/01/11  remove row bracket if an array has 1 element, suggested by Mykel Kochenderfer
+ 2011/12/22 *accept sequence of 'param',value input in savejson and loadjson
+ 2011/11/18  fix struct array bug reported by Mykel Kochenderfer
+
+== JSONlab 0.5.1 (codename: Nexus Update 1), FangQ <q.fang (at) neu.edu> ==
+
+ 2011/10/21  fix a bug in loadjson, previous code does not use any of the acceleration
+ 2011/10/20  loadjson supports JSON collections - concatenated JSON objects
+
+== JSONlab 0.5.0 (codename: Nexus), FangQ <q.fang (at) neu.edu> ==
+
+ 2011/10/16  package and release jsonlab 0.5.0
+ 2011/10/15 *add json demo and regression test, support cpx numbers, fix double quote bug
+ 2011/10/11 *speed up readjson dramatically, interpret _Array* tags, show data in root level
+ 2011/10/10  create jsonlab project, start jsonlab website, add online documentation
+ 2011/10/07 *speed up savejson by 25x using sprintf instead of mat2str, add options support
+ 2011/10/06 *savejson works for structs, cells and arrays
+ 2011/09/09  derive loadjson from JSON parser from MATLAB Central, draft savejson.m
