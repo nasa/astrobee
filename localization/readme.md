@@ -3,7 +3,7 @@
 This folder consists of libraries for the graph-based localizer, sparse mapping pipeline, sensor inputs for localization, and other supporting libraries. 
 
 See the following publications for more details:
-* Ryan Soussan, Marina Moreira, Brian Coltin, and Trey Smith, "AstroLoc2: Fast Sequential Depth-Enhanced Localization for Free-Flying Robots", Int. Conf. on Robotics and Automation (ICRA), 2025. [Link](https://ieeexplore.ieee.org/abstract/document/11128673 "Link") [Link](https://ntrs.nasa.gov/api/citations/20250001870/downloads/astroloc2_final.pdf "PDF")
+* Ryan Soussan, Marina Moreira, Brian Coltin, and Trey Smith, "AstroLoc2: Fast Sequential Depth-Enhanced Localization for Free-Flying Robots", Int. Conf. on Robotics and Automation (ICRA), 2025. [Link](https://ieeexplore.ieee.org/abstract/document/11128673 "Link") [PDF](https://ntrs.nasa.gov/api/citations/20250001870/downloads/astroloc2_final.pdf "PDF")
   * Latest publication describing the current sequential graph-based localization system for Astrobee
 
 * Ryan Soussan, Varsha Kumar, Brian Coltin, and Trey Smith, "Astroloc: An efficient and robust localizer for a free-flying robot", Int. Conf. on Robotics and Automation (ICRA), 2022. [Link](https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=9811919 "Link")
