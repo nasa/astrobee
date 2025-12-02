@@ -46,8 +46,7 @@ The ["Astrobee ROS Demo"](https://github.com/Pedro-Roque/astrobee_ros_demo) pack
 
 For more information, read [Astrobee-related publications](https://www.nasa.gov/astrobee-research-publications/).
 Learning about the Astrobee [platform](https://ntrs.nasa.gov/api/citations/20160007769/downloads/20160007769.pdf),
-[software](https://brian.coltin.org/pub/fluckiger2018astrobee.pdf),
-and [localization](https://www.nasa.gov/sites/default/files/atoms/files/coltin2016localization.pdf)
+[software](https://brian.coltin.org/pub/fluckiger2018astrobee.pdf), [original mapping and localization system](https://www.nasa.gov/sites/default/files/atoms/files/coltin2016localization.pdf), and [current localizer](https://ntrs.nasa.gov/api/citations/20250001870/downloads/astroloc2_final.pdf)
 are good starting points.
 
 ### Guest Science
