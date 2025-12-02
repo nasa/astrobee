@@ -44,10 +44,9 @@ due to NASA legal requirements. Thank you for your understanding.
 
 The ["Astrobee ROS Demo"](https://github.com/Pedro-Roque/astrobee_ros_demo) package provides a C++/Python interface to implement custom control methods in ROS.
 
-For more information, read [Astrobee-related publications](https://www.nasa.gov/content/research-publications-0).
-Learning about the Astrobee [platform](https://www.nasa.gov/sites/default/files/atoms/files/bualat_spaceops_2018_paper.pdf),
-[software](https://www.nasa.gov/sites/default/files/atoms/files/fluckiger2018astrobee.pdf),
-and [localization](https://www.nasa.gov/sites/default/files/atoms/files/coltin2016localization.pdf)
+For more information, read [Astrobee-related publications](https://www.nasa.gov/astrobee-research-publications/).
+Learning about the Astrobee [platform](https://ntrs.nasa.gov/api/citations/20160007769/downloads/20160007769.pdf),
+[software](https://brian.coltin.org/pub/fluckiger2018astrobee.pdf), [original mapping and localization system](https://www.nasa.gov/sites/default/files/atoms/files/coltin2016localization.pdf), and [current localizer](https://ntrs.nasa.gov/api/citations/20250001870/downloads/astroloc2_final.pdf)
 are good starting points.
 
 ### Guest Science
