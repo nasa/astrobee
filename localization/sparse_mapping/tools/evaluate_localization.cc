@@ -65,7 +65,8 @@ int main(int argc, char** argv) {
     Eigen::Vector3d pos(x, y, z);
 
     trials++;
-    camera::CameraModel camera(Eigen::Vector3d(), Eigen::Matrix3d::Identity(), map.GetCameraParameters());
+    // Assume first camera model
+    camera::CameraModel camera(Eigen::Vector3d(), Eigen::Matrix3d::Identity(), map.GetCameraParameters(0));
     struct timeval a, b;
     gettimeofday(&a, NULL);
     if (!map.Localize(name, &camera)) {

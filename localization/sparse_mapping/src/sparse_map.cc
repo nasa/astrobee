@@ -89,16 +89,28 @@ namespace sparse_mapping {
 SparseMap::SparseMap(const std::vector<std::string>& filenames, const std::string& detector,
                      const camera::CameraParameters& params)
     : cid_to_filename_(filenames),
+      detector_(detector) {
+  SetDefaultLocParams();
+  cid_to_descriptor_map_.resize(cid_to_filename_.size());
+  cid_to_keypoint_map_.resize(cid_to_filename_.size());
+  cid_to_camera_id_.resize(cid_to_filename_.size());
+  camera_id_to_camera_params_.emplace_back(params);
+}
+
+SparseMap::SparseMap(const std::vector<std::string>& filenames, const std::string& detector,
+                     const std::vector<int>& cid_to_camera_id,
+                     const std::vector<camera::CameraParameters>& camera_id_to_camera_params)
+    : cid_to_filename_(filenames),
       detector_(detector),
-      camera_params_(params) {
+      cid_to_camera_id_(cid_to_camera_id),
+      camera_id_to_camera_params_(camera_id_to_camera_params) {
   SetDefaultLocParams();
   cid_to_descriptor_map_.resize(cid_to_filename_.size());
   cid_to_keypoint_map_.resize(cid_to_filename_.size());
 }
 
 SparseMap::SparseMap(const std::string& protobuf_file, bool localization)
-    : camera_params_(Eigen::Vector2i(-1, -1), Eigen::Vector2d::Constant(-1), Eigen::Vector2d(-1, -1)),
-      protobuf_file_(protobuf_file) {
+    : protobuf_file_(protobuf_file) {
   SetDefaultLocParams();
   // The above camera params used bad values because we are expected to reload
   // later.
@@ -108,8 +120,7 @@ SparseMap::SparseMap(const std::string& protobuf_file, bool localization)
 // Form a sparse map with given cameras/images, and no features
 SparseMap::SparseMap(const std::vector<Eigen::Affine3d>& cid_to_cam_t, const std::vector<std::string>& filenames,
                      const std::string& detector, const camera::CameraParameters& params)
-    : detector_(detector),
-      camera_params_(params) {
+    : detector_(detector) {
   SetDefaultLocParams();
   if (filenames.size() != cid_to_cam_t.size())
     LOG(FATAL) << "Expecting as many images as cameras";
@@ -127,13 +138,14 @@ SparseMap::SparseMap(const std::vector<Eigen::Affine3d>& cid_to_cam_t, const std
   // Initialize other data expected in the map
   cid_to_keypoint_map_.resize(num_cams);
   cid_to_descriptor_map_.resize(num_cams);
+  cid_to_camera_id_.resize(cid_to_filename_.size(), 0);
+  camera_id_to_camera_params_.emplace_back(params);
 }
 
 // Form a sparse map by reading a text file from disk. This is for comparing
 // bundler, nvm or theia maps.
-SparseMap::SparseMap(bool bundler_format, std::string const& filename, std::vector<std::string> const& all_image_files)
-    : camera_params_(Eigen::Vector2i(640, 480), Eigen::Vector2d::Constant(300),
-                     Eigen::Vector2d(320, 240))  /* these are placeholders and must be changed */ {
+SparseMap::SparseMap(bool bundler_format, std::string const& filename,
+                     std::vector<std::string> const& all_image_files) {
   SetDefaultLocParams();
   std::string ext = ff_common::file_extension(filename);
   boost::to_lower(ext);
@@ -276,11 +288,8 @@ void SparseMap::DetectFeatures() {
   for (size_t cid = 0; cid < num_files; cid++) {
     ff_common::PrintProgressBar(stdout, static_cast<float>(cid) / static_cast<float>(num_files - 1));
 
-    pool.AddTask(&SparseMap::DetectFeaturesFromFile, this,
-                 std::ref(cid_to_filename_[cid]),
-                 multithreaded,
-                 &cid_to_descriptor_map_[cid],
-                 &cid_to_keypoint_map_[cid]);
+    pool.AddTask(&SparseMap::DetectFeaturesFromFile, this, std::ref(cid_to_filename_[cid]),
+                 std::ref(camera_params(cid)), multithreaded, &cid_to_descriptor_map_[cid], &cid_to_keypoint_map_[cid]);
   }
   pool.Join();
 
@@ -317,30 +326,66 @@ void SparseMap::Load(const std::string & protobuf_file, bool localization) {
   detector_.Reset(map.detector_name());
 
   // Check that the maps is correctly formed
-  assert(map.camera().focal_length_size() == 2);
-  assert(map.camera().optical_offset_size() == 2);
-  assert(map.camera().distorted_image_size_size() == 2);
-  assert(map.camera().undistorted_image_size_size() == 2);
-  typedef Eigen::Vector2d V2d;
-  typedef Eigen::Vector2i V2i;
-  camera_params_.SetFocalLength(V2d(map.camera().focal_length(0),
-                                    map.camera().focal_length(1)));
-  camera_params_.SetOpticalOffset(V2d(map.camera().optical_offset(0),
-                                      map.camera().optical_offset(1)));
-  camera_params_.SetDistortedSize(V2i(map.camera().distorted_image_size(0),
-                                      map.camera().distorted_image_size(1)));
-  camera_params_.SetUndistortedSize(V2i(map.camera().undistorted_image_size(0),
-                                        map.camera().undistorted_image_size(1)));
-  Eigen::VectorXd distortion(map.camera().distortion_size());
-  for (int i = 0; i < map.camera().distortion_size(); i++) {
-    distortion[i] = map.camera().distortion(i);
+  // For backwards compatibility, if num_cameras not set just load map.camera.
+  if (map.has_num_cameras()) {
+    for (int i = 0; i < map.num_cameras(); ++i) {
+      sparse_mapping_protobuf::CameraModel camera;
+      if (!ReadProtobufFrom(input, &camera)) {
+        LOG(FATAL) << "Failed to parse camera.";
+      }
+      assert(camera.focal_length_size() == 2);
+      assert(camera.optical_offset_size() == 2);
+      assert(camera.distorted_image_size_size() == 2);
+      assert(camera.undistorted_image_size_size() == 2);
+      typedef Eigen::Vector2d V2d;
+      typedef Eigen::Vector2i V2i;
+      const V2d focal_length(camera.focal_length(0),
+                                        camera.focal_length(1));
+      const V2d optical_center(camera.optical_offset(0),
+                                          camera.optical_offset(1));
+      const V2i distorted_image_size(camera.distorted_image_size(0),
+                                          camera.distorted_image_size(1));
+      Eigen::VectorXd distortion(camera.distortion_size());
+      for (int i = 0; i < camera.distortion_size(); i++) {
+        distortion[i] = camera.distortion(i);
+      }
+      camera::CameraParameters camera_params(distorted_image_size, focal_length, optical_center, distortion);
+      camera_params.SetDistortedSize(V2i(camera.distorted_image_size(0),
+                                          camera.distorted_image_size(1)));
+      camera_params.SetUndistortedSize(V2i(camera.undistorted_image_size(0),
+                                            camera.undistorted_image_size(1)));
+      camera_id_to_camera_params_.emplace_back(camera_params);
+    }
+  } else {
+      assert(map.camera().focal_length_size() == 2);
+      assert(map.camera().optical_offset_size() == 2);
+      assert(map.camera().distorted_image_size_size() == 2);
+      assert(map.camera().undistorted_image_size_size() == 2);
+      typedef Eigen::Vector2d V2d;
+      typedef Eigen::Vector2i V2i;
+      const V2d focal_length(map.camera().focal_length(0),
+                                        map.camera().focal_length(1));
+      const V2d optical_center(map.camera().optical_offset(0),
+                                          map.camera().optical_offset(1));
+      const V2i distorted_image_size(map.camera().distorted_image_size(0),
+                                          map.camera().distorted_image_size(1));
+      Eigen::VectorXd distortion(map.camera().distortion_size());
+      for (int i = 0; i < map.camera().distortion_size(); i++) {
+        distortion[i] = map.camera().distortion(i);
+      }
+      camera::CameraParameters camera_params(distorted_image_size, focal_length, optical_center, distortion);
+      camera_params.SetDistortedSize(V2i(map.camera().distorted_image_size(0),
+                                          map.camera().distorted_image_size(1)));
+      camera_params.SetUndistortedSize(V2i(map.camera().undistorted_image_size(0),
+                                            map.camera().undistorted_image_size(1)));
+      camera_id_to_camera_params_.emplace_back(camera_params);
   }
-  camera_params_.SetDistortion(distortion);
 
   int num_frames = map.num_frames();
   int num_landmarks = map.num_landmarks();
 
   cid_to_filename_.resize(num_frames);
+  cid_to_camera_id_.resize(num_frames, 0);
   cid_to_descriptor_map_.resize(num_frames);
   if (!localization) {
     cid_to_keypoint_map_.resize(num_frames);
@@ -358,6 +403,7 @@ void SparseMap::Load(const std::string & protobuf_file, bool localization) {
     else
       cid_to_filename_[cid] = "";
 
+    if (frame.has_camera_id()) cid_to_camera_id_[cid] = frame.camera_id();
 
     // load keypoints
     if (!localization)
@@ -531,18 +577,7 @@ void SparseMap::Save(const std::string & protobuf_file) const {
   else
     map.set_descriptor_depth(0);
 
-  sparse_mapping_protobuf::CameraModel* camera = map.mutable_camera();
-  camera->add_focal_length(camera_params_.GetFocalVector()[0]);
-  camera->add_focal_length(camera_params_.GetFocalVector()[1]);
-  camera->add_optical_offset(camera_params_.GetOpticalOffset()[0]);
-  camera->add_optical_offset(camera_params_.GetOpticalOffset()[1]);
-  camera->add_distorted_image_size(camera_params_.GetDistortedSize()[0]);
-  camera->add_distorted_image_size(camera_params_.GetDistortedSize()[1]);
-  camera->add_undistorted_image_size(camera_params_.GetUndistortedSize()[0]);
-  camera->add_undistorted_image_size(camera_params_.GetUndistortedSize()[1]);
-  for (int i = 0; i < camera_params_.GetDistortion().size(); i++) {
-    camera->add_distortion(camera_params_.GetDistortion()[i]);
-  }
+  map.set_num_cameras(camera_id_to_camera_params_.size());
 
   CHECK(cid_to_filename_.size() == cid_to_keypoint_map_.size())
     << "Number of CIDs in filenames and keypoint map do not match";
@@ -567,6 +602,24 @@ void SparseMap::Save(const std::string & protobuf_file) const {
     LOG(FATAL) << "Failed to write map to file.";
   }
 
+  for (const auto& camera_params : camera_id_to_camera_params_) {
+    sparse_mapping_protobuf::CameraModel camera;
+    camera.add_focal_length(camera_params.GetFocalVector()[0]);
+    camera.add_focal_length(camera_params.GetFocalVector()[1]);
+    camera.add_optical_offset(camera_params.GetOpticalOffset()[0]);
+    camera.add_optical_offset(camera_params.GetOpticalOffset()[1]);
+    camera.add_distorted_image_size(camera_params.GetDistortedSize()[0]);
+    camera.add_distorted_image_size(camera_params.GetDistortedSize()[1]);
+    camera.add_undistorted_image_size(camera_params.GetUndistortedSize()[0]);
+    camera.add_undistorted_image_size(camera_params.GetUndistortedSize()[1]);
+    for (int i = 0; i < camera_params.GetDistortion().size(); i++) {
+      camera.add_distortion(camera_params.GetDistortion()[i]);
+    }
+    if (!WriteProtobufTo(camera, output)) {
+      LOG(FATAL) << "Failed to write camera to file.";
+    }
+  }
+
   // write the frames
   for (size_t cid = 0; cid < cid_to_filename_.size(); cid++) {
     sparse_mapping_protobuf::Frame frame;
@@ -575,6 +628,7 @@ void SparseMap::Save(const std::string & protobuf_file) const {
     if (!cid_to_filename_[cid].empty()) {
       frame.set_name(cid_to_filename_[cid]);
     }
+    frame.set_camera_id(cid_to_camera_id_[cid]);
 
     // set the features, required
     for (int fid = 0; fid < cid_to_keypoint_map_[cid].cols(); fid++) {
@@ -661,23 +715,19 @@ void SparseMap::InitializeCidFidToPid() {
                                         &cid_fid_to_pid_);
 }
 
-void SparseMap::DetectFeaturesFromFile(std::string const& filename,
-                                       bool multithreaded,
-                                       cv::Mat* descriptors,
-                                       Eigen::Matrix2Xd* keypoints) {
+void SparseMap::DetectFeaturesFromFile(std::string const& filename, const camera::CameraParameters& camera_params,
+                                       bool multithreaded, cv::Mat* descriptors, Eigen::Matrix2Xd* keypoints) {
   cv::Mat image = cv::imread(filename, cv::IMREAD_GRAYSCALE);
   if (image.rows == 0 || image.cols == 0) {
     boost::filesystem::path full_path(boost::filesystem::current_path());
     LOG(FATAL) << "Found empty image in file: " << filename << " from " << full_path;
   }
 
-  DetectFeatures(image, multithreaded, descriptors, keypoints);
+  DetectFeatures(image, camera_params, multithreaded, descriptors, keypoints);
 }
 
-void SparseMap::DetectFeatures(const cv::Mat& image,
-                               bool multithreaded,
-                               cv::Mat* descriptors,
-                               Eigen::Matrix2Xd* keypoints) {
+void SparseMap::DetectFeatures(const cv::Mat& image, const camera::CameraParameters& camera_params, bool multithreaded,
+                               cv::Mat* descriptors, Eigen::Matrix2Xd* keypoints) {
   // If using histogram equalization, need an extra image to store it
   cv::Mat * image_ptr = const_cast<cv::Mat*>(&image);
   cv::Mat hist_image;
@@ -730,7 +780,7 @@ void SparseMap::DetectFeatures(const cv::Mat& image,
   Eigen::Vector2d output;
 
   for (size_t j = 0; j < storage.size(); j++) {
-    camera_params_.Convert<camera::DISTORTED_C, camera::UNDISTORTED_C>
+    camera_params.Convert<camera::DISTORTED_C, camera::UNDISTORTED_C>
       (Eigen::Vector2d(storage[j].pt.x, storage[j].pt.y), &output);
     keypoints->col(j) = output;
   }
@@ -818,7 +868,7 @@ bool SparseMap::Localize(cv::Mat const& test_descriptors, Eigen::Matrix2Xd const
       if (map_image.empty()) {
           LOG(ERROR) << "Failed to load map image: " << map_filename;
       } else {
-        ViewMatches(test_keypoints, cid_to_keypoint_map_[cid], all_matches[i], camera_params_, image, map_image);
+        ViewMatches(test_keypoints, cid_to_keypoint_map_[cid], all_matches[i], camera_params(cid), image, map_image);
       }
     }
 
@@ -830,8 +880,8 @@ bool SparseMap::Localize(cv::Mat const& test_descriptors, Eigen::Matrix2Xd const
         std::vector<cv::DMatch> inlier_matches;
         std::vector<size_t> vec_inliers;
         Eigen::Matrix3d essential_matrix;
-        FindEssentialAndInliers(test_keypoints, cid_to_keypoint_map_[cid], all_matches[i], camera_params_,
-                                &inlier_matches, &vec_inliers, &essential_matrix,
+        FindEssentialAndInliers(test_keypoints, cid_to_keypoint_map_[cid], all_matches[i], pose->GetParameters(),
+                                camera_params(cid), &inlier_matches, &vec_inliers, &essential_matrix,
                                 loc_params_.essential_ransac_iterations);
         all_matches[i] = inlier_matches;
         if (loc_params_.verbose_localization)
@@ -947,7 +997,7 @@ bool SparseMap::Localize(std::string const& img_file,
   cv::Mat test_descriptors;
   Eigen::Matrix2Xd test_keypoints;
   bool multithreaded = false;
-  DetectFeaturesFromFile(img_file, multithreaded, &test_descriptors, &test_keypoints);
+  DetectFeaturesFromFile(img_file, pose->GetParameters(), multithreaded, &test_descriptors, &test_keypoints);
   return Localize(test_descriptors, test_keypoints,
                                   pose,
                                   inlier_landmarks, inlier_observations,
@@ -1125,7 +1175,7 @@ bool SparseMap::Localize(const cv::Mat & image, camera::CameraModel* pose,
   bool multithreaded = false;
   cv::Mat test_descriptors;
   Eigen::Matrix2Xd test_keypoints;
-  DetectFeatures(image, multithreaded, &test_descriptors, &test_keypoints);
+  DetectFeatures(image, pose->GetParameters(), multithreaded, &test_descriptors, &test_keypoints);
   return Localize(test_descriptors, test_keypoints,
                                   pose,
                                   inlier_landmarks, inlier_observations,

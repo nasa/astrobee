@@ -30,6 +30,7 @@
 
 namespace camera {
   class CameraModel;
+  class CameraParameters;
 }
 
 namespace cv {
@@ -60,7 +61,8 @@ namespace sparse_mapping {
  **/
 void BundleAdjust(std::vector<std::map<int, int> > const& pid_to_cid_fid,
                   std::vector<Eigen::Matrix2Xd > const& cid_to_keypoint_map,
-                  double focal_length,
+                  std::vector<int> const& cid_to_camera_id,
+                  std::vector<camera::CameraParameters> const& camera_id_to_camera_params,
                   std::vector<Eigen::Affine3d> * cid_to_cam_t_global,
                   std::vector<Eigen::Vector3d> * pid_to_xyz,
                   std::vector<std::map<int, int> > const& user_pid_to_cid_fid,
@@ -82,7 +84,7 @@ void BundleAdjust(std::vector<std::map<int, int> > const& pid_to_cid_fid,
  *
  **/
 void BundleAdjustSmallSet(std::vector<Eigen::Matrix2Xd> const& features_n,
-                          double focal_length,
+                          std::vector<double> focal_length_n,
                           std::vector<Eigen::Affine3d> * cam_t_global_n,
                           Eigen::Matrix3Xd * pid_to_xyz,
                           ceres::LossFunction * loss,

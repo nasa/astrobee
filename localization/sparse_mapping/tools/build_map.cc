@@ -236,11 +236,20 @@ void Rebuild() {
   LOG(INFO) << "Rebuilding map with " << FLAGS_rebuild_detector << " detector.";
   sparse_mapping::SparseMap original(FLAGS_output_map);
 
-  camera::CameraParameters params = original.GetCameraParameters();
+  std::vector<std::string> files(original.GetNumFrames());
+  for (size_t i = 0; i < original.GetNumFrames(); i++) {
+    files[i] = original.GetFrameFilename(i);
+  }
+
+  sparse_mapping::SparseMap map(files, FLAGS_rebuild_detector, original.cid_to_camera_id_, original.camera_id_to_camera_params_);
+
+  // Replace camera model, assumes only one is used for the map
   if (FLAGS_rebuild_replace_camera) {
     char * bot_ptr = getenv("ASTROBEE_ROBOT");
     if (bot_ptr == NULL)
       LOG(FATAL) << "Must set ASTROBEE_ROBOT.";
+    if (map.camera_id_to_camera_params_.size() != 1)
+      LOG(FATAL) << "When replacing camera, the original map must have been build with one camera, instead is used" << map.camera_id_to_camera_params_.size();
     LOG(INFO) << "Using camera for robot: " << bot_ptr << ".";
     config_reader::ConfigReader config;
     config.AddFile("cameras.config");
@@ -249,15 +258,9 @@ void Rebuild() {
       exit(1);
       return;
     }
-    params = camera::CameraParameters(&config, FLAGS_robot_camera.c_str());
+    const camera::CameraParameters params(&config, FLAGS_robot_camera.c_str());
+    map.OverwriteCameraParameters(params);
   }
-
-  std::vector<std::string> files(original.GetNumFrames());
-  for (size_t i = 0; i < original.GetNumFrames(); i++) {
-    files[i] = original.GetFrameFilename(i);
-  }
-
-  sparse_mapping::SparseMap map(files, FLAGS_rebuild_detector, params);
 
   LOG(INFO) << "Detecting features.";
   map.DetectFeatures();

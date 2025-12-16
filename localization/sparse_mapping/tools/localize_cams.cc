@@ -82,20 +82,20 @@ int main(int argc, char** argv) {
 
   sparse_mapping::SparseMap source(FLAGS_source_map);
 
-  if ( !(source.GetCameraParameters() == reference.GetCameraParameters()) )
-    LOG(FATAL) << "The source and reference maps don't have the same camera parameters.";
-
   int num_good_errors = 0;
   size_t num_frames = source.GetNumFrames();
   for (size_t cid = 0; cid < num_frames; cid++) {
+    if ( !(source.GetCameraParameters(cid) == reference.GetCameraParameters(cid)))
+      LOG(FATAL) << "The source and reference maps don't have the same camera parameters.";
+
     std::string img_file = source.GetFrameFilename(cid);
 
     // localize frame
     camera::CameraModel localized_cam(Eigen::Vector3d(), Eigen::Matrix3d::Identity(),
-                                      reference.GetCameraParameters());
+                                      reference.GetCameraParameters(cid));
 
     camera::CameraModel source_cam(source.GetFrameGlobalTransform(cid),
-                                   source.GetCameraParameters());
+                                   source.GetCameraParameters(cid));
     std::cout << "Source map position:         " << source_cam.GetPosition().transpose() << "\n";
 
     if (!reference.Localize(img_file, &localized_cam)) {

@@ -94,7 +94,8 @@ struct ReprojectionError {
 };
 
 void BundleAdjust(std::vector<std::map<int, int> > const& pid_to_cid_fid,
-                  std::vector<Eigen::Matrix2Xd> const& cid_to_keypoint_map, double focal_length,
+                  std::vector<Eigen::Matrix2Xd> const& cid_to_keypoint_map, std::vector<int> const& cid_to_camera_id,
+                  std::vector<camera::CameraParameters> const& camera_id_to_camera_params,
                   std::vector<Eigen::Affine3d>* cid_to_cam_t_global, std::vector<Eigen::Vector3d>* pid_to_xyz,
                   std::vector<std::map<int, int> > const& user_pid_to_cid_fid,
                   std::vector<Eigen::Matrix2Xd> const& user_cid_to_keypoint_map,
@@ -109,12 +110,14 @@ void BundleAdjust(std::vector<std::map<int, int> > const& pid_to_cid_fid,
 
   // Allocate space for the angle axis representation of rotation
   std::vector<double> camera_aa_storage(3 * cid_to_cam_t_global->size());
+  std::vector<double> focal_lengths;
   for (size_t cid = 0; cid < cid_to_cam_t_global->size(); cid++) {
     Eigen::Map<Eigen::Vector3d> aa_storage(camera_aa_storage.data() + 3 * cid);
     Eigen::Vector3d vec;
     camera::RotationToRodrigues(cid_to_cam_t_global->at(cid).linear(),
                                &vec);
     aa_storage = vec;
+    focal_lengths.emplace_back(camera_id_to_camera_params[cid_to_camera_id[cid]].GetFocalLength());
   }
 
   // Build problem
@@ -158,13 +161,12 @@ void BundleAdjust(std::vector<std::map<int, int> > const& pid_to_cid_fid,
       for (std::map<int, int>::value_type const& cid_fid : (*p_pid_to_cid_fid)[pid]) {
         ceres::CostFunction* cost_function =
           ReprojectionError::Create((*p_cid_to_keypoint_map)[cid_fid.first].col(cid_fid.second));
-
         problem.AddResidualBlock(cost_function,
                                  local_loss,
                                  &cid_to_cam_t_global->at(cid_fid.first).translation()[0],
                                  &camera_aa_storage[3 * cid_fid.first],
                                  &p_pid_to_xyz->at(pid)[0],
-                                 &focal_length);
+                                 &focal_lengths[cid_fid.first]);
 
         if (fix_all_cameras || (cid_fid.first < first || cid_fid.first > last) ||
             fixed_cameras.find(cid_fid.first) != fixed_cameras.end()) {
@@ -180,7 +182,9 @@ void BundleAdjust(std::vector<std::map<int, int> > const& pid_to_cid_fid,
         problem.SetParameterBlockConstant(&p_pid_to_xyz->at(pid)[0]);
       }
     }
-    problem.SetParameterBlockConstant(&focal_length);
+    for (auto& focal_length : focal_lengths) {
+      problem.SetParameterBlockConstant(&focal_length);
+    }
   }
 
   // Solve the problem
@@ -198,7 +202,7 @@ void BundleAdjust(std::vector<std::map<int, int> > const& pid_to_cid_fid,
 
 // This is a very specialized function
 void BundleAdjustSmallSet(std::vector<Eigen::Matrix2Xd> const& features_n,
-                          double focal_length,
+                          std::vector<double> focal_length_n,
                           std::vector<Eigen::Affine3d> * cam_t_global_n,
                           Eigen::Matrix3Xd * pid_to_xyz,
                           ceres::LossFunction * loss,
@@ -232,10 +236,12 @@ void BundleAdjustSmallSet(std::vector<Eigen::Matrix2Xd> const& features_n,
                                &cam_t_global_n->at(cid).translation()[0],
                                &aa.at(cid)[0],
                                &pid_to_xyz->col(pid)[0],
-                               &focal_length);
+                               &focal_length_n[cid]);
     }
   }
-  problem.SetParameterBlockConstant(&focal_length);
+  for (size_t cid = 0; cid < n_cameras; ++cid) {
+    problem.SetParameterBlockConstant(&focal_length_n[cid]);
+  }
 
   // Solve the problem
   ceres::Solve(options, &problem, summary);

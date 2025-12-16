@@ -156,13 +156,16 @@ void WriteMatches(openMVG::matching::PairWiseMatches const& match_map,
 void BuildMapPerformMatching(openMVG::matching::PairWiseMatches * match_map,
                              std::vector<Eigen::Matrix2Xd > const& cid_to_keypoint_map,
                              std::vector<cv::Mat> const& cid_to_descriptor_map,
-                             camera::CameraParameters const& camera_params,
+                             std::vector<int> const& cid_to_camera_id,
+                             std::vector<camera::CameraParameters> const& camera_id_to_camera_params,
                              CIDPairAffineMap * relative_affines,
                              std::mutex * match_mutex,
                              int i /*query cid index*/, int j /*train cid index*/,
                              bool compute_rays_angle, double * rays_angle) {
   Eigen::Matrix2Xd const& keypoints1 = cid_to_keypoint_map[i];
   Eigen::Matrix2Xd const& keypoints2 = cid_to_keypoint_map[j];
+  const auto& camera_params1 = camera_id_to_camera_params[cid_to_camera_id[i]];
+  const auto& camera_params2 = camera_id_to_camera_params[cid_to_camera_id[j]];
 
   std::vector<cv::DMatch> matches, inlier_matches;
   interest_point::FindMatches(cid_to_descriptor_map[i],
@@ -178,7 +181,7 @@ void BuildMapPerformMatching(openMVG::matching::PairWiseMatches * match_map,
 
   bool compute_inliers_only = false;
   BuildMapFindEssentialAndInliers(keypoints1, keypoints2, matches,
-                                  camera_params, compute_inliers_only,
+                                  camera_params1, camera_params2, compute_inliers_only,
                                   i, j,
                                   match_mutex,
                                   relative_affines,
@@ -284,7 +287,8 @@ void MatchFeatures(const std::string & essential_file,
                             &match_map,
                             s->cid_to_keypoint_map_,
                             s->cid_to_descriptor_map_,
-                            std::cref(s->camera_params_),
+                            s->cid_to_camera_id_,
+                            s->camera_id_to_camera_params_,
                             &relative_affines,
                             &match_mutex,
                             cid, indices[j],
@@ -352,7 +356,8 @@ void BuildTracks(bool rm_invalid_xyz,
   // Triangulate. The results should be quite inaccurate, we'll redo this
   // later. This step is mostly for consistency.
   sparse_mapping::Triangulate(rm_invalid_xyz,
-                              s->camera_params_.GetFocalLength(),
+                              s->cid_to_camera_id_,
+                              s->camera_id_to_camera_params_,
                               s->cid_to_cam_t_global_,
                               s->cid_to_keypoint_map_,
                               &(s->pid_to_cid_fid_),
@@ -438,7 +443,8 @@ void IncrementalBA(std::string const& essential_file,
     pid_to_xyz_local.clear();
     std::vector<std::map<int, int> > cid_fid_to_pid_local;
     sparse_mapping::Triangulate(rm_invalid_xyz,
-                                s->camera_params_.GetFocalLength(),
+                                s->cid_to_camera_id_,
+                                s->camera_id_to_camera_params_,
                                 cid_to_cam_t_local,
                                 s->cid_to_keypoint_map_,
                                 &pid_to_cid_fid_local,
@@ -472,14 +478,10 @@ void IncrementalBA(std::string const& essential_file,
     LOG(INFO) << "Optimizing cameras from " << start << " to " << cid << " (total: "
         << cid-start+1 << ")";
 
-    sparse_mapping::BundleAdjust(pid_to_cid_fid_local, s->cid_to_keypoint_map_,
-                                 s->camera_params_.GetFocalLength(),
-                                 &cid_to_cam_t_local, &pid_to_xyz_local,
-                                 s->user_pid_to_cid_fid_,
-                                 s->user_cid_to_keypoint_map_,
-                                 &(s->user_pid_to_xyz_),
-                                 loss, options, &summary,
-                                 start, cid);
+    sparse_mapping::BundleAdjust(pid_to_cid_fid_local, s->cid_to_keypoint_map_, s->cid_to_camera_id_,
+                                 s->camera_id_to_camera_params_, &cid_to_cam_t_local, &pid_to_xyz_local,
+                                 s->user_pid_to_cid_fid_, s->user_cid_to_keypoint_map_, &(s->user_pid_to_xyz_), loss,
+                                 options, &summary, start, cid);
 
     // Copy back
     for (int c = 0; c <= cid; c++)
@@ -488,7 +490,8 @@ void IncrementalBA(std::string const& essential_file,
 
   // Triangulate all points
   sparse_mapping::Triangulate(rm_invalid_xyz,
-                              s->camera_params_.GetFocalLength(),
+                              s->cid_to_camera_id_,
+                              s->camera_id_to_camera_params_,
                               s->cid_to_cam_t_global_,
                               s->cid_to_keypoint_map_,
                               &(s->pid_to_cid_fid_),
@@ -600,7 +603,8 @@ void CloseLoop(sparse_mapping::SparseMap * s) {
   // sparse_mapping::PrintPidStats(s->pid_to_cid_fid_);
   bool rm_invalid_xyz = true;
   sparse_mapping::Triangulate(rm_invalid_xyz,
-                              s->camera_params_.GetFocalLength(),
+                              s->cid_to_camera_id_,
+                              s->camera_id_to_camera_params_,
                               s->cid_to_cam_t_global_,
                               s->cid_to_keypoint_map_,
                               &(s->pid_to_cid_fid_),
@@ -643,7 +647,8 @@ void BundleAdjustment(sparse_mapping::SparseMap * s,
                       int first, int last, bool fix_all_cameras,
                       std::set<int> const& fixed_cameras) {
   sparse_mapping::BundleAdjust(s->pid_to_cid_fid_, s->cid_to_keypoint_map_,
-                               s->camera_params_.GetFocalLength(), &(s->cid_to_cam_t_global_),
+                               s->cid_to_camera_id_, s->camera_id_to_camera_params_,
+                               &(s->cid_to_cam_t_global_),
                                &(s->pid_to_xyz_),
                                s->user_pid_to_cid_fid_, s->user_cid_to_keypoint_map_,
                                &(s->user_pid_to_xyz_),
@@ -652,7 +657,7 @@ void BundleAdjustment(sparse_mapping::SparseMap * s,
 
   // First do BA, and only afterwards remove outliers.
   if (!FLAGS_skip_filtering) {
-    FilterPID(FLAGS_reproj_thresh,  s->camera_params_, s->cid_to_cam_t_global_,
+    FilterPID(FLAGS_reproj_thresh, s->cid_to_camera_id_, s->camera_id_to_camera_params_, s->cid_to_cam_t_global_,
               s->cid_to_keypoint_map_, &(s->pid_to_cid_fid_), &(s->pid_to_xyz_));
     s->InitializeCidFidToPid();
   }
@@ -1178,8 +1183,6 @@ void MergeMaps(sparse_mapping::SparseMap * A_in,
   sparse_mapping::SparseMap & C = *C_out;
 
   // Basic sanity checks (not exhaustive)
-  if ( !(A.GetCameraParameters() == B.GetCameraParameters()) )
-    LOG(FATAL) << "The input maps don't have the same camera parameters.";
   if ( !(A.detector_ == B.detector_) )
     LOG(FATAL) << "The input maps don't have the same detector and/or descriptor.";
 
@@ -1201,17 +1204,25 @@ void MergeMaps(sparse_mapping::SparseMap * A_in,
   int num_acid = A.cid_to_filename_.size();
   int num_bcid = B.cid_to_filename_.size();
   int num_ccid = num_acid + num_bcid;
+  int num_A_camera_ids = A.camera_id_to_camera_params_.size();
   C.cid_to_filename_      .resize(num_ccid);
   C.cid_to_keypoint_map_  .resize(num_ccid);
   C.cid_to_cam_t_global_  .resize(num_ccid);
   C.cid_to_descriptor_map_.resize(num_ccid);
+  C.cid_to_camera_id_     .resize(num_ccid);
   for (int cid = 0; cid < num_bcid; cid++) {
     // C.cid_to_filename_ already contains A.cid_to_filename_, etc.
     int c = num_acid + cid;
     C.cid_to_filename_[c]       = B.cid_to_filename_[cid];
     C.cid_to_keypoint_map_[c]   = B.cid_to_keypoint_map_[cid];
     C.cid_to_descriptor_map_[c] = B.cid_to_descriptor_map_[cid];
+    C.cid_to_camera_id_[c]      = B.cid_to_camera_id_[cid] + num_A_camera_ids;
     // We will have to deal with cid_to_cam_t_global_ later
+  }
+  // Append B's camera params to A's.
+  // TODO(rsoussan): Check for equality of camera params and consolidate
+  for (const auto& camera_params : B.camera_id_to_camera_params_) {
+    C.camera_id_to_camera_params_.emplace_back(camera_params);
   }
 
   // Create cid_fid_to_pid_ for both maps, to be able to go from cid_fid to pid.
@@ -1418,7 +1429,8 @@ void MergeMaps(sparse_mapping::SparseMap * A_in,
     std::vector<std::map<int, int> > new_cid_fid_to_pid;
     bool rm_invalid_xyz = true;  // don't remove anything, as cameras are pretty unreliable now
     sparse_mapping::Triangulate(rm_invalid_xyz,
-                                C.camera_params_.GetFocalLength(),
+                                C.cid_to_camera_id_,
+                                C.camera_id_to_camera_params_,
                                 C.cid_to_cam_t_global_,
                                 C.cid_to_keypoint_map_,
                                 &new_pid_to_cid_fid,
@@ -1700,8 +1712,9 @@ double RegistrationOrVerification(std::vector<std::string> const& data_files,
   // Shift the keypoints. Undistort if necessary.
   Eigen::Vector2d output;
   for (size_t cid = 0; cid < map->user_cid_to_keypoint_map_.size(); cid++) {
+    const auto& camera_params = map->camera_params(cid);
     for (int i = 0; i < map->user_cid_to_keypoint_map_[cid].cols(); i++) {
-      map->camera_params_.Convert<camera::DISTORTED, camera::UNDISTORTED_C>
+      camera_params.Convert<camera::DISTORTED, camera::UNDISTORTED_C>
         (map->user_cid_to_keypoint_map_[cid].col(i), &output);
       map->user_cid_to_keypoint_map_[cid].col(i) = output;
     }
@@ -1718,7 +1731,8 @@ double RegistrationOrVerification(std::vector<std::string> const& data_files,
   std::vector<std::map<int, int> > cid_fid_to_pid_local;
   bool rm_invalid_xyz = false;  // there should be nothing to remove hopefully
   sparse_mapping::Triangulate(rm_invalid_xyz,
-                              map->camera_params_.GetFocalLength(),
+                              map->cid_to_camera_id_,
+                              map->camera_id_to_camera_params_,
                               map->cid_to_cam_t_global_,
                               map->user_cid_to_keypoint_map_,
                               &(map->user_pid_to_cid_fid_),
@@ -1935,9 +1949,10 @@ void ReadAffineCSV(std::string const& input_filename,
 
 // Filter the matches by a geometric constraint. Compute the essential matrix.
 void FindEssentialAndInliers(Eigen::Matrix2Xd const& keypoints1, Eigen::Matrix2Xd const& keypoints2,
-                             std::vector<cv::DMatch> const& matches, camera::CameraParameters const& camera_params,
-                             std::vector<cv::DMatch>* inlier_matches, std::vector<size_t>* vec_inliers,
-                             Eigen::Matrix3d* essential_matrix, const int ransac_iterations) {
+                             std::vector<cv::DMatch> const& matches, camera::CameraParameters const& camera_params1,
+                             camera::CameraParameters const& camera_params2, std::vector<cv::DMatch>* inlier_matches,
+                             std::vector<size_t>* vec_inliers, Eigen::Matrix3d* essential_matrix,
+                             const int ransac_iterations) {
   // Initialize the outputs
   inlier_matches->clear();
 
@@ -1948,18 +1963,20 @@ void FindEssentialAndInliers(Eigen::Matrix2Xd const& keypoints1, Eigen::Matrix2X
     observationsa.col(i) = keypoints1.col(matches[i].queryIdx);
     observationsb.col(i) = keypoints2.col(matches[i].trainIdx);
   }
-
-  std::pair<size_t, size_t> image_size(camera_params.GetUndistortedSize()[0],
-                                       camera_params.GetUndistortedSize()[1]);
-  Eigen::Matrix3d k = camera_params.GetIntrinsicMatrix<camera::UNDISTORTED_C>();
+  std::pair<size_t, size_t> image_size1(camera_params1.GetUndistortedSize()[0],
+                                       camera_params1.GetUndistortedSize()[1]);
+  std::pair<size_t, size_t> image_size2(camera_params2.GetUndistortedSize()[0],
+                                       camera_params2.GetUndistortedSize()[1]);
+  Eigen::Matrix3d k1 = camera_params1.GetIntrinsicMatrix<camera::UNDISTORTED_C>();
+  Eigen::Matrix3d k2 = camera_params2.GetIntrinsicMatrix<camera::UNDISTORTED_C>();
 
   // Calculate the essential matrix
   double error_max = std::numeric_limits<double>::max();
   double max_expected_error = 2.5;
 
-  if (!interest_point::RobustEssential(k, k, observationsa, observationsb,
+  if (!interest_point::RobustEssential(k1, k2, observationsa, observationsb,
                                        essential_matrix, vec_inliers,
-                                       image_size, image_size,
+                                       image_size1, image_size2,
                                        &error_max,
                                        max_expected_error, ransac_iterations)) {
     VLOG(2) << " | Estimation of essential matrix failed!\n";
@@ -1979,7 +1996,8 @@ void FindEssentialAndInliers(Eigen::Matrix2Xd const& keypoints1, Eigen::Matrix2X
 void BuildMapFindEssentialAndInliers(Eigen::Matrix2Xd const& keypoints1,
                                      Eigen::Matrix2Xd const& keypoints2,
                                      std::vector<cv::DMatch> const& matches,
-                                     camera::CameraParameters const& camera_params,
+                                     camera::CameraParameters const& camera_params1,
+                                     camera::CameraParameters const& camera_params2,
                                      bool compute_inliers_only,
                                      size_t cam_a_idx, size_t cam_b_idx,
                                      std::mutex * match_mutex,
@@ -1993,7 +2011,8 @@ void BuildMapFindEssentialAndInliers(Eigen::Matrix2Xd const& keypoints1,
 
   std::vector<size_t> vec_inliers;
   Eigen::Matrix3d e;
-  FindEssentialAndInliers(keypoints1, keypoints2, matches, camera_params, inlier_matches, &vec_inliers, &e);
+  FindEssentialAndInliers(keypoints1, keypoints2, matches, camera_params1, camera_params2, inlier_matches, &vec_inliers,
+                          &e);
   if (!inlier_matches) {
     VLOG(2) << cam_a_idx << " " << cam_b_idx
             << " | Estimation of essential matrix failed!\n";
@@ -2028,8 +2047,9 @@ void BuildMapFindEssentialAndInliers(Eigen::Matrix2Xd const& keypoints1,
     observationsa.col(i) = keypoints1.col(matches[i].queryIdx);
     observationsb.col(i) = keypoints2.col(matches[i].trainIdx);
   }
-  Eigen::Matrix3d k = camera_params.GetIntrinsicMatrix<camera::UNDISTORTED_C>();
-  if (!interest_point::EstimateRTFromE(k, k, observationsa, observationsb,
+  Eigen::Matrix3d k1 = camera_params1.GetIntrinsicMatrix<camera::UNDISTORTED_C>();
+  Eigen::Matrix3d k2 = camera_params2.GetIntrinsicMatrix<camera::UNDISTORTED_C>();
+  if (!interest_point::EstimateRTFromE(k1, k2, observationsa, observationsb,
                                        e, vec_inliers,
                                        &r, &t)) {
     VLOG(2) << cam_a_idx << " " << cam_b_idx
@@ -2064,13 +2084,9 @@ void BuildMapFindEssentialAndInliers(Eigen::Matrix2Xd const& keypoints1,
   double error;
   int num_pts_behind_camera = 0;
   for (ptrdiff_t i = 0; i < observations2[0].cols(); i++) {
-    pid_to_xyz.col(i) =
-      sparse_mapping::TriangulatePoint
-      (Eigen::Vector3d(observations2[0](0, i), observations2[0](1, i),
-                       camera_params.GetFocalLength()),
-       Eigen::Vector3d(observations2[1](0, i), observations2[1](1, i),
-                       camera_params.GetFocalLength()),
-       r, t, &error);
+    pid_to_xyz.col(i) = sparse_mapping::TriangulatePoint
+      (Eigen::Vector3d(observations2[0](0, i), observations2[0](1, i), camera_params1.GetFocalLength()),
+       Eigen::Vector3d(observations2[1](0, i), observations2[1](1, i), camera_params2.GetFocalLength()), r, t, &error);
     Eigen::Vector3d P = pid_to_xyz.col(i);
     Eigen::Vector3d Q = r*P + t;
     if (P[2] <= 0 || Q[2] <= 0) {
@@ -2083,7 +2099,8 @@ void BuildMapFindEssentialAndInliers(Eigen::Matrix2Xd const& keypoints1,
           << " (" << round((100.0*num_pts_behind_camera) / observations2[0].cols())
           << "%)";
 
-  sparse_mapping::BundleAdjustSmallSet(observations2, camera_params.GetFocalLength(), &cameras,
+  std::vector<double> focal_lengths{camera_params1.GetFocalLength(), camera_params2.GetFocalLength()};
+  sparse_mapping::BundleAdjustSmallSet(observations2, focal_lengths, &cameras,
                                        &pid_to_xyz, new ceres::CauchyLoss(0.5), options,
                                        &summary);
 
@@ -2103,9 +2120,9 @@ void BuildMapFindEssentialAndInliers(Eigen::Matrix2Xd const& keypoints1,
       Eigen::Vector3d P =
         sparse_mapping::TriangulatePoint
         (Eigen::Vector3d(observations2[0](0, i), observations2[0](1, i),
-                         camera_params.GetFocalLength()),
+                         camera_params1.GetFocalLength()),
          Eigen::Vector3d(observations2[1](0, i), observations2[1](1, i),
-                         camera_params.GetFocalLength()),
+                         camera_params2.GetFocalLength()),
          cameras[1].linear(), cameras[1].translation(), &error);
 
       Eigen::Vector3d X0 = ctr0 - P;
@@ -2181,21 +2198,21 @@ void BuildMapFindEssentialAndInliers(Eigen::Matrix2Xd const& keypoints1,
   }
 }
 
-void Triangulate(bool rm_invalid_xyz, double focal_length,
+void Triangulate(bool rm_invalid_xyz, std::vector<int> const& cid_to_camera_id,
+                 std::vector<camera::CameraParameters> const& camera_id_to_camera_params,
                  std::vector<Eigen::Affine3d> const& cid_to_cam_t_global,
                  std::vector<Eigen::Matrix2Xd> const& cid_to_keypoint_map,
-                 std::vector<std::map<int, int> > * pid_to_cid_fid,
-                 std::vector<Eigen::Vector3d> * pid_to_xyz,
-                 std::vector<std::map<int, int> > * cid_fid_to_pid) {
-  Eigen::Matrix3d k;
-  k << focal_length, 0, 0,
-    0, focal_length, 0,
-    0, 0, 1;
-
+                 std::vector<std::map<int, int>>* pid_to_cid_fid, std::vector<Eigen::Vector3d>* pid_to_xyz,
+                 std::vector<std::map<int, int>>* cid_fid_to_pid) {
   // Build p matrices for all of the cameras. openMVG::Triangulation
   // will be holding pointers to all of the cameras.
   std::vector<openMVG::Mat34> cid_to_p(cid_to_cam_t_global.size());
   for (size_t cid = 0; cid < cid_to_p.size(); cid++) {
+    const double focal_length = camera_id_to_camera_params[cid_to_camera_id[cid]].GetFocalLength();
+    Eigen::Matrix3d k;
+    k << focal_length, 0, 0,
+      0, focal_length, 0,
+      0, 0, 1;
     openMVG::P_From_KRt(k, cid_to_cam_t_global[cid].linear(),
                         cid_to_cam_t_global[cid].translation(), &cid_to_p[cid]);
   }

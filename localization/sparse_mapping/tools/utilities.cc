@@ -58,7 +58,8 @@ boost::optional<vc::FeatureMatches> Matches(const vc::FeatureImage& current_imag
   return matches;
 }
 
-Eigen::Affine3d EstimateAffine3d(const vc::FeatureMatches& matches, const camera::CameraParameters& camera_params,
+Eigen::Affine3d EstimateAffine3d(const vc::FeatureMatches& matches, const camera::CameraParameters& camera_params1,
+                                 const camera::CameraParameters& camera_params2,
                                  std::vector<cv::DMatch>& inliers) {
   Eigen::Matrix2Xd source_image_points(2, matches.size());
   Eigen::Matrix2Xd target_image_points(2, matches.size());
@@ -67,8 +68,8 @@ Eigen::Affine3d EstimateAffine3d(const vc::FeatureMatches& matches, const camera
     const auto& match = matches[i];
     Eigen::Vector2d undistorted_source_point;
     Eigen::Vector2d undistorted_target_point;
-    camera_params.Convert<camera::DISTORTED, camera::UNDISTORTED_C>(match.source_point, &undistorted_source_point);
-    camera_params.Convert<camera::DISTORTED, camera::UNDISTORTED_C>(match.target_point, &undistorted_target_point);
+    camera_params1.Convert<camera::DISTORTED, camera::UNDISTORTED_C>(match.source_point, &undistorted_source_point);
+    camera_params2.Convert<camera::DISTORTED, camera::UNDISTORTED_C>(match.target_point, &undistorted_target_point);
     source_image_points.col(i) = undistorted_source_point;
     target_image_points.col(i) = undistorted_target_point;
     cv_matches.emplace_back(cv::DMatch(i, i, i, 0));
@@ -76,8 +77,8 @@ Eigen::Affine3d EstimateAffine3d(const vc::FeatureMatches& matches, const camera
 
   std::mutex mutex;
   CIDPairAffineMap affines;
-  BuildMapFindEssentialAndInliers(source_image_points, target_image_points, cv_matches, camera_params, false, 0, 0,
-                                  &mutex, &affines, &inliers, false, nullptr);
+  BuildMapFindEssentialAndInliers(source_image_points, target_image_points, cv_matches, camera_params1, camera_params2,
+                                  false, 0, 0, &mutex, &affines, &inliers, false, nullptr);
   const Eigen::Affine3d target_T_source = affines[std::make_pair(0, 0)];
   return target_T_source.inverse();
 }
