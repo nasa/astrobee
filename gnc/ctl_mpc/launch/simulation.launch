@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<launch>
+    <include file="$(find astrobee)/launch/sim.launch" >
+        <arg name="dds" value="false"/>
+        <arg name="rviz" value="true"/>
+        <arg name="gtloc" default="true" />
+
+        <arg name="pose" default="11 -7 4.8 0 0 0 1"/>
+        <!-- <arg name="pose" default="1 0 0 0 0 0.174 0.985"/> -->
+    </include>
+</launch>

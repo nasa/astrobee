@@ -1,0 +1,141 @@
+Readme for things I've done
+
+-----------------
+ List of files :           
+-----------------
+
+- qp_lin_alg_export.cpp
+- qp_lin_alg_export.hpp
+- mpc_export_bis.cpp
+- mpc_export_bis.hpp
+- crane_bis.cpp
+
+---------------
+ Description :
+---------------
+
+----------------------------
+        Algorithm
+----------------------------
+
+
+- qp_lin_alg_export.hpp :
+define the class QPLinAlgExport by inheritance from ExportAlgorithm and all its methods
+this file is in the "ACADOtoolkit/include/acado/code_generation/" directory
+
+- qp_lin_alg_export.cpp :
+implement all the methods of the class QPLinALgExport
+this file is in the "ACADOtoolkit/src/code_generation/" directory
+
+---------------------------
+      User Interface
+---------------------------
+
+- mpc_export_bis.hpp :
+define the class MPCexportBis by inheritance from ExportModule and all its methods
+this file is in the "ACADOtoolkit/include/acado/code_generation/" directory
+
+- mpc_export_bis.cpp :
+implement all the methods of the class MPCexportBis
+this file is in the "ACADOtoolkit/src/code_generation/" directory
+
+---------------------------
+         Example
+---------------------------
+
+- crane_bis.cpp :
+an example of the utilisation of the classes created
+
+-----------------
+ How to use it :
+-----------------
+
+- define an optimal control problem
+- configure it (constrains ... )
+- create an MPCexportBis object
+- set the options
+- call exportCode(dir) where dir is the directory you want the generate files to be
+- compile
+- execute the created file to generate the C files from C++
+
+----------------------------------------
+ Extends the files with another routine
+----------------------------------------
+
+---------------------------------------
+    go on qp_lin_alg_export.cpp
+---------------------------------------
+
+  - in setup :
+    define our variables by adding :
+
+	"V1.setupDataStruct( ACADO_VARIABLES );
+	                .
+	                .
+	                .
+	 Vn.setupDataStruct( ACADO_VARIABLES );
+	 Res.setupDataStruct( ACADO_VARIABLES );
+   	 
+	 setupYourRoutine( );"
+
+	 // where V1, ... , Vn are the variables of your routine
+  	 // and Res is the result of your routine.
+
+     this is to add between 
+	"if ( (PrintLevel)printLevel >= HIGH )
+                acadoPrintf("--> Preparing to export %s... ",fileName.getName() );"
+     and 
+	"if ( (PrintLevel)printLevel >= HIGH )
+                acadoPrintf("done.\n" );"
+
+  - after create a the method "setupYourRoutine( )" by writing (for example) in the end of the file :
+
+	"returnValue QPLinALgExport::setupYourRoutine( )
+	 {
+	 	 ExportVariable V1( "V1" , dimV11 , dim V12 );
+		                  .
+		                  .
+		                  .
+		 ExportVariable Vn( "Vn" , dimVn1 , dimVn2 );
+		 ExportVariable Res( "Res" , dimRes1 , dimRes2 );
+		 // where dimVij = the dimension number j of Vi for all i in 1 : n
+		 // same thing for Res
+
+		 yourFunctionToExport_exported.setup( "yourFunctionToExport_exported" , Res , V1 , ... , Vn )
+		 yourFunctionToExport_exported.addstatement( Res == ... ) // what you want to do
+
+		 return SUCCESFUL_RETURN;
+	 }"
+
+   if one of the variable is Q, QS , QS2 , QF or R process this way for this variable (only !!) :
+	"ExportVariable VV = V; // where V is Q , QS , QS2 , QF or R
+	 VV.setDataStruct( ACADO_LOCAL );"
+
+   and in yourFunctionToExport_exported.addstatement use VV instead of V
+
+  - add in getFunctionDeclarations the line :
+	
+	"declarations.addDeclaration( yourFunctionToExport_exported );"
+
+    in getCode the line :
+
+	"code.getFunction( yourFunctionToExport_exported );"
+
+    and in copy the line :
+
+	"yourFunctionToExport_exported = arg.yourFunctionToExport_exported;"
+
+-----------------------------------------
+      go on qp_lin_alg_export.hpp
+-----------------------------------------
+
+  - add the lines :
+	"/** your comments
+	  *
+	  *	 \return SUCCESSFUL_RETURN
+	  */
+	 returnValue setupYourRoutine( );"
+    somewhere between the 2 "protected"
+  - add the line :
+	"ExportFunction yourFunctionToExport_exported; /**< short description */"
+    at the end before the last "}"

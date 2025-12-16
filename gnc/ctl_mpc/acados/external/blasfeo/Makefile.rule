@@ -1,0 +1,570 @@
+###################################################################################################
+#                                                                                                 #
+# This file is part of BLASFEO.                                                                   #
+#                                                                                                 #
+# BLASFEO -- BLAS for embedded optimization.                                                      #
+# Copyright (C) 2019 by Gianluca Frison.                                                          #
+# Developed at IMTEK (University of Freiburg) under the supervision of Moritz Diehl.              #
+# All rights reserved.                                                                            #
+#                                                                                                 #
+# The 2-Clause BSD License                                                                        #
+#                                                                                                 #
+# Redistribution and use in source and binary forms, with or without                              #
+# modification, are permitted provided that the following conditions are met:                     #
+#                                                                                                 #
+# 1. Redistributions of source code must retain the above copyright notice, this                  #
+#    list of conditions and the following disclaimer.                                             #
+# 2. Redistributions in binary form must reproduce the above copyright notice,                    #
+#    this list of conditions and the following disclaimer in the documentation                    #
+#    and/or other materials provided with the distribution.                                       #
+#                                                                                                 #
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND                 #
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED                   #
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE                          #
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR                 #
+# ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES                  #
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;                    #
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND                     #
+# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT                      #
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS                   #
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                                    #
+#                                                                                                 #
+# Author: Gianluca Frison, gianluca.frison (at) imtek.uni-freiburg.de                             #
+#                                                                                                 #
+###################################################################################################
+
+# Do something in this makefile
+$(info Parsing Makefile.rule)
+
+# Get path of Makefile.rule as main project directory 
+#CURRENT_DIR  := $(dir $(lastword $(MAKEFILE_LIST)))
+MAKEFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
+CURRENT_DIR := $(patsubst %/,%,$(dir $(MAKEFILE_PATH)))
+
+
+
+#################################################
+### main makefile options
+#################################################
+
+# Select target architecture (TARGET)
+#
+# X64_INTEL_SKYLAKE_X: x86_64 architecture with AVX512 (F+VL) ISA (64 bit OS)
+# Code optimized for Intel Skylake-X architecture with 2 512-bit FMA pipes.
+#
+# X64_INTEL_HASWELL: x86_64 architecture with AVX2 and FMA ISAs (64 bit OS)
+# Code optimized for Intel Haswell, Intel Skylake, AMD Zen, AMD Zen2 and AMD Zen3 architectures.
+#
+# X64_INTEL_SANDY_BRIDGE : x86_64 architecture with AVX ISA (64 bit OS)
+# Code optimized for Intel Sandy-Bridge architecture.
+#
+# X64_INTEL_CORE : x86_64 architecture with SSE3 ISA (64 bit OS)
+# Code optimized for Intel Core archiecture.
+#
+# X64_AMD_BULLDOZER : x86_64 architecture with AVX and FMA ISAs (64 bit OS)
+# Code optimized for AMD Bulldozer.
+#
+# X86_AMD_JAGUAR : x86 architecture with AVX ISA (32 bit OS)
+# Code optimized for AMD Jaguar.
+#
+# X86_AMD_BARCELONA : x86 architecture with SSE3 ISA (32 bit OS)
+# Code optimized for AMD Barcelona.
+#
+# ARMV8A_APPLE_M1 : ARMv8A architecture with NEON (64 bit OS)
+# Code optimized for Apple M1.
+#
+# ARMV8A_ARM_CORTEX_A76 : ARMv8A architecture with NEON (64 bit OS)
+# Code optimized for ARM Cortex A76.
+#
+# ARMV8A_ARM_CORTEX_A73 : ARMv8A architecture with NEON (64 bit OS)
+# Code optimized for ARM Cortex A73.
+#
+# ARMV8A_ARM_CORTEX_A57 : ARMv8A architecture with NEON (64 bit OS)
+# Code optimized for ARM Cortex A57, A72.
+#
+# ARMV8A_ARM_CORTEX_A55 : ARMv8A architecture with NEON (64 bit OS)
+# Code optimized for ARM Cortex A55.
+#
+# ARMV8A_ARM_CORTEX_A53 : ARMv8A architecture with NEON (64 bit OS)
+# Code optimized for ARM Cortex A53.
+#
+# ARMV7A_ARM_CORTEX_A15 : ARMv7A architecture with NEON-VFPv4 ISA (32 bit OS)
+# Code optimized for ARM Cortex A15.
+#
+# ARMV7A_ARM_CORTEX_A9 : ARMv7A architecture with NEON-VFPv3 ISA (32 bit OS)
+# Code optimized for ARM Cortex A9.
+#
+# ARMV7A_ARM_CORTEX_A7 : ARMv7A architecture with NEON-VFPv4 ISA (32 bit OS)
+# Code optimized for ARM Cortex A7.
+#
+# GENERIC : generic architecture, plain C code.
+#
+#
+# TARGET = X64_INTEL_SKYLAKE_X
+TARGET = X64_INTEL_HASWELL
+# TARGET = X64_INTEL_SANDY_BRIDGE
+# TARGET = X64_INTEL_CORE
+#
+# TARGET = X64_AMD_BULLDOZER
+# TARGET = X86_AMD_JAGUAR
+# TARGET = X86_AMD_BARCELONA
+#
+# TARGET = ARMV8A_APPLE_M1
+#
+# TARGET = ARMV8A_ARM_CORTEX_A76
+# TARGET = ARMV8A_ARM_CORTEX_A73
+# TARGET = ARMV8A_ARM_CORTEX_A57
+# TARGET = ARMV8A_ARM_CORTEX_A55
+# TARGET = ARMV8A_ARM_CORTEX_A53
+# TARGET = ARMV7A_ARM_CORTEX_A15
+# TARGET = ARMV7A_ARM_CORTEX_A9
+# TARGET = ARMV7A_ARM_CORTEX_A7
+#
+# TARGET = GENERIC
+
+# Select back-end linear lagebra version (LA) to implement BLASFEO API:
+# HIGH_PERFORMANCE : target-tailored; performance-optimized for cache resident matrices; panel-major matrix format
+# REFERENCE : target-unspecific lightly-optimized; small code footprint; {panel,column}-major matrix format(s)
+# EXTERNAL_BLAS_WRAPPER : call to external BLAS and LAPACK libraries; column-major matrix format
+#
+LA = HIGH_PERFORMANCE
+# LA = REFERENCE
+# LA = EXTERNAL_BLAS_WRAPPER
+
+# Export additional back-ends with different naming
+# BLASFEO reference with blasfeo_ref_xxx naming
+# BLASFEO_REF_API = 0
+BLASFEO_REF_API = 1
+# BLASFEO high-performance with blasfeo_hp_xxx naming
+BLASFEO_HP_API = 0
+# BLASFEO_HP_API = 1
+
+# Select the Matrix Format internally used in the blasfeo_{d,s}mat structure
+# COLMAJ : column-major matrix format
+# PANELMAJ : panel-major matrix format
+# MF = COLMAJ
+MF = PANELMAJ
+
+# Compile the BLAS API routines provided by BLASFEO
+#
+# BLAS_API = 0
+BLAS_API = 1
+
+# Export standard FORTRAN namings for BLAS API routines
+# 0 : routines namings are in the form blasfeo_blas_dgemm
+# 1 : routines namings are in the form dgemm_
+# and export standard C namings for CBLAS API routines
+# 0 : routines namings are in the form blasfeo_cblas_dgemm
+# 1 : routines namings are in the form cblas_dgemm
+#
+FORTRAN_BLAS_API = 0
+# FORTRAN_BLAS_API = 1
+
+# Complement the BLAS_API with the Netlib BLAS (only for FORTAN_BLAS_API=1)
+COMPLEMENT_WITH_NETLIB_BLAS = 0
+# COMPLEMENT_WITH_NETLIB_BLAS = 1
+
+# Complement the BLAS_API with the Netlib LAPACK (only for FORTAN_BLAS_API=1)
+COMPLEMENT_WITH_NETLIB_LAPACK = 0
+# COMPLEMENT_WITH_NETLIB_LAPACK = 1
+
+# Compile the CBLAS API routines provided by BLASFEO
+#
+CBLAS_API = 0
+# CBLAS_API = 1
+
+#Compile the LAPACKE API from Netlib
+LAPACKE_API = 0
+# LAPACKE_API = 1
+
+# Select external BLAS and LAPACK implementation (to be provided by the user).
+# Edit Makefile.external_blas to specify installation location (default /opt).
+# It is used by the BLASFEO library if LA=EXTERNAL_BLAS_WRAPPER.
+# It may also be used as a comparison in some benchmarks and tests.
+#
+EXTERNAL_BLAS = 0
+# EXTERNAL_BLAS = SYSTEM
+# EXTERNAL_BLAS = OPENBLAS
+# EXTERNAL_BLAS = NETLIB
+# EXTERNAL_BLAS = MKL
+# EXTERNAL_BLAS = BLIS
+# EXTERNAL_BLAS = ATLAS
+# EXTERNAL_BLAS = ARMPL
+# EXTERNAL_BLAS = ACCELERATE
+include $(CURRENT_DIR)/Makefile.external_blas
+
+# Select operating system (automatic selection for LINUX and MAC)
+#
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S), Linux)
+    OS = LINUX
+endif
+ifeq ($(UNAME_S), Darwin)
+    OS = MAC
+endif
+#
+# Select operating system (manual selection)
+#
+# OS = LINUX
+# OS = MAC
+# OS = WINDOWS
+
+
+
+#################################################
+### other makefile options and settings
+#################################################
+
+# In BLAS API, fallback to external BLAS library for some not-yet-implemented routines
+#
+FALLBACK_TO_EXTERNAL_BLAS = 0
+# FALLBACK_TO_EXTERNAL_BLAS = 1
+
+# Maximum inner product length K for buffer allocation on stack (decrease this value if stack size is exceeded)
+#
+K_MAX_STACK = 300
+
+# Macro level (code size vs performance in assembly kernels):
+# 0 : no macro (min code size)
+# 1 : all macro but gemm kernel (sweet spot)
+# 2 : all macro (max performance)
+#
+# MACRO_LEVEL = 2
+MACRO_LEVEL = 1
+# MACRO_LEVEL = 0
+
+# Use C99 extension to math library
+#
+# USE_C99_MATH = 0
+USE_C99_MATH = 1
+
+# Compile auxiliary functions with external dependencies (for memory allocation, printing and timing)
+#
+# EXT_DEP = 0
+EXT_DEP = 1
+
+# Enables the compilation of sandbox (experimental)
+#
+SANDBOX_MODE = 0
+# SANDBOX_MODE = 1
+
+# Enables the compilation of experimental routines
+#
+EXPERIMENTAL = 0
+# EXPERIMENTAL = 1
+
+# Enable on-line checks for matrix and vector dimensions (experimental)
+#
+RUNTIME_CHECKS = 0
+# RUNTIME_CHECKS = 1
+
+# Print name of BLAS API routines when called (for debugging purposes)
+#
+PRINT_NAME = 0
+# PRINT_NAME = 1
+
+# Select the packing algorithm (limited to colmaj dgemm and sgemm ATM)
+# AUTO   : automatic switching between packing algorithms
+# ALG_0  : no packing
+# ALG_M1 : pack A
+# ALG_N1 : pack B
+# ALG_2  : pack A and B
+#
+PACKING_ALG = AUTO
+# PACKING_ALG = ALG_0
+# PACKING_ALG = ALG_M1
+# PACKING_ALG = ALG_N1
+# PACKING_ALG = ALG_2
+
+# C Compiler
+#
+CC ?= gcc
+# CC = clang
+# CC = x86_64-w64-mingw32-gcc
+# CC = arm-linux-gnueabihf-gcc
+# CC = /opt/ndk/bin/aarch64-linux-android-gcc
+# CC = /home/gianluca/android-ndk-r23b/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android31-clang
+
+# archive routine
+#
+AR = ar
+
+# Installation directory
+#
+PREFIX = /opt
+
+# compiler / assembler / linker flags
+#
+# CFLAGS  =
+ASFLAGS =
+LDFLAGS =
+
+# Common optimization flags
+#
+CFLAGS ?= -O2
+CFLAGS += -fPIC
+
+# Debugging flags
+#
+CFLAGS  += #-g #-Wall -pedantic -Wfloat-equal #-pg
+ASFLAGS += #-g
+
+# Profiling flags
+#
+#CFLAGS += --coverage
+#CFLAGS += -fopenmp
+
+
+
+# Installation directory
+TOP = $(CURRENT_DIR)
+
+# Support local options
+# TODO move somewhere else ???
+-include $(CURRENT_DIR)/Makefile.local
+
+# search directories
+CFLAGS += -I$(TOP)/include
+
+
+
+# Conditional definitions and checks
+
+# LA high performance
+ifeq ($(LA), HIGH_PERFORMANCE)
+CFLAGS  += -DLA_HIGH_PERFORMANCE
+ASFLAGS  += -DLA_HIGH_PERFORMANCE
+BINARY_DIR = build/$(LA)/$(TARGET)
+endif
+# LA reference
+ifeq ($(LA), REFERENCE)
+CFLAGS  += -DLA_REFERENCE
+BINARY_DIR = build/$(LA)/$(TARGET)
+endif
+# LA blas wrapper
+ifeq ($(LA), EXTERNAL_BLAS_WRAPPER)
+ifeq ($(EXTERNAL_BLAS), 0)
+$(error No EXTERNAL_BLAS selected for LA=EXTERNAL_BLAS_WRAPPER)
+endif
+ifeq ($(MF), PANELMAJ)
+$(error As of now, with LA=EXTERNAL_BLAS_WRAPPER only MF=COLMAJ is supported)
+endif
+CFLAGS  += -DLA_EXTERNAL_BLAS_WRAPPER
+BINARY_DIR = build/$(LA)/$(EXTERNAL_BLAS)
+endif
+# TODO remove and fix tests
+# CFLAGS  += -DBLASFEO_LA=$(LA)
+
+ifeq ($(BLASFEO_REF_API), 1)
+CFLAGS += -DBLASFEO_REF_API
+endif
+
+ifeq ($(MF), COLMAJ)
+CFLAGS  += -DMF_COLMAJ
+ASFLAGS  += -DMF_COLMAJ
+endif
+ifeq ($(MF), PANELMAJ)
+CFLAGS  += -DMF_PANELMAJ
+ASFLAGS  += -DMF_PANELMAJ
+endif
+
+ifeq ($(BLAS_API), 1)
+CFLAGS += -DBLAS_API
+ASFLAGS += -DBLAS_API
+ifeq ($(FORTRAN_BLAS_API), 1)
+CFLAGS += -DFORTRAN_BLAS_API
+ASFLAGS +=
+endif # FORTRAN_BLAS_API
+ifeq ($(FALLBACK_TO_EXTERNAL_BLAS), 1)
+CFLAGS += -DFALLBACK_TO_EXTERNAL_BLAS
+ASFLAGS += -DFALLBACK_TO_EXTERNAL_BLAS
+endif # FALLBACK_TO_EXTERNAL_BLAS
+endif # BLAS_API
+
+#ifeq ($(CBLAS_API), 1)
+#ifeq ($(FORTRAN_BLAS_API), 0)
+#$(error Cannot expose non-FORTRAN style BLAS_API when building CBLAS_API)
+#endif
+#endif
+
+ifeq ($(LAPACKE_API), 1) 
+ifeq ($(FORTRAN_BLAS_API), 0)
+$(error Cannot expose non-FORTRAN style BLAS_API when building LAPACKE_API)
+endif
+endif
+
+ifeq ($(COMPLEMENT_WITH_NETLIB_BLAS), 1)
+ifeq ($(FORTRAN_BLAS_API), 0)
+$(error Cannot expose non-FORTRAN style BLAS_API when complementing with Netlib BLAS)
+endif
+endif
+
+ifeq ($(COMPLEMENT_WITH_NETLIB_LAPACK), 1)
+ifeq ($(FORTRAN_BLAS_API), 0)
+$(error Cannot expose non-FORTRAN style BLAS_API when complementing with Netlib LAPACK)
+endif
+endif
+
+STACK_SIZE := $(shell ulimit -s)
+ifneq ($(STACK_SIZE), unlimited)
+STACK_SIZE_EXCEEDED := $(shell echo $(K_MAX_STACK)*12*8*2 \> $(STACK_SIZE)*1024 | bc )
+ifeq ($(STACK_SIZE_EXCEEDED), 1)
+$(error stack size likely to be exceeded, please decrease the value of K_MAX_STACK )
+endif
+endif
+CFLAGS  += -DK_MAX_STACK=$(K_MAX_STACK)
+
+ifneq ($(PACKING_ALG), AUTO)
+CFLAGS  += -DPACKING_$(PACKING_ALG)
+endif
+
+ifeq ($(USE_C99_MATH), 1)
+CFLAGS += -DUSE_C99_MATH
+endif
+
+ifeq ($(RUNTIME_CHECKS), 1)
+CFLAGS += -DDIM_CHECK
+endif
+
+ifeq ($(EXT_DEP), 1)
+CFLAGS += -DEXT_DEP
+endif
+
+ifeq ($(SANDBOX_MODE), 1)
+CFLAGS += -DSANDBOX_MODE
+endif
+
+ifeq ($(MACRO_LEVEL), 1)
+ASFLAGS += -DMACRO_LEVEL=1
+endif
+ifeq ($(MACRO_LEVEL), 2)
+ASFLAGS += -DMACRO_LEVEL=2
+endif
+
+ifeq ($(PRINT_NAME), 1)
+CFLAGS += -DPRINT_NAME
+endif
+
+ifeq ($(OS), LINUX)
+CFLAGS  += -DOS_LINUX
+ASFLAGS += -DOS_LINUX
+endif
+ifeq ($(OS), MAC)
+CFLAGS  += -DOS_MAC
+ASFLAGS += -DOS_MAC
+endif
+ifeq ($(OS), WINDOWS)
+CFLAGS  += -DOS_WINDOWS
+ASFLAGS += -DOS_WINDOWS
+endif
+ifeq ($(SOC), DSPACE)
+CFLAGS  += -D__DSPACE__
+ASFLAGS += -D__DSPACE__
+endif
+ifeq ($(SOC), BACHMANN)
+CFLAGS  += -D__BACHMANN__
+ASFLAGS += -D__BACHMANN__
+endif
+
+# EXTERNAL_BLAS
+
+ifndef EXTERNAL_BLAS
+    EXTERNAL_BLAS = 0
+endif
+
+CFLAGS += $(INCLUDE_EXTERNAL_BLAS)
+ifeq ($(EXTERNAL_BLAS), 0)
+CFLAGS  +=
+endif
+ifeq ($(EXTERNAL_BLAS), SYSTEM)
+CFLAGS  += -DEXTERNAL_BLAS_SYSTEM
+endif
+ifeq ($(EXTERNAL_BLAS), OPENBLAS)
+CFLAGS  += -DEXTERNAL_BLAS_OPENBLAS
+endif
+ifeq ($(EXTERNAL_BLAS), BLIS)
+CFLAGS  += -DEXTERNAL_BLAS_BLIS -std=gnu99
+endif
+ifeq ($(EXTERNAL_BLAS), NETLIB)
+CFLAGS  += -DEXTERNAL_BLAS_NETLIB
+endif
+ifeq ($(EXTERNAL_BLAS), MKL)
+CFLAGS  += -DEXTERNAL_BLAS_MKL -std=c99 -m64 -DMKL_DIRECT_CALL_SEQ
+endif
+ifeq ($(EXTERNAL_BLAS), ATLAS)
+CFLAGS  += -DEXTERNAL_BLAS_ATLAS
+endif
+ifeq ($(EXTERNAL_BLAS), ARMPL)
+CFLAGS  += -DEXTERNAL_BLAS_ARMPL
+endif
+ifeq ($(EXTERNAL_BLAS), ACCELERATE)
+CFLAGS  += -DEXTERNAL_BLAS_ACCELERATE
+endif
+# TODO remove and fix tests
+# CFLAGS  += -DEXTERNAL_BLAS=$(EXTERNAL_BLAS)
+
+# Architecture-specific flags
+ifeq ($(TARGET), X64_INTEL_SKYLAKE_X)
+CFLAGS  += -m64 -mavx512f -mavx512vl -mfma -DTARGET_X64_INTEL_SKYLAKE_X
+endif
+ifeq ($(TARGET), X64_INTEL_HASWELL)
+CFLAGS  += -m64 -mavx2 -mfma -DTARGET_X64_INTEL_HASWELL
+endif
+ifeq ($(TARGET), X64_INTEL_SANDY_BRIDGE)
+CFLAGS  += -m64 -mavx -DTARGET_X64_INTEL_SANDY_BRIDGE
+endif
+ifeq ($(TARGET), X64_INTEL_CORE)
+CFLAGS  += -m64 -msse3 -DTARGET_X64_INTEL_CORE
+endif
+ifeq ($(TARGET), X64_AMD_BULLDOZER)
+CFLAGS  += -m64 -mavx -mfma -DTARGET_X64_AMD_BULLDOZER
+endif
+ifeq ($(TARGET), X86_AMD_JAGUAR)
+CFLAGS  += -m32 -mavx -DTARGET_X86_AMD_JAGUAR
+ASFLAGS += -m32 -mavx -DTARGET_X86_AMD_JAGUAR
+endif
+ifeq ($(TARGET), X86_AMD_BARCELONA)
+CFLAGS  += -m32 -msse3 -DTARGET_X86_AMD_BARCELONA
+ASFLAGS += -m32 -msse3 -DTARGET_X86_AMD_BARCELONA
+endif
+ifeq ($(TARGET), ARMV8A_APPLE_M1)
+CFLAGS  += -march=armv8-a+crc+crypto+simd -DTARGET_ARMV8A_APPLE_M1 -DTARGET_ARMV8A_ARM_CORTEX_A57
+ASFLAGS += -DTARGET_ARMV8A_APPLE_M1 -DTARGET_ARMV8A_ARM_CORTEX_A57
+endif
+ifeq ($(TARGET), ARMV8A_ARM_CORTEX_A76)
+CFLAGS  += -march=armv8-a+crc+crypto+simd -DTARGET_ARMV8A_ARM_CORTEX_A76 -DTARGET_ARMV8A_ARM_CORTEX_A57
+ASFLAGS += -DTARGET_ARMV8A_ARM_CORTEX_A76 -DTARGET_ARMV8A_ARM_CORTEX_A57
+endif
+ifeq ($(TARGET), ARMV8A_ARM_CORTEX_A73)
+CFLAGS  += -march=armv8-a+crc+crypto+simd -DTARGET_ARMV8A_ARM_CORTEX_A73 -DTARGET_ARMV8A_ARM_CORTEX_A57
+ASFLAGS += -DTARGET_ARMV8A_ARM_CORTEX_A73 -DTARGET_ARMV8A_ARM_CORTEX_A57
+endif
+ifeq ($(TARGET), ARMV8A_ARM_CORTEX_A57)
+CFLAGS  += -march=armv8-a+crc+crypto+simd -DTARGET_ARMV8A_ARM_CORTEX_A57
+ASFLAGS += -DTARGET_ARMV8A_ARM_CORTEX_A57
+endif
+ifeq ($(TARGET), ARMV8A_ARM_CORTEX_A55)
+CFLAGS  += -march=armv8-a+crc+crypto+simd -DTARGET_ARMV8A_ARM_CORTEX_A55 -DTARGET_ARMV8A_ARM_CORTEX_A53
+ASFLAGS += -DTARGET_ARMV8A_ARM_CORTEX_A55 -DTARGET_ARMV8A_ARM_CORTEX_A53
+endif
+ifeq ($(TARGET), ARMV8A_ARM_CORTEX_A53)
+CFLAGS  += -march=armv8-a+crc+crypto+simd -DTARGET_ARMV8A_ARM_CORTEX_A53
+ASFLAGS += -DTARGET_ARMV8A_ARM_CORTEX_A53
+endif
+ifeq ($(TARGET), ARMV7A_ARM_CORTEX_A15)
+CFLAGS  += -marm -mfloat-abi=hard -mfpu=neon-vfpv4 -mcpu=cortex-a15 -DTARGET_ARMV7A_ARM_CORTEX_A15
+ASFLAGS += -mfpu=neon-vfpv4 -DTARGET_ARMV7A_ARM_CORTEX_A15
+endif
+ifeq ($(TARGET), ARMV7A_ARM_CORTEX_A9)
+CFLAGS  += -marm -mfloat-abi=hard -mfpu=neon -mcpu=cortex-a9 -DTARGET_ARMV7A_ARM_CORTEX_A9
+ASFLAGS += -mfpu=neon -DTARGET_ARMV7A_ARM_CORTEX_A9
+endif
+ifeq ($(TARGET), ARMV7A_ARM_CORTEX_A7)
+CFLAGS  += -marm -mfloat-abi=hard -mfpu=neon-vfpv4 -mcpu=cortex-a7 -DTARGET_ARMV7A_ARM_CORTEX_A7
+ASFLAGS += -mfpu=neon-vfpv4 -DTARGET_ARMV7A_ARM_CORTEX_A7
+endif
+ifeq ($(TARGET), GENERIC)
+CFLAGS  += -DTARGET_GENERIC
+endif
+# TODO remove and fix tests
+# CFLAGS  += -DBLASFEO_TARGET=$(TARGET)

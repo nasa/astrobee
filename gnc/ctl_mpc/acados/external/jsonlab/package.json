@@ -1,0 +1,21 @@
+{
+  "name": "jsonlab",
+  "version": "1.9.8",
+  "description": "An open-source MATLAB/Octave JSON encoder and decoder",
+  "directories": {
+    "example": "examples"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fangq/jsonlab.git"
+  },
+  "author": "Qianqian Fang <q.fang at neu.edu>",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/fangq/jsonlab/issues"
+  },
+  "homepage": "https://openjdata.org/jsonlab/"
+}

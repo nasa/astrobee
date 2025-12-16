@@ -1,0 +1,198 @@
+{
+    "blas1":{
+      "axpy":{
+        "doc":[
+          "Scale vector1 by alpha1 and accumalate on vecor2",
+          "",
+          "math: z = y + alpha*x",
+          "math-full: z[zi:zi+n] = alpha*x[xi:xi+n] + y[yi:yi+n]"
+        ],
+        "arguments":["alpha1", "vector1"],
+        "signature":{
+          "int":"rows",
+          "int":"columns",
+          "FLOAT": "scale factor",
+          "STRMAT_ptr": "matrix1",
+          "int":"row offset",
+          "int":"column offset"},
+        "implementation": {},
+        "test": {}
+      },
+      "axpby":{},
+      "vecmul":{},
+      "vecmulacc":{},
+      "vecmuldot":{},
+      "dot":{},
+      "rotg":{},
+      "colrot":{},
+      "rowrot":{}
+    },
+    "blas2":{
+      "gemv_n":{},
+      "gemv_t":{},
+      "gemv_d":{},
+      "gemv_nt":{},
+      "symv_l_nt":{},
+      "trsv_lnn_mn":{},
+      "trsv_ltn_mn":{},
+      "trsv_lnn":{},
+      "trsv_lnu":{},
+      "trsv_ltn":{},
+      "trsv_unn":{},
+      "trsv_utn":{},
+      "trsm_unn":{},
+      "trsm_utn":{},
+      "trsm_lnn":{},
+      "trsm_ltn":{}
+    },
+    "blas3":{
+      "gemm_nn":{},
+      "gemm_nt":{},
+      "gemm_tn":{},
+      "gemm_tt":{},
+      "syrk_ln_mn":{},
+      "syrk_ln":{},
+      "trsm_llnu":{},
+      "trsm_rltu":{},
+      "trsm_rltn":{},
+      "trsm_lunn":{},
+      "trsm_rutn":{},
+      "trmm_rutn":{},
+      "trmm_rlnn":{},
+      "dia_left_ib":{}
+    },
+    "lapack":{
+      "potrf_l":{},
+      "potrf_l_mn":{},
+      "syrk_{PREC}potrf_l_ln":{},
+      "getrf_nopivot":{
+        "common_name": "Sequential General LU factorization",
+        "doc": [
+          "LU factorization of a general M-by-N matrix A.",
+          "Iterative version of Sivan Toledo's recursive LU algorithm",
+          "A = P * L * U"
+        ],
+        "signature":{
+          "int": "rows",
+          "int": "columns",
+          "STRMAT_ptr": "input matrix",
+          "int": "input row offset",
+          "int": "input column offset",
+          "STRMAT_ptr": "lower and upper trinagular (trapeziodal) matrices condensed",
+          "int": "output row offset",
+          "int": "output column offset"
+        }
+      },
+      "getrf_rowpivot":{
+        "common_name": "Sequential General LU factorization with rowpivot",
+        "doc": [
+          "LU factorization of a general M-by-N matrix A with row pivot",
+          "Iterative version of Sivan Toledo's recursive LU algorithm",
+          "A = P * L * U"
+        ],
+        "signature":{
+          "int": "rows",
+          "int": "columns",
+          "STRMAT_ptr": "input matrix",
+          "int": "input (A) row offset",
+          "int": "input (A) column offset",
+          "STRMAT_ptr": "LU: lower and upper trinagular (trapeziodal) condensed matrix",
+          "int": "output (LU) row offset",
+          "int": "output (LU) column offset"
+        }
+      },
+      "geqrf":{},
+      "geqrf_worksize":{},
+      "gelqf":{},
+      "gelqf_worksize":{},
+      "gelqf_pd":{},
+      "gelqf_pd_la":{},
+      "gelqf_pd_lla":{}
+    },
+    "aux":{
+      "ge":{
+        "sc":{
+          "doc": ["Scale matrix"],
+          "signature":{
+            "int":"rows",
+            "int":"columns",
+            "FLOAT": "scale factor",
+            "STRMAT_ptr": "matrix",
+            "int":"row offset",
+            "int":"column offset"},
+          "implementation": {},
+          "test": {}
+        },
+      "cp":{},
+      "ad":{},
+      "cpsc":{}
+      },
+      "tr":{
+        "cp_l":{},
+        "cpsc":{},
+        "sc_l":{},
+        "tr_l":{},
+        "tr_u":{}
+      },
+      "dia":{
+        "re":{},
+        "in":{},
+        "in_sp":{},
+        "ex":{},
+        "ex_sp":{},
+        "ad":{},
+        "ad_sp":{},
+        "adin_sp":{}
+      },
+      "row":{
+        "in":{},
+        "ex":{},
+        "ad":{},
+        "ad_sp":{},
+        "sw":{},
+        "pe":{},
+        "pei":{}
+      },
+      "col":{
+        "in":{},
+        "ex":{},
+        "sw":{},
+        "pe":{},
+        "pei":{}
+      },
+      "vec":{
+        "se":{},
+        "cp":{},
+        "sc":{},
+        "cpsc":{},
+        "in1":{},
+        "ex1":{},
+        "in_sp":{},
+        "ad":{},
+        "ad_sp":{},
+        "ex_sp":{},
+        "sw":{},
+        "cl":{},
+        "cl_mask":{},
+        "ze":{},
+        "nrm_inf":{},
+        "pe":{},
+        "pei":{}
+      },
+      "mem":{
+        "memsize_{STRMAT}":{},
+        "memsize_diag_{STRMAT}":{},
+        "memsize_{STRVEC}":{},
+        "create_{STRMAT}":{},
+        "create_{STRVEC}":{},
+        "pack_{STRMAT}":{},
+        "pack_tran_{STRVEC}":{},
+        "unpack_{STRMAT}":{},
+        "unpack_tran_{STRMAT}":{},
+        "unpack_{STRVEC}":{},
+        "{PREC}_cast_mat2strmat":{},
+        "{PREC}_cast_diag_mat2strmat":{},
+        "{PREC}_cast_vec2vecmat":{}
+      }
+    }
+}
