@@ -15,7 +15,7 @@
 #define I2C_ADDR 0x0A
 
 // Interrupt counter.
-long int count_[NUM_MOTORS];
+volatile long int count_[NUM_MOTORS];
 
 void setup() {
   int i = 0;
