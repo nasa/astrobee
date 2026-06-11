@@ -5,6 +5,7 @@
  * If you want to use a different board other than Mega,
  * be careful about interrupt numbers.
  * Author: Jongwoon Yoo (jongwoon.yoo@nasa.gov)
+ * Modified: Serhii Trush (Techn0man1ac) 
  */
 
 #include <Wire.h>
@@ -15,7 +16,8 @@
 #define I2C_ADDR 0x0A
 
 // Interrupt counter.
-long int count_[NUM_MOTORS];
+// Using volatile ensures that the value is read from memory every time.
+volatile long int count_[NUM_MOTORS]; 
 
 void setup() {
   int i = 0;
