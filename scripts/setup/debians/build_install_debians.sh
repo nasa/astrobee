@@ -27,7 +27,7 @@ build_list=()
 
 sudo apt-get install -y devscripts equivs libproj-dev
 # delete old files (-f avoids 'no such file' warning on first run)
-rm -f *.deb *.debian.tar.xz *.orig.tar.gz *.dsc *.build *.buildinfo *.changes *.ddeb
+rm -f ./*.deb ./*.debian.tar.xz ./*.orig.tar.gz ./*.dsc ./*.build ./*.buildinfo ./*.changes ./*.ddeb 2>/dev/null || true
 
 # Add public debians to build list
 build_list+=( ar-track-alvar-msgs ar-track-alvar dlib dbow2 gtsam decomputil jps3d openmvg opencv-xfeatures2d)
