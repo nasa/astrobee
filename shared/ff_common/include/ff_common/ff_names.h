@@ -479,6 +479,10 @@ inline bool LatchedTopic(std::string const& topic) {
                                         TOPIC_MOBILITY_ZONES,
                                         TOPIC_ROBOT_NAME,
                                         TOPIC_SIGNALS,
+                                        TOPIC_HARDWARE_VIVE_LIGHTHOUSES,
+                                        TOPIC_HARDWARE_VIVE_TRACKERS,
+                                        "vive",
+                                        "ekf",
                                         "parameter_descriptions",
                                         "parameter_updates", };
   if (latched_topics.find(topic) != latched_topics.end()) {
