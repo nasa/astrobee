@@ -18,7 +18,7 @@
 # under the License.
 
 read -r -d '' usage_string <<EOF
-usage: run.sh [-h] [-x] [-b] [-f] [-r] [-n] [-m] [-d]
+usage: run.sh [-h] [-x] [-b] [-f] [-r] [-n] [-m] [-d] [-nv]
               [-a "arg1" -a "arg2"]
               -- [cmd [arg1] [arg2] ...]
 
@@ -32,6 +32,7 @@ usage: run.sh [-h] [-x] [-b] [-f] [-r] [-n] [-m] [-d]
 -d or --dry-run: Just what commands would be run
 -i or --image run a different image tag
 -a or --args "arg1" --args "arg2": Pass extra args to sim
+-nv or --nvidia: Use an Nvidia GPU with the container runtime
 
 Run the specified command and args within a docker container.
 
@@ -57,7 +58,7 @@ usage()
 ######################################################################
 
 shortopts="h,x,f,r,n,g:,m,d,i:,a:"
-longopts="help,xenial,focal,remote,no-display,gpu:,mount,dry-run,image:,args:"
+longopts="help,xenial,focal,remote,no-display,gpu:,mount,dry-run,image:,args:,nvidia"
 opts=$(getopt -a -n run.sh --options "$shortopts" --longoptions "$longopts" -- "$@")
 if [ $? -ne 0 ]; then
     echo
@@ -76,10 +77,12 @@ eval set -- "$opts"
 os=`cat /etc/os-release | grep -oP "(?<=VERSION_CODENAME=).*"`
 sim_args="dds:=false robot:=sim_pub"
 display="true"
-if [[ $(lshw -C display | grep vendor) =~ Nvidia ]]; then
+if [[ $(lshw -C display | grep vendor) =~ NVIDIA ]]; then
   gpu="true"
+  nvidia="true"
 else
   gpu="false"
+  nvidia="false"
 fi
 mount="false"
 tagrepo="astrobee"
@@ -102,6 +105,8 @@ while [ "$1" != "" ]; do
                                    ;;
         -g | --gpu)                gpu="$2"
                                    shift
+                                   ;;
+        -nv | --nvidia )           nvidia="true" gpu="true"
                                    ;;
         -m | --mount )             mount="true"
                                    ;;
@@ -152,6 +157,11 @@ if [ "$os" = "xenial" ]; then
     tag=astrobee:latest-${image}ubuntu16.04
 elif [ "$os" = "focal" ]; then
     tag=astrobee:latest-${image}ubuntu20.04
+else
+    echo "No docker image for OS '$os'. Use --xenial or --focal to pick one."
+    echo
+    usage
+    exit 1
 fi
 
 # check if local docker tag exists
@@ -185,6 +195,9 @@ if [ "$display" = "true" ]; then
     display_args+=" --privileged"
     if [ "$gpu" = "true" ]; then
         display_args+=" --gpus all"
+    fi
+    if [ "$nvidia" = "true" ]; then
+        display_args+=" --runtime=nvidia -e NVIDIA_VISIBLE_DEVICES=all -e NVIDIA_DRIVER_CAPABILITIES=all -e __NV_PRIME_RENDER_OFFLOAD=1 -e __GLX_VENDOR_LIBRARY_NAME=nvidia"
     fi
 fi
 
