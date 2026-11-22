@@ -15,6 +15,8 @@
     Astrobee Flight Software
   </maintainer>
   <build_depend>ament_cmake</build_depend>
+  <depend>boost</depend>
+  <test_depend>ament_cmake_gtest</test_depend>
   <export>
     <build_type>ament_cmake</build_type>
   </export>
