@@ -27,6 +27,7 @@ set( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -O3 -fPIC" )
 
 find_package(ament_cmake REQUIRED)
 
+find_package(Boost REQUIRED COMPONENTS filesystem)
 find_package(Eigen3 REQUIRED)
 LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
 find_package(JsonCpp REQUIRED)
@@ -53,53 +54,29 @@ add_library(jsonloader SHARED
   src/planio.cc
   src/validation.cc
 )
-target_link_libraries(jsonloader gflags glog ${JSONCPP_LIBRARIES} )
+target_link_libraries(jsonloader
+  PUBLIC gflags glog ${JSONCPP_LIBRARIES}
+  PRIVATE Boost::filesystem
+)
 ament_export_targets(jsonloader HAS_LIBRARY_TARGET)
 
-#if(CATKIN_ENABLE_TESTING)
-#  find_package(rostest REQUIRED)
-#
-#  add_rostest_gtest(test_command
-#    test/test_command.test
-#    test/test_command.cxx
-#  )
-#  target_link_libraries(test_command
-#    jsonloader
-#  )
-#
-#  add_rostest_gtest(test_keepout
-#    test/test_keepout.test
-#    test/test_keepout.cxx
-#  )
-#  target_link_libraries(test_keepout
-#    jsonloader
-#  )
-#
-#  add_rostest_gtest(test_keepoutio
-#    test/test_keepoutio.test
-#    test/test_keepoutio.cxx
-#  )
-#  target_link_libraries(test_keepoutio
-#    jsonloader
-#  )
-#
-#  add_rostest_gtest(test_plan
-#    test/test_plan.test
-#    test/test_plan.cxx
-#  )
-#  target_link_libraries(test_plan
-#    jsonloader
-#  )
-#
-#  add_rostest_gtest(test_validation
-#    test/test_validation.test
-#    test/test_validation.cxx
-#  )
-#  target_link_libraries(test_validation
-#    jsonloader
-#  )
-#
-#endif()
+if(BUILD_TESTING)
+  find_package(ament_cmake_gtest REQUIRED)
+
+  foreach(test_name test_command test_keepout test_keepoutio test_plan test_validation)
+    ament_add_gtest(${test_name} test/${test_name}.cxx
+      SKIP_LINKING_MAIN_LIBRARIES
+      ENV "DATA_DIR=${CMAKE_CURRENT_SOURCE_DIR}/test/data/"
+    )
+    if(TARGET ${test_name})
+      target_link_libraries(${test_name} jsonloader)
+    endif()
+  endforeach()
+
+  if(TARGET test_plan)
+    target_link_libraries(test_plan Boost::filesystem)
+  endif()
+endif()
 
 #############
 ## Install ##
